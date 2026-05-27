@@ -143,6 +143,14 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .st-empty{text-align:center;padding:40px;color:var(--text2);font-size:13px}
 #section-tracker{max-width:100%}
 #section-charts{max-width:1440px}
+#section-settings{max-width:720px}
+.conn-row{display:flex;align-items:end;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.conn-row .input-group{flex:1;min-width:220px}
+.conn-row input{width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit;outline:none}
+.conn-row input:focus{border-color:var(--accent)}
+.conn-btn{height:36px;padding:0 18px;border-radius:6px;border:none;font-weight:600;cursor:pointer;white-space:nowrap;font-size:13px;font-family:inherit;transition:all .2s}
+.conn-btn:hover{filter:brightness(1.15)}
+.conn-status{font-size:12px;min-width:100px;padding-top:4px}
 .ch-chip{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:11px;font-weight:500;transition:all .2s;font-family:inherit}
 .ch-chip:hover{border-color:var(--accent);color:var(--text)}
 .ch-chip.ch-active{border-color:var(--accent);background:var(--accent);color:#fff}
@@ -159,6 +167,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
     <button class="main-tab active" onclick="showSection('calculators')">Calculators</button>
     <button class="main-tab" onclick="showSection('tracker')">Stock Tracker</button>
     <button class="main-tab" onclick="showSection('charts')">Charts</button>
+    <button class="main-tab" onclick="showSection('settings')">Settings</button>
   </div>
   <div class="topbar-actions" id="calc-actions">
     <button onclick="saveCurrentStock()">Save Stock</button>
@@ -396,15 +405,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 <div class="content" id="section-tracker" style="display:none">
 
 <div class="card">
-  <div class="card-title">Tracker Settings & Global Defaults</div>
+  <div class="card-title">Tracker Defaults</div>
   <div class="input-grid">
-    <div class="input-group"><label>FMP API Key</label><input type="text" id="st-apikey" placeholder="Enter FMP API key" oninput="saveTrackerSettings()"></div>
-    <div class="input-group"><label>Yahoo Worker URL</label><input type="text" id="st-worker" placeholder="https://yahoo-finance-proxy.YOURNAME.workers.dev" oninput="saveTrackerSettings()" style="min-width:250px"></div>
-    <div class="input-group" style="grid-column:1/-1;display:flex;align-items:end;gap:8px;flex-wrap:wrap">
-      <div style="flex:1;min-width:200px"><label>Sync Key</label><input type="text" id="st-synckey" placeholder="Enter sync key" oninput="saveTrackerSettings()" style="width:100%"></div>
-      <button onclick="testSync()" id="sync-btn" style="height:36px;padding:0 18px;border-radius:6px;border:none;background:#6c9bd1;color:#fff;font-weight:600;cursor:pointer;white-space:nowrap">Sync Now</button>
-      <span id="sync-status" style="font-size:13px;min-width:120px"></span>
-    </div>
     <div class="input-group"><label>Growth Y1-5 (%)</label><input type="number" id="st-g1" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
     <div class="input-group"><label>Growth Y6-10 (%)</label><input type="number" id="st-g2" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
     <div class="input-group"><label>Growth Y11-15 (%)</label><input type="number" id="st-g3" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
@@ -499,6 +501,43 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </div>
 
 </div><!-- end section-charts -->
+
+<!-- ====== SECTION: SETTINGS ====== -->
+<div class="content" id="section-settings" style="display:none">
+
+<div class="card">
+  <div class="card-title">Connections</div>
+  <p style="color:var(--text2);font-size:12px;margin-bottom:18px">API keys and sync credentials are stored only in your browser (localStorage) — never in the public source code.</p>
+
+  <div class="conn-row">
+    <div class="input-group">
+      <label>Yahoo Worker URL</label>
+      <input type="text" id="st-worker" placeholder="https://yahoo-finance-proxy.YOURNAME.workers.dev" oninput="saveTrackerSettings()">
+    </div>
+    <button class="conn-btn" style="background:#6c9bd1;color:#fff" onclick="testWorker()">Test</button>
+    <div class="conn-status" id="worker-status"></div>
+  </div>
+
+  <div class="conn-row">
+    <div class="input-group">
+      <label>FMP API Key</label>
+      <input type="text" id="st-apikey" placeholder="Enter FMP API key" oninput="saveTrackerSettings()">
+    </div>
+    <button class="conn-btn" style="background:#a29bfe;color:#fff" onclick="testFmp()">Test</button>
+    <div class="conn-status" id="fmp-status"></div>
+  </div>
+
+  <div class="conn-row">
+    <div class="input-group">
+      <label>Sync Key</label>
+      <input type="text" id="st-synckey" placeholder="Enter sync key" oninput="saveTrackerSettings()">
+    </div>
+    <button class="conn-btn" style="background:#00b894;color:#fff" onclick="testSync()" id="sync-btn">Sync Now</button>
+    <div class="conn-status" id="sync-status"></div>
+  </div>
+</div>
+
+</div><!-- end section-settings -->
 
 <!-- Modals -->
 <div class="modal-overlay" id="export-modal"><div class="modal"><h3>Export Data</h3><textarea id="export-data" readonly></textarea><div class="modal-actions"><button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('export-data').value);alert('Copied!')">Copy</button><button class="btn btn-secondary" onclick="downloadExport()">Download JSON</button><button class="btn btn-secondary" onclick="closeModals()">Close</button></div></div></div>
@@ -772,10 +811,10 @@ function doImport(){
 
 // Section switching
 function showSection(name){
-  ['calculators','tracker','charts'].forEach(s=>{
+  ['calculators','tracker','charts','settings'].forEach(s=>{
     document.getElementById('section-'+s).style.display=name===s?'':'none';
   });
-  const secs=['calculators','tracker','charts'];
+  const secs=['calculators','tracker','charts','settings'];
   document.querySelectorAll('.main-nav .main-tab').forEach((b,i)=>b.classList.toggle('active',secs[i]===name));
   document.getElementById('calc-actions').style.display=name==='calculators'?'':'none';
   if(name==='tracker')renderTracker();
@@ -1634,7 +1673,7 @@ function renderMiniCharts(){
   });
 }
 
-// ====== CLOUD SYNC ======
+// ====== CLOUD SYNC & CONNECTION TESTS ======
 function getSyncKey(){return stSettings().syncKey||''}
 let syncTimer=null;
 let lastSyncTs=0;
@@ -1644,40 +1683,60 @@ function getSyncUrl(){
   return s.workerUrl||'';
 }
 
-function setSyncStatus(msg,ok){
-  const el=document.getElementById('sync-status');
+function setStatus(id,msg,ok){
+  const el=document.getElementById(id);
   if(!el)return;
   el.textContent=msg;
   el.style.color=ok===true?'#2ecc71':ok===false?'#e74c3c':'#aaa';
+}
+
+async function testWorker(){
+  const url=getSyncUrl();
+  if(!url){setStatus('worker-status','Enter URL first',false);return}
+  setStatus('worker-status','Testing...','');
+  try{
+    const r=await fetch(url+'/health');
+    if(r.ok){const d=await r.json();setStatus('worker-status','Connected ✓',true)}
+    else setStatus('worker-status','Error ('+r.status+')',false);
+  }catch(e){setStatus('worker-status','Connection failed',false)}
+}
+
+async function testFmp(){
+  const key=stSettings().apiKey;
+  if(!key){setStatus('fmp-status','Enter key first',false);return}
+  setStatus('fmp-status','Testing...','');
+  try{
+    const r=await fetch('https://financialmodelingprep.com/stable/profile?symbol=AAPL&apikey='+encodeURIComponent(key));
+    if(r.ok){const d=await r.json();setStatus('fmp-status',d.length?'Connected ✓':'Invalid key',d.length?true:false)}
+    else if(r.status===401||r.status===403)setStatus('fmp-status','Invalid key',false);
+    else setStatus('fmp-status','Error ('+r.status+')',false);
+  }catch(e){setStatus('fmp-status','Connection failed',false)}
 }
 
 async function testSync(){
   const url=getSyncUrl();
   const key=getSyncKey();
   const btn=document.getElementById('sync-btn');
-  if(!url){setSyncStatus('Worker URL missing',false);return}
-  if(!key){setSyncStatus('Sync Key missing',false);return}
+  if(!url){setStatus('sync-status','Worker URL missing',false);return}
+  if(!key){setStatus('sync-status','Sync Key missing',false);return}
   btn.disabled=true;btn.textContent='Syncing...';
-  setSyncStatus('','');
+  setStatus('sync-status','','');
   try{
-    // First save current state
     await cloudSave();
-    // Then try to load
     const r=await fetch(url+'/sync/load',{headers:{'X-Sync-Key':key}});
-    if(r.status===401){setSyncStatus('Wrong sync key',false);btn.disabled=false;btn.textContent='Sync Now';return}
-    if(!r.ok){setSyncStatus('Server error ('+r.status+')',false);btn.disabled=false;btn.textContent='Sync Now';return}
+    if(r.status===401){setStatus('sync-status','Wrong sync key',false);btn.disabled=false;btn.textContent='Sync Now';return}
+    if(!r.ok){setStatus('sync-status','Server error ('+r.status+')',false);btn.disabled=false;btn.textContent='Sync Now';return}
     const d=await r.json();
     if(d.ok){
-      // Apply cloud data if newer
       const loaded=await cloudLoad();
       if(loaded){recalcAll();renderTracker();renderSavedStocks()}
       const when=d.data?.ts?new Date(d.data.ts).toLocaleTimeString():'now';
-      setSyncStatus('Synced ✓ ('+when+')',true);
+      setStatus('sync-status','Synced ✓ ('+when+')',true);
     }else{
-      setSyncStatus('No data yet — saved!',true);
+      setStatus('sync-status','No data yet — saved!',true);
     }
   }catch(e){
-    setSyncStatus('Connection failed',false);
+    setStatus('sync-status','Connection failed',false);
   }
   btn.disabled=false;btn.textContent='Sync Now';
 }
@@ -1699,8 +1758,8 @@ async function cloudSave(){
       body:JSON.stringify(payload)
     });
     lastSyncTs=payload.ts;
-    setSyncStatus('Saved ✓ '+new Date().toLocaleTimeString(),true);
-  }catch(e){setSyncStatus('Save failed',false);console.warn('Cloud save failed',e)}
+    setStatus('sync-status','Saved ✓ '+new Date().toLocaleTimeString(),true);
+  }catch(e){setStatus('sync-status','Save failed',false);console.warn('Cloud save failed',e)}
 }
 
 function scheduleCloudSave(){
