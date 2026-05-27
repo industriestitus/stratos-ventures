@@ -1,0 +1,1723 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratos Ventures</title>
+<link rel="icon" href="data:,">
+<script>
+(function(){
+  var c=document.createElement('canvas');c.width=32;c.height=32;
+  var x=c.getContext('2d');
+  // Dark rounded rect bg
+  x.beginPath();x.roundRect(0,0,32,32,6);x.fillStyle='#0f1117';x.fill();
+  // Rotated ellipse ring
+  x.save();x.translate(16,16);x.rotate(-25*Math.PI/180);
+  x.beginPath();x.ellipse(0,0,13,5,0,0,Math.PI*2);
+  x.strokeStyle='#a29bfe';x.lineWidth=1.3;x.stroke();x.restore();
+  // SV text
+  x.font='bold 13px Arial';x.fillStyle='#6c9bd1';x.textAlign='center';x.textBaseline='middle';
+  x.fillText('SV',16,17);
+  // Set favicon
+  var link=document.querySelector("link[rel='icon']");
+  link.type='image/png';link.href=c.toDataURL('image/png');
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<style>
+:root { --bg:#0f1117; --surface:#1a1d27; --surface2:#232734; --border:#2e3347; --text:#e4e7f1; --text2:#8b90a5; --accent:#6c5ce7; --accent2:#a29bfe; --green:#00b894; --red:#e17055; --orange:#fdcb6e; --blue:#74b9ff; --radius:10px; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.topbar{display:flex;align-items:center;gap:16px;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.topbar h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.main-nav{display:flex;gap:2px}
+.main-tab{padding:6px 16px;font-size:13px;font-weight:600;border-radius:6px;border:none;background:transparent;color:var(--text2);cursor:pointer;transition:all .2s}
+.main-tab:hover{background:var(--surface2);color:var(--text)}
+.main-tab.active{background:var(--accent);color:#fff}
+.topbar-actions{display:flex;gap:8px;margin-left:auto}
+.topbar-actions button{padding:6px 14px;font-size:12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;transition:all .2s}
+.topbar-actions button:hover{border-color:var(--accent);color:var(--text)}
+.content{max-width:1440px;margin:0 auto;padding:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.input-group{display:flex;flex-direction:column;gap:3px}
+.input-group label{font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.3px}
+.input-group input,.input-group select{padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border-color .2s}
+.input-group input:focus{border-color:var(--accent)}
+.input-group .unit{font-size:9px;color:var(--text2)}
+.stock-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.stock-header input{padding:9px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:15px;font-weight:600;width:260px;outline:none}
+.stock-header input:focus{border-color:var(--accent)}
+.stock-header select{padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;cursor:pointer}
+.summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;transition:all .2s}
+.summary-card:hover{border-color:var(--accent)}
+.summary-card.active-summary{border-color:var(--accent);box-shadow:0 0 12px rgba(108,92,231,.2)}
+.summary-card .sc-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
+.summary-card .sc-value{font-size:24px;font-weight:700;margin-bottom:2px}
+.summary-card .sc-sub{font-size:11px;color:var(--text2)}
+.positive{color:var(--green)}.negative{color:var(--red)}.neutral{color:var(--blue)}.warn{color:var(--orange)}
+.tabs{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto}
+.tab{padding:7px 16px;font-size:12px;font-weight:500;border-radius:8px;border:none;background:transparent;color:var(--text2);cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab:hover{background:var(--surface2);color:var(--text)}
+.tab.active{background:var(--accent);color:#fff}
+.panel{display:none}.panel.active{display:block}
+.year-inputs{overflow-x:auto;margin-top:10px}
+.year-inputs table{width:100%;border-collapse:collapse;min-width:800px}
+.year-inputs th{font-size:10px;font-weight:500;color:var(--text2);text-transform:uppercase;padding:5px 6px;text-align:center;white-space:nowrap}
+.year-inputs td{padding:3px;font-size:12px;text-align:center;color:var(--accent2)}
+.year-inputs input{width:100%;padding:5px 4px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;text-align:center;outline:none}
+.year-inputs input:focus{border-color:var(--accent)}
+.year-inputs .lc{font-size:11px;font-weight:500;color:var(--text2);white-space:nowrap;padding-right:8px;text-align:right;min-width:100px}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.result-box{background:var(--surface2);border-radius:8px;padding:12px;text-align:center}
+.result-box .label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.result-box .value{font-size:20px;font-weight:700}
+.chart-container{position:relative;height:280px;margin-top:12px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:1000px){.two-col,.three-col{grid-template-columns:1fr}}
+.aria-table{width:100%;border-collapse:collapse;margin-top:8px}
+.aria-table th,.aria-table td{padding:8px 12px;text-align:center;font-size:12px;border-bottom:1px solid var(--border)}
+.aria-table th{color:var(--text2);font-weight:500;font-size:10px;text-transform:uppercase}
+.aria-table td{font-weight:500}
+.aria-table input{width:60px;padding:3px 5px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;text-align:center;outline:none}
+.money-back-marker{background:var(--green)!important;color:#fff!important;font-weight:700!important;border-radius:4px;padding:2px 4px}
+.toggle-row{display:flex;align-items:center;gap:8px;margin-top:10px;cursor:pointer;color:var(--text2);font-size:12px}
+.toggle-row:hover{color:var(--text)}
+.toggle-row .arrow{transition:transform .2s;display:inline-block}
+.toggle-row .arrow.open{transform:rotate(90deg)}
+.collapsible{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.collapsible.open{max-height:500px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.active{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+.modal h3{margin-bottom:16px}
+.modal textarea{width:100%;height:200px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:monospace;resize:vertical;outline:none}
+.modal-actions{display:flex;gap:8px;margin-top:16px;justify-content:flex-end}
+.btn{padding:8px 16px;border-radius:8px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent)}
+.saved-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.saved-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);font-size:12px;cursor:pointer;transition:all .2s}
+.saved-chip:hover{border-color:var(--accent)}
+.saved-chip .delete-chip{color:var(--red);font-weight:700;cursor:pointer;margin-left:4px}
+
+/* Stock Tracker */
+.st-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.st-controls input{padding:7px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;outline:none;font-family:inherit}
+.st-controls input:focus{border-color:var(--accent)}
+.st-controls button{padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}
+.st-controls button:hover{border-color:var(--accent);color:var(--text)}
+.st-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.st-table{border-collapse:separate;border-spacing:0;font-size:11px;table-layout:fixed}
+.st-table th{position:sticky;top:0;background:var(--surface2);padding:6px 4px;text-align:left;font-size:9px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;cursor:pointer;white-space:nowrap;border-bottom:2px solid var(--border);user-select:none;z-index:2}
+.st-table th:hover{color:var(--text)}
+.st-table th .sa{font-size:8px;margin-left:2px;opacity:.3}
+.st-table th.sorted .sa{opacity:1;color:var(--accent)}
+.st-table td{padding:4px 4px;border-bottom:1px solid var(--border);white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;background:var(--surface)}
+.st-table tr:hover td{background:rgba(35,39,52,.6)}
+.st-table th.st-frozen{position:sticky;z-index:4;background:var(--surface2)}
+.st-table td.st-frozen{position:sticky;z-index:1;background:var(--surface)}
+.st-table tr:hover td.st-frozen{background:#1e2230}
+.st-table th.st-frozen-last,.st-table td.st-frozen-last{border-right:2px solid var(--accent)!important}
+.st-ticker{font-weight:600;color:var(--accent2);cursor:pointer}
+.st-ticker:hover{color:var(--accent);text-decoration:underline}
+.st-edit{background:none;border:none;color:#74b9ff;font-size:11px;font-family:inherit;padding:1px 2px;width:100%;outline:none;border-bottom:1px dashed rgba(116,185,255,.3)}
+.st-edit:focus{border-bottom-color:var(--accent);color:var(--text)}
+.st-edit-wide{min-width:120px}
+.st-data{background:none;border:none;color:var(--text);font-size:11px;font-family:inherit;padding:1px 2px;width:100%;outline:none;border-bottom:1px dashed rgba(228,231,241,.15);text-align:right;font-variant-numeric:tabular-nums}
+.st-data:focus{border-bottom:1px solid var(--accent);color:#fff;background:rgba(108,92,231,.08)}
+.st-data.txt{text-align:left}
+.st-del{color:var(--red);cursor:pointer;font-size:14px;opacity:.4;background:none;border:none;padding:2px 4px}
+.st-del:hover{opacity:1}
+.st-exp-btn{color:var(--text2);cursor:pointer;font-size:10px;background:none;border:none;padding:2px 4px;transition:transform .2s}
+.st-exp-btn.open{transform:rotate(90deg)}
+.st-exp-row td{background:var(--surface2)!important;padding:12px 16px!important}
+.st-exp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.st-exp-grid .input-group label{font-size:9px}
+.st-exp-grid .input-group input{font-size:11px;padding:4px 6px}
+.st-progress{font-size:11px;color:var(--text2);margin-left:8px}
+.st-empty{text-align:center;padding:40px;color:var(--text2);font-size:13px}
+#section-tracker{max-width:100%}
+#section-charts{max-width:1440px}
+.ch-chip{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:11px;font-weight:500;transition:all .2s;font-family:inherit}
+.ch-chip:hover{border-color:var(--accent);color:var(--text)}
+.ch-chip.ch-active{border-color:var(--accent);background:var(--accent);color:#fff}
+.ch-mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.ch-mini-title{font-size:12px;font-weight:600;color:var(--accent2);margin-bottom:8px}
+.ch-mini-canvas{position:relative;height:180px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Stratos Ventures</h1>
+  <div class="main-nav">
+    <button class="main-tab active" onclick="showSection('calculators')">Calculators</button>
+    <button class="main-tab" onclick="showSection('tracker')">Stock Tracker</button>
+    <button class="main-tab" onclick="showSection('charts')">Charts</button>
+  </div>
+  <div class="topbar-actions" id="calc-actions">
+    <button onclick="saveCurrentStock()">Save Stock</button>
+    <button onclick="showExportModal()">Export</button>
+    <button onclick="showImportModal()">Import</button>
+  </div>
+</div>
+
+<!-- ====== SECTION: CALCULATORS ====== -->
+<div class="content" id="section-calculators">
+
+<div class="stock-header">
+  <input type="text" id="stockName" placeholder="Stock ticker / name">
+  <select id="currencyUnit"><option value="$">$ USD</option><option value="€">€ EUR</option><option value="£">£ GBP</option><option value="Ft">Ft HUF</option></select>
+  <select id="scaleUnit"><option value="M">Millions</option><option value="B">Billions</option><option value="K">Thousands</option><option value="">Units</option></select>
+</div>
+
+<div class="card">
+  <div class="card-title">Shared Inputs</div>
+  <div class="input-grid">
+    <div class="input-group"><label>Market Cap</label><input type="number" id="s-mc" value="93000" oninput="recalcAll()"></div>
+    <div class="input-group"><label>FCF-SBC (Year 0)</label><input type="number" id="s-fcf0" value="8400" oninput="recalcAll()"></div>
+    <div class="input-group"><label>Discount Rate (%)</label><input type="number" id="s-dr" value="10" step="0.5" oninput="recalcAll()"></div>
+    <div class="input-group"><label>Terminal Growth (%)</label><input type="number" id="s-tg" value="2" step="0.5" oninput="recalcAll()"></div>
+    <div class="input-group"><label>Exit P/FCF-SBC Multiple</label><input type="number" id="s-em" value="20" step="1" oninput="recalcAll()"></div>
+    <div class="input-group"><label>+ Cash</label><input type="number" id="s-cash" value="0" oninput="recalcAll()"></div>
+    <div class="input-group"><label>- Debt</label><input type="number" id="s-debt" value="0" oninput="recalcAll()"></div>
+    <div class="input-group"><label>Fade Years (Reverse DCF)</label><input type="number" id="s-fade" value="10" min="5" max="20" oninput="recalcAll()"></div>
+  </div>
+  <div class="input-grid" style="margin-top:12px">
+    <div class="input-group"><label>Growth Y1-5 (%)</label><input type="number" id="s-g1" value="10" step="0.5" oninput="applyGrowthPresets();recalcAll()"></div>
+    <div class="input-group"><label>Growth Y6-10 (%)</label><input type="number" id="s-g2" value="10" step="0.5" oninput="applyGrowthPresets();recalcAll()"></div>
+    <div class="input-group"><label>Growth Y11-15 (%)</label><input type="number" id="s-g3" value="10" step="0.5" oninput="applyGrowthPresets();recalcAll()"></div>
+  </div>
+  <div class="toggle-row" onclick="toggleYearlyGrowth()">
+    <span class="arrow" id="yr-arrow">&#9654;</span> Custom per-year growth rates
+  </div>
+  <div class="collapsible" id="yr-collapse">
+    <div class="year-inputs" style="margin-top:8px">
+      <table><thead><tr>
+        <th></th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th><th>Y6</th><th>Y7</th><th>Y8</th><th>Y9</th><th>Y10</th><th>Y11</th><th>Y12</th><th>Y13</th><th>Y14</th><th>Y15</th>
+      </tr></thead><tbody><tr>
+        <td class="lc">Growth (%)</td>
+        <td><input type="number" id="s-yr-1" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-2" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-3" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-4" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-5" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-6" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-7" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-8" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-9" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-10" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-11" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-12" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-13" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-14" value="10" oninput="recalcAll()" style="width:46px"></td>
+        <td><input type="number" id="s-yr-15" value="10" oninput="recalcAll()" style="width:46px"></td>
+      </tr></tbody></table>
+    </div>
+  </div>
+</div>
+
+<div class="summary-row" id="summary-row">
+  <div class="summary-card active-summary" onclick="switchTab('dcf-perpetuity')">
+    <div class="sc-title">DCF (Perpetuity)</div>
+    <div class="sc-value" id="sum-dcfp-val">-</div>
+    <div class="sc-sub" id="sum-dcfp-sub">-</div>
+  </div>
+  <div class="summary-card" onclick="switchTab('dcf-exit')">
+    <div class="sc-title">DCF (Exit Multiple)</div>
+    <div class="sc-value" id="sum-dcfe-val">-</div>
+    <div class="sc-sub" id="sum-dcfe-sub">-</div>
+  </div>
+  <div class="summary-card" onclick="switchTab('reverse-dcf')">
+    <div class="sc-title">Reverse DCF (Perp.)</div>
+    <div class="sc-value" id="sum-rdcfp-val">-</div>
+    <div class="sc-sub" id="sum-rdcfp-sub">-</div>
+  </div>
+  <div class="summary-card" onclick="switchTab('reverse-dcf')">
+    <div class="sc-title">Reverse DCF (Exit)</div>
+    <div class="sc-value" id="sum-rdcfe-val">-</div>
+    <div class="sc-sub" id="sum-rdcfe-sub">-</div>
+  </div>
+  <div class="summary-card" onclick="switchTab('moneyback')">
+    <div class="sc-title">Money Back</div>
+    <div class="sc-value" id="sum-mb-val">-</div>
+    <div class="sc-sub" id="sum-mb-sub">-</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('dcf-perpetuity')">DCF (Perpetuity)</button>
+  <button class="tab" onclick="switchTab('dcf-exit')">DCF (Exit Multiple)</button>
+  <button class="tab" onclick="switchTab('reverse-dcf')">Reverse DCF</button>
+  <button class="tab" onclick="switchTab('aria')">Aria</button>
+  <button class="tab" onclick="switchTab('moneyback')">Money Back</button>
+  <button class="tab" onclick="switchTab('saved')">Saved Stocks</button>
+</div>
+
+<div class="panel active" id="panel-dcf-perpetuity">
+  <div class="card">
+    <div class="card-title">FCF-SBC Projection & Discounting</div>
+    <div class="year-inputs"><table><thead><tr>
+      <th></th><th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th><th>Y6</th><th>Y7</th><th>Y8</th><th>Y9</th><th>Y10</th>
+    </tr></thead><tbody>
+      <tr><td class="lc">FCF-SBC</td><td id="dp-f0"></td><td id="dp-f1"></td><td id="dp-f2"></td><td id="dp-f3"></td><td id="dp-f4"></td><td id="dp-f5"></td><td id="dp-f6"></td><td id="dp-f7"></td><td id="dp-f8"></td><td id="dp-f9"></td><td id="dp-f10"></td></tr>
+      <tr><td class="lc">Growth</td><td>-</td><td id="dp-g1"></td><td id="dp-g2"></td><td id="dp-g3"></td><td id="dp-g4"></td><td id="dp-g5"></td><td id="dp-g6"></td><td id="dp-g7"></td><td id="dp-g8"></td><td id="dp-g9"></td><td id="dp-g10"></td></tr>
+      <tr><td class="lc">Disc. Factor</td><td>-</td><td id="dp-d1"></td><td id="dp-d2"></td><td id="dp-d3"></td><td id="dp-d4"></td><td id="dp-d5"></td><td id="dp-d6"></td><td id="dp-d7"></td><td id="dp-d8"></td><td id="dp-d9"></td><td id="dp-d10"></td></tr>
+      <tr><td class="lc">Disc. FCF</td><td>-</td><td id="dp-p1"></td><td id="dp-p2"></td><td id="dp-p3"></td><td id="dp-p4"></td><td id="dp-p5"></td><td id="dp-p6"></td><td id="dp-p7"></td><td id="dp-p8"></td><td id="dp-p9"></td><td id="dp-p10"></td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Valuation Result</div><div class="results-grid" id="dcfp-results"></div></div>
+    <div class="card"><div class="card-title">FCF-SBC Projection</div><div class="chart-container"><canvas id="dcfp-chart"></canvas></div></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-dcf-exit">
+  <div class="card">
+    <div class="card-title">FCF-SBC Projection & Discounting</div>
+    <div class="year-inputs"><table><thead><tr>
+      <th></th><th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th><th>Y6</th><th>Y7</th><th>Y8</th><th>Y9</th><th>Y10</th>
+    </tr></thead><tbody>
+      <tr><td class="lc">FCF-SBC</td><td id="de-f0"></td><td id="de-f1"></td><td id="de-f2"></td><td id="de-f3"></td><td id="de-f4"></td><td id="de-f5"></td><td id="de-f6"></td><td id="de-f7"></td><td id="de-f8"></td><td id="de-f9"></td><td id="de-f10"></td></tr>
+      <tr><td class="lc">Growth</td><td>-</td><td id="de-g1"></td><td id="de-g2"></td><td id="de-g3"></td><td id="de-g4"></td><td id="de-g5"></td><td id="de-g6"></td><td id="de-g7"></td><td id="de-g8"></td><td id="de-g9"></td><td id="de-g10"></td></tr>
+      <tr><td class="lc">Disc. Factor</td><td>-</td><td id="de-d1"></td><td id="de-d2"></td><td id="de-d3"></td><td id="de-d4"></td><td id="de-d5"></td><td id="de-d6"></td><td id="de-d7"></td><td id="de-d8"></td><td id="de-d9"></td><td id="de-d10"></td></tr>
+      <tr><td class="lc">Disc. FCF</td><td>-</td><td id="de-p1"></td><td id="de-p2"></td><td id="de-p3"></td><td id="de-p4"></td><td id="de-p5"></td><td id="de-p6"></td><td id="de-p7"></td><td id="de-p8"></td><td id="de-p9"></td><td id="de-p10"></td></tr>
+    </tbody></table></div>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Valuation Result</div><div class="results-grid" id="dcfe-results"></div></div>
+    <div class="card"><div class="card-title">FCF-SBC Projection</div><div class="chart-container"><canvas id="dcfe-chart"></canvas></div></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-reverse-dcf">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Perpetuity Method</div>
+      <div class="results-grid" id="rdcfp-results"></div>
+      <div style="margin-top:12px;font-size:11px;color:var(--text2)">Implied growth for <span id="rdcf-fade-label">10</span> years, then <span id="rdcf-term-label">2%</span> terminal growth forever.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Exit Multiple Method</div>
+      <div class="results-grid" id="rdcfe-results"></div>
+      <div style="margin-top:12px;font-size:11px;color:var(--text2)">Implied growth for <span id="rdcf-fade-label2">10</span> years, then sold at <span id="rdcf-em-label">20</span>x P/FCF-SBC.</div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Sensitivity: Implied Growth vs Discount Rate (Perpetuity)</div>
+      <div class="chart-container"><canvas id="rdcfp-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Sensitivity: Implied Growth vs Discount Rate (Exit Multiple)</div>
+      <div class="chart-container"><canvas id="rdcfe-chart"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Implied FCF-SBC Projection (Perpetuity Method)</div>
+    <div class="year-inputs"><table><thead><tr>
+      <th></th><th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th><th>Y6</th><th>Y7</th><th>Y8</th><th>Y9</th><th>Y10</th>
+    </tr></thead><tbody>
+      <tr><td class="lc">FCF-SBC</td><td id="rp-f0"></td><td id="rp-f1"></td><td id="rp-f2"></td><td id="rp-f3"></td><td id="rp-f4"></td><td id="rp-f5"></td><td id="rp-f6"></td><td id="rp-f7"></td><td id="rp-f8"></td><td id="rp-f9"></td><td id="rp-f10"></td></tr>
+      <tr><td class="lc">Disc. FCF</td><td>-</td><td id="rp-p1"></td><td id="rp-p2"></td><td id="rp-p3"></td><td id="rp-p4"></td><td id="rp-p5"></td><td id="rp-p6"></td><td id="rp-p7"></td><td id="rp-p8"></td><td id="rp-p9"></td><td id="rp-p10"></td></tr>
+    </tbody></table></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-aria">
+  <div class="card">
+    <div class="card-title">FCF-SBC Projection (using shared growth rates)</div>
+    <div class="year-inputs"><table><thead><tr>
+      <th></th><th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th><th>Y6</th><th>Y7</th><th>Y8</th><th>Y9</th><th>Y10</th><th>Y11</th><th>Y12</th><th>Y13</th><th>Y14</th><th>Y15</th>
+    </tr></thead><tbody>
+      <tr><td class="lc">FCF-SBC</td>
+        <td id="ar-f0"></td><td id="ar-f1"></td><td id="ar-f2"></td><td id="ar-f3"></td><td id="ar-f4"></td><td id="ar-f5"></td>
+        <td id="ar-f6"></td><td id="ar-f7"></td><td id="ar-f8"></td><td id="ar-f9"></td><td id="ar-f10"></td>
+        <td id="ar-f11"></td><td id="ar-f12"></td><td id="ar-f13"></td><td id="ar-f14"></td><td id="ar-f15"></td>
+      </tr>
+    </tbody></table></div>
+  </div>
+  <div class="card">
+    <div class="card-title">P/FCF-SBC Multiples</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="input-group" style="width:auto"><label>Count</label>
+        <select id="aria-mult-count" onchange="initAriaMultiples(true);calcAria()"><option value="4">4</option><option value="6" selected>6</option><option value="8">8</option></select>
+      </div>
+      <div id="aria-multiples-inputs" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Year 5 Valuation</div><table class="aria-table" id="aria-table-5"></table></div>
+    <div class="card"><div class="card-title">Year 10 Valuation</div><table class="aria-table" id="aria-table-10"></table></div>
+  </div>
+  <div class="card"><div class="card-title">CAGR by P/FCF-SBC Multiple</div><div class="chart-container"><canvas id="aria-chart"></canvas></div></div>
+</div>
+
+<div class="panel" id="panel-moneyback">
+  <div class="card">
+    <div class="card-title">FCF-SBC Projection & Cumulative (using shared growth rates)</div>
+    <div class="year-inputs"><table><thead><tr>
+      <th></th><th>Y0</th><th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th><th>Y6</th><th>Y7</th><th>Y8</th><th>Y9</th><th>Y10</th><th>Y11</th><th>Y12</th><th>Y13</th><th>Y14</th><th>Y15</th>
+    </tr></thead><tbody>
+      <tr><td class="lc">FCF-SBC</td>
+        <td id="mb-f0"></td><td id="mb-f1"></td><td id="mb-f2"></td><td id="mb-f3"></td><td id="mb-f4"></td><td id="mb-f5"></td>
+        <td id="mb-f6"></td><td id="mb-f7"></td><td id="mb-f8"></td><td id="mb-f9"></td><td id="mb-f10"></td>
+        <td id="mb-f11"></td><td id="mb-f12"></td><td id="mb-f13"></td><td id="mb-f14"></td><td id="mb-f15"></td>
+      </tr>
+      <tr><td class="lc">Cumulative</td>
+        <td id="mb-c0"></td><td id="mb-c1"></td><td id="mb-c2"></td><td id="mb-c3"></td><td id="mb-c4"></td><td id="mb-c5"></td>
+        <td id="mb-c6"></td><td id="mb-c7"></td><td id="mb-c8"></td><td id="mb-c9"></td><td id="mb-c10"></td>
+        <td id="mb-c11"></td><td id="mb-c12"></td><td id="mb-c13"></td><td id="mb-c14"></td><td id="mb-c15"></td>
+      </tr>
+    </tbody></table></div>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Result</div><div class="results-grid" id="mb-results"></div></div>
+    <div class="card"><div class="card-title">Cumulative FCF-SBC vs Market Cap</div><div class="chart-container"><canvas id="mb-chart"></canvas></div></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-saved">
+  <div class="card">
+    <div class="card-title">Saved Stocks</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Click to load. Data stored in localStorage.</p>
+    <div class="saved-list" id="saved-stocks-list"></div>
+  </div>
+</div>
+
+</div><!-- end section-calculators -->
+
+<!-- ====== SECTION: STOCK TRACKER ====== -->
+<div class="content" id="section-tracker" style="display:none">
+
+<div class="card">
+  <div class="card-title">Tracker Settings & Global Defaults</div>
+  <div class="input-grid">
+    <div class="input-group"><label>FMP API Key</label><input type="password" id="st-apikey" value="5tydKn7kVqKPZfkLz5ZmSfxT81Zo3Kc8" oninput="saveTrackerSettings()"></div>
+    <div class="input-group"><label>Yahoo Worker URL</label><input type="text" id="st-worker" placeholder="https://yahoo-finance-proxy.YOURNAME.workers.dev" oninput="saveTrackerSettings()" style="min-width:250px"></div>
+    <div class="input-group"><label>Growth Y1-5 (%)</label><input type="number" id="st-g1" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
+    <div class="input-group"><label>Growth Y6-10 (%)</label><input type="number" id="st-g2" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
+    <div class="input-group"><label>Growth Y11-15 (%)</label><input type="number" id="st-g3" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
+    <div class="input-group"><label>Discount Rate (%)</label><input type="number" id="st-dr" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
+    <div class="input-group"><label>Terminal Growth (%)</label><input type="number" id="st-tg" value="2" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
+    <div class="input-group"><label>Exit Multiple</label><input type="number" id="st-em" value="20" step="1" oninput="saveTrackerSettings();recalcTracker()"></div>
+    <div class="input-group"><label>Fade Years</label><input type="number" id="st-fade" value="10" min="5" max="20" oninput="saveTrackerSettings();recalcTracker()"></div>
+  </div>
+</div>
+
+<div class="st-controls">
+  <input type="text" id="st-add-input" placeholder="Ticker (e.g. AAPL)" style="width:160px" onkeydown="if(event.key==='Enter')addTrackerStock()">
+  <button onclick="addTrackerStock()">+ Add</button>
+  <button onclick="refreshAllStocks()">&#8635; Refresh All</button>
+  <span class="st-progress" id="st-progress"></span>
+  <div style="flex:1"></div>
+  <input type="text" id="st-filter" placeholder="Filter..." style="width:160px" oninput="renderTracker()">
+  <button onclick="exportTrackerData()">Export</button>
+  <label class="st-controls button" style="padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px">Import<input type="file" accept=".json" style="display:none" onchange="importTrackerFile(event)"></label>
+</div>
+
+<div class="card">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;flex-wrap:wrap">
+    <div class="card-title" style="margin-bottom:0">Valuation vs Growth</div>
+    <div class="input-group" style="flex-direction:row;align-items:center;gap:6px">
+      <label style="white-space:nowrap">X axis</label>
+      <select id="scatter-x" onchange="renderScatterChart()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;cursor:pointer">
+        <option value="pe">P/E</option>
+        <option value="ps">P/S</option>
+        <option value="pfcf" selected>P/FCF</option>
+        <option value="pocf">P/OCF</option>
+        <option value="evEbit">EV/EBIT</option>
+        <option value="peg">PEG</option>
+      </select>
+    </div>
+    <div class="input-group" style="flex-direction:row;align-items:center;gap:6px">
+      <label style="white-space:nowrap">Y axis</label>
+      <select id="scatter-y" onchange="renderScatterChart()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;cursor:pointer">
+        <option value="revenueGrowth" selected>Revenue Growth % (TTM)</option>
+        <option value="revCAGR3">3-Year Revenue CAGR %</option>
+        <option value="epsGrowth">EPS Growth %</option>
+      </select>
+    </div>
+  </div>
+  <div style="position:relative;height:360px">
+    <canvas id="scatter-chart"></canvas>
+  </div>
+</div>
+
+<div class="st-wrap">
+  <table class="st-table">
+    <thead id="st-thead"></thead>
+    <tbody id="st-tbody"></tbody>
+  </table>
+</div>
+
+</div><!-- end section-tracker -->
+
+<!-- ====== SECTION: CHARTS ====== -->
+<div class="content" id="section-charts" style="display:none">
+
+<div class="card">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap">
+    <div class="card-title" style="margin-bottom:0">Price & Valuation Charts</div>
+    <div class="input-group" style="flex-direction:row;align-items:center;gap:6px">
+      <label style="white-space:nowrap">Range</label>
+      <select id="ch-range" onchange="renderAllCharts()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;cursor:pointer">
+        <option value="6mo">6 Months</option>
+        <option value="1y" selected>1 Year</option>
+        <option value="2y">2 Years</option>
+      </select>
+    </div>
+    <div class="input-group" style="flex-direction:row;align-items:center;gap:6px">
+      <label style="white-space:nowrap">Type</label>
+      <select id="ch-type" onchange="switchChartType()" style="padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;cursor:pointer">
+        <option value="price" selected>Price</option>
+        <option value="priceNorm">Price (Normalized %)</option>
+        <option value="pe">P/E Ratio</option>
+      </select>
+    </div>
+    <span class="st-progress" id="ch-progress"></span>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px" id="ch-stock-chips"></div>
+  <div style="position:relative;height:420px">
+    <canvas id="ch-main-chart"></canvas>
+  </div>
+</div>
+
+<div class="card" id="ch-grid-card">
+  <div class="card-title">Individual Stock Charts</div>
+  <div id="ch-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:16px"></div>
+</div>
+
+</div><!-- end section-charts -->
+
+<!-- Modals -->
+<div class="modal-overlay" id="export-modal"><div class="modal"><h3>Export Data</h3><textarea id="export-data" readonly></textarea><div class="modal-actions"><button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('export-data').value);alert('Copied!')">Copy</button><button class="btn btn-secondary" onclick="downloadExport()">Download JSON</button><button class="btn btn-secondary" onclick="closeModals()">Close</button></div></div></div>
+<div class="modal-overlay" id="import-modal"><div class="modal"><h3>Import Data</h3><textarea id="import-data" placeholder="Paste JSON data here..."></textarea><div class="modal-actions"><button class="btn btn-primary" onclick="doImport()">Import</button><label class="btn btn-secondary" style="cursor:pointer">Load File<input type="file" accept=".json" style="display:none" onchange="loadImportFile(event)"></label><button class="btn btn-secondary" onclick="closeModals()">Cancel</button></div></div></div>
+
+<script>
+// ====== CALCULATOR (existing) ======
+const charts = {};
+function fmt(n,dec=0){if(n==null||isNaN(n))return'-';if(Math.abs(n)>=1e12)return(n/1e12).toFixed(1)+'T';if(Math.abs(n)>=1e9)return(n/1e9).toFixed(1)+'B';if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e4)return(n/1e3).toFixed(1)+'K';return n.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function V(id){return parseFloat(document.getElementById(id)?.value)||0}
+function T(id,t){const e=document.getElementById(id);if(e)e.textContent=t}
+
+function toggleYearlyGrowth(){
+  const c=document.getElementById('yr-collapse'),a=document.getElementById('yr-arrow');
+  c.classList.toggle('open');a.classList.toggle('open');
+}
+
+function applyGrowthPresets(){
+  const g1=V('s-g1'),g2=V('s-g2'),g3=V('s-g3');
+  for(let i=1;i<=5;i++)document.getElementById('s-yr-'+i).value=g1;
+  for(let i=6;i<=10;i++)document.getElementById('s-yr-'+i).value=g2;
+  for(let i=11;i<=15;i++)document.getElementById('s-yr-'+i).value=g3;
+}
+
+function getGrowths(){const g=[];for(let i=1;i<=15;i++)g.push(V('s-yr-'+i)/100);return g}
+function getFCFs(){const f0=V('s-fcf0'),g=getGrowths(),f=[f0];for(let i=0;i<15;i++)f.push(f[i]*(1+g[i]));return f}
+
+const tabNames=['dcf-perpetuity','dcf-exit','reverse-dcf','aria','moneyback','saved'];
+function switchTab(name){
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const idx=tabNames.indexOf(name);
+  document.querySelectorAll('.tabs .tab')[idx].classList.add('active');
+  document.getElementById('panel-'+name).classList.add('active');
+  document.querySelectorAll('.summary-card').forEach(c=>c.classList.remove('active-summary'));
+  const sIdx={['dcf-perpetuity']:0,['dcf-exit']:1,['reverse-dcf']:2,['aria']:-1,['moneyback']:4,['saved']:-1}[name];
+  if(sIdx>=0)document.querySelectorAll('.summary-card')[sIdx]?.classList.add('active-summary');
+  if(name==='saved')renderSavedStocks();
+}
+
+function calcDCF(prefix,useExit){
+  const mc=V('s-mc'),fcf0=V('s-fcf0'),dr=V('s-dr')/100,tg=V('s-tg')/100,em=V('s-em'),cash=V('s-cash'),debt=V('s-debt');
+  const g=getGrowths();
+  const fcfs=[fcf0],dfs=[1],pvs=[0];
+  for(let i=1;i<=10;i++){
+    fcfs.push(fcfs[i-1]*(1+g[i-1]));
+    dfs.push(1/Math.pow(1+dr,i));
+    pvs.push(fcfs[i]*dfs[i]);
+  }
+  T(prefix+'-f0',fmt(fcfs[0]));
+  for(let i=1;i<=10;i++){T(prefix+'-f'+i,fmt(fcfs[i]));T(prefix+'-g'+i,(g[i-1]*100).toFixed(1)+'%');T(prefix+'-d'+i,dfs[i].toFixed(4));T(prefix+'-p'+i,fmt(pvs[i]))}
+  const fcfSum=pvs.reduce((a,b)=>a+b,0);
+  let tv,tvLabel;
+  if(useExit){tv=fcfs[10]*em;tvLabel='Terminal Value ('+em+'x)'}
+  else{tv=(fcfs[10]*(1+tg))/(dr-tg);tvLabel='Terminal Value'}
+  const pvTV=tv/Math.pow(1+dr,10);
+  const ev=fcfSum+pvTV,eq=ev+cash-debt,up=(eq-mc)/mc;
+  return{fcfs,pvs,fcfSum,tv,pvTV,ev,eq,up,tvLabel,mc};
+}
+
+function calcDCFP(){
+  const r=calcDCF('dp',false);
+  document.getElementById('dcfp-results').innerHTML=`
+    <div class="result-box"><div class="label">Sum Disc. FCF</div><div class="value neutral">${fmt(r.fcfSum)}</div></div>
+    <div class="result-box"><div class="label">${r.tvLabel}</div><div class="value neutral">${fmt(r.tv)}</div></div>
+    <div class="result-box"><div class="label">PV Terminal</div><div class="value neutral">${fmt(r.pvTV)}</div></div>
+    <div class="result-box"><div class="label">Enterprise Value</div><div class="value neutral">${fmt(r.ev)}</div></div>
+    <div class="result-box"><div class="label">Equity Value</div><div class="value neutral">${fmt(r.eq)}</div></div>
+    <div class="result-box"><div class="label">Upside/Downside</div><div class="value ${r.up>=0?'positive':'negative'}">${r.up>=0?'+':''}${(r.up*100).toFixed(1)}%</div></div>`;
+  renderChart('dcfp-chart','dcfp',['Y0','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'],
+    [{label:'FCF-SBC',data:r.fcfs,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,0.1)',fill:true},
+     {label:'Discounted FCF',data:[null,...r.pvs.slice(1)],borderColor:'#74b9ff',backgroundColor:'rgba(116,185,255,0.1)',fill:true}]);
+  const el=document.getElementById('sum-dcfp-val');el.textContent=fmt(r.eq);el.className='sc-value '+(r.up>=0?'positive':'negative');
+  document.getElementById('sum-dcfp-sub').textContent=(r.up>=0?'+':'')+(r.up*100).toFixed(1)+'% upside';
+}
+
+function calcDCFE(){
+  const r=calcDCF('de',true);
+  document.getElementById('dcfe-results').innerHTML=`
+    <div class="result-box"><div class="label">Sum Disc. FCF</div><div class="value neutral">${fmt(r.fcfSum)}</div></div>
+    <div class="result-box"><div class="label">${r.tvLabel}</div><div class="value neutral">${fmt(r.tv)}</div></div>
+    <div class="result-box"><div class="label">PV Terminal</div><div class="value neutral">${fmt(r.pvTV)}</div></div>
+    <div class="result-box"><div class="label">Enterprise Value</div><div class="value neutral">${fmt(r.ev)}</div></div>
+    <div class="result-box"><div class="label">Equity Value</div><div class="value neutral">${fmt(r.eq)}</div></div>
+    <div class="result-box"><div class="label">Upside/Downside</div><div class="value ${r.up>=0?'positive':'negative'}">${r.up>=0?'+':''}${(r.up*100).toFixed(1)}%</div></div>`;
+  renderChart('dcfe-chart','dcfe',['Y0','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'],
+    [{label:'FCF-SBC',data:r.fcfs,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,0.1)',fill:true},
+     {label:'Discounted FCF',data:[null,...r.pvs.slice(1)],borderColor:'#74b9ff',backgroundColor:'rgba(116,185,255,0.1)',fill:true}]);
+  const el=document.getElementById('sum-dcfe-val');el.textContent=fmt(r.eq);el.className='sc-value '+(r.up>=0?'positive':'negative');
+  document.getElementById('sum-dcfe-sub').textContent=(r.up>=0?'+':'')+(r.up*100).toFixed(1)+'% upside';
+}
+
+function solveGrowth(fcf0,dr,fadeYears,terminalFn){
+  return function(targetEV){
+    let lo=-0.5,hi=2.0;
+    for(let it=0;it<200;it++){
+      const mid=(lo+hi)/2;
+      let f=fcf0,s=0;
+      for(let i=1;i<=fadeYears;i++){f*=(1+mid);s+=f/Math.pow(1+dr,i)}
+      const tv=terminalFn(f,dr);
+      if(s+tv/Math.pow(1+dr,fadeYears)<targetEV)lo=mid;else hi=mid;
+    }
+    return(lo+hi)/2;
+  }
+}
+
+function calcReverseDCF(){
+  const mc=V('s-mc'),fcf0=V('s-fcf0'),dr=V('s-dr')/100,tg=V('s-tg')/100,em=V('s-em'),cash=V('s-cash'),debt=V('s-debt'),fade=V('s-fade');
+  const targetEV=mc-cash+debt;
+  T('rdcf-fade-label',fade);T('rdcf-term-label',(tg*100).toFixed(1)+'%');
+  T('rdcf-fade-label2',fade);T('rdcf-em-label',em);
+  const solvP=solveGrowth(fcf0,dr,fade,function(f,d){return(f*(1+tg))/(d-tg)});
+  const igP=solvP(targetEV);
+  const fcfsP=[fcf0];for(let i=1;i<=Math.min(fade,10);i++)fcfsP.push(fcfsP[i-1]*(1+igP));
+  T('rp-f0',fmt(fcfsP[0]));
+  for(let i=1;i<=Math.min(fade,10);i++){T('rp-f'+i,fmt(fcfsP[i]));T('rp-p'+i,fmt(fcfsP[i]/Math.pow(1+dr,i)))}
+  const pPFCF=mc/fcf0,pYield=fcf0/mc;
+  document.getElementById('rdcfp-results').innerHTML=`
+    <div class="result-box"><div class="label">Implied Growth</div><div class="value ${igP>0.15?'negative':igP>0.08?'warn':'positive'}">${(igP*100).toFixed(2)}%</div></div>
+    <div class="result-box"><div class="label">P/FCF-SBC</div><div class="value neutral">${pPFCF.toFixed(1)}x</div></div>
+    <div class="result-box"><div class="label">FCF-SBC Yield</div><div class="value neutral">${(pYield*100).toFixed(2)}%</div></div>`;
+  document.getElementById('sum-rdcfp-val').textContent=(igP*100).toFixed(1)+'%';
+  document.getElementById('sum-rdcfp-val').className='sc-value '+(igP>0.15?'negative':igP>0.08?'warn':'positive');
+  document.getElementById('sum-rdcfp-sub').textContent='implied growth (perp.)';
+  const solvE=solveGrowth(fcf0,dr,fade,function(f){return f*em});
+  const igE=solvE(targetEV);
+  document.getElementById('rdcfe-results').innerHTML=`
+    <div class="result-box"><div class="label">Implied Growth</div><div class="value ${igE>0.15?'negative':igE>0.08?'warn':'positive'}">${(igE*100).toFixed(2)}%</div></div>
+    <div class="result-box"><div class="label">Exit Multiple</div><div class="value neutral">${em}x</div></div>
+    <div class="result-box"><div class="label">FCF-SBC Yield</div><div class="value neutral">${(pYield*100).toFixed(2)}%</div></div>`;
+  document.getElementById('sum-rdcfe-val').textContent=(igE*100).toFixed(1)+'%';
+  document.getElementById('sum-rdcfe-val').className='sc-value '+(igE>0.15?'negative':igE>0.08?'warn':'positive');
+  document.getElementById('sum-rdcfe-sub').textContent='implied growth (exit '+em+'x)';
+  function buildSens(termFn,chartId,chartKey){
+    const sensData=[],labels=[];
+    for(let d=6;d<=14;d++){labels.push(d+'%');const drt=d/100;const sv=solveGrowth(fcf0,drt,fade,termFn);sensData.push(sv(targetEV)*100)}
+    renderChart(chartId,chartKey,labels,[{label:'Implied Growth (%)',data:sensData,borderColor:'#e17055',backgroundColor:'rgba(225,112,85,0.1)',fill:true,tension:0.3}],{yLabel:'Implied Growth (%)'});
+  }
+  buildSens(function(f,d){return(f*(1+tg))/(d-tg)},'rdcfp-chart','rdcfp');
+  buildSens(function(f){return f*em},'rdcfe-chart','rdcfe');
+}
+
+let ariaMultiples=[10,15,20,25,30,35],ariaInit=false;
+function initAriaMultiples(force){
+  const count=parseInt(document.getElementById('aria-mult-count').value);
+  if(force||!ariaInit||ariaMultiples.length!==count){
+    if(force||ariaMultiples.length!==count){const d=[10,15,20,25,30,35,40,45];ariaMultiples=d.slice(0,count)}
+    ariaInit=true;
+  }
+  const c=document.getElementById('aria-multiples-inputs');c.innerHTML='';
+  ariaMultiples.forEach((m,i)=>{
+    const inp=document.createElement('input');inp.type='number';inp.value=m;
+    inp.style.cssText='width:60px;padding:5px 6px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;text-align:center;outline:none';
+    inp.oninput=()=>{ariaMultiples[i]=parseFloat(inp.value)||0;calcAria()};
+    c.appendChild(inp);
+  });
+}
+
+function calcAria(){
+  initAriaMultiples(false);
+  const mc=V('s-mc'),fcfs=getFCFs();
+  T('ar-f0',fmt(fcfs[0]));for(let i=1;i<=15;i++)T('ar-f'+i,fmt(fcfs[i]));
+  function buildTable(tid,yr){
+    const f=fcfs[yr],tbl=document.getElementById(tid);
+    let h='<thead><tr><th>P/FCF-SBC</th><th>FCF Yield</th><th>Implied MCap</th><th>CAGR</th></tr></thead><tbody>';
+    ariaMultiples.forEach(m=>{
+      const imc=f*m,cagr=Math.pow(imc/mc,1/yr)-1,cls=cagr>=0.15?'positive':cagr>=0.08?'warn':'negative';
+      h+=`<tr><td>${m}x</td><td>${(100/m).toFixed(1)}%</td><td>${fmt(imc)}</td><td class="${cls}">${(cagr*100).toFixed(1)}%</td></tr>`;
+    });
+    tbl.innerHTML=h+'</tbody>';
+  }
+  buildTable('aria-table-5',5);buildTable('aria-table-10',10);
+  const lbls=ariaMultiples.map(m=>m+'x');
+  const c5=ariaMultiples.map(m=>(Math.pow((fcfs[5]*m)/mc,1/5)-1)*100);
+  const c10=ariaMultiples.map(m=>(Math.pow((fcfs[10]*m)/mc,1/10)-1)*100);
+  renderChart('aria-chart','aria',lbls,
+    [{label:'Year 5 CAGR (%)',data:c5,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,0.3)',type:'bar'},
+     {label:'Year 10 CAGR (%)',data:c10,borderColor:'#00b894',backgroundColor:'rgba(0,184,148,0.3)',type:'bar'}],
+    {yLabel:'CAGR (%)'});
+}
+
+function calcMoneyBack(){
+  const mc=V('s-mc'),fcfs=getFCFs();
+  const cum=[fcfs[0]];for(let i=1;i<=15;i++)cum.push(cum[i-1]+fcfs[i]);
+  T('mb-f0',fmt(fcfs[0]));for(let i=1;i<=15;i++)T('mb-f'+i,fmt(fcfs[i]));
+  let mby=null;
+  for(let i=0;i<=15;i++){
+    const el=document.getElementById('mb-c'+i);el.textContent=fmt(cum[i]);el.classList.remove('money-back-marker');
+    if(cum[i]>=mc&&mby===null){mby=i;el.classList.add('money-back-marker')}
+  }
+  let interp=mby!==null?mby:'>15';
+  if(mby!==null&&mby>0)interp=(mby-1+(mc-cum[mby-1])/(cum[mby]-cum[mby-1])).toFixed(1);
+  document.getElementById('mb-results').innerHTML=`
+    <div class="result-box"><div class="label">Money Back in</div><div class="value ${mby!==null&&mby<=10?'positive':'negative'}">${interp} years</div></div>
+    <div class="result-box"><div class="label">Market Cap</div><div class="value neutral">${fmt(mc)}</div></div>
+    <div class="result-box"><div class="label">Y15 Cumulative</div><div class="value neutral">${fmt(cum[15])}</div></div>
+    <div class="result-box"><div class="label">Coverage (Y15)</div><div class="value ${cum[15]/mc>=1?'positive':'negative'}">${(cum[15]/mc).toFixed(2)}x</div></div>`;
+  const lbls=[];for(let i=0;i<=15;i++)lbls.push('Y'+i);
+  renderChart('mb-chart','mb',lbls,
+    [{label:'Cumulative FCF-SBC',data:cum,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,0.15)',fill:true},
+     {label:'Market Cap',data:Array(16).fill(mc),borderColor:'#e17055',borderDash:[8,4],pointRadius:0},
+     {label:'Annual FCF-SBC',data:fcfs,borderColor:'#00b894',backgroundColor:'rgba(0,184,148,0.1)',fill:true,type:'bar'}],
+    {yLabel:'Value'});
+  const el2=document.getElementById('sum-mb-val');el2.textContent=interp+(mby!==null?' yrs':'');
+  el2.className='sc-value '+(mby!==null&&mby<=10?'positive':'negative');
+  document.getElementById('sum-mb-sub').textContent='coverage '+(cum[15]/mc).toFixed(1)+'x';
+}
+
+function renderChart(cid,key,labels,datasets,opts={}){
+  if(charts[key])charts[key].destroy();
+  charts[key]=new Chart(document.getElementById(cid).getContext('2d'),{
+    type:'line',data:{labels,datasets:datasets.map(d=>({tension:0.2,pointRadius:3,borderWidth:2,...d}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8b90a5',font:{size:10}}}},
+      scales:{x:{ticks:{color:'#8b90a5',font:{size:9}},grid:{color:'rgba(46,51,71,0.5)'}},
+        y:{ticks:{color:'#8b90a5',font:{size:9},callback:v=>fmt(v)},grid:{color:'rgba(46,51,71,0.5)'},
+          title:opts.yLabel?{display:true,text:opts.yLabel,color:'#8b90a5'}:{}}}}
+  });
+}
+
+function recalcAll(){calcDCFP();calcDCFE();calcReverseDCF();calcAria();calcMoneyBack()}
+
+// Calculator save/load
+function getAllData(){
+  const d={name:document.getElementById('stockName').value,currency:document.getElementById('currencyUnit').value,scale:document.getElementById('scaleUnit').value,ariaMultiples};
+  document.querySelectorAll('#section-calculators input[type="number"],#section-calculators input[type="text"],#section-calculators select').forEach(el=>{if(el.id&&!el.id.startsWith('st-'))d[el.id]=el.value});
+  return d;
+}
+function loadData(d){
+  if(d.name)document.getElementById('stockName').value=d.name;
+  if(d.currency)document.getElementById('currencyUnit').value=d.currency;
+  if(d.scale)document.getElementById('scaleUnit').value=d.scale;
+  if(d.ariaMultiples){ariaMultiples=d.ariaMultiples;ariaInit=true}
+  Object.keys(d).forEach(k=>{if(['name','currency','scale','ariaMultiples','savedAt'].includes(k))return;const el=document.getElementById(k);if(el&&!k.startsWith('st-'))el.value=d[k]});
+  recalcAll();
+}
+function saveCurrentStock(){
+  const name=document.getElementById('stockName').value.trim();
+  if(!name){alert('Enter a stock name/ticker first.');return}
+  const saved=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
+  saved[name]=getAllData();saved[name].savedAt=new Date().toISOString();
+  localStorage.setItem('valuation_stocks',JSON.stringify(saved));alert(`"${name}" saved.`);renderSavedStocks();
+}
+function loadStock(name){const saved=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');if(saved[name]){loadData(saved[name]);switchTab('dcf-perpetuity')}}
+function deleteStock(name,e){e.stopPropagation();if(!confirm(`Delete "${name}"?`))return;const s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');delete s[name];localStorage.setItem('valuation_stocks',JSON.stringify(s));renderSavedStocks()}
+function renderSavedStocks(){
+  const c=document.getElementById('saved-stocks-list'),s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
+  if(!Object.keys(s).length){c.innerHTML='<p style="color:var(--text2);font-size:12px">No saved stocks yet.</p>';return}
+  c.innerHTML=Object.keys(s).map(n=>{const d=s[n],dt=d.savedAt?new Date(d.savedAt).toLocaleDateString():'';
+    return`<div class="saved-chip" onclick="loadStock('${n.replace(/'/g,"\\'")}')"><strong>${n}</strong> <span style="color:var(--text2);font-size:10px">${dt}</span><span class="delete-chip" onclick="deleteStock('${n.replace(/'/g,"\\'")}',event)">x</span></div>`}).join('');
+}
+function showExportModal(){
+  const s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
+  document.getElementById('export-data').value=JSON.stringify({version:2,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s},null,2);
+  document.getElementById('export-modal').classList.add('active');
+}
+function showImportModal(){document.getElementById('import-data').value='';document.getElementById('import-modal').classList.add('active')}
+function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'))}
+function downloadExport(){
+  const b=new Blob([document.getElementById('export-data').value],{type:'application/json'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download=(document.getElementById('stockName').value.trim()||'valuation')+'_export.json';a.click();URL.revokeObjectURL(a.href);
+}
+function loadImportFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{document.getElementById('import-data').value=ev.target.result};r.readAsText(f)}
+function doImport(){
+  try{const d=JSON.parse(document.getElementById('import-data').value);
+    if(d.current)loadData(d.current);
+    if(d.savedStocks){const ex=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');Object.assign(ex,d.savedStocks);localStorage.setItem('valuation_stocks',JSON.stringify(ex))}
+    closeModals();alert('Imported!');recalcAll()
+  }catch(e){alert('Invalid JSON data.')}
+}
+
+// Section switching
+function showSection(name){
+  ['calculators','tracker','charts'].forEach(s=>{
+    document.getElementById('section-'+s).style.display=name===s?'':'none';
+  });
+  const secs=['calculators','tracker','charts'];
+  document.querySelectorAll('.main-nav .main-tab').forEach((b,i)=>b.classList.toggle('active',secs[i]===name));
+  document.getElementById('calc-actions').style.display=name==='calculators'?'':'none';
+  if(name==='tracker')renderTracker();
+  if(name==='charts')initCharts();
+}
+
+// ====== STOCK TRACKER ======
+const FMP='https://financialmodelingprep.com/stable';
+const TNAMES={AAPL:'Apple',AMZN:'Amazon',GOOGL:'Google',MSFT:'Microsoft',META:'Meta',ASML:'ASML',BKNG:'Booking',BN:'Brookfield',NFLX:'Netflix',V:'Visa',MA:'Mastercard',SPGI:'S&P Global',MCO:"Moody's",EFX:'Equifax',FICO:'FICO',UBER:'Uber','EVO.ST':'Evolution',KSPI:'Kaspi',DUOL:'Duolingo',MELI:'MercadoLibre',IBKR:'IBKR',LMND:'Lemonade',LYFT:'Lyft',TMDX:'TransMedics',ZETA:'Zeta',RACE:'Ferrari','MC.PA':'LVMH',CRM:'Salesforce',NOW:'ServiceNow',ADBE:'Adobe',ETH:'Ethereum'};
+const DEFAULT_TICKERS=Object.keys(TNAMES);
+let tStocks={};
+let stSort={col:'ticker',dir:'asc'};
+let stExpanded={};
+
+function parseNum(s){s=String(s).trim().replace(/,/g,'').replace(/\s/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
+function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct)return parseFloat(v).toFixed(1);return typeof v==='number'?v.toFixed(2):v}
+
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function stSettings(){
+  return{
+    apiKey:document.getElementById('st-apikey')?.value||'',
+    workerUrl:(document.getElementById('st-worker')?.value||'').replace(/\/$/,''),
+    g1:parseFloat(document.getElementById('st-g1')?.value)||10,
+    g2:parseFloat(document.getElementById('st-g2')?.value)||10,
+    g3:parseFloat(document.getElementById('st-g3')?.value)||10,
+    dr:parseFloat(document.getElementById('st-dr')?.value)||10,
+    tg:parseFloat(document.getElementById('st-tg')?.value)||2,
+    em:parseFloat(document.getElementById('st-em')?.value)||20,
+    fade:parseFloat(document.getElementById('st-fade')?.value)||10
+  };
+}
+
+function saveTrackerSettings(){localStorage.setItem('tracker_settings',JSON.stringify(stSettings()))}
+
+function loadTrackerSettings(){
+  const s=JSON.parse(localStorage.getItem('tracker_settings')||'{}');
+  const map={apiKey:'st-apikey',workerUrl:'st-worker',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
+  Object.keys(map).forEach(k=>{if(s[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=s[k]}});
+}
+
+function saveTrackerStocks(){localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}
+
+function loadTrackerStocks(){
+  const d=localStorage.getItem('tracker_stocks_v1');
+  if(d){try{tStocks=JSON.parse(d)}catch(e){tStocks={}}}
+  if(!Object.keys(tStocks).length){
+    DEFAULT_TICKERS.forEach(t=>{tStocks[t]={ticker:t,name:TNAMES[t]||t}});
+    saveTrackerStocks();
+  }
+}
+
+// FMP API
+async function fmpFetch(endpoint,params){
+  const s=stSettings();
+  if(!s.apiKey)return null;
+  const url=`${FMP}/${endpoint}?${new URLSearchParams({...params,apikey:s.apiKey})}`;
+  try{const r=await fetch(url);if(!r.ok)return null;const d=await r.json();if(d?.['Error Message'])return null;return d}catch(e){return null}
+}
+
+// Yahoo Finance via Cloudflare Worker
+async function fetchYahooData(ticker){
+  const s=stSettings();
+  if(!s.workerUrl)return null;
+  try{
+    const url=`${s.workerUrl}/quote/${encodeURIComponent(ticker)}?modules=price,financialData,defaultKeyStatistics,incomeStatementHistory`;
+    const r=await fetch(url);
+    if(!r.ok)return null;
+    const d=await r.json();
+    const result=d?.quoteSummary?.result?.[0];
+    if(!result)return null;
+
+    const stock=tStocks[ticker]||{ticker,name:TNAMES[ticker]||ticker};
+    const price=result.price||{};
+    const fin=result.financialData||{};
+    const keys=result.defaultKeyStatistics||{};
+
+    stock.name=TNAMES[ticker]||price.shortName||price.longName||ticker;
+    stock.price=price.regularMarketPrice?.raw||fin.currentPrice?.raw;
+    stock.marketCap=price.marketCap?.raw;
+    stock.date=new Date().toISOString().slice(0,10).replace(/-/g,'.');
+
+    // financialData has OCF, FCF, revenue, margins
+    if(fin.totalRevenue?.raw!=null)stock.revenue=fin.totalRevenue.raw;
+    if(fin.operatingCashflow?.raw!=null)stock.ocf=fin.operatingCashflow.raw;
+    if(fin.freeCashflow?.raw!=null)stock.fcf=fin.freeCashflow.raw;
+    if(fin.ebitda?.raw!=null)stock.ebitda=fin.ebitda.raw;
+
+    // Derive profit from revenue * profitMargins, EBIT from revenue * operatingMargins
+    if(fin.totalRevenue?.raw!=null&&fin.profitMargins?.raw!=null)stock.profit=Math.round(fin.totalRevenue.raw*fin.profitMargins.raw);
+    if(fin.totalRevenue?.raw!=null&&fin.operatingMargins?.raw!=null&&fin.operatingMargins.raw!==0)stock.ebit=Math.round(fin.totalRevenue.raw*fin.operatingMargins.raw);
+
+    // Growth
+    if(fin.revenueGrowth?.raw!=null)stock.revenueGrowth=fin.revenueGrowth.raw*100;
+    if(fin.earningsGrowth?.raw!=null)stock.epsGrowth=fin.earningsGrowth.raw*100;
+    else if(keys.earningsQuarterlyGrowth?.raw!=null)stock.epsGrowth=keys.earningsQuarterlyGrowth.raw*100;
+
+    // EPS diluted
+    if(keys.trailingEps?.raw!=null)stock.epsDiluted=keys.trailingEps.raw;
+
+    // Historical revenue growth from incomeStatementHistory
+    const incHist=(result.incomeStatementHistory?.incomeStatementHistory||[]);
+    if(incHist.length>=2){
+      // Sorted newest first; compute YoY growth for each pair
+      const revs=incHist.map(s=>s.totalRevenue?.raw).filter(v=>v!=null);
+      if(revs.length>=2)stock.revGrowthY1=((revs[0]/revs[1])-1)*100;
+      if(revs.length>=3)stock.revGrowthY2=((revs[1]/revs[2])-1)*100;
+      if(revs.length>=4){
+        stock.revGrowthY3=((revs[2]/revs[3])-1)*100;
+        stock.revCAGR3=(Math.pow(revs[0]/revs[3],1/3)-1)*100;
+      }
+    }
+
+    // SBC not available from Yahoo financialData — keep existing manual value if any
+    // Derive OCF-SBC and FCF-SBC (SBC = 0 if not manually entered)
+    const sbc=stock.sbc||0;
+    if(stock.ocf)stock.ocfSbc=stock.ocf-sbc;
+    if(stock.fcf)stock.fcfSbc=stock.fcf-sbc;
+
+    stock._source='yahoo';
+    tStocks[ticker]=stock;
+    return stock;
+  }catch(e){console.warn('Yahoo fetch failed for',ticker,e);return null}
+}
+
+async function fetchStockData(ticker){
+  const stock=tStocks[ticker]||{ticker,name:TNAMES[ticker]||ticker};
+  if(ticker==='ETH'){stock.date=new Date().toISOString().slice(0,10).replace(/-/g,'.');tStocks[ticker]=stock;return stock}
+
+  // Try Yahoo Finance first (via Worker) for main data
+  const yahoo=await fetchYahooData(ticker);
+
+  if(!yahoo||!yahoo.marketCap){
+    // Full FMP fallback if Yahoo failed completely
+    const [profile,income,cashflow,growth]=await Promise.all([
+      fmpFetch('profile',{symbol:ticker}),
+      fmpFetch('income-statement',{symbol:ticker,limit:1}),
+      fmpFetch('cash-flow-statement',{symbol:ticker,limit:1}),
+      fmpFetch('financial-growth',{symbol:ticker,limit:1})
+    ]);
+    if(profile?.[0]){const p=profile[0];stock.name=TNAMES[ticker]||p.companyName||ticker;stock.price=p.price;stock.marketCap=p.marketCap;stock.date=new Date().toISOString().slice(0,10).replace(/-/g,'.')}
+    if(income?.[0]){const i=income[0];stock.revenue=i.revenue;stock.profit=i.netIncome;stock.ebit=i.operatingIncome||i.ebit;stock.epsDiluted=i.epsDiluted}
+    if(cashflow?.[0]){const c=cashflow[0];stock.ocf=c.operatingCashFlow;stock.fcf=c.freeCashFlow;stock.sbc=c.stockBasedCompensation;stock.buybackRaw=Math.abs(c.commonStockRepurchased||0);stock.ocfSbc=(stock.ocf||0)-(stock.sbc||0);stock.fcfSbc=(stock.fcf||0)-(stock.sbc||0)}
+    if(growth?.[0]){const g=growth[0];stock.revenueGrowth=(g.revenueGrowth||0)*100;stock.epsGrowth=(g.epsdilutedGrowth||g.epsgrowth||0)*100}
+    stock._source='fmp';
+    tStocks[ticker]=stock;
+    return stock;
+  }
+
+  // Yahoo succeeded — supplement SBC & buyback from FMP (if missing)
+  if(stock.sbc==null||stock.buybackRaw==null){
+    const cashflow=await fmpFetch('cash-flow-statement',{symbol:ticker,limit:1});
+    if(cashflow?.[0]){
+      const c=cashflow[0];
+      if(stock.sbc==null&&c.stockBasedCompensation!=null)stock.sbc=c.stockBasedCompensation;
+      if(stock.buybackRaw==null&&c.commonStockRepurchased!=null)stock.buybackRaw=Math.abs(c.commonStockRepurchased);
+      // Recalculate derived fields with SBC
+      const sbc=stock.sbc||0;
+      if(stock.ocf!=null)stock.ocfSbc=stock.ocf-sbc;
+      if(stock.fcf!=null)stock.fcfSbc=stock.fcf-sbc;
+    }
+  }
+
+  tStocks[ticker]=stock;
+  return stock;
+}
+
+async function addTrackerStock(){
+  const inp=document.getElementById('st-add-input');
+  const ticker=inp.value.trim().toUpperCase();
+  if(!ticker)return;
+  if(tStocks[ticker]){alert(ticker+' already exists');return}
+  tStocks[ticker]={ticker,name:TNAMES[ticker]||ticker};
+  inp.value='';
+  document.getElementById('st-progress').textContent='Fetching '+ticker+'...';
+  await fetchStockData(ticker);
+  document.getElementById('st-progress').textContent='';
+  saveTrackerStocks();
+  renderTracker();
+}
+
+function removeTrackerStock(ticker){
+  if(!confirm('Remove '+ticker+'?'))return;
+  delete tStocks[ticker];
+  saveTrackerStocks();
+  renderTracker();
+}
+
+async function refreshAllStocks(){
+  const tickers=Object.keys(tStocks);
+  const prog=document.getElementById('st-progress');
+  for(let i=0;i<tickers.length;i++){
+    prog.textContent=`Refreshing ${i+1}/${tickers.length}: ${tickers[i]}...`;
+    await fetchStockData(tickers[i]);
+    renderTracker();
+    if(i<tickers.length-1)await new Promise(r=>setTimeout(r,200));
+  }
+  prog.textContent='Done!';
+  saveTrackerStocks();
+  setTimeout(()=>{prog.textContent=''},2000);
+}
+
+// Per-stock calculator
+function calcStockCalcs(s){
+  const res={};
+  const mc=s.marketCap,fcf0=s.fcfSbc;
+  if(!mc||!fcf0||fcf0<=0)return res;
+  const st=stSettings();
+  const ov=s.overrides||{};
+  const g1=(ov.g1??st.g1)/100,g2=(ov.g2??st.g2)/100,g3=(ov.g3??st.g3)/100;
+  const dr=(ov.dr??st.dr)/100,tg=(ov.tg??st.tg)/100,em=ov.em??st.em,fade=ov.fade??st.fade;
+  const cash=ov.cash||0,debt=ov.debt||0;
+  const growths=[];
+  for(let i=0;i<5;i++)growths.push(g1);
+  for(let i=0;i<5;i++)growths.push(g2);
+  for(let i=0;i<5;i++)growths.push(g3);
+  const fcfs=[fcf0];
+  for(let i=0;i<15;i++)fcfs.push(fcfs[i]*(1+growths[i]));
+
+  // DCF Perpetuity
+  let dcfSum=0;
+  for(let i=1;i<=10;i++)dcfSum+=fcfs[i]/Math.pow(1+dr,i);
+  const tvP=(fcfs[10]*(1+tg))/(dr-tg);
+  const evP=dcfSum+tvP/Math.pow(1+dr,10)+cash-debt;
+  res.dcf=((evP-mc)/mc)*100;
+
+  // Reverse DCF Perpetuity
+  const targetEV=mc-cash+debt;
+  const sP=solveGrowth(fcf0,dr,fade,(f,d)=>(f*(1+tg))/(d-tg));
+  res.reverseDcf=sP(targetEV)*100;
+
+  // Money Back
+  const cum=[fcfs[0]];
+  for(let i=1;i<=15;i++)cum.push(cum[i-1]+fcfs[i]);
+  let mby=null;
+  for(let i=0;i<=15;i++){if(cum[i]>=mc&&mby===null)mby=i}
+  if(mby!==null&&mby>0)res.moneyBack=parseFloat((mby-1+(mc-cum[mby-1])/(cum[mby]-cum[mby-1])).toFixed(1));
+  else if(mby===0)res.moneyBack=0;
+  else res.moneyBack='>15';
+
+  // Aria (Year 10 at exit multiple)
+  const ariaIMC=fcfs[10]*em;
+  res.aria=(Math.pow(ariaIMC/mc,1/10)-1)*100;
+
+  return res;
+}
+
+function calcStockRatios(s){
+  const r={};
+  const mc=s.marketCap;
+  if(!mc)return r;
+  if(s.revenue)r.ps=mc/s.revenue;
+  if(s.profit)r.pe=mc/s.profit;
+  if(s.fcf)r.pfcf=mc/s.fcf;
+  if(s.ocf)r.pocf=mc/s.ocf;
+  if(s.ebit)r.evEbit=mc/s.ebit;
+  if(r.pe&&s.epsGrowth&&s.epsGrowth!==0)r.peg=r.pe/s.epsGrowth;
+  if(s.buybackRaw&&mc)r.buyback=(s.buybackRaw/mc)*100;
+  return r;
+}
+
+// Column definitions
+const stCols=[
+  {k:'_exp',l:'',w:22,frozen:1,left:0},
+  {k:'ticker',l:'Ticker',w:58,frozen:1,left:22,tip:'Stock Ticker'},
+  {k:'name',l:'Name',w:88,d:1,txt:1,frozen:1,left:80,lastFrozen:1,tip:'Company Name'},
+  {k:'date',l:'Date',w:72,d:1,txt:1,tip:'Last Updated'},
+  {k:'price',l:'Price',w:62,d:1,tip:'Share Price'},
+  {k:'marketCap',l:'MCap',w:64,d:1,big:1,tip:'Market Capitalization'},
+  {k:'revenue',l:'Rev',w:62,d:1,big:1,tip:'Revenue (TTM)'},
+  {k:'revenueGrowth',l:'RG%',w:42,d:1,pct:1,tip:'Revenue Growth % (TTM)'},
+  {k:'revCAGR3',l:'3Y CAGR',w:58,d:1,pct:1,tip:'3-Year Revenue CAGR %'},
+  {k:'profit',l:'Profit',w:64,d:1,big:1,tip:'Net Income (TTM)'},
+  {k:'moneyBack',l:'MB',w:36,calc:1,tip:'Money Back (years)'},
+  {k:'aria',l:'Aria',w:42,calc:1,tip:'Aria CAGR %'},
+  {k:'dcf',l:'DCF',w:48,calc:1,tip:'DCF Upside/Downside %'},
+  {k:'reverseDcf',l:'rDCF',w:48,calc:1,tip:'Reverse DCF Implied Growth %'},
+  {k:'expectedReturn',l:'ExpR',w:42,edit:1,tip:'Expected Return (manual)'},
+  {k:'ps',l:'P/S',w:40,ratio:1,tip:'Price / Sales'},
+  {k:'pe',l:'P/E',w:40,ratio:1,tip:'Price / Earnings'},
+  {k:'peg',l:'PEG',w:40,ratio:1,tip:'P/E to Growth Ratio'},
+  {k:'pfcf',l:'P/FCF',w:46,ratio:1,tip:'Price / Free Cash Flow'},
+  {k:'pocf',l:'P/OCF',w:46,ratio:1,tip:'Price / Operating Cash Flow'},
+  {k:'evEbit',l:'EV/EBIT',w:52,ratio:1,tip:'Enterprise Value / EBIT'},
+  {k:'moat',l:'Moat',w:52,edit:1,tip:'Competitive Moat'},
+  {k:'risk',l:'Risk',w:42,edit:1,tip:'Risk Level'},
+  {k:'uncertainty',l:'Cert',w:42,edit:1,tip:'Certainty / Uncertainty'},
+  {k:'conviction',l:'Conv',w:42,edit:1,tip:'Conviction Level'},
+  {k:'thesis',l:'Thesis',w:110,edit:1,wide:1,tip:'Investment Thesis'},
+  {k:'epsGrowth',l:'EPS G%',w:48,d:1,pct:1,tip:'Earnings Per Share Growth %'},
+  {k:'ocf',l:'OCF',w:62,d:1,big:1,tip:'Operating Cash Flow'},
+  {k:'ocfSbc',l:'OCF-SBC',w:66,d:1,big:1,tip:'Operating Cash Flow minus Stock Based Compensation'},
+  {k:'fcf',l:'FCF',w:62,d:1,big:1,tip:'Free Cash Flow'},
+  {k:'fcfSbc',l:'FCF-SBC',w:66,d:1,big:1,tip:'Free Cash Flow minus Stock Based Compensation'},
+  {k:'sbc',l:'SBC',w:58,d:1,big:1,tip:'Stock Based Compensation'},
+  {k:'buyback',l:'BB%',w:42,ratio:1,pct:1,tip:'Buyback Yield %'},
+  {k:'_del',l:'',w:22}
+];
+
+function sortTracker(col){
+  if(stSort.col===col)stSort.dir=stSort.dir==='asc'?'desc':'asc';
+  else{stSort.col=col;stSort.dir='asc'}
+  renderTracker();
+}
+
+function toggleStockExpand(ticker){
+  stExpanded[ticker]=!stExpanded[ticker];
+  renderTracker();
+}
+
+function updateTrackerField(inp){
+  const t=inp.dataset.ticker,f=inp.dataset.field;
+  if(tStocks[t])tStocks[t][f]=inp.value;
+  saveTrackerStocks();
+}
+
+function updateTrackerOverride(inp){
+  const t=inp.dataset.ticker,f=inp.dataset.field;
+  if(!tStocks[t])return;
+  if(!tStocks[t].overrides)tStocks[t].overrides={};
+  const v=inp.value.trim();
+  if(v==='')delete tStocks[t].overrides[f];
+  else tStocks[t].overrides[f]=parseFloat(v);
+  saveTrackerStocks();
+  renderTracker();
+}
+
+function loadStockToCalc(ticker){
+  const s=tStocks[ticker];
+  if(!s)return;
+  showSection('calculators');
+  document.getElementById('stockName').value=s.name||s.ticker;
+  if(s.marketCap){
+    const scale=document.getElementById('scaleUnit').value;
+    let mc=s.marketCap;
+    if(scale==='M')mc/=1e6;else if(scale==='B')mc/=1e9;else if(scale==='K')mc/=1e3;
+    document.getElementById('s-mc').value=Math.round(mc);
+  }
+  if(s.fcfSbc){
+    const scale=document.getElementById('scaleUnit').value;
+    let f=s.fcfSbc;
+    if(scale==='M')f/=1e6;else if(scale==='B')f/=1e9;else if(scale==='K')f/=1e3;
+    document.getElementById('s-fcf0').value=Math.round(f);
+  }
+  recalcAll();
+}
+
+function recalcTracker(){renderTracker();renderScatterChart()}
+
+const scatterXDefs={
+  pe:{label:'P/E',fn:s=>calcStockRatios(s).pe},
+  ps:{label:'P/S',fn:s=>calcStockRatios(s).ps},
+  pfcf:{label:'P/FCF',fn:s=>calcStockRatios(s).pfcf},
+  pocf:{label:'P/OCF',fn:s=>calcStockRatios(s).pocf},
+  evEbit:{label:'EV/EBIT',fn:s=>calcStockRatios(s).evEbit},
+  peg:{label:'PEG',fn:s=>calcStockRatios(s).peg}
+};
+const scatterYDefs={
+  revenueGrowth:{label:'Revenue Growth % (TTM)',fn:s=>s.revenueGrowth},
+  revCAGR3:{label:'3-Year Revenue CAGR %',fn:s=>s.revCAGR3},
+  epsGrowth:{label:'EPS Growth %',fn:s=>s.epsGrowth}
+};
+
+function renderScatterChart(){
+  const xKey=document.getElementById('scatter-x')?.value||'pfcf';
+  const yKey=document.getElementById('scatter-y')?.value||'revenueGrowth';
+  const xDef=scatterXDefs[xKey],yDef=scatterYDefs[yKey];
+  if(!xDef||!yDef)return;
+
+  const points=[],labels=[],colors=[];
+  const palette=['#6c5ce7','#00b894','#e17055','#74b9ff','#fdcb6e','#a29bfe','#55efc4','#fab1a0','#81ecec','#ffeaa7','#dfe6e9','#ff7675','#fd79a8','#636e72','#00cec9','#e84393','#0984e3','#d63031','#e1d44e','#b8e994','#6ab04c','#4834d4','#30336b','#f9ca24','#7ed6df','#c7ecee','#dff9fb','#badc58','#f0932b','#eb4d4b','#686de0'];
+  let pi=0;
+
+  Object.values(tStocks).forEach(s=>{
+    const x=xDef.fn(s),y=yDef.fn(s);
+    if(x!=null&&!isNaN(x)&&isFinite(x)&&y!=null&&!isNaN(y)&&isFinite(y)){
+      points.push({x,y});
+      labels.push(s.ticker);
+      colors.push(palette[pi%palette.length]);
+      pi++;
+    }
+  });
+
+  if(!points.length)return;
+
+  const canvas=document.getElementById('scatter-chart');
+  if(!canvas)return;
+  if(charts.scatter)charts.scatter.destroy();
+
+  charts.scatter=new Chart(canvas.getContext('2d'),{
+    type:'scatter',
+    data:{datasets:[{
+      data:points,
+      backgroundColor:colors,
+      borderColor:colors.map(c=>c+'cc'),
+      pointRadius:7,
+      pointHoverRadius:10,
+      borderWidth:1.5
+    }]},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(26,29,39,0.95)',
+          borderColor:'#2e3347',
+          borderWidth:1,
+          titleFont:{size:13,weight:'bold'},
+          bodyFont:{size:12},
+          padding:10,
+          callbacks:{
+            title:ctx=>labels[ctx[0].dataIndex],
+            label:ctx=>[
+              `${xDef.label}: ${ctx.raw.x.toFixed(1)}x`,
+              `${yDef.label}: ${ctx.raw.y.toFixed(1)}%`
+            ]
+          }
+        }
+      },
+      scales:{
+        x:{
+          title:{display:true,text:xDef.label,color:'#8b90a5',font:{size:12,weight:'600'}},
+          ticks:{color:'#8b90a5',font:{size:10}},
+          grid:{color:'rgba(46,51,71,0.5)'}
+        },
+        y:{
+          title:{display:true,text:yDef.label,color:'#8b90a5',font:{size:12,weight:'600'}},
+          ticks:{color:'#8b90a5',font:{size:10},callback:v=>v+'%'},
+          grid:{color:'rgba(46,51,71,0.5)'}
+        }
+      }
+    },
+    plugins:[{
+      id:'tickerLabels',
+      afterDatasetsDraw(chart){
+        const ctx2=chart.ctx;
+        ctx2.font='600 10px Inter,-apple-system,sans-serif';
+        ctx2.textBaseline='bottom';
+        const meta=chart.getDatasetMeta(0);
+        meta.data.forEach((pt,i)=>{
+          ctx2.fillStyle=colors[i];
+          ctx2.fillText(labels[i],pt.x+9,pt.y-2);
+        });
+      }
+    }]
+  });
+}
+
+function renderTracker(){
+  const filter=(document.getElementById('st-filter')?.value||'').toLowerCase();
+  let stocks=Object.values(tStocks);
+  if(filter)stocks=stocks.filter(s=>(s.ticker+' '+s.name+' '+(s.thesis||'')+' '+(s.moat||'')).toLowerCase().includes(filter));
+
+  stocks.sort((a,b)=>{
+    const col=stSort.col;
+    let va,vb;
+    if(['moneyBack','aria','dcf','reverseDcf'].includes(col)){
+      const ca=calcStockCalcs(a),cb=calcStockCalcs(b);
+      va=ca[col];vb=cb[col];
+    }else if(['ps','pe','pfcf','pocf','evEbit','buyback'].includes(col)){
+      const ra=calcStockRatios(a),rb=calcStockRatios(b);
+      va=ra[col];vb=rb[col];
+    }else{va=a[col];vb=b[col]}
+    if(va==null||va==='>15')va=9999;
+    if(vb==null||vb==='>15')vb=9999;
+    if(typeof va==='string'&&typeof vb==='string')return stSort.dir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    return stSort.dir==='asc'?(va-vb):(vb-va);
+  });
+
+  const thead=document.getElementById('st-thead');
+  const tw=stCols.reduce((a,c)=>a+c.w,0);
+  thead.closest('table').style.width=tw+'px';
+  thead.innerHTML='<tr>'+stCols.map(c=>{
+    const fr=c.frozen?` st-frozen${c.lastFrozen?' st-frozen-last':''}`:''
+    const ls=c.frozen?`left:${c.left}px;`:'';
+    const tp=c.tip?` title="${escH(c.tip)}"`:'';
+    if(c.k.startsWith('_'))return`<th class="${fr}" style="width:${c.w}px;${ls}"></th>`;
+    const sorted=stSort.col===c.k;
+    const arrow=sorted?(stSort.dir==='asc'?'▲':'▼'):'▲';
+    return`<th class="${sorted?'sorted':''}${fr}" onclick="sortTracker('${c.k}')" style="width:${c.w}px;${ls}"${tp}>${c.l} <span class="sa">${arrow}</span></th>`;
+  }).join('')+'</tr>';
+
+  const tbody=document.getElementById('st-tbody');
+  if(!stocks.length){tbody.innerHTML=`<tr><td colspan="${stCols.length}" class="st-empty">No stocks match filter.</td></tr>`;return}
+
+  let html='';
+  stocks.forEach(s=>{
+    const calcs=calcStockCalcs(s);
+    const ratios=calcStockRatios(s);
+    html+='<tr>';
+    stCols.forEach(c=>{
+      const fr=c.frozen?` st-frozen${c.lastFrozen?' st-frozen-last':''}`:''
+      const ls=c.frozen?` style="left:${c.left}px"`:'';
+      if(c.k==='_exp'){
+        html+=`<td class="${fr}"${ls}><button class="st-exp-btn ${stExpanded[s.ticker]?'open':''}" onclick="toggleStockExpand('${escH(s.ticker)}')">&#9654;</button></td>`;
+      }else if(c.k==='_del'){
+        html+=`<td><button class="st-del" onclick="removeTrackerStock('${escH(s.ticker)}')">&#215;</button></td>`;
+      }else if(c.k==='ticker'){
+        html+=`<td class="st-ticker${fr}"${ls} onclick="loadStockToCalc('${escH(s.ticker)}')" title="Click to load into calculator">${escH(s.ticker)}</td>`;
+      }else if(c.d){
+        const v=s[c.k];
+        const disp=fmtCell(v,c);
+        const slowdown=(c.k==='revenueGrowth'||c.k==='revCAGR3')&&s.revenueGrowth!=null&&s.revCAGR3!=null&&s.revenueGrowth<s.revCAGR3;
+        html+=`<td class="${fr}"${ls}><input class="st-data ${c.txt?'txt':''}" ${slowdown?'style="color:var(--red)"':''} value="${escH(disp)}" data-ticker="${escH(s.ticker)}" data-field="${c.k}" data-raw="${v!=null?v:''}" ${c.big?'data-big="1"':''} ${c.pct?'data-pct="1"':''} ${c.txt?'data-txt="1"':''} onfocus="stDataFocus(this)" onblur="stDataBlur(this)"></td>`;
+      }else if(c.edit){
+        html+=`<td class="${fr}"${ls}><input class="st-edit ${c.wide?'st-edit-wide':''}" value="${escH(s[c.k]||'')}" data-ticker="${escH(s.ticker)}" data-field="${c.k}" oninput="updateTrackerField(this)"></td>`;
+      }else if(c.calc){
+        const v=calcs[c.k];
+        let display='-',cls='';
+        if(v!=null&&v!=='>15'&&!isNaN(v)){
+          if(c.k==='moneyBack'){display=parseFloat(v).toFixed(1);cls=v<=10?'positive':'negative'}
+          else{display=parseFloat(v).toFixed(1)+'%';
+            if(c.k==='reverseDcf')cls=v>15?'negative':v>8?'warn':'positive';
+            else cls=v>=15?'positive':v>=0?'warn':'negative';
+          }
+        }else if(v==='>15'){display='>15';cls='negative'}
+        html+=`<td class="${cls}">${display}</td>`;
+      }else if(c.ratio){
+        const v=ratios[c.k];
+        if(c.pct)html+=`<td>${v!=null&&!isNaN(v)?v.toFixed(1)+'%':'-'}</td>`;
+        else html+=`<td>${v!=null&&!isNaN(v)?v.toFixed(1)+'x':'-'}</td>`;
+      }else{
+        html+=`<td>${escH(s[c.k]||'-')}</td>`;
+      }
+    });
+    html+='</tr>';
+
+    if(stExpanded[s.ticker]){
+      const ov=s.overrides||{};
+      const st2=stSettings();
+      html+=`<tr class="st-exp-row"><td colspan="${stCols.length}"><div class="st-exp-grid">`;
+      const fields=[
+        {k:'g1',l:'Growth Y1-5 (%)',def:st2.g1},{k:'g2',l:'Growth Y6-10 (%)',def:st2.g2},{k:'g3',l:'Growth Y11-15 (%)',def:st2.g3},
+        {k:'dr',l:'Discount Rate (%)',def:st2.dr},{k:'tg',l:'Terminal Growth (%)',def:st2.tg},{k:'em',l:'Exit Multiple',def:st2.em},
+        {k:'fade',l:'Fade Years',def:st2.fade},{k:'cash',l:'+ Cash',def:0},{k:'debt',l:'- Debt',def:0}
+      ];
+      fields.forEach(f=>{
+        html+=`<div class="input-group"><label>${f.l}</label><input type="number" value="${ov[f.k]!=null?ov[f.k]:''}" placeholder="${f.def}" data-ticker="${escH(s.ticker)}" data-field="${f.k}" oninput="updateTrackerOverride(this)"></div>`;
+      });
+      // Historical growth (read-only display)
+      const histFields=[
+        {k:'revGrowthY1',l:'Rev Growth Y-1'},{k:'revGrowthY2',l:'Rev Growth Y-2'},{k:'revGrowthY3',l:'Rev Growth Y-3'},{k:'revCAGR3',l:'3Y Rev CAGR'}
+      ];
+      html+=`</div><div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">Historical Growth</div><div class="st-exp-grid">`;
+      histFields.forEach(f=>{
+        const v=s[f.k];
+        html+=`<div class="input-group"><label>${f.l}</label><div style="font-size:12px;font-weight:500;color:${v!=null?(v>=0?'var(--green)':'var(--red)'):'var(--text2)'};padding:4px 0">${v!=null?v.toFixed(1)+'%':'-'}</div></div>`;
+      });
+      html+=`</div></div><div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><div style="font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">Manual Data Entry</div><div class="st-exp-grid">`;
+      // Manual data entry
+      const dataFields=[
+        {k:'price',l:'Price'},{k:'marketCap',l:'Market Cap'},{k:'revenue',l:'Revenue'},{k:'profit',l:'Profit'},
+        {k:'ocf',l:'OCF'},{k:'fcf',l:'FCF'},{k:'sbc',l:'SBC'},{k:'fcfSbc',l:'FCF-SBC'},
+        {k:'revenueGrowth',l:'Rev Growth %'},{k:'epsGrowth',l:'EPS Growth %'}
+      ];
+      dataFields.forEach(f=>{
+        html+=`<div class="input-group"><label>${f.l}</label><input type="number" value="${s[f.k]!=null?s[f.k]:''}" data-ticker="${escH(s.ticker)}" data-field="${f.k}" oninput="updateTrackerDataField(this)"></div>`;
+      });
+      html+=`</div></div></td></tr>`;
+    }
+  });
+  tbody.innerHTML=html;
+  renderScatterChart();
+}
+
+function stDataFocus(inp){
+  const raw=inp.dataset.raw;
+  if(inp.dataset.txt)return;
+  if(raw!==''&&raw!=null)inp.value=raw;
+  inp.select();
+}
+function stDataBlur(inp){
+  const t=inp.dataset.ticker,f=inp.dataset.field;
+  if(!tStocks[t])return;
+  const v=inp.value.trim();
+  if(inp.dataset.txt){
+    tStocks[t][f]=v||undefined;
+  }else{
+    if(v===''||v==='-'){delete tStocks[t][f];inp.value='';inp.dataset.raw=''}
+    else{
+      const n=parseNum(v);
+      tStocks[t][f]=n;
+      inp.dataset.raw=n;
+      const col=stCols.find(c=>c.k===f);
+      inp.value=col?fmtCell(n,col):n;
+    }
+    if(f==='ocf'||f==='sbc')tStocks[t].ocfSbc=(tStocks[t].ocf||0)-(tStocks[t].sbc||0);
+    if(f==='fcf'||f==='sbc')tStocks[t].fcfSbc=(tStocks[t].fcf||0)-(tStocks[t].sbc||0);
+  }
+  saveTrackerStocks();
+  renderTracker();
+}
+
+function updateTrackerDataField(inp){
+  const t=inp.dataset.ticker,f=inp.dataset.field;
+  if(!tStocks[t])return;
+  const v=inp.value.trim();
+  if(v===''){delete tStocks[t][f]}
+  else{tStocks[t][f]=parseFloat(v)}
+  if(f==='ocf'||f==='sbc')tStocks[t].ocfSbc=(tStocks[t].ocf||0)-(tStocks[t].sbc||0);
+  if(f==='fcf'||f==='sbc')tStocks[t].fcfSbc=(tStocks[t].fcf||0)-(tStocks[t].sbc||0);
+  saveTrackerStocks();
+  renderTracker();
+}
+
+function exportTrackerData(){
+  const d=JSON.stringify({version:1,exportedAt:new Date().toISOString(),settings:stSettings(),stocks:tStocks},null,2);
+  const b=new Blob([d],{type:'application/json'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(b);a.download='tracker_export.json';a.click();URL.revokeObjectURL(a.href);
+}
+
+function importTrackerFile(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.stocks){Object.assign(tStocks,d.stocks);saveTrackerStocks()}
+      if(d.settings){
+        const map={apiKey:'st-apikey',workerUrl:'st-worker',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
+        Object.keys(map).forEach(k=>{if(d.settings[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=d.settings[k]}});
+        saveTrackerSettings();
+      }
+      renderTracker();
+      alert('Imported!');
+    }catch(err){alert('Invalid JSON file.')}
+  };
+  r.readAsText(f);
+  e.target.value='';
+}
+
+// ====== CHARTS TAB ======
+let chData={};// {ticker:{timestamps:[],closes:[],eps:null}}
+let chSelected=new Set();
+let chMiniCharts={};
+const CH_COLORS=['#6c5ce7','#00b894','#e17055','#74b9ff','#fdcb6e','#a29bfe','#55efc4','#fab1a0','#81ecec','#ffeaa7','#ff7675','#fd79a8','#00cec9','#e84393','#0984e3','#d63031','#e1d44e','#b8e994','#6ab04c','#4834d4','#30336b','#f9ca24','#7ed6df','#c7ecee','#badc58','#f0932b','#eb4d4b','#686de0'];
+
+let chInited=false;
+function initCharts(){
+  if(!chInited){chInited=true;renderChartChips();renderAllCharts()}
+  else{renderChartChips();renderMainChart()}
+}
+
+function getChartColor(ticker){
+  const tickers=Object.keys(tStocks);
+  return CH_COLORS[tickers.indexOf(ticker)%CH_COLORS.length];
+}
+
+function renderChartChips(){
+  const cont=document.getElementById('ch-stock-chips');
+  if(!cont)return;
+  // Auto-select first 5 if none selected
+  if(!chSelected.size){
+    const tickers=Object.keys(tStocks);
+    tickers.slice(0,5).forEach(t=>chSelected.add(t));
+  }
+  cont.innerHTML=Object.keys(tStocks).map(t=>{
+    const active=chSelected.has(t);
+    const color=getChartColor(t);
+    return`<button class="ch-chip ${active?'ch-active':''}" onclick="toggleChartStock('${escH(t)}')" style="${active?'border-color:'+color+';background:'+color:''}">${escH(t)}</button>`;
+  }).join('');
+}
+
+function toggleChartStock(ticker){
+  if(chSelected.has(ticker))chSelected.delete(ticker);
+  else chSelected.add(ticker);
+  renderChartChips();
+  renderMainChart();
+}
+
+async function fetchChartData(ticker,range){
+  const s=stSettings();
+  if(!s.workerUrl)return null;
+  const interval=range==='6mo'?'1d':'1wk';
+  try{
+    const r=await fetch(`${s.workerUrl}/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}`);
+    if(!r.ok)return null;
+    const d=await r.json();
+    const result=d?.chart?.result?.[0];
+    if(!result)return null;
+    const ts=result.timestamp||[];
+    const closes=result.indicators?.quote?.[0]?.close||[];
+    const currency=result.meta?.currency||'USD';
+    return{timestamps:ts,closes,currency};
+  }catch(e){return null}
+}
+
+async function renderAllCharts(){
+  const range=document.getElementById('ch-range')?.value||'1y';
+  const prog=document.getElementById('ch-progress');
+  const tickers=Object.keys(tStocks).filter(t=>t!=='ETH');
+
+  prog.textContent='Loading charts...';
+  chData={};
+
+  // Fetch all in parallel (batches of 6)
+  for(let i=0;i<tickers.length;i+=6){
+    const batch=tickers.slice(i,i+6);
+    prog.textContent=`Loading ${i+1}-${Math.min(i+6,tickers.length)}/${tickers.length}...`;
+    const results=await Promise.all(batch.map(t=>fetchChartData(t,range)));
+    batch.forEach((t,j)=>{if(results[j])chData[t]=results[j]});
+  }
+
+  prog.textContent='';
+  renderMainChart();
+  renderMiniCharts();
+}
+
+function renderMainChart(){
+  const type=document.getElementById('ch-type')?.value||'price';
+  const canvas=document.getElementById('ch-main-chart');
+  if(!canvas)return;
+  if(charts.chMain)charts.chMain.destroy();
+
+  const datasets=[];
+  chSelected.forEach(ticker=>{
+    const d=chData[ticker];
+    if(!d||!d.timestamps.length)return;
+    const color=getChartColor(ticker);
+    const labels=d.timestamps.map(t=>new Date(t*1000));
+
+    let data;
+    if(type==='priceNorm'){
+      const base=d.closes.find(v=>v!=null);
+      if(!base)return;
+      data=d.closes.map(v=>v!=null?((v/base)-1)*100:null);
+    }else if(type==='pe'){
+      const stock=tStocks[ticker];
+      const eps=stock?.epsDiluted;
+      if(!eps||eps<=0)return;
+      data=d.closes.map(v=>v!=null?v/eps:null);
+    }else{
+      data=d.closes;
+    }
+
+    datasets.push({
+      label:ticker,
+      data:data.map((v,i)=>({x:labels[i],y:v})),
+      borderColor:color,
+      backgroundColor:color+'20',
+      borderWidth:2,
+      pointRadius:0,
+      pointHoverRadius:4,
+      tension:0.2
+    });
+  });
+
+  const yLabel=type==='priceNorm'?'Change %':type==='pe'?'P/E Ratio':'Price';
+  const yCallback=type==='priceNorm'?v=>v.toFixed(0)+'%':type==='pe'?v=>v.toFixed(0)+'x':v=>v.toLocaleString();
+
+  charts.chMain=new Chart(canvas.getContext('2d'),{
+    type:'line',
+    data:{datasets},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{color:'#8b90a5',font:{size:11},usePointStyle:true,pointStyle:'circle'}},
+        tooltip:{
+          backgroundColor:'rgba(26,29,39,0.95)',
+          borderColor:'#2e3347',
+          borderWidth:1,
+          titleFont:{size:12},
+          bodyFont:{size:11},
+          callbacks:{
+            title:ctx=>{const d=ctx[0]?.parsed?.x;return d?new Date(d).toLocaleDateString():''},
+            label:ctx=>{
+              const v=ctx.parsed.y;
+              if(type==='priceNorm')return`${ctx.dataset.label}: ${v>=0?'+':''}${v.toFixed(1)}%`;
+              if(type==='pe')return`${ctx.dataset.label}: ${v.toFixed(1)}x`;
+              return`${ctx.dataset.label}: $${v.toFixed(2)}`;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          type:'time',
+          time:{unit:'month',displayFormats:{month:'MMM yy'}},
+          ticks:{color:'#8b90a5',font:{size:9},maxTicksLimit:12},
+          grid:{color:'rgba(46,51,71,0.5)'}
+        },
+        y:{
+          ticks:{color:'#8b90a5',font:{size:10},callback:yCallback},
+          grid:{color:'rgba(46,51,71,0.5)'},
+          title:{display:true,text:yLabel,color:'#8b90a5'}
+        }
+      }
+    }
+  });
+}
+
+function switchChartType(){renderMainChart()}
+
+function renderMiniCharts(){
+  const grid=document.getElementById('ch-grid');
+  if(!grid)return;
+  Object.values(chMiniCharts).forEach(c=>{if(c)c.destroy()});
+  chMiniCharts={};
+
+  const tickers=Object.keys(chData);
+  if(!tickers.length){grid.innerHTML='<p style="color:var(--text2)">No chart data loaded.</p>';return}
+
+  grid.innerHTML=tickers.map(t=>{
+    const d=chData[t];
+    if(!d||!d.timestamps.length)return'';
+    const first=d.closes.find(v=>v!=null);
+    const last=d.closes.filter(v=>v!=null).pop();
+    const pct=first?((last/first)-1)*100:0;
+    const up=pct>=0;
+    const pctStr=(up?'+':'')+pct.toFixed(1)+'%';
+    const color=up?'var(--green)':'var(--red)';
+    return`<div class="ch-mini"><div class="ch-mini-title" style="display:flex;justify-content:space-between;align-items:center">`
+      +`<span>${escH(t)} — ${escH(tStocks[t]?.name||t)}</span>`
+      +`<span style="color:${color};font-weight:700;font-size:13px">${pctStr}</span>`
+      +`</div><div class="ch-mini-canvas"><canvas id="ch-mini-${escH(t)}"></canvas></div></div>`;
+  }).join('');
+
+  tickers.forEach(t=>{
+    const d=chData[t];
+    if(!d||!d.timestamps.length)return;
+    const canvas=document.getElementById('ch-mini-'+t);
+    if(!canvas)return;
+    const color=getChartColor(t);
+    const labels=d.timestamps.map(ts=>new Date(ts*1000));
+    const first=d.closes.find(v=>v!=null);
+    const last=d.closes.filter(v=>v!=null).pop();
+    const up=last>=first;
+
+    chMiniCharts[t]=new Chart(canvas.getContext('2d'),{
+      type:'line',
+      data:{datasets:[{
+        data:d.closes.map((v,i)=>({x:labels[i],y:v})),
+        borderColor:up?'#00b894':'#e17055',
+        backgroundColor:(up?'#00b894':'#e17055')+'15',
+        fill:true,borderWidth:1.5,pointRadius:0,tension:0.2
+      }]},
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{
+          callbacks:{
+            title:ctx=>{const d=ctx[0]?.parsed?.x;return d?new Date(d).toLocaleDateString():''},
+            label:ctx=>`${d.currency||'$'}${ctx.parsed.y.toFixed(2)}`
+          }
+        }},
+        scales:{
+          x:{type:'time',time:{unit:'month',displayFormats:{month:'MMM'}},ticks:{color:'#8b90a5',font:{size:8},maxTicksLimit:6},grid:{display:false}},
+          y:{ticks:{color:'#8b90a5',font:{size:8},maxTicksLimit:4},grid:{color:'rgba(46,51,71,0.3)'}}
+        }
+      }
+    });
+  });
+}
+
+// ====== CLOUD SYNC ======
+const SYNC_KEY='stratos-2024-sv';
+let syncTimer=null;
+let lastSyncTs=0;
+
+function getSyncUrl(){
+  const s=stSettings();
+  return s.workerUrl||'';
+}
+
+async function cloudSave(){
+  const url=getSyncUrl();
+  if(!url)return;
+  const payload={
+    ts:Date.now(),
+    stocks:tStocks,
+    settings:stSettings(),
+    calculator:getAllData(),
+    savedStocks:JSON.parse(localStorage.getItem('valuation_stocks')||'{}')
+  };
+  try{
+    await fetch(url+'/sync/save',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-Sync-Key':SYNC_KEY},
+      body:JSON.stringify(payload)
+    });
+    lastSyncTs=payload.ts;
+    console.log('Cloud sync saved',new Date().toLocaleTimeString());
+  }catch(e){console.warn('Cloud save failed',e)}
+}
+
+function scheduleCloudSave(){
+  if(syncTimer)clearTimeout(syncTimer);
+  syncTimer=setTimeout(cloudSave,3000); // 3s debounce
+}
+
+async function cloudLoad(){
+  const url=getSyncUrl();
+  if(!url)return false;
+  try{
+    const r=await fetch(url+'/sync/load',{headers:{'X-Sync-Key':SYNC_KEY}});
+    if(!r.ok)return false;
+    const d=await r.json();
+    if(!d.ok||!d.data)return false;
+    const cloud=d.data;
+    const localTs=parseInt(localStorage.getItem('sync_ts')||'0');
+    if(cloud.ts&&cloud.ts>localTs){
+      // Cloud is newer — apply
+      if(cloud.stocks){tStocks=cloud.stocks;saveTrackerStocks()}
+      if(cloud.settings){
+        const map={apiKey:'st-apikey',workerUrl:'st-worker',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
+        Object.keys(map).forEach(k=>{if(cloud.settings[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=cloud.settings[k]}});
+        saveTrackerSettings();
+      }
+      if(cloud.calculator)loadData(cloud.calculator);
+      if(cloud.savedStocks)localStorage.setItem('valuation_stocks',JSON.stringify(cloud.savedStocks));
+      localStorage.setItem('sync_ts',String(cloud.ts));
+      lastSyncTs=cloud.ts;
+      console.log('Cloud sync loaded',new Date(cloud.ts).toLocaleTimeString());
+      return true;
+    }
+    return false;
+  }catch(e){console.warn('Cloud load failed',e);return false}
+}
+
+// Auto save/load
+async function autoLoad(){
+  loadTrackerSettings();
+  loadTrackerStocks();
+  const l=localStorage.getItem('valuation_last_v2');
+  if(l){try{loadData(JSON.parse(l))}catch(e){}}
+  recalcAll();
+  // Try cloud load (overwrites if cloud is newer)
+  const loaded=await cloudLoad();
+  if(loaded){recalcAll();renderSavedStocks()}
+}
+function autoSave(){
+  localStorage.setItem('valuation_last_v2',JSON.stringify(getAllData()));
+  localStorage.setItem('sync_ts',String(Date.now()));
+  scheduleCloudSave();
+}
+
+// Hook tracker saves to cloud sync
+const _origSaveStocks=saveTrackerStocks;
+saveTrackerStocks=function(){_origSaveStocks();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveSettings=saveTrackerSettings;
+saveTrackerSettings=function(){_origSaveSettings();scheduleCloudSave()};
+
+document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
+window.addEventListener('load',autoLoad);
+</script>
+</body>
+</html>
