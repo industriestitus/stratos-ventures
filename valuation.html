@@ -1319,7 +1319,7 @@ function renderTracker(){
       }else if(c.d){
         const v=s[c.k];
         const disp=fmtCell(v,c);
-        const slowdown=(c.k==='revenueGrowth'||c.k==='revCAGR3')&&s.revenueGrowth!=null&&s.revCAGR3!=null&&s.revenueGrowth<s.revCAGR3;
+        const slowdown=c.k==='revenueGrowth'&&s.revenueGrowth!=null&&s.revCAGR3!=null&&s.revenueGrowth<s.revCAGR3;
         html+=`<td class="${fr}"${ls}><input class="st-data ${c.txt?'txt':''}" ${slowdown?'style="color:var(--red)"':''} value="${escH(disp)}" data-ticker="${escH(s.ticker)}" data-field="${c.k}" data-raw="${v!=null?v:''}" ${c.big?'data-big="1"':''} ${c.pct?'data-pct="1"':''} ${c.txt?'data-txt="1"':''} onfocus="stDataFocus(this)" onblur="stDataBlur(this)"></td>`;
       }else if(c.edit){
         html+=`<td class="${fr}"${ls}><input class="st-edit ${c.wide?'st-edit-wide':''}" value="${escH(s[c.k]||'')}" data-ticker="${escH(s.ticker)}" data-field="${c.k}" oninput="updateTrackerField(this)"></td>`;
