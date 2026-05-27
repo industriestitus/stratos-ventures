@@ -400,6 +400,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <div class="input-grid">
     <div class="input-group"><label>FMP API Key</label><input type="password" id="st-apikey" value="5tydKn7kVqKPZfkLz5ZmSfxT81Zo3Kc8" oninput="saveTrackerSettings()"></div>
     <div class="input-group"><label>Yahoo Worker URL</label><input type="text" id="st-worker" placeholder="https://yahoo-finance-proxy.YOURNAME.workers.dev" oninput="saveTrackerSettings()" style="min-width:250px"></div>
+    <div class="input-group"><label>Sync Key</label><input type="password" id="st-synckey" placeholder="Enter sync key for cloud save/load" oninput="saveTrackerSettings()"></div>
     <div class="input-group"><label>Growth Y1-5 (%)</label><input type="number" id="st-g1" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
     <div class="input-group"><label>Growth Y6-10 (%)</label><input type="number" id="st-g2" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
     <div class="input-group"><label>Growth Y11-15 (%)</label><input type="number" id="st-g3" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
@@ -794,6 +795,7 @@ function stSettings(){
   return{
     apiKey:document.getElementById('st-apikey')?.value||'',
     workerUrl:(document.getElementById('st-worker')?.value||'').replace(/\/$/,''),
+    syncKey:document.getElementById('st-synckey')?.value||'',
     g1:parseFloat(document.getElementById('st-g1')?.value)||10,
     g2:parseFloat(document.getElementById('st-g2')?.value)||10,
     g3:parseFloat(document.getElementById('st-g3')?.value)||10,
@@ -808,7 +810,7 @@ function saveTrackerSettings(){localStorage.setItem('tracker_settings',JSON.stri
 
 function loadTrackerSettings(){
   const s=JSON.parse(localStorage.getItem('tracker_settings')||'{}');
-  const map={apiKey:'st-apikey',workerUrl:'st-worker',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
+  const map={apiKey:'st-apikey',workerUrl:'st-worker',syncKey:'st-synckey',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
   Object.keys(map).forEach(k=>{if(s[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=s[k]}});
 }
 
@@ -1629,7 +1631,7 @@ function renderMiniCharts(){
 }
 
 // ====== CLOUD SYNC ======
-const SYNC_KEY='stratos-2024-sv';
+function getSyncKey(){return stSettings().syncKey||''}
 let syncTimer=null;
 let lastSyncTs=0;
 
@@ -1640,7 +1642,7 @@ function getSyncUrl(){
 
 async function cloudSave(){
   const url=getSyncUrl();
-  if(!url)return;
+  if(!url||!getSyncKey())return;
   const payload={
     ts:Date.now(),
     stocks:tStocks,
@@ -1651,7 +1653,7 @@ async function cloudSave(){
   try{
     await fetch(url+'/sync/save',{
       method:'POST',
-      headers:{'Content-Type':'application/json','X-Sync-Key':SYNC_KEY},
+      headers:{'Content-Type':'application/json','X-Sync-Key':getSyncKey()},
       body:JSON.stringify(payload)
     });
     lastSyncTs=payload.ts;
@@ -1666,9 +1668,10 @@ function scheduleCloudSave(){
 
 async function cloudLoad(){
   const url=getSyncUrl();
-  if(!url)return false;
+  const key=getSyncKey();
+  if(!url||!key)return false;
   try{
-    const r=await fetch(url+'/sync/load',{headers:{'X-Sync-Key':SYNC_KEY}});
+    const r=await fetch(url+'/sync/load',{headers:{'X-Sync-Key':key}});
     if(!r.ok)return false;
     const d=await r.json();
     if(!d.ok||!d.data)return false;
@@ -1678,7 +1681,7 @@ async function cloudLoad(){
       // Cloud is newer — apply
       if(cloud.stocks){tStocks=cloud.stocks;saveTrackerStocks()}
       if(cloud.settings){
-        const map={apiKey:'st-apikey',workerUrl:'st-worker',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
+        const map={apiKey:'st-apikey',workerUrl:'st-worker',syncKey:'st-synckey',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
         Object.keys(map).forEach(k=>{if(cloud.settings[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=cloud.settings[k]}});
         saveTrackerSettings();
       }
