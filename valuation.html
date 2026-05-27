@@ -400,7 +400,11 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   <div class="input-grid">
     <div class="input-group"><label>FMP API Key</label><input type="password" id="st-apikey" value="5tydKn7kVqKPZfkLz5ZmSfxT81Zo3Kc8" oninput="saveTrackerSettings()"></div>
     <div class="input-group"><label>Yahoo Worker URL</label><input type="text" id="st-worker" placeholder="https://yahoo-finance-proxy.YOURNAME.workers.dev" oninput="saveTrackerSettings()" style="min-width:250px"></div>
-    <div class="input-group"><label>Sync Key</label><input type="password" id="st-synckey" placeholder="Enter sync key for cloud save/load" oninput="saveTrackerSettings()"></div>
+    <div class="input-group" style="grid-column:1/-1;display:flex;align-items:end;gap:8px;flex-wrap:wrap">
+      <div style="flex:1;min-width:200px"><label>Sync Key</label><input type="text" id="st-synckey" placeholder="Enter sync key" oninput="saveTrackerSettings()" style="width:100%"></div>
+      <button onclick="testSync()" id="sync-btn" style="height:36px;padding:0 18px;border-radius:6px;border:none;background:#6c9bd1;color:#fff;font-weight:600;cursor:pointer;white-space:nowrap">Sync Now</button>
+      <span id="sync-status" style="font-size:13px;min-width:120px"></span>
+    </div>
     <div class="input-group"><label>Growth Y1-5 (%)</label><input type="number" id="st-g1" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
     <div class="input-group"><label>Growth Y6-10 (%)</label><input type="number" id="st-g2" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
     <div class="input-group"><label>Growth Y11-15 (%)</label><input type="number" id="st-g3" value="10" step="0.5" oninput="saveTrackerSettings();recalcTracker()"></div>
@@ -1640,6 +1644,44 @@ function getSyncUrl(){
   return s.workerUrl||'';
 }
 
+function setSyncStatus(msg,ok){
+  const el=document.getElementById('sync-status');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.color=ok===true?'#2ecc71':ok===false?'#e74c3c':'#aaa';
+}
+
+async function testSync(){
+  const url=getSyncUrl();
+  const key=getSyncKey();
+  const btn=document.getElementById('sync-btn');
+  if(!url){setSyncStatus('Worker URL missing',false);return}
+  if(!key){setSyncStatus('Sync Key missing',false);return}
+  btn.disabled=true;btn.textContent='Syncing...';
+  setSyncStatus('','');
+  try{
+    // First save current state
+    await cloudSave();
+    // Then try to load
+    const r=await fetch(url+'/sync/load',{headers:{'X-Sync-Key':key}});
+    if(r.status===401){setSyncStatus('Wrong sync key',false);btn.disabled=false;btn.textContent='Sync Now';return}
+    if(!r.ok){setSyncStatus('Server error ('+r.status+')',false);btn.disabled=false;btn.textContent='Sync Now';return}
+    const d=await r.json();
+    if(d.ok){
+      // Apply cloud data if newer
+      const loaded=await cloudLoad();
+      if(loaded){recalcAll();renderTracker();renderSavedStocks()}
+      const when=d.data?.ts?new Date(d.data.ts).toLocaleTimeString():'now';
+      setSyncStatus('Synced ✓ ('+when+')',true);
+    }else{
+      setSyncStatus('No data yet — saved!',true);
+    }
+  }catch(e){
+    setSyncStatus('Connection failed',false);
+  }
+  btn.disabled=false;btn.textContent='Sync Now';
+}
+
 async function cloudSave(){
   const url=getSyncUrl();
   if(!url||!getSyncKey())return;
@@ -1657,8 +1699,8 @@ async function cloudSave(){
       body:JSON.stringify(payload)
     });
     lastSyncTs=payload.ts;
-    console.log('Cloud sync saved',new Date().toLocaleTimeString());
-  }catch(e){console.warn('Cloud save failed',e)}
+    setSyncStatus('Saved ✓ '+new Date().toLocaleTimeString(),true);
+  }catch(e){setSyncStatus('Save failed',false);console.warn('Cloud save failed',e)}
 }
 
 function scheduleCloudSave(){
