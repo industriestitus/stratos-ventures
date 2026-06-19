@@ -1,0 +1,160 @@
+# Stratos Ventures — Roadmap
+
+## Current Phase: Phase 0 — Foundation
+Status: IN PROGRESS
+
+---
+
+## Phase 0: Foundation & Security (1-2 sessions)
+> Get the basics right before building new features.
+
+- [ ] Fix security: move hardcoded sync secret to CF Worker env variable
+- [ ] Fix security: lock CORS to specific origins
+- [ ] Set up Cloudflare D1 database (replace KV for structured data)
+- [ ] Design D1 schema (companies, positions, accounts, notes, snapshots, settings)
+- [ ] Set up Cloudflare Access (Zero Trust) — Google login gate
+- [ ] Implement client-side E2E encryption (AES-256-GCM + PBKDF2)
+- [ ] Recovery key generation and display
+- [ ] Clean up duplicate files (index.html = valuation.html)
+- [ ] Add .claudeignore for node_modules, dist, build artifacts
+
+## Phase 1: App Shell & Navigation (1-2 sessions)
+> Mobile-responsive shell with proper routing.
+
+- [ ] Redesign navigation: sidebar (desktop) / bottom nav (mobile)
+- [ ] Tab routing: Dashboard, Companies, Portfolio, Research, Framework, Settings
+- [ ] Company profile page shell (click company → full profile)
+- [ ] Mobile-responsive layout (touch-friendly, swipeable)
+- [ ] Loading states and error handling
+
+## Phase 2: Company Profile Page (2-3 sessions)
+> The core of the app — everything about a company in one place.
+
+- [ ] Integrate existing calculator (DCF, Reverse DCF, ARIA, Money Back)
+- [ ] Integrate existing tracker data
+- [ ] Add earnings timeline (Q1, Q2... with checkboxes)
+- [ ] Add 10K/10Q tracking section
+- [ ] Add investment thesis / notes section
+- [ ] Pipeline status (Watchlist → Under review → Buy target → Owned)
+- [ ] Historical charts (10-30 year revenue, FCF, EPS) from FMP
+- [ ] Company type tag (slow, medium, fast, cyclical, turnaround, asset)
+- [ ] Per-company TODO list (analysis tasks, due dates, completion tracking)
+- [ ] Metric tooltips: hover → definition, formula, calculation, source, benchmark
+- [ ] Data override: click any metric to override API value (original preserved, "overridden" badge)
+- [ ] Auto-fill financial thresholds from API (green = meets threshold, red = fails)
+
+## Phase 3: Research & Notes (1-2 sessions)
+> Investment journal, news notes, market journal.
+
+- [ ] Investment journal: date + ticker + text (why bought/sold)
+- [ ] Earnings notes: per-company, per-quarter, Markdown
+- [ ] News notes: date + source + excerpt + comment
+- [ ] Market journal: macro notes (not company-specific)
+- [ ] Search across all notes
+- [ ] Markdown editor (simple, not a full WYSIWYG)
+
+## Phase 4: Portfolio Module (2-3 sessions)
+> Multi-broker, multi-currency portfolio tracking.
+
+- [ ] Broker accounts setup (name, currency)
+- [ ] Positions: ticker + account + shares + avg cost
+- [ ] CSV/Excel import (IBKR, Degiro formats)
+- [ ] Manual add/edit/delete positions
+- [ ] Transaction history: buy/sell/dividend logging
+- [ ] Multi-currency conversion (live rates)
+- [ ] Monthly snapshots (manual or auto)
+- [ ] P&L calculation per position and total
+
+## Phase 5: Dashboard (2-3 sessions)
+> Portfolio overview, metrics, alerts.
+
+- [ ] Portfolio total value with currency conversion
+- [ ] Pie charts: by ticker, account, currency, asset class, sector
+- [ ] Terry Smith metrics: weighted P/E, P/S, P/FCF, ROE, ROIC, margins
+- [ ] Benchmark comparison (S&P 500)
+- [ ] Red flag alerts (margin drops, debt rises, revenue slows)
+- [ ] Dip Finder widget
+- [ ] Financial Independence tracker
+- [ ] General TODO list (not company-specific — current tasks, reminders)
+- [ ] TODO summary widget ("X open tasks across Y companies")
+
+## Phase 6: Dividend Module (1 session)
+> Dividend tracking and income forecasting.
+
+- [ ] Dividend history per company (from FMP + Yahoo)
+- [ ] Dividend yield, payout ratio, growth rate
+- [ ] Payment schedule calendar
+- [ ] Monthly/quarterly income forecast
+- [ ] Portfolio total dividend income
+
+## Phase 7: Framework & Reviews (2-3 sessions)
+> Investment principles, checklists, review templates — your "investing operating system."
+
+### Framework Tab — Your Investing Lens
+- [ ] Investment principles/approach (GARP, compounding, "buy good companies, don't overpay, do nothing")
+- [ ] Portfolio rules (sell losers, add to winners, position sizing rules)
+- [ ] Ideal company traits checklist (30+ traits: moat, organic growth, pricing power, etc.)
+- [ ] What I avoid / red flags (high R&D, commodity, dual class, acquisition-based growth, etc.)
+- [ ] Position scoring calculator (CAGR × Conviction × Risk multipliers)
+
+### Per-Company Analysis Checklist (12 sections)
+- [ ] Company Details section (business model, TAM, revenue split, moat, competitive advantage)
+- [ ] Moat Analysis section (pricing power, switching costs, network effects, brand)
+- [ ] Management section (track record, insider ownership, capital allocation, compensation)
+- [ ] Industry & Competitors section (market share, concentration, barriers to entry)
+- [ ] Risks section (with status tags: ON TRACK / BROKEN / UNCLEAR)
+- [ ] Financial Analysis section (auto-fill from API: balance sheet, income, cash flow thresholds)
+- [ ] Valuation section (DCF, PE, PEG, reverse DCF, money back, ARIA)
+- [ ] Buy/Sell Decision section (thesis, CAGR, edge, 3 bear arguments, 3 sell triggers)
+- [ ] Research Sources section (10K, earnings call, investor pres, YouTube, Reddit — checkbox per source)
+- [ ] Psychology Check section (temperament, conviction, FOMO, patience)
+- [ ] Quarterly Follow-up section (numbers, news, thesis check, action, timeline view)
+- [ ] Change Tracking (auto: timestamps, quarter, position size, audit trail — never delete)
+
+### Reviews
+- [ ] Weekly review template with pre-defined questions
+- [ ] Monthly review template (portfolio health check)
+- [ ] Quarterly review template (per-company, linked to checklist)
+
+## Phase 8: Stock Scores & Screening (1-2 sessions)
+> Auto-calculated scores and filtering.
+
+- [ ] Stock Scores: valuation, growth, profitability, health (calculated from FMP data)
+- [ ] Company comparison: side-by-side metrics
+- [ ] Basic screener with filters
+- [ ] Insider trading display (from Finnhub)
+
+## Phase 9: Export & Polish (1 session)
+> Full data portability and UI polish.
+
+- [ ] JSON full backup/restore
+- [ ] CSV export (positions, transactions)
+- [ ] Excel export (multi-sheet)
+- [ ] Markdown export (notes, journal, analysis)
+- [ ] CSV import for positions
+
+## Phase 10: Optional / Future
+> Nice-to-have features, add when needed.
+
+- [ ] AI analysis via Claude API (company summaries, Q&A)
+- [ ] Brokerage sync (SnapTrade or similar)
+- [ ] PWA support (installable on phone)
+- [ ] Notifications (earnings coming up, price alerts)
+- [ ] Google Drive migration tool (import existing Docs)
+- [ ] Dark/light theme toggle
+
+---
+
+## Open Questions
+- [ ] Cost basis method: FIFO, LIFO, or average?
+- [ ] Benchmark: S&P 500, MSCI World, or custom?
+- [ ] Currency effect: separate stock return vs FX return?
+- [ ] Non-stock assets: custom asset with manual value?
+
+## Decisions Made
+- ✅ Platform: Unified web app (not Electron)
+- ✅ Hosting: Cloudflare free tier (~$10/yr domain only)
+- ✅ Security: E2E encryption (AES-256-GCM) + Cloudflare Access (Zero Trust)
+- ✅ Data: FMP + Finnhub + Yahoo (all free tier)
+- ✅ Notes: Markdown inside app, exportable
+- ✅ Mobile: responsive design, not native app
