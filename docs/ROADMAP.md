@@ -1,6 +1,6 @@
 # Stratos Ventures — Roadmap
 
-## Current Phase: Phase 0 — Foundation
+## Current Phase: Phase 1 — App Shell & Navigation
 Status: IN PROGRESS
 
 ---
@@ -21,8 +21,8 @@ Status: IN PROGRESS
 ## Phase 1: App Shell & Navigation (1-2 sessions)
 > Mobile-responsive shell with proper routing.
 
-- [ ] Redesign navigation: sidebar (desktop) / bottom nav (mobile)
-- [ ] Tab routing: Dashboard, Companies, Portfolio, Research, Framework, Settings
+- [x] Redesign navigation: sidebar (desktop) / bottom nav (mobile)
+- [x] Tab routing: Dashboard, Companies, Portfolio, Research, Framework, Settings
 - [ ] Company profile page shell (click company → full profile)
 - [ ] Mobile-responsive layout (touch-friendly, swipeable)
 - [ ] Loading states and error handling
@@ -148,10 +148,7 @@ Status: IN PROGRESS
 ---
 
 ## Open Questions
-- [ ] Cost basis method: FIFO, LIFO, or average?
-- [ ] Benchmark: S&P 500, MSCI World, or custom?
-- [ ] Currency effect: separate stock return vs FX return?
-- [ ] Non-stock assets: custom asset with manual value?
+- [ ] Cost basis method: FIFO, LIFO, or average? — decide at Phase 4 start
 
 ## Decisions Made
 - ✅ Platform: Unified web app (not Electron)
@@ -160,3 +157,6 @@ Status: IN PROGRESS
 - ✅ Data: FMP + Finnhub + Yahoo (all free tier)
 - ✅ Notes: Markdown inside app, exportable
 - ✅ Mobile: responsive design, not native app
+- ✅ Benchmark: S&P 500
+- ✅ Currency effect: show both combined and separated (stock return vs FX return)
+- ✅ Non-stock assets: custom asset with manual value entry
