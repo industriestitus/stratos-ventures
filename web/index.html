@@ -161,6 +161,47 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </head>
 <body>
 
+<div id="lock-screen" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);align-items:center;justify-content:center">
+  <div style="width:340px;text-align:center">
+    <h1 style="font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Stratos Ventures</h1>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:32px">Encrypted investment platform</p>
+
+    <div id="lock-unlock">
+      <input type="password" id="lock-pass" placeholder="Encryption password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:12px;outline:none" onkeydown="if(event.key==='Enter')unlockApp()">
+      <div id="lock-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
+      <button onclick="unlockApp()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px">Unlock</button>
+      <button onclick="showLockView('recovery')" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline">Forgot password? Use recovery key</button>
+    </div>
+
+    <div id="lock-setup" style="display:none">
+      <p style="color:var(--text);font-size:14px;margin-bottom:16px">Set up encryption to protect your data</p>
+      <input type="password" id="setup-pass" placeholder="Choose a password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:10px;outline:none">
+      <input type="password" id="setup-pass2" placeholder="Confirm password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:10px;outline:none" onkeydown="if(event.key==='Enter')setupEncryption()">
+      <div id="setup-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
+      <button onclick="setupEncryption()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer">Enable Encryption</button>
+      <button onclick="skipEncryption()" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;margin-top:12px;text-decoration:underline">Skip for now</button>
+    </div>
+
+    <div id="lock-recovery-key" style="display:none">
+      <p style="color:var(--green);font-size:14px;margin-bottom:8px;font-weight:600">Encryption enabled!</p>
+      <p style="color:var(--text);font-size:13px;margin-bottom:16px">Save this recovery key somewhere safe. You'll need it if you forget your password.</p>
+      <div id="recovery-key-display" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:monospace;font-size:15px;color:var(--orange);word-break:break-all;margin-bottom:16px;user-select:all"></div>
+      <button onclick="navigator.clipboard.writeText(document.getElementById('recovery-key-display').textContent);this.textContent='Copied!';setTimeout(()=>this.textContent='Copy Recovery Key',2000)" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer;margin-bottom:10px">Copy Recovery Key</button>
+      <label style="display:flex;align-items:center;gap:8px;color:var(--text2);font-size:12px;margin-bottom:16px;cursor:pointer"><input type="checkbox" id="recovery-saved-check"> I have saved my recovery key</label>
+      <button id="recovery-continue-btn" onclick="finishSetup()" disabled style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;opacity:0.5">Continue to App</button>
+    </div>
+
+    <div id="lock-recovery" style="display:none">
+      <p style="color:var(--text);font-size:14px;margin-bottom:16px">Enter your recovery key to reset your password</p>
+      <input type="text" id="recovery-key-input" placeholder="xxxx-xxxx-xxxx-xxxx-..." style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:monospace;margin-bottom:10px;outline:none">
+      <input type="password" id="recovery-new-pass" placeholder="New password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:10px;outline:none">
+      <div id="recovery-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
+      <button onclick="recoverWithKey()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px">Reset Password</button>
+      <button onclick="showLockView('unlock')" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline">Back to password login</button>
+    </div>
+  </div>
+</div>
+
 <div class="topbar">
   <h1>Stratos Ventures</h1>
   <div class="main-nav">
@@ -537,6 +578,29 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   </div>
 </div>
 
+<div class="card">
+  <div class="card-title">Encryption</div>
+  <div id="enc-status-off" style="display:none">
+    <p style="color:var(--text2);font-size:13px;margin-bottom:12px">Encryption is <span style="color:var(--red);font-weight:600">not enabled</span>. Your cloud data is stored in plaintext.</p>
+    <button onclick="showLockView('setup');document.getElementById('lock-screen').style.display='flex'" style="padding:8px 16px;border-radius:6px;border:none;background:var(--accent);color:#fff;font-size:13px;cursor:pointer">Enable Encryption</button>
+  </div>
+  <div id="enc-status-on" style="display:none">
+    <p style="color:var(--text2);font-size:13px;margin-bottom:16px">Encryption is <span style="color:var(--green);font-weight:600">enabled</span>. Cloud data is encrypted with AES-256-GCM.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="input-group" style="flex:1;min-width:140px">
+        <label>Current Password</label>
+        <input type="password" id="enc-old-pass" placeholder="Current password">
+      </div>
+      <div class="input-group" style="flex:1;min-width:140px">
+        <label>New Password</label>
+        <input type="password" id="enc-new-pass" placeholder="New password">
+      </div>
+    </div>
+    <div id="enc-change-error" style="color:var(--red);font-size:12px;margin:8px 0;display:none"></div>
+    <button onclick="changeEncPassword()" style="margin-top:10px;padding:8px 16px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer">Change Password</button>
+  </div>
+</div>
+
 </div><!-- end section-settings -->
 
 <!-- Modals -->
@@ -544,6 +608,194 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 <div class="modal-overlay" id="import-modal"><div class="modal"><h3>Import Data</h3><textarea id="import-data" placeholder="Paste JSON data here..."></textarea><div class="modal-actions"><button class="btn btn-primary" onclick="doImport()">Import</button><label class="btn btn-secondary" style="cursor:pointer">Load File<input type="file" accept=".json" style="display:none" onchange="loadImportFile(event)"></label><button class="btn btn-secondary" onclick="closeModals()">Cancel</button></div></div></div>
 
 <script>
+// ====== E2E ENCRYPTION ======
+let _encPass=null;
+
+function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)))}
+function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0)).buffer}
+
+async function deriveKey(pass,salt){
+  const enc=new TextEncoder();
+  const km=await crypto.subtle.importKey('raw',enc.encode(pass),{name:'PBKDF2'},false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt:new Uint8Array(salt),iterations:600000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+
+async function encryptPayload(pass,obj){
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const key=await deriveKey(pass,salt);
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(obj)));
+  return {v:1,salt:b64(salt),iv:b64(iv),ct:b64(ct)};
+}
+
+async function decryptPayload(pass,blob){
+  const key=await deriveKey(pass,new Uint8Array(unb64(blob.salt)));
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(unb64(blob.iv))},key,new Uint8Array(unb64(blob.ct)));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+function isEncryptedBlob(d){return d&&d.v===1&&d.ct}
+
+function generateRecoveryKey(){
+  const bytes=crypto.getRandomValues(new Uint8Array(16));
+  const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  return hex.match(/.{4}/g).join('-');
+}
+
+async function hashKey(s){
+  const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return b64(h);
+}
+
+async function encryptVerify(pass,salt){
+  const key=await deriveKey(pass,new Uint8Array(unb64(salt)));
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode('stratos-ok'));
+  return {iv:b64(iv),ct:b64(ct)};
+}
+
+async function verifyPassword(pass){
+  const salt=localStorage.getItem('enc_salt');
+  const verify=JSON.parse(localStorage.getItem('enc_verify')||'null');
+  if(!salt||!verify)return false;
+  try{
+    const key=await deriveKey(pass,new Uint8Array(unb64(salt)));
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(unb64(verify.iv))},key,new Uint8Array(unb64(verify.ct)));
+    return new TextDecoder().decode(pt)==='stratos-ok';
+  }catch(e){return false}
+}
+
+function isEncryptionEnabled(){return !!localStorage.getItem('enc_salt')}
+
+function showLockView(view){
+  ['lock-unlock','lock-setup','lock-recovery-key','lock-recovery'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('lock-'+view).style.display='block';
+  document.getElementById('lock-error')&&(document.getElementById('lock-error').style.display='none');
+}
+
+async function unlockApp(){
+  const pass=document.getElementById('lock-pass').value;
+  if(!pass)return;
+  const err=document.getElementById('lock-error');
+  const ok=await verifyPassword(pass);
+  if(!ok){err.textContent='Wrong password';err.style.display='block';return}
+  _encPass=pass;
+  document.getElementById('lock-screen').style.display='none';
+  autoLoad();
+}
+
+async function setupEncryption(){
+  const p1=document.getElementById('setup-pass').value;
+  const p2=document.getElementById('setup-pass2').value;
+  const err=document.getElementById('setup-error');
+  if(p1.length<6){err.textContent='Password must be at least 6 characters';err.style.display='block';return}
+  if(p1!==p2){err.textContent='Passwords do not match';err.style.display='block';return}
+  const salt=b64(crypto.getRandomValues(new Uint8Array(16)));
+  const verify=await encryptVerify(p1,salt);
+  const rk=generateRecoveryKey();
+  const rkHash=await hashKey(rk);
+  localStorage.setItem('enc_salt',salt);
+  localStorage.setItem('enc_verify',JSON.stringify(verify));
+  localStorage.setItem('enc_recovery',rkHash);
+  _encPass=p1;
+  document.getElementById('recovery-key-display').textContent=rk;
+  document.getElementById('recovery-saved-check').onchange=function(){
+    const btn=document.getElementById('recovery-continue-btn');
+    btn.disabled=!this.checked;btn.style.opacity=this.checked?'1':'0.5';
+  };
+  showLockView('recovery-key');
+}
+
+function skipEncryption(){
+  localStorage.setItem('enc_skipped','1');
+  document.getElementById('lock-screen').style.display='none';
+  autoLoad();
+}
+
+function finishSetup(){
+  document.getElementById('lock-screen').style.display='none';
+  autoLoad();
+  updateEncStatus();
+  cloudSave().catch(()=>{});
+}
+
+async function recoverWithKey(){
+  const rk=document.getElementById('recovery-key-input').value.trim();
+  const newPass=document.getElementById('recovery-new-pass').value;
+  const err=document.getElementById('recovery-error');
+  if(!rk||!newPass){err.textContent='Fill in both fields';err.style.display='block';return}
+  if(newPass.length<6){err.textContent='Password must be at least 6 characters';err.style.display='block';return}
+  const storedHash=localStorage.getItem('enc_recovery');
+  const inputHash=await hashKey(rk);
+  if(inputHash!==storedHash){err.textContent='Invalid recovery key';err.style.display='block';return}
+  const salt=b64(crypto.getRandomValues(new Uint8Array(16)));
+  const verify=await encryptVerify(newPass,salt);
+  const newRk=generateRecoveryKey();
+  const newRkHash=await hashKey(newRk);
+  localStorage.setItem('enc_salt',salt);
+  localStorage.setItem('enc_verify',JSON.stringify(verify));
+  localStorage.setItem('enc_recovery',newRkHash);
+  _encPass=newPass;
+  // Load local data only (cloud data encrypted with old password is unrecoverable)
+  loadTrackerSettings();
+  loadTrackerStocks();
+  const l=localStorage.getItem('valuation_last_v2');
+  if(l){try{loadData(JSON.parse(l))}catch(e){}}
+  recalcAll();
+  updateEncStatus();
+  // Re-encrypt local data to cloud with new password
+  cloudSave().catch(()=>{});
+  // Show new recovery key before continuing
+  document.getElementById('recovery-key-display').textContent=newRk;
+  document.getElementById('recovery-saved-check').checked=false;
+  document.getElementById('recovery-continue-btn').disabled=true;
+  document.getElementById('recovery-continue-btn').style.opacity='0.5';
+  document.getElementById('recovery-saved-check').onchange=function(){
+    const btn=document.getElementById('recovery-continue-btn');
+    btn.disabled=!this.checked;btn.style.opacity=this.checked?'1':'0.5';
+  };
+  showLockView('recovery-key');
+}
+
+async function changeEncPassword(){
+  const oldP=document.getElementById('enc-old-pass').value;
+  const newP=document.getElementById('enc-new-pass').value;
+  const err=document.getElementById('enc-change-error');
+  if(!oldP||!newP){err.textContent='Fill in both fields';err.style.display='block';return}
+  if(newP.length<6){err.textContent='New password must be at least 6 characters';err.style.display='block';return}
+  const ok=await verifyPassword(oldP);
+  if(!ok){err.textContent='Current password is wrong';err.style.display='block';return}
+  const prevSalt=localStorage.getItem('enc_salt');
+  const prevVerify=localStorage.getItem('enc_verify');
+  const salt=b64(crypto.getRandomValues(new Uint8Array(16)));
+  const verify=await encryptVerify(newP,salt);
+  localStorage.setItem('enc_salt',salt);
+  localStorage.setItem('enc_verify',JSON.stringify(verify));
+  _encPass=newP;
+  err.style.display='none';
+  document.getElementById('enc-old-pass').value='';
+  document.getElementById('enc-new-pass').value='';
+  try{
+    await cloudSave();
+    alert('Password changed! Cloud data re-encrypted.');
+  }catch(e){
+    // Rollback if cloud save failed
+    localStorage.setItem('enc_salt',prevSalt);
+    localStorage.setItem('enc_verify',prevVerify);
+    _encPass=oldP;
+    err.textContent='Cloud save failed — password NOT changed. Try again.';
+    err.style.display='block';
+  }
+}
+
+function updateEncStatus(){
+  const on=isEncryptionEnabled();
+  const elOff=document.getElementById('enc-status-off');
+  const elOn=document.getElementById('enc-status-on');
+  if(elOff)elOff.style.display=on?'none':'block';
+  if(elOn)elOn.style.display=on?'block':'none';
+}
+
 // ====== CALCULATOR (existing) ======
 const charts = {};
 function fmt(n,dec=0){if(n==null||isNaN(n))return'-';if(Math.abs(n)>=1e12)return(n/1e12).toFixed(1)+'T';if(Math.abs(n)>=1e9)return(n/1e9).toFixed(1)+'B';if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e4)return(n/1e3).toFixed(1)+'K';return n.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
@@ -1751,20 +2003,25 @@ async function cloudSave(){
     calculator:getAllData(),
     savedStocks:JSON.parse(localStorage.getItem('valuation_stocks')||'{}')
   };
+  let body=payload;
+  if(_encPass&&isEncryptionEnabled()){
+    try{body=await encryptPayload(_encPass,payload)}catch(e){console.warn('Encrypt failed',e);return}
+  }
   try{
-    await fetch(url+'/sync/save',{
+    const r=await fetch(url+'/sync/save',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Sync-Key':getSyncKey()},
-      body:JSON.stringify(payload)
+      body:JSON.stringify(body)
     });
+    if(!r.ok)throw new Error('HTTP '+r.status);
     lastSyncTs=payload.ts;
     setStatus('sync-status','Saved ✓ '+new Date().toLocaleTimeString(),true);
-  }catch(e){setStatus('sync-status','Save failed',false);console.warn('Cloud save failed',e)}
+  }catch(e){setStatus('sync-status','Save failed',false);console.warn('Cloud save failed',e);throw e}
 }
 
 function scheduleCloudSave(){
   if(syncTimer)clearTimeout(syncTimer);
-  syncTimer=setTimeout(cloudSave,3000); // 3s debounce
+  syncTimer=setTimeout(()=>cloudSave().catch(()=>{}),3000);
 }
 
 async function cloudLoad(){
@@ -1776,10 +2033,13 @@ async function cloudLoad(){
     if(!r.ok)return false;
     const d=await r.json();
     if(!d.ok||!d.data)return false;
-    const cloud=d.data;
+    let cloud=d.data;
+    if(isEncryptedBlob(cloud)){
+      if(!_encPass){console.warn('Cloud data encrypted but no password');return false}
+      try{cloud=await decryptPayload(_encPass,cloud)}catch(e){console.warn('Decrypt failed',e);setStatus('sync-status','Decryption failed — wrong password?',false);return false}
+    }
     const localTs=parseInt(localStorage.getItem('sync_ts')||'0');
     if(cloud.ts&&cloud.ts>localTs){
-      // Cloud is newer — apply
       if(cloud.stocks){tStocks=cloud.stocks;saveTrackerStocks()}
       if(cloud.settings){
         const map={apiKey:'st-apikey',workerUrl:'st-worker',syncKey:'st-synckey',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
@@ -1804,7 +2064,7 @@ async function autoLoad(){
   const l=localStorage.getItem('valuation_last_v2');
   if(l){try{loadData(JSON.parse(l))}catch(e){}}
   recalcAll();
-  // Try cloud load (overwrites if cloud is newer)
+  updateEncStatus();
   const loaded=await cloudLoad();
   if(loaded){recalcAll();renderSavedStocks()}
 }
@@ -1821,7 +2081,17 @@ const _origSaveSettings=saveTrackerSettings;
 saveTrackerSettings=function(){_origSaveSettings();scheduleCloudSave()};
 
 document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
-window.addEventListener('load',autoLoad);
+window.addEventListener('load',()=>{
+  if(isEncryptionEnabled()){
+    document.getElementById('lock-screen').style.display='flex';
+    showLockView('unlock');
+  }else if(!localStorage.getItem('enc_skipped')){
+    document.getElementById('lock-screen').style.display='flex';
+    showLockView('setup');
+  }else{
+    autoLoad();
+  }
+});
 </script>
 </body>
 </html>

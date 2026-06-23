@@ -8,15 +8,15 @@ Status: IN PROGRESS
 ## Phase 0: Foundation & Security (1-2 sessions)
 > Get the basics right before building new features.
 
-- [ ] Fix security: move hardcoded sync secret to CF Worker env variable
-- [ ] Fix security: lock CORS to specific origins
+- [x] Fix security: move hardcoded sync secret to CF Worker env variable
+- [x] Fix security: lock CORS to specific origins
 - [ ] Set up Cloudflare D1 database (replace KV for structured data)
 - [ ] Design D1 schema (companies, positions, accounts, notes, snapshots, settings)
-- [ ] Set up Cloudflare Access (Zero Trust) — Google login gate
-- [ ] Implement client-side E2E encryption (AES-256-GCM + PBKDF2)
-- [ ] Recovery key generation and display
-- [ ] Clean up duplicate files (index.html = valuation.html)
-- [ ] Add .claudeignore for node_modules, dist, build artifacts
+- [ ] Set up Cloudflare Access (Zero Trust) — needs custom domain first (pages.dev can't be protected)
+- [x] Implement client-side E2E encryption (AES-256-GCM + PBKDF2)
+- [x] Recovery key generation and display
+- [x] Clean up duplicate files (index.html = valuation.html)
+- [x] Add .claudeignore for node_modules, dist, build artifacts
 
 ## Phase 1: App Shell & Navigation (1-2 sessions)
 > Mobile-responsive shell with proper routing.
@@ -52,6 +52,7 @@ Status: IN PROGRESS
 - [ ] Market journal: macro notes (not company-specific)
 - [ ] Search across all notes
 - [ ] Markdown editor (simple, not a full WYSIWYG)
+- [ ] Image support in notes (paste/upload screenshots, charts, diagrams into company analysis notes)
 
 ## Phase 4: Portfolio Module (2-3 sessions)
 > Multi-broker, multi-currency portfolio tracking.

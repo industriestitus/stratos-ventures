@@ -5,32 +5,23 @@
 # Web app — serve locally
 cd web && python3 -m http.server 8765
 # Then open: http://localhost:8765/index.html
-
-# Desktop app — dev mode
-cd desktop && npm run dev
-
-# Desktop app — build
-cd desktop && npm run build
 ```
 
 ## Tech Stack
 - **Web app**: Vanilla HTML/JS/CSS, Chart.js, localStorage + Cloudflare KV sync
-- **Desktop app**: Electron + React + TypeScript + Vite + SQLite (better-sqlite3)
 - **Backend**: Cloudflare Workers + KV (migrating to D1)
 - **Data APIs**: FMP (fundamentals), Finnhub (real-time), Yahoo Finance (EU stocks, via CF Worker proxy)
-- **Target**: All new development in `web/` — desktop is reference only
 
 ## Architecture
 ```
 web/
   index.html          — Main app (calculator + tracker + charts + settings)
-  valuation.html      — Same as index.html (legacy duplicate)
   cloudflare-worker/  — Yahoo Finance proxy + data sync backend
   server.py           — Local dev server
   serve.sh            — Local dev startup script
-desktop/              — Electron app (REFERENCE ONLY — no new development)
-  src/                — React components
-  electron/           — Main process + SQLite database
+docs/
+  ROADMAP.md          — Project phases and progress
+  reference-desktop-schema.sql — Old desktop SQLite schema (for D1 design reference)
 ```
 
 ## Code Standards

@@ -1,0 +1,13 @@
+name = "yahoo-finance-proxy"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "SYNC_DATA"
+id = "78d0e84e13da47cbbe0d13ea57361c9e"
+
+# Required secrets (set via `wrangler secret put`):
+#   SYNC_SECRET — auth key for /sync endpoints
+#
+# Optional env vars:
+#   ALLOWED_ORIGINS — comma-separated extra origins (e.g. "https://stratos.example.com")
