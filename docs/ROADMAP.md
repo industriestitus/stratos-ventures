@@ -10,9 +10,9 @@ Status: IN PROGRESS
 
 - [x] Fix security: move hardcoded sync secret to CF Worker env variable
 - [x] Fix security: lock CORS to specific origins
-- [ ] Set up Cloudflare D1 database (replace KV for structured data)
-- [ ] Design D1 schema (companies, positions, accounts, notes, snapshots, settings)
-- [ ] Set up Cloudflare Access (Zero Trust) — needs custom domain first (pages.dev can't be protected)
+- [x] Set up Cloudflare D1 database (replace KV for structured data)
+- [x] Design D1 schema (companies, positions, accounts, notes, snapshots, settings) — see docs/d1-schema.sql
+- [ ] ~~Set up Cloudflare Access (Zero Trust)~~ — moved to Phase 10 (needs custom domain)
 - [x] Implement client-side E2E encryption (AES-256-GCM + PBKDF2)
 - [x] Recovery key generation and display
 - [x] Clean up duplicate files (index.html = valuation.html)
@@ -143,6 +143,7 @@ Status: IN PROGRESS
 - [ ] Notifications (earnings coming up, price alerts)
 - [ ] Google Drive migration tool (import existing Docs)
 - [ ] Dark/light theme toggle
+- [ ] Set up Cloudflare Access (Zero Trust) — needs custom domain (~$10/yr), then protect pages.dev
 
 ---
 

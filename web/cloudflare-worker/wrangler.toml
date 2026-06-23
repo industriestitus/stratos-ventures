@@ -6,6 +6,11 @@ compatibility_date = "2024-01-01"
 binding = "SYNC_DATA"
 id = "78d0e84e13da47cbbe0d13ea57361c9e"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "stratos-ventures-db"
+database_id = "52a43c92-6fc1-4f00-ab14-7a98e6a88a66"
+
 # Required secrets (set via `wrangler secret put`):
 #   SYNC_SECRET — auth key for /sync endpoints
 #
