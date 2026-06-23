@@ -67,7 +67,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .company-tabs{padding:0}
 }
 .content{max-width:1440px;margin:0 auto;padding:20px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;position:relative}
 .card-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
 .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .input-group{display:flex;flex-direction:column;gap:3px}
@@ -149,7 +149,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .st-table tr:hover td{background:rgba(35,39,52,.6)}
 .st-table th.st-frozen{position:sticky;z-index:4;background:var(--surface2)}
 .st-table td.st-frozen{position:sticky;z-index:1;background:var(--surface)}
-.st-table tr:hover td.st-frozen{background:#1e2230}
+.st-table tr:hover td.st-frozen{background:var(--surface2)}
 .st-table th.st-frozen-last,.st-table td.st-frozen-last{border-right:2px solid var(--accent)!important}
 .st-ticker{font-weight:600;color:var(--accent2);cursor:pointer}
 .st-ticker:hover{color:var(--accent);text-decoration:underline}
@@ -302,7 +302,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 <body>
 
 <div id="lock-screen" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);align-items:center;justify-content:center">
-  <div style="width:340px;text-align:center">
+  <div style="width:100%;max-width:340px;padding:0 16px;text-align:center">
     <h1 style="font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Stratos Ventures</h1>
     <p style="color:var(--text2);font-size:13px;margin-bottom:32px">Encrypted investment platform</p>
 
@@ -1136,7 +1136,8 @@ function showSpinner(container,text){
   container.style.position='relative';
   const o=document.createElement('div');
   o.className='loading-overlay';
-  o.innerHTML='<div class="spinner spinner--lg"></div>'+(text?'<span>'+text+'</span>':'');
+  const sp=document.createElement('div');sp.className='spinner spinner--lg';o.appendChild(sp);
+  if(text){const s=document.createElement('span');s.textContent=text;o.appendChild(s)}
   container.appendChild(o);
 }
 function hideSpinner(container){
@@ -1144,7 +1145,7 @@ function hideSpinner(container){
   if(o)o.remove();
 }
 function setBtnLoading(btn,loading,origText){
-  if(loading){btn._origText=btn.textContent;btn.disabled=true;btn.classList.add('btn-loading');btn.innerHTML='<div class="spinner spinner--sm"></div>'+(origText||btn._origText||'');}
+  if(loading){btn._origText=btn.textContent;btn.disabled=true;btn.classList.add('btn-loading');btn.textContent='';const sp=document.createElement('div');sp.className='spinner spinner--sm';btn.appendChild(sp);btn.appendChild(document.createTextNode(origText||btn._origText||''));}
   else{btn.disabled=false;btn.classList.remove('btn-loading');btn.textContent=btn._origText||origText||'';}
 }
 
@@ -1390,8 +1391,13 @@ function deleteStock(name,e){e.stopPropagation();if(!confirm(`Delete "${name}"?`
 function renderSavedStocks(){
   const c=document.getElementById('saved-stocks-list'),s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
   if(!Object.keys(s).length){c.innerHTML='<p style="color:var(--text2);font-size:12px">No saved stocks yet.</p>';return}
-  c.innerHTML=Object.keys(s).map(n=>{const d=s[n],dt=d.savedAt?new Date(d.savedAt).toLocaleDateString():'';
-    return`<div class="saved-chip" onclick="loadStock('${n.replace(/'/g,"\\'")}')"><strong>${n}</strong> <span style="color:var(--text2);font-size:10px">${dt}</span><span class="delete-chip" onclick="deleteStock('${n.replace(/'/g,"\\'")}',event)">x</span></div>`}).join('');
+  c.innerHTML=Object.keys(s).map(n=>{const d=s[n],dt=d.savedAt?new Date(d.savedAt).toLocaleDateString():'';const en=escH(n);
+    return`<div class="saved-chip" data-stock="${en}"><strong>${en}</strong> <span style="color:var(--text2);font-size:10px">${escH(dt)}</span><span class="delete-chip" data-del="${en}">x</span></div>`}).join('');
+  c.querySelectorAll('.saved-chip').forEach(el=>{
+    el.addEventListener('click',()=>loadStock(el.dataset.stock));
+    const del=el.querySelector('.delete-chip');
+    if(del)del.addEventListener('click',e=>{e.stopPropagation();deleteStock(del.dataset.del,e)});
+  });
 }
 function showExportModal(){
   const s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
