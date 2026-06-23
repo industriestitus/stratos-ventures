@@ -1592,7 +1592,7 @@ let stExpanded={};
 function parseNum(s){s=String(s).trim().replace(/,/g,'').replace(/\s/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
 function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct)return parseFloat(v).toFixed(1);return typeof v==='number'?v.toFixed(2):v}
 
-function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 function stSettings(){
   return{
@@ -1851,7 +1851,7 @@ function calcStockRatios(s){
   if(s.fcf)r.pfcf=mc/s.fcf;
   if(s.ocf)r.pocf=mc/s.ocf;
   if(s.ebit)r.evEbit=mc/s.ebit;
-  if(r.pe&&s.epsGrowth&&s.epsGrowth!==0)r.peg=r.pe/s.epsGrowth;
+  if(r.pe&&s.epsGrowth&&s.epsGrowth>0)r.peg=r.pe/s.epsGrowth;
   if(s.buybackRaw&&mc)r.buyback=(s.buybackRaw/mc)*100;
   return r;
 }
@@ -2192,7 +2192,6 @@ function stDataBlur(inp){
     if(f==='fcf'||f==='sbc')tStocks[t].fcfSbc=(tStocks[t].fcf||0)-(tStocks[t].sbc||0);
   }
   saveTrackerStocks();
-  renderTracker();
 }
 
 function updateTrackerDataField(inp){
@@ -2204,11 +2203,11 @@ function updateTrackerDataField(inp){
   if(f==='ocf'||f==='sbc')tStocks[t].ocfSbc=(tStocks[t].ocf||0)-(tStocks[t].sbc||0);
   if(f==='fcf'||f==='sbc')tStocks[t].fcfSbc=(tStocks[t].fcf||0)-(tStocks[t].sbc||0);
   saveTrackerStocks();
-  renderTracker();
 }
 
 function exportTrackerData(){
-  const d=JSON.stringify({version:1,exportedAt:new Date().toISOString(),settings:stSettings(),stocks:tStocks},null,2);
+  const s=stSettings();const safeSettings={g1:s.g1,g2:s.g2,g3:s.g3,dr:s.dr,tg:s.tg,em:s.em,fade:s.fade};
+  const d=JSON.stringify({version:1,exportedAt:new Date().toISOString(),settings:safeSettings,stocks:tStocks},null,2);
   const b=new Blob([d],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(b);a.download='tracker_export.json';a.click();URL.revokeObjectURL(a.href);
 }
@@ -2465,7 +2464,9 @@ let lastSyncTs=0;
 
 function getSyncUrl(){
   const s=stSettings();
-  return s.workerUrl||'';
+  const url=s.workerUrl||'';
+  if(url&&url.startsWith('http://')){showToast('Sync URL uses HTTP — data sent unencrypted. Use HTTPS.','warning');return ''}
+  return url;
 }
 
 function setStatus(id,msg,ok){
