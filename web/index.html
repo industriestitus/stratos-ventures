@@ -171,6 +171,39 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .st-empty{text-align:center;padding:40px;color:var(--text2);font-size:13px}
 #company-panel-tracker{max-width:100%}
 #company-panel-charts{max-width:1440px}
+/* Company Profile */
+#company-profile{max-width:1440px;padding:0 20px}
+.cp-header{margin-bottom:16px}
+.cp-back{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s;margin-bottom:12px}
+.cp-back:hover{border-color:var(--accent);color:var(--text)}
+.cp-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.cp-name{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.cp-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}
+.cp-ticker{font-weight:600;color:var(--accent2);background:rgba(108,92,231,.12);padding:2px 8px;border-radius:4px}
+.cp-price{font-weight:600;color:var(--text)}
+.cp-mcap,.cp-date{color:var(--text2)}
+.cp-date{font-size:11px}
+.cp-actions{display:flex;gap:8px}
+.cp-actions .btn{display:inline-flex;align-items:center;gap:6px}
+.cp-tabs{display:flex;gap:4px;margin-bottom:16px}
+.cp-panel{display:none}.cp-panel.active{display:block}
+.cp-metrics-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.cp-metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.cp-metric-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px}
+.cp-metric-value{font-size:20px;font-weight:700}
+.cp-metric-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.cp-assessment-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.cp-assess-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.cp-assess-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px}
+.cp-assess-value{font-size:15px;font-weight:600;color:var(--text)}
+.cp-thesis{grid-column:1/-1}
+.cp-thesis .cp-assess-value{font-size:13px;font-weight:400;line-height:1.5;color:var(--text2)}
+@media(max-width:768px){
+  .cp-name{font-size:18px}
+  .cp-metrics-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .cp-tabs{overflow-x:auto}
+  .cp-assessment-grid{grid-template-columns:1fr 1fr}
+}
 #section-settings{max-width:720px}
 .conn-row{display:flex;align-items:end;gap:10px;margin-bottom:18px;flex-wrap:wrap}
 .conn-row .input-group{flex:1;min-width:220px}
@@ -616,6 +649,67 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </div>
 
   </div><!-- end company-panel-charts -->
+
+  <!-- Company Profile (detail view) -->
+  <div id="company-profile" style="display:none">
+    <div class="cp-header">
+      <button class="cp-back" onclick="closeProfile()">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M12 4l-6 6 6 6"/></svg>
+        Back to Tracker
+      </button>
+      <div class="cp-title-row">
+        <div>
+          <h2 class="cp-name" id="cp-name"></h2>
+          <div class="cp-meta">
+            <span class="cp-ticker" id="cp-ticker"></span>
+            <span class="cp-price" id="cp-price"></span>
+            <span class="cp-mcap" id="cp-mcap"></span>
+            <span class="cp-date" id="cp-date"></span>
+          </div>
+        </div>
+        <div class="cp-actions">
+          <button class="btn btn-secondary" onclick="const t=profileTicker;closeProfile();loadStockToCalc(t)" title="Open in Calculator">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><rect x="4" y="2" width="12" height="16" rx="2"/><line x1="7" y1="6" x2="13" y2="6"/><circle cx="7.5" cy="9.5" r=".7" fill="currentColor"/><circle cx="10" cy="9.5" r=".7" fill="currentColor"/><circle cx="12.5" cy="9.5" r=".7" fill="currentColor"/><circle cx="7.5" cy="12.5" r=".7" fill="currentColor"/><circle cx="10" cy="12.5" r=".7" fill="currentColor"/><circle cx="12.5" cy="12.5" r=".7" fill="currentColor"/></svg>
+            Calculator
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="cp-tabs">
+      <button class="tab active" onclick="switchProfileTab('overview')">Overview</button>
+      <button class="tab" onclick="switchProfileTab('financials')">Financials</button>
+      <button class="tab" onclick="switchProfileTab('valuation')">Valuation</button>
+      <button class="tab" onclick="switchProfileTab('notes')">Notes</button>
+      <button class="tab" onclick="switchProfileTab('checklist')">Checklist</button>
+    </div>
+    <div id="cp-panel-overview" class="cp-panel active">
+      <div id="cp-overview-content"></div>
+    </div>
+    <div id="cp-panel-financials" class="cp-panel" style="display:none">
+      <div class="card placeholder-section">
+        <h2>Financials</h2>
+        <p>Detailed financial statements and historical data. Coming in Phase 2.</p>
+      </div>
+    </div>
+    <div id="cp-panel-valuation" class="cp-panel" style="display:none">
+      <div class="card placeholder-section">
+        <h2>Valuation</h2>
+        <p>DCF models, comparables, and scenario analysis. Coming in Phase 3.</p>
+      </div>
+    </div>
+    <div id="cp-panel-notes" class="cp-panel" style="display:none">
+      <div class="card placeholder-section">
+        <h2>Notes</h2>
+        <p>Research notes, earnings call summaries, and analysis. Coming in Phase 3.</p>
+      </div>
+    </div>
+    <div id="cp-panel-checklist" class="cp-panel" style="display:none">
+      <div class="card placeholder-section">
+        <h2>Checklist</h2>
+        <p>Investment checklist and due diligence tracker. Coming in Phase 4.</p>
+      </div>
+    </div>
+  </div><!-- end company-profile -->
 
 </div><!-- end section-companies -->
 
@@ -1222,6 +1316,7 @@ function showSection(name){
   }
   closeMoreMenu();
   if(name==='companies'){
+    if(profileTicker)return;
     const active=document.querySelector('.company-panel.active');
     if(active&&active.id==='company-panel-tracker')renderTracker();
     if(active&&active.id==='company-panel-charts')initCharts();
@@ -1247,6 +1342,121 @@ function toggleMoreMenu(){
 function closeMoreMenu(){
   document.querySelector('.more-menu')?.classList.remove('open');
   document.querySelector('.more-backdrop')?.classList.remove('open');
+}
+
+// ====== COMPANY PROFILE ======
+let profileTicker=null;
+
+function showProfile(ticker){
+  const s=tStocks[ticker];
+  if(!s)return;
+  profileTicker=ticker;
+  document.querySelector('.company-tabs').style.display='none';
+  document.querySelectorAll('.company-panel').forEach(p=>p.style.display='none');
+  const prof=document.getElementById('company-profile');
+  prof.style.display='';
+
+  const r=calcStockRatios(s);
+  const c=calcStockCalcs(s);
+
+  document.getElementById('cp-name').textContent=s.name||s.ticker;
+  document.getElementById('cp-ticker').textContent=s.ticker;
+  document.getElementById('cp-price').textContent=s.price?'$'+s.price.toFixed(2):'-';
+  document.getElementById('cp-mcap').textContent='MCap: '+fmt(s.marketCap);
+  document.getElementById('cp-date').textContent=s.date||'';
+
+  // Overview content
+  let h='';
+
+  // Card 1: Key Metrics
+  h+='<div class="card"><div class="card-title">Key Metrics</div><div class="cp-metrics-grid">';
+  const metrics=[
+    {l:'Price',v:s.price?'$'+s.price.toFixed(2):'-'},
+    {l:'Market Cap',v:fmt(s.marketCap)},
+    {l:'Revenue',v:fmt(s.revenue)},
+    {l:'Net Income',v:fmt(s.profit)},
+    {l:'Operating CF',v:fmt(s.ocf)},
+    {l:'Free Cash Flow',v:fmt(s.fcf)},
+    {l:'SBC',v:fmt(s.sbc)},
+    {l:'FCF - SBC',v:fmt(s.fcfSbc)}
+  ];
+  metrics.forEach(m=>{
+    h+=`<div class="cp-metric"><div class="cp-metric-label">${m.l}</div><div class="cp-metric-value">${m.v||'-'}</div></div>`;
+  });
+  h+='</div></div>';
+
+  // Card 2: Valuation & Returns
+  h+='<div class="card"><div class="card-title">Valuation & Returns</div><div class="cp-metrics-grid">';
+  function valClass(v,low,high,invert){
+    if(v==null||isNaN(v))return'';
+    if(invert)return v<=low?'positive':v>=high?'negative':'warn';
+    return v>=high?'positive':v<=low?'negative':'warn';
+  }
+  const vals=[
+    {l:'P/S',v:r.ps,f:v=>v?.toFixed(1),cls:valClass(r.ps,5,15,true)},
+    {l:'P/E',v:r.pe,f:v=>v?.toFixed(1),cls:valClass(r.pe,15,30,true)},
+    {l:'P/FCF',v:r.pfcf,f:v=>v?.toFixed(1),cls:valClass(r.pfcf,15,30,true)},
+    {l:'P/OCF',v:r.pocf,f:v=>v?.toFixed(1),cls:valClass(r.pocf,15,30,true)},
+    {l:'EV/EBIT',v:r.evEbit,f:v=>v?.toFixed(1),cls:valClass(r.evEbit,15,30,true)},
+    {l:'PEG',v:r.peg,f:v=>v?.toFixed(2),cls:valClass(r.peg,1,2,true)},
+    {l:'Money Back',v:c.moneyBack,f:v=>typeof v==='string'?v:v?.toFixed(1)+'y',cls:typeof c.moneyBack==='number'?valClass(c.moneyBack,5,10,true):'negative'},
+    {l:'ARIA CAGR',v:c.aria,f:v=>v?.toFixed(1)+'%',cls:valClass(c.aria,10,15)},
+    {l:'DCF Upside',v:c.dcf,f:v=>v?.toFixed(0)+'%',cls:valClass(c.dcf,0,30)},
+    {l:'Reverse DCF',v:c.reverseDcf,f:v=>v?.toFixed(1)+'%',cls:valClass(c.reverseDcf,5,15)},
+    {l:'Buyback Yield',v:r.buyback,f:v=>v?.toFixed(1)+'%',cls:valClass(r.buyback,1,3)}
+  ];
+  vals.forEach(m=>{
+    const display=(m.v!=null&&(typeof m.v==='string'||!isNaN(m.v)))?m.f(m.v):'-';
+    h+=`<div class="cp-metric"><div class="cp-metric-label">${m.l}</div><div class="cp-metric-value ${m.cls}">${display}</div></div>`;
+  });
+  h+='</div></div>';
+
+  // Card 3: Assessment
+  h+='<div class="card"><div class="card-title">Assessment</div><div class="cp-assessment-grid">';
+  const growthItems=[
+    {l:'Revenue Growth',v:s.revenueGrowth!=null?s.revenueGrowth.toFixed(1)+'%':'-',cls:valClass(s.revenueGrowth,5,15)},
+    {l:'3Y Revenue CAGR',v:s.revCAGR3!=null?s.revCAGR3.toFixed(1)+'%':'-',cls:valClass(s.revCAGR3,5,15)},
+    {l:'EPS Growth',v:s.epsGrowth!=null?s.epsGrowth.toFixed(1)+'%':'-',cls:valClass(s.epsGrowth,5,15)}
+  ];
+  const assessItems=[
+    {l:'Moat',v:s.moat||'-'},
+    {l:'Risk',v:s.risk||'-'},
+    {l:'Uncertainty',v:s.uncertainty||'-'},
+    {l:'Conviction',v:s.conviction||'-'},
+    {l:'Expected Return',v:s.expectedReturn||'-'}
+  ];
+  growthItems.forEach(m=>{
+    h+=`<div class="cp-assess-item"><div class="cp-assess-label">${m.l}</div><div class="cp-assess-value ${m.cls||''}">${m.v}</div></div>`;
+  });
+  assessItems.forEach(m=>{
+    h+=`<div class="cp-assess-item"><div class="cp-assess-label">${m.l}</div><div class="cp-assess-value">${escH(m.v)}</div></div>`;
+  });
+  if(s.thesis){
+    h+=`<div class="cp-assess-item cp-thesis"><div class="cp-assess-label">Thesis</div><div class="cp-assess-value">${escH(s.thesis)}</div></div>`;
+  }
+  h+='</div></div>';
+
+  document.getElementById('cp-overview-content').innerHTML=h;
+
+  // Reset to overview tab
+  switchProfileTab('overview');
+}
+
+function switchProfileTab(name){
+  ['overview','financials','valuation','notes','checklist'].forEach(t=>{
+    const el=document.getElementById('cp-panel-'+t);
+    if(el){el.style.display=t===name?'':'none';el.classList.toggle('active',t===name)}
+  });
+  document.querySelectorAll('.cp-tabs .tab').forEach(b=>{
+    b.classList.toggle('active',b.textContent.toLowerCase()===name);
+  });
+}
+
+function closeProfile(){
+  profileTicker=null;
+  document.getElementById('company-profile').style.display='none';
+  document.querySelector('.company-tabs').style.display='';
+  switchCompanyTab('tracker');
 }
 
 // ====== STOCK TRACKER ======
@@ -1743,7 +1953,7 @@ function renderTracker(){
       }else if(c.k==='_del'){
         html+=`<td><button class="st-del" onclick="removeTrackerStock('${escH(s.ticker)}')">&#215;</button></td>`;
       }else if(c.k==='ticker'){
-        html+=`<td class="st-ticker${fr}"${ls} onclick="loadStockToCalc('${escH(s.ticker)}')" title="Click to load into calculator">${escH(s.ticker)}</td>`;
+        html+=`<td class="st-ticker${fr}"${ls} onclick="showProfile('${escH(s.ticker)}')" title="Click to view company profile">${escH(s.ticker)}</td>`;
       }else if(c.d){
         const v=s[c.k];
         const disp=fmtCell(v,c);
