@@ -198,6 +198,33 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .cp-assess-value{font-size:15px;font-weight:600;color:var(--text)}
 .cp-thesis{grid-column:1/-1}
 .cp-thesis .cp-assess-value{font-size:13px;font-weight:400;line-height:1.5;color:var(--text2)}
+/* Toast notifications */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:500;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{pointer-events:auto;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--text2);border-radius:8px;padding:12px 36px 12px 14px;font-size:13px;color:var(--text);max-width:380px;min-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toast-in .3s ease;position:relative;line-height:1.4}
+.toast--success{border-left-color:var(--green)}
+.toast--error{border-left-color:var(--red)}
+.toast--warning{border-left-color:var(--orange)}
+.toast--info{border-left-color:var(--accent)}
+.toast-close{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;line-height:1;padding:2px 6px}
+.toast-close:hover{color:var(--text)}
+.toast.removing{animation:toast-out .25s ease forwards}
+@keyframes toast-in{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toast-out{from{transform:translateX(0);opacity:1}to{transform:translateX(120%);opacity:0}}
+/* Spinner */
+.spinner{border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+.spinner--sm{width:16px;height:16px;border-width:2px}
+.spinner--md{width:24px;height:24px}
+.spinner--lg{width:40px;height:40px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{position:absolute;inset:0;background:rgba(15,17,23,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:var(--radius);z-index:10}
+.loading-overlay span{font-size:12px;color:var(--text2)}
+.btn-loading{pointer-events:none;opacity:.7}
+.btn-loading .spinner{display:inline-block;vertical-align:middle;margin-right:6px}
+/* Empty state */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text2)}
+.empty-state svg{width:48px;height:48px;opacity:.4;margin-bottom:12px}
+.empty-state h3{font-size:16px;font-weight:600;color:var(--text);margin-bottom:6px}
+.empty-state p{font-size:13px;max-width:300px;margin:0 auto}
 #section-settings{max-width:720px}
 .conn-row{display:flex;align-items:end;gap:10px;margin-bottom:18px;flex-wrap:wrap}
 .conn-row .input-group{flex:1;min-width:220px}
@@ -260,6 +287,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   .cp-actions .btn{padding:8px 12px;font-size:12px}
   .cp-metric{padding:10px}
   .cp-metric-value{font-size:16px}
+  .toast-container{left:12px;right:12px;bottom:80px}
+  .toast{max-width:100%;min-width:0}
 }
 @media(max-width:480px){
   .summary-row,.input-grid,.results-grid,.cp-metrics-grid,.cp-assessment-grid{grid-template-columns:1fr}
@@ -890,7 +919,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </div><!-- end app-shell -->
 
 <!-- Modals -->
-<div class="modal-overlay" id="export-modal"><div class="modal"><h3>Export Data</h3><textarea id="export-data" readonly></textarea><div class="modal-actions"><button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('export-data').value);alert('Copied!')">Copy</button><button class="btn btn-secondary" onclick="downloadExport()">Download JSON</button><button class="btn btn-secondary" onclick="closeModals()">Close</button></div></div></div>
+<div class="modal-overlay" id="export-modal"><div class="modal"><h3>Export Data</h3><textarea id="export-data" readonly></textarea><div class="modal-actions"><button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('export-data').value);showToast('Copied to clipboard','success')">Copy</button><button class="btn btn-secondary" onclick="downloadExport()">Download JSON</button><button class="btn btn-secondary" onclick="closeModals()">Close</button></div></div></div>
 <div class="modal-overlay" id="import-modal"><div class="modal"><h3>Import Data</h3><textarea id="import-data" placeholder="Paste JSON data here..."></textarea><div class="modal-actions"><button class="btn btn-primary" onclick="doImport()">Import</button><label class="btn btn-secondary" style="cursor:pointer">Load File<input type="file" accept=".json" style="display:none" onchange="loadImportFile(event)"></label><button class="btn btn-secondary" onclick="closeModals()">Cancel</button></div></div></div>
 
 <script>
@@ -1063,7 +1092,7 @@ async function changeEncPassword(){
   document.getElementById('enc-new-pass').value='';
   try{
     await cloudSave();
-    alert('Password changed! Cloud data re-encrypted.');
+    showToast('Password changed! Cloud data re-encrypted.','success');
   }catch(e){
     // Rollback if cloud save failed
     localStorage.setItem('enc_salt',prevSalt);
@@ -1080,6 +1109,43 @@ function updateEncStatus(){
   const elOn=document.getElementById('enc-status-on');
   if(elOff)elOff.style.display=on?'none':'block';
   if(elOn)elOn.style.display=on?'block':'none';
+}
+
+// ====== TOAST & LOADING ======
+const _toastDedup=new Map();
+function showToast(msg,type='info',duration){
+  if(!duration)duration=type==='error'?6000:4000;
+  const key=type+':'+msg;
+  if(_toastDedup.has(key))return;
+  _toastDedup.set(key,1);setTimeout(()=>_toastDedup.delete(key),10000);
+  const c=document.getElementById('toast-container');
+  if(!c)return;
+  const t=document.createElement('div');
+  t.className='toast toast--'+type;
+  t.textContent=msg;
+  const cl=document.createElement('button');cl.className='toast-close';cl.textContent='×';
+  cl.onclick=()=>{t.classList.add('removing');setTimeout(()=>t.remove(),250)};
+  t.appendChild(cl);
+  c.appendChild(t);
+  while(c.children.length>5)c.firstChild.remove();
+  setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300)},duration);
+}
+
+function showSpinner(container,text){
+  hideSpinner(container);
+  container.style.position='relative';
+  const o=document.createElement('div');
+  o.className='loading-overlay';
+  o.innerHTML='<div class="spinner spinner--lg"></div>'+(text?'<span>'+text+'</span>':'');
+  container.appendChild(o);
+}
+function hideSpinner(container){
+  const o=container.querySelector('.loading-overlay');
+  if(o)o.remove();
+}
+function setBtnLoading(btn,loading,origText){
+  if(loading){btn._origText=btn.textContent;btn.disabled=true;btn.classList.add('btn-loading');btn.innerHTML='<div class="spinner spinner--sm"></div>'+(origText||btn._origText||'');}
+  else{btn.disabled=false;btn.classList.remove('btn-loading');btn.textContent=btn._origText||origText||'';}
 }
 
 // ====== CALCULATOR (existing) ======
@@ -1314,10 +1380,10 @@ function loadData(d){
 }
 function saveCurrentStock(){
   const name=document.getElementById('stockName').value.trim();
-  if(!name){alert('Enter a stock name/ticker first.');return}
+  if(!name){showToast('Enter a stock name/ticker first.','warning');return}
   const saved=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
   saved[name]=getAllData();saved[name].savedAt=new Date().toISOString();
-  localStorage.setItem('valuation_stocks',JSON.stringify(saved));alert(`"${name}" saved.`);renderSavedStocks();
+  localStorage.setItem('valuation_stocks',JSON.stringify(saved));showToast(`"${name}" saved.`,'success');renderSavedStocks();
 }
 function loadStock(name){const saved=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');if(saved[name]){loadData(saved[name]);switchTab('dcf-perpetuity')}}
 function deleteStock(name,e){e.stopPropagation();if(!confirm(`Delete "${name}"?`))return;const s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');delete s[name];localStorage.setItem('valuation_stocks',JSON.stringify(s));renderSavedStocks()}
@@ -1343,8 +1409,8 @@ function doImport(){
   try{const d=JSON.parse(document.getElementById('import-data').value);
     if(d.current)loadData(d.current);
     if(d.savedStocks){const ex=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');Object.assign(ex,d.savedStocks);localStorage.setItem('valuation_stocks',JSON.stringify(ex))}
-    closeModals();alert('Imported!');recalcAll()
-  }catch(e){alert('Invalid JSON data.')}
+    closeModals();showToast('Imported!','success');recalcAll()
+  }catch(e){showToast('Invalid JSON data.','error')}
 }
 
 // Section switching
@@ -1559,9 +1625,15 @@ function loadTrackerStocks(){
 // FMP API
 async function fmpFetch(endpoint,params){
   const s=stSettings();
-  if(!s.apiKey)return null;
+  if(!s.apiKey){showToast('FMP API key not set — go to Settings','warning');return null}
   const url=`${FMP}/${endpoint}?${new URLSearchParams({...params,apikey:s.apiKey})}`;
-  try{const r=await fetch(url);if(!r.ok)return null;const d=await r.json();if(d?.['Error Message'])return null;return d}catch(e){return null}
+  try{
+    const r=await fetch(url);
+    if(r.status===429){showToast('FMP rate limit — wait a moment','warning');return null}
+    if(r.status===401||r.status===403){showToast('FMP API key invalid','error');return null}
+    if(!r.ok)return null;
+    const d=await r.json();if(d?.['Error Message'])return null;return d;
+  }catch(e){return null}
 }
 
 // Yahoo Finance via Cloudflare Worker
@@ -1626,7 +1698,7 @@ async function fetchYahooData(ticker){
     stock._source='yahoo';
     tStocks[ticker]=stock;
     return stock;
-  }catch(e){console.warn('Yahoo fetch failed for',ticker,e);return null}
+  }catch(e){console.warn('Yahoo fetch failed for',ticker,e);showToast('Yahoo fetch failed for '+ticker,'warning');return null}
 }
 
 async function fetchStockData(ticker){
@@ -1675,12 +1747,17 @@ async function addTrackerStock(){
   const inp=document.getElementById('st-add-input');
   const ticker=inp.value.trim().toUpperCase();
   if(!ticker)return;
-  if(tStocks[ticker]){alert(ticker+' already exists');return}
+  if(tStocks[ticker]){showToast(ticker+' already tracked','warning');return}
+  const addBtn=inp.nextElementSibling;
   tStocks[ticker]={ticker,name:TNAMES[ticker]||ticker};
-  inp.value='';
-  document.getElementById('st-progress').textContent='Fetching '+ticker+'...';
-  await fetchStockData(ticker);
-  document.getElementById('st-progress').textContent='';
+  inp.value='';inp.disabled=true;
+  setBtnLoading(addBtn,true,'Adding...');
+  try{
+    const result=await fetchStockData(ticker);
+    if(!result||!result.marketCap)showToast(ticker+' added but some data unavailable — check API settings','warning');
+    else showToast(ticker+' added','success',2000);
+  }catch(e){showToast('Failed to fetch '+ticker,'error')}
+  finally{inp.disabled=false;setBtnLoading(addBtn,false,'+ Add')}
   saveTrackerStocks();
   renderTracker();
 }
@@ -1694,16 +1771,24 @@ function removeTrackerStock(ticker){
 
 async function refreshAllStocks(){
   const tickers=Object.keys(tStocks);
+  if(!tickers.length){showToast('No stocks to refresh','warning');return}
   const prog=document.getElementById('st-progress');
+  const wrap=document.querySelector('.st-wrap');
+  const refreshBtn=document.querySelector('.st-controls button[onclick*="refreshAll"]');
+  if(refreshBtn)setBtnLoading(refreshBtn,true,'Refreshing...');
+  if(wrap)showSpinner(wrap,`Refreshing 0/${tickers.length}...`);
+  const failed=[];
   for(let i=0;i<tickers.length;i++){
-    prog.textContent=`Refreshing ${i+1}/${tickers.length}: ${tickers[i]}...`;
-    await fetchStockData(tickers[i]);
+    if(wrap){const ov=wrap.querySelector('.loading-overlay span');if(ov)ov.textContent=`Refreshing ${i+1}/${tickers.length}: ${tickers[i]}...`}
+    try{await fetchStockData(tickers[i])}catch(e){failed.push(tickers[i])}
     renderTracker();
     if(i<tickers.length-1)await new Promise(r=>setTimeout(r,200));
   }
-  prog.textContent='Done!';
+  if(wrap)hideSpinner(wrap);
+  if(refreshBtn)setBtnLoading(refreshBtn,false,'↻ Refresh All');
   saveTrackerStocks();
-  setTimeout(()=>{prog.textContent=''},2000);
+  if(failed.length)showToast(`${tickers.length-failed.length}/${tickers.length} refreshed. Failed: ${failed.join(', ')}`,'warning');
+  else showToast(`All ${tickers.length} stocks refreshed`,'success',2000);
 }
 
 // Per-stock calculator
@@ -1988,7 +2073,13 @@ function renderTracker(){
   }).join('')+'</tr>';
 
   const tbody=document.getElementById('st-tbody');
-  if(!stocks.length){tbody.innerHTML=`<tr><td colspan="${stCols.length}" class="st-empty">No stocks match filter.</td></tr>`;return}
+  if(!stocks.length){
+    const hasAny=Object.keys(tStocks).length>0;
+    tbody.innerHTML=hasAny
+      ?`<tr><td colspan="${stCols.length}" class="st-empty">No stocks match filter.</td></tr>`
+      :`<tr><td colspan="${stCols.length}"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h18v18H3z"/><path d="M7 14l3-3 2 2 4-4"/><circle cx="17" cy="7" r="1.5"/></svg><h3>No stocks tracked yet</h3><p>Type a ticker above and click + Add to start tracking companies.</p></div></td></tr>`;
+    return;
+  }
 
   let html='';
   stocks.forEach(s=>{
@@ -2129,8 +2220,8 @@ function importTrackerFile(e){
         saveTrackerSettings();
       }
       renderTracker();
-      alert('Imported!');
-    }catch(err){alert('Invalid JSON file.')}
+      showToast('Imported!','success');
+    }catch(err){showToast('Invalid JSON file.','error')}
   };
   r.readAsText(f);
   e.target.value='';
@@ -2529,5 +2620,6 @@ window.addEventListener('load',()=>{
   }
 });
 </script>
+<div id="toast-container" class="toast-container"></div>
 </body>
 </html>

@@ -25,7 +25,7 @@ Status: IN PROGRESS
 - [x] Tab routing: Dashboard, Companies, Portfolio, Research, Framework, Settings
 - [x] Company profile page shell (click company → full profile)
 - [x] Mobile-responsive layout (touch-friendly, swipeable)
-- [ ] Loading states and error handling
+- [x] Loading states and error handling
 
 ## Phase 2: Company Profile Page (2-3 sessions)
 > The core of the app — everything about a company in one place.
