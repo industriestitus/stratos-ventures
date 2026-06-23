@@ -198,12 +198,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .cp-assess-value{font-size:15px;font-weight:600;color:var(--text)}
 .cp-thesis{grid-column:1/-1}
 .cp-thesis .cp-assess-value{font-size:13px;font-weight:400;line-height:1.5;color:var(--text2)}
-@media(max-width:768px){
-  .cp-name{font-size:18px}
-  .cp-metrics-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
-  .cp-tabs{overflow-x:auto}
-  .cp-assessment-grid{grid-template-columns:1fr 1fr}
-}
 #section-settings{max-width:720px}
 .conn-row{display:flex;align-items:end;gap:10px;margin-bottom:18px;flex-wrap:wrap}
 .conn-row .input-group{flex:1;min-width:220px}
@@ -218,6 +212,62 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .ch-mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
 .ch-mini-title{font-size:12px;font-weight:600;color:var(--accent2);margin-bottom:8px}
 .ch-mini-canvas{position:relative;height:180px}
+/* === Mobile Responsive === */
+@media(max-width:768px){
+  .bnav-item{min-height:44px}
+  .bnav-item svg{width:24px;height:24px}
+  .content{padding:12px}
+  .card{padding:14px}
+  .tab{padding:8px 14px;font-size:13px;min-height:36px}
+  .input-grid{grid-template-columns:repeat(2,1fr)}
+  .summary-row{grid-template-columns:repeat(2,1fr)}
+  .summary-card .sc-value{font-size:20px}
+  .results-grid{grid-template-columns:repeat(2,1fr)}
+  .stock-header{flex-direction:column;align-items:stretch}
+  .stock-header input{width:100%}
+  .stock-header select{width:100%;padding:10px}
+  .calc-actions{width:100%}
+  .calc-actions button{flex:1;padding:10px 8px;font-size:13px;min-height:40px}
+  .st-controls{gap:6px}
+  .st-controls input,.st-controls button{padding:10px 12px;font-size:13px;min-height:40px}
+  .st-table{font-size:12px}
+  .st-table th{padding:8px 6px;font-size:10px}
+  .st-table td{padding:6px 4px}
+  .st-ticker{font-size:13px}
+  .st-del,.st-exp-btn{padding:8px;min-width:32px;min-height:32px}
+  .st-edit,.st-data{padding:4px;font-size:12px}
+  .st-exp-grid{grid-template-columns:repeat(2,1fr)}
+  .year-inputs table{min-width:600px}
+  .year-inputs input{padding:8px 4px;font-size:13px}
+  .year-inputs th{font-size:10px;padding:6px 4px}
+  .aria-table input{padding:6px 4px;font-size:13px}
+  .aria-table td{padding:6px 8px}
+  .chart-container{height:220px}
+  #ch-grid{grid-template-columns:1fr!important}
+  .modal{width:95%;padding:16px}
+  .conn-row{flex-direction:column}
+  .conn-row .input-group{min-width:0}
+  .conn-btn{width:100%}
+  #section-settings{max-width:100%}
+  .st-wrap{position:relative}
+  .st-wrap::after{content:'';position:absolute;top:0;right:0;bottom:0;width:24px;background:linear-gradient(to right,transparent,var(--surface));pointer-events:none;z-index:1;opacity:.7}
+  .cp-name{font-size:18px}
+  .cp-metrics-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .cp-tabs{overflow-x:auto}
+  .cp-assessment-grid{grid-template-columns:1fr 1fr}
+  .cp-back{padding:8px 14px;min-height:36px}
+  .cp-meta{font-size:11px;gap:8px}
+  .cp-actions .btn{padding:8px 12px;font-size:12px}
+  .cp-metric{padding:10px}
+  .cp-metric-value{font-size:16px}
+}
+@media(max-width:480px){
+  .summary-row,.input-grid,.results-grid,.cp-metrics-grid,.cp-assessment-grid{grid-template-columns:1fr}
+  .cp-name{font-size:16px}
+  .st-controls{flex-direction:column}
+  .st-controls input,.st-controls button{width:100%!important}
+  .st-controls div[style*="flex:1"]{display:none}
+}
 </style>
 </head>
 <body>

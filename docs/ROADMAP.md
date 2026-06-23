@@ -24,7 +24,7 @@ Status: IN PROGRESS
 - [x] Redesign navigation: sidebar (desktop) / bottom nav (mobile)
 - [x] Tab routing: Dashboard, Companies, Portfolio, Research, Framework, Settings
 - [x] Company profile page shell (click company → full profile)
-- [ ] Mobile-responsive layout (touch-friendly, swipeable)
+- [x] Mobile-responsive layout (touch-friendly, swipeable)
 - [ ] Loading states and error handling
 
 ## Phase 2: Company Profile Page (2-3 sessions)
