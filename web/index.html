@@ -86,6 +86,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .summary-card .sc-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px}
 .summary-card .sc-value{font-size:24px;font-weight:700;margin-bottom:2px}
 .summary-card .sc-sub{font-size:11px;color:var(--text2)}
+button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .positive{color:var(--green)}.negative{color:var(--red)}.neutral{color:var(--blue)}.warn{color:var(--orange)}
 .tabs{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto}
 .tab{padding:7px 16px;font-size:12px;font-weight:500;border-radius:8px;border:none;background:transparent;color:var(--text2);cursor:pointer;transition:all .2s;white-space:nowrap}
@@ -1154,6 +1155,7 @@ async function recoverWithKey(){
   // Load local data only (cloud data encrypted with old password is unrecoverable)
   loadTrackerSettings();
   loadTrackerStocks();
+  initTodoCounter();
   const l=localStorage.getItem('valuation_last_v2');
   if(l){try{loadData(JSON.parse(l))}catch(e){}}
   recalcAll();
@@ -1593,15 +1595,16 @@ function showProfile(ticker){
   // Card 1: Key Metrics (overridable)
   h+='<div class="card"><div class="card-title">Key Metrics</div><div class="cp-metrics-grid">';
   const ovd=s.overriddenData||{};
+  function ov(field){return ovd[field]!=null?ovd[field]:s[field]}
   const metrics=[
-    {l:'Price',v:s.price?'$'+s.price.toFixed(2):'-',f:'price'},
-    {l:'Market Cap',v:fmt(s.marketCap),f:'marketCap'},
-    {l:'Revenue',v:fmt(s.revenue),f:'revenue'},
-    {l:'Net Income',v:fmt(s.profit),f:'profit'},
-    {l:'Operating CF',v:fmt(s.ocf),f:'ocf'},
-    {l:'Free Cash Flow',v:fmt(s.fcf),f:'fcf'},
-    {l:'SBC',v:fmt(s.sbc),f:'sbc'},
-    {l:'FCF - SBC',v:fmt(s.fcfSbc),f:'fcfSbc'}
+    {l:'Price',v:ov('price')?'$'+ov('price').toFixed(2):'-',f:'price'},
+    {l:'Market Cap',v:fmt(ov('marketCap')),f:'marketCap'},
+    {l:'Revenue',v:fmt(ov('revenue')),f:'revenue'},
+    {l:'Net Income',v:fmt(ov('profit')),f:'profit'},
+    {l:'Operating CF',v:fmt(ov('ocf')),f:'ocf'},
+    {l:'Free Cash Flow',v:fmt(ov('fcf')),f:'fcf'},
+    {l:'SBC',v:fmt(ov('sbc')),f:'sbc'},
+    {l:'FCF - SBC',v:fmt(ov('fcfSbc')),f:'fcfSbc'}
   ];
   metrics.forEach(m=>{
     const isOvr=ovd[m.f]!=null;
@@ -2070,6 +2073,7 @@ function addEarningsYear(ticker){
 
 // Per-company TODO list
 let todoIdCounter=0;
+function initTodoCounter(){todoIdCounter=Math.max(0,...Object.values(tStocks).flatMap(s=>(s.todos||[]).map(t=>t.id||0)))}
 function initTodos(s){if(!s.todos)s.todos=[];return s.todos}
 function renderTodos(ticker){
   const s=tStocks[ticker];if(!s)return'';
@@ -2241,11 +2245,13 @@ function startOverride(ticker,field,el){
       return;
     }
     const parsed=parseNum(raw);
-    if(isNaN(parsed)||parsed===0){valEl.innerHTML=origHTML;return}
+    if(isNaN(parsed)){valEl.innerHTML=origHTML;return}
     if(!s._origData)s._origData={};
     if(s._origData[field]==null)s._origData[field]=current;
     s.overriddenData[field]=parsed;
     s[field]=parsed;
+    if(field==='ocf'||field==='sbc')s.ocfSbc=(s.ocf||0)-(s.sbc||0);
+    if(field==='fcf'||field==='sbc')s.fcfSbc=(s.fcf||0)-(s.sbc||0);
     saveTrackerStocks();
     showProfile(ticker);
   }
@@ -2262,7 +2268,7 @@ let stSort={col:'ticker',dir:'asc'};
 let stExpanded={};
 
 function parseNum(s){s=String(s).trim().replace(/,/g,'').replace(/\s/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
-function asPct(v){if(v==null)return null;return Math.abs(v)<5?v*100:v}
+function asPct(v){if(v==null)return null;return Math.abs(v)<=1?v*100:v}
 function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct)return parseFloat(v).toFixed(1);return typeof v==='number'?v.toFixed(2):v}
 
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -2285,7 +2291,8 @@ function stSettings(){
 function saveTrackerSettings(){localStorage.setItem('tracker_settings',JSON.stringify(stSettings()))}
 
 function loadTrackerSettings(){
-  const s=JSON.parse(localStorage.getItem('tracker_settings')||'{}');
+  let s={};
+  try{s=JSON.parse(localStorage.getItem('tracker_settings')||'{}')}catch(e){s={}}
   const map={apiKey:'st-apikey',workerUrl:'st-worker',syncKey:'st-synckey',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
   Object.keys(map).forEach(k=>{if(s[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=s[k]}});
 }
@@ -2412,6 +2419,7 @@ async function fetchStockData(ticker){
     const km2=await fmpFetch('key-metrics-ttm',{symbol:ticker,limit:1});
     if(km2?.[0]){const k=km2[0];if(k.roicTTM!=null)stock.roic=asPct(k.roicTTM);if(k.roeTTM!=null)stock.roe=asPct(k.roeTTM);if(k.debtToEquityTTM!=null)stock.debtEquity=k.debtToEquityTTM;if(k.currentRatioTTM!=null)stock.currentRatio=k.currentRatioTTM}
     stock._source='fmp';
+    if(stock.overriddenData){Object.entries(stock.overriddenData).forEach(([k,v])=>{stock[k]=v})}
     tStocks[ticker]=stock;
     return stock;
   }
@@ -2442,6 +2450,8 @@ async function fetchStockData(ticker){
     }
   }
 
+  // Re-apply overrides so API refresh doesn't wipe user values
+  if(stock.overriddenData){Object.entries(stock.overriddenData).forEach(([k,v])=>{stock[k]=v})}
   tStocks[ticker]=stock;
   return stock;
 }
@@ -2472,9 +2482,12 @@ function removeTrackerStock(ticker){
   renderTracker();
 }
 
+let _refreshing=false;
 async function refreshAllStocks(){
+  if(_refreshing){showToast('Refresh already in progress','warning');return}
+  _refreshing=true;
   const tickers=Object.keys(tStocks);
-  if(!tickers.length){showToast('No stocks to refresh','warning');return}
+  if(!tickers.length){_refreshing=false;showToast('No stocks to refresh','warning');return}
   const prog=document.getElementById('st-progress');
   const wrap=document.querySelector('.st-wrap');
   const refreshBtn=document.querySelector('.st-controls button[onclick*="refreshAll"]');
@@ -2490,6 +2503,7 @@ async function refreshAllStocks(){
   if(wrap)hideSpinner(wrap);
   if(refreshBtn)setBtnLoading(refreshBtn,false,'↻ Refresh All');
   saveTrackerStocks();
+  _refreshing=false;
   if(failed.length)showToast(`${tickers.length-failed.length}/${tickers.length} refreshed. Failed: ${failed.join(', ')}`,'warning');
   else showToast(`All ${tickers.length} stocks refreshed`,'success',2000);
 }
@@ -2514,14 +2528,18 @@ function calcStockCalcs(s){
   // DCF Perpetuity
   let dcfSum=0;
   for(let i=1;i<=10;i++)dcfSum+=fcfs[i]/Math.pow(1+dr,i);
-  const tvP=(fcfs[10]*(1+tg))/(dr-tg);
-  const evP=dcfSum+tvP/Math.pow(1+dr,10)+cash-debt;
-  res.dcf=((evP-mc)/mc)*100;
+  if(dr>tg){
+    const tvP=(fcfs[10]*(1+tg))/(dr-tg);
+    const evP=dcfSum+tvP/Math.pow(1+dr,10)+cash-debt;
+    res.dcf=((evP-mc)/mc)*100;
+  }
 
   // Reverse DCF Perpetuity
-  const targetEV=mc-cash+debt;
-  const sP=solveGrowth(fcf0,dr,fade,(f,d)=>(f*(1+tg))/(d-tg));
-  res.reverseDcf=sP(targetEV)*100;
+  if(dr>tg){
+    const targetEV=mc-cash+debt;
+    const sP=solveGrowth(fcf0,dr,fade,(f,d)=>(f*(1+tg))/(d-tg));
+    res.reverseDcf=sP(targetEV)*100;
+  }
 
   // Money Back
   const cum=[fcfs[0]];
@@ -2543,11 +2561,11 @@ function calcStockRatios(s){
   const r={};
   const mc=s.marketCap;
   if(!mc)return r;
-  if(s.revenue)r.ps=mc/s.revenue;
-  if(s.profit)r.pe=mc/s.profit;
-  if(s.fcf)r.pfcf=mc/s.fcf;
-  if(s.ocf)r.pocf=mc/s.ocf;
-  if(s.ebit)r.evEbit=mc/s.ebit;
+  if(s.revenue&&s.revenue>0)r.ps=mc/s.revenue;
+  if(s.profit&&s.profit>0)r.pe=mc/s.profit;
+  if(s.fcf&&s.fcf>0)r.pfcf=mc/s.fcf;
+  if(s.ocf&&s.ocf>0)r.pocf=mc/s.ocf;
+  if(s.ebit&&s.ebit>0)r.evEbit=mc/s.ebit;
   if(r.pe&&s.epsGrowth&&s.epsGrowth>0)r.peg=r.pe/s.epsGrowth;
   if(s.buybackRaw&&mc)r.buyback=(s.buybackRaw/mc)*100;
   return r;
@@ -2802,7 +2820,7 @@ function renderTracker(){
         const v=s[c.k];
         const disp=fmtCell(v,c);
         const slowdown=c.k==='revenueGrowth'&&s.revenueGrowth!=null&&s.revCAGR3!=null&&s.revenueGrowth<s.revCAGR3;
-        html+=`<td class="${fr}"${ls}><input class="st-data ${c.txt?'txt':''}" ${slowdown?'style="color:var(--red)"':''} value="${escH(disp)}" data-ticker="${escH(s.ticker)}" data-field="${c.k}" data-raw="${v!=null?v:''}" ${c.big?'data-big="1"':''} ${c.pct?'data-pct="1"':''} ${c.txt?'data-txt="1"':''} onfocus="stDataFocus(this)" onblur="stDataBlur(this)"></td>`;
+        html+=`<td class="${fr}"${ls}><input class="st-data ${c.txt?'txt':''}" ${slowdown?'style="color:var(--red)"':''} value="${escH(disp)}" data-ticker="${escH(s.ticker)}" data-field="${c.k}" data-raw="${v!=null?escH(String(v)):''}" ${c.big?'data-big="1"':''} ${c.pct?'data-pct="1"':''} ${c.txt?'data-txt="1"':''} onfocus="stDataFocus(this)" onblur="stDataBlur(this)"></td>`;
       }else if(c.edit){
         html+=`<td class="${fr}"${ls}><input class="st-edit ${c.wide?'st-edit-wide':''}" value="${escH(s[c.k]||'')}" data-ticker="${escH(s.ticker)}" data-field="${c.k}" oninput="updateTrackerField(this)"></td>`;
       }else if(c.calc){
@@ -3230,7 +3248,7 @@ async function cloudSave(){
   const payload={
     ts:Date.now(),
     stocks:tStocks,
-    settings:stSettings(),
+    settings:(()=>{const st=stSettings();return{g1:st.g1,g2:st.g2,g3:st.g3,dr:st.dr,tg:st.tg,em:st.em,fade:st.fade}})(),
     calculator:getAllData(),
     savedStocks:JSON.parse(localStorage.getItem('valuation_stocks')||'{}')
   };
@@ -3292,6 +3310,7 @@ async function cloudLoad(){
 async function autoLoad(){
   loadTrackerSettings();
   loadTrackerStocks();
+  initTodoCounter();
   const l=localStorage.getItem('valuation_last_v2');
   if(l){try{loadData(JSON.parse(l))}catch(e){}}
   recalcAll();
