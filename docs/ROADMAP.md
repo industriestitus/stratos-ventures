@@ -130,11 +130,13 @@ Status: NOT STARTED
 ## Phase 9: Export & Polish (1 session)
 > Full data portability and UI polish.
 
-- [ ] JSON full backup/restore
+- [ ] JSON full backup/restore (unified: calculator + tracker + notes in one file)
 - [ ] CSV export (positions, transactions)
 - [ ] Excel export (multi-sheet)
 - [ ] Markdown export (notes, journal, analysis)
 - [ ] CSV import for positions
+- [ ] Hash-based routing with browser back/forward button support
+- [ ] Data versioning & migration system (schema version in localStorage, auto-upgrade on load)
 
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
@@ -146,6 +148,10 @@ Status: NOT STARTED
 - [ ] Google Drive migration tool (import existing Docs)
 - [ ] Dark/light theme toggle
 - [ ] Set up Cloudflare Access (Zero Trust) — needs custom domain (~$10/yr), then protect pages.dev
+- [ ] localStorage encryption at rest (AES-256 for local data, not just cloud sync)
+- [ ] Cloud sync conflict resolution (merge strategy instead of last-write-wins)
+- [ ] Multi-tab localStorage sync (StorageEvent listener to prevent stale reads)
+- [ ] Lazy-load charts (defer Chart.js rendering until canvas is visible)
 
 ---
 

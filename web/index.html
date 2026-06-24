@@ -1254,6 +1254,7 @@ function setBtnLoading(btn,loading,origText){
 // ====== CALCULATOR (existing) ======
 const charts = {};
 function fmt(n,dec=0){if(n==null||!isFinite(n))return'-';if(Math.abs(n)>=1e12)return(n/1e12).toFixed(1)+'T';if(Math.abs(n)>=1e9)return(n/1e9).toFixed(1)+'B';if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e4)return(n/1e3).toFixed(1)+'K';return n.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function cv(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim()}
 function V(id){return parseFloat(document.getElementById(id)?.value)||0}
 function T(id,t){const e=document.getElementById(id);if(e)e.textContent=t}
 
@@ -1315,8 +1316,8 @@ function calcDCFP(){
     <div class="result-box"><div class="label">Equity Value</div><div class="value neutral">${fmt(r.eq)}</div></div>
     <div class="result-box"><div class="label">Upside/Downside</div><div class="value ${r.up>=0?'positive':'negative'}">${r.up>=0?'+':''}${(r.up*100).toFixed(1)}%</div></div>`;
   renderChart('dcfp-chart','dcfp',['Y0','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'],
-    [{label:'FCF-SBC',data:r.fcfs,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,0.1)',fill:true},
-     {label:'Discounted FCF',data:[null,...r.pvs.slice(1)],borderColor:'#74b9ff',backgroundColor:'rgba(116,185,255,0.1)',fill:true}]);
+    [{label:'FCF-SBC',data:r.fcfs,borderColor:cv('--accent'),backgroundColor:cv('--accent')+'1a',fill:true},
+     {label:'Discounted FCF',data:[null,...r.pvs.slice(1)],borderColor:cv('--blue'),backgroundColor:cv('--blue')+'1a',fill:true}]);
   const el=document.getElementById('sum-dcfp-val');el.textContent=fmt(r.eq);el.className='sc-value '+(r.up>=0?'positive':'negative');
   document.getElementById('sum-dcfp-sub').textContent=(r.up>=0?'+':'')+(r.up*100).toFixed(1)+'% upside';
 }
@@ -1331,8 +1332,8 @@ function calcDCFE(){
     <div class="result-box"><div class="label">Equity Value</div><div class="value neutral">${fmt(r.eq)}</div></div>
     <div class="result-box"><div class="label">Upside/Downside</div><div class="value ${r.up>=0?'positive':'negative'}">${r.up>=0?'+':''}${(r.up*100).toFixed(1)}%</div></div>`;
   renderChart('dcfe-chart','dcfe',['Y0','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'],
-    [{label:'FCF-SBC',data:r.fcfs,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,0.1)',fill:true},
-     {label:'Discounted FCF',data:[null,...r.pvs.slice(1)],borderColor:'#74b9ff',backgroundColor:'rgba(116,185,255,0.1)',fill:true}]);
+    [{label:'FCF-SBC',data:r.fcfs,borderColor:cv('--accent'),backgroundColor:cv('--accent')+'1a',fill:true},
+     {label:'Discounted FCF',data:[null,...r.pvs.slice(1)],borderColor:cv('--blue'),backgroundColor:cv('--blue')+'1a',fill:true}]);
   const el=document.getElementById('sum-dcfe-val');el.textContent=fmt(r.eq);el.className='sc-value '+(r.up>=0?'positive':'negative');
   document.getElementById('sum-dcfe-sub').textContent=(r.up>=0?'+':'')+(r.up*100).toFixed(1)+'% upside';
 }
@@ -1381,7 +1382,7 @@ function calcReverseDCF(){
   function buildSens(termFn,chartId,chartKey){
     const sensData=[],labels=[];
     for(let d=6;d<=14;d++){labels.push(d+'%');const drt=d/100;const sv=solveGrowth(fcf0,drt,fade,termFn);sensData.push(sv(targetEV)*100)}
-    renderChart(chartId,chartKey,labels,[{label:'Implied Growth (%)',data:sensData,borderColor:'#e17055',backgroundColor:'rgba(225,112,85,0.1)',fill:true,tension:0.3}],{yLabel:'Implied Growth (%)'});
+    renderChart(chartId,chartKey,labels,[{label:'Implied Growth (%)',data:sensData,borderColor:cv('--red'),backgroundColor:cv('--red')+'1a',fill:true,tension:0.3}],{yLabel:'Implied Growth (%)'});
   }
   buildSens(function(f,d){return(f*(1+tg))/(d-tg)},'rdcfp-chart','rdcfp');
   buildSens(function(f){return f*em},'rdcfe-chart','rdcfe');
@@ -1421,8 +1422,8 @@ function calcAria(){
   const c5=ariaMultiples.map(m=>(Math.pow((fcfs[5]*m)/mc,1/5)-1)*100);
   const c10=ariaMultiples.map(m=>(Math.pow((fcfs[10]*m)/mc,1/10)-1)*100);
   renderChart('aria-chart','aria',lbls,
-    [{label:'Year 5 CAGR (%)',data:c5,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,0.3)',type:'bar'},
-     {label:'Year 10 CAGR (%)',data:c10,borderColor:'#00b894',backgroundColor:'rgba(0,184,148,0.3)',type:'bar'}],
+    [{label:'Year 5 CAGR (%)',data:c5,borderColor:cv('--accent'),backgroundColor:cv('--accent')+'4d',type:'bar'},
+     {label:'Year 10 CAGR (%)',data:c10,borderColor:cv('--green'),backgroundColor:cv('--green')+'4d',type:'bar'}],
     {yLabel:'CAGR (%)'});
 }
 
@@ -1444,9 +1445,9 @@ function calcMoneyBack(){
     <div class="result-box"><div class="label">Coverage (Y15)</div><div class="value ${cum[15]/mc>=1?'positive':'negative'}">${(cum[15]/mc).toFixed(2)}x</div></div>`;
   const lbls=[];for(let i=0;i<=15;i++)lbls.push('Y'+i);
   renderChart('mb-chart','mb',lbls,
-    [{label:'Cumulative FCF-SBC',data:cum,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,0.15)',fill:true},
-     {label:'Market Cap',data:Array(16).fill(mc),borderColor:'#e17055',borderDash:[8,4],pointRadius:0},
-     {label:'Annual FCF-SBC',data:fcfs,borderColor:'#00b894',backgroundColor:'rgba(0,184,148,0.1)',fill:true,type:'bar'}],
+    [{label:'Cumulative FCF-SBC',data:cum,borderColor:cv('--accent'),backgroundColor:cv('--accent')+'26',fill:true},
+     {label:'Market Cap',data:Array(16).fill(mc),borderColor:cv('--red'),borderDash:[8,4],pointRadius:0},
+     {label:'Annual FCF-SBC',data:fcfs,borderColor:cv('--green'),backgroundColor:cv('--green')+'1a',fill:true,type:'bar'}],
     {yLabel:'Value'});
   const el2=document.getElementById('sum-mb-val');el2.textContent=interp+(mby!==null?' yrs':'');
   el2.className='sc-value '+(mby!==null&&mby<=10?'positive':'negative');
@@ -1455,13 +1456,14 @@ function calcMoneyBack(){
 
 function renderChart(cid,key,labels,datasets,opts={}){
   if(charts[key])charts[key].destroy();
+  const t2=cv('--text2'),grd=cv('--border')+'66';
   charts[key]=new Chart(document.getElementById(cid).getContext('2d'),{
     type:'line',data:{labels,datasets:datasets.map(d=>({tension:0.2,pointRadius:3,borderWidth:2,...d}))},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#8b90a5',font:{size:10}}}},
-      scales:{x:{ticks:{color:'#8b90a5',font:{size:9}},grid:{color:'rgba(46,51,71,0.5)'}},
-        y:{ticks:{color:'#8b90a5',font:{size:9},callback:v=>fmt(v)},grid:{color:'rgba(46,51,71,0.5)'},
-          title:opts.yLabel?{display:true,text:opts.yLabel,color:'#8b90a5'}:{}}}}
+      plugins:{legend:{labels:{color:t2,font:{size:10}}}},
+      scales:{x:{ticks:{color:t2,font:{size:9}},grid:{color:grd}},
+        y:{ticks:{color:t2,font:{size:9},callback:v=>fmt(v)},grid:{color:grd},
+          title:opts.yLabel?{display:true,text:opts.yLabel,color:t2}:{}}}}
   });
 }
 
@@ -1608,7 +1610,7 @@ function showProfile(ticker){
   ];
   metrics.forEach(m=>{
     const isOvr=ovd[m.f]!=null;
-    h+=`<div class="cp-metric cp-overridable" ondblclick="startOverride('${escH(ticker)}','${m.f}',this)"><div class="cp-metric-label">${m.l}</div><div class="cp-metric-value">${m.v||'-'}</div>${isOvr?'<div class="cp-override-badge">overridden</div>':''}</div>`;
+    h+=`<div class="cp-metric cp-overridable" ondblclick="startOverride('${escH(ticker)}','${m.f}',this)" ontouchstart="this._lpt=setTimeout(()=>startOverride('${escH(ticker)}','${m.f}',this),600)" ontouchend="clearTimeout(this._lpt)" ontouchmove="clearTimeout(this._lpt)"><div class="cp-metric-label">${m.l}</div><div class="cp-metric-value">${m.v||'-'}</div>${isOvr?'<div class="cp-override-badge">overridden</div>':''}</div>`;
   });
   h+='</div></div>';
 
@@ -1855,15 +1857,16 @@ async function fetchHistoricalCharts(ticker){
     const cf=(cfData||[]).slice().reverse();
     const years=inc.map(d=>d.calendarYear||d.date?.slice(0,4)||'');
     const cfMap=Object.fromEntries(cf.map(d=>[d.calendarYear||d.date?.slice(0,4),d.freeCashFlow]));
-    const accent='#6c5ce7';const green='#27ae60';const blue='#3498db';const orange='#e67e22';
+    const accent=cv('--accent');const green=cv('--green');const blue=cv('--blue');const orange=cv('--orange');
     function mkChart(cid,key,label,data,color,type='bar'){
       if(cpHistCharts[key])cpHistCharts[key].destroy();
       const el=document.getElementById(cid);if(!el)return;
+      const t2=cv('--text2'),grd=cv('--border')+'4d';
       cpHistCharts[key]=new Chart(el.getContext('2d'),{
         type,data:{labels:years,datasets:[{label,data,backgroundColor:color+'88',borderColor:color,borderWidth:type==='bar'?0:2,tension:0.2,pointRadius:type==='line'?3:0}]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b90a5',font:{size:10}}}},
-          scales:{x:{ticks:{color:'#8b90a5',font:{size:9}},grid:{color:'rgba(46,51,71,0.3)'}},
-            y:{ticks:{color:'#8b90a5',font:{size:9},callback:v=>fmt(v)},grid:{color:'rgba(46,51,71,0.3)'}}}}
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:t2,font:{size:10}}}},
+          scales:{x:{ticks:{color:t2,font:{size:9}},grid:{color:grd}},
+            y:{ticks:{color:t2,font:{size:9},callback:v=>fmt(v)},grid:{color:grd}}}}
       });
     }
     mkChart('cp-hist-rev','histRev','Revenue',inc.map(d=>d.revenue),accent);
@@ -1874,14 +1877,15 @@ async function fetchHistoricalCharts(ticker){
     if(cpHistCharts.histMargins)cpHistCharts.histMargins.destroy();
     const mEl=document.getElementById('cp-hist-margins');
     if(mEl){
+      const mt2=cv('--text2'),mgrd=cv('--border')+'4d';
       cpHistCharts.histMargins=new Chart(mEl.getContext('2d'),{
         type:'line',data:{labels:years,datasets:[
           {label:'Gross Margin %',data:grossMargins,borderColor:orange,backgroundColor:orange+'44',tension:0.2,pointRadius:3,borderWidth:2},
           {label:'Net Margin %',data:margins,borderColor:accent,backgroundColor:accent+'44',tension:0.2,pointRadius:3,borderWidth:2}
         ]},
-        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b90a5',font:{size:10}}}},
-          scales:{x:{ticks:{color:'#8b90a5',font:{size:9}},grid:{color:'rgba(46,51,71,0.3)'}},
-            y:{ticks:{color:'#8b90a5',font:{size:9},callback:v=>typeof v==='number'?v.toFixed(0)+'%':v},grid:{color:'rgba(46,51,71,0.3)'}}}}
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:mt2,font:{size:10}}}},
+          scales:{x:{ticks:{color:mt2,font:{size:9}},grid:{color:mgrd}},
+            y:{ticks:{color:mt2,font:{size:9},callback:v=>typeof v==='number'?v.toFixed(0)+'%':v},grid:{color:mgrd}}}}
       });
     }
   }catch(e){
@@ -2383,6 +2387,8 @@ async function fetchYahooData(ticker){
     if(fin.profitMargins?.raw!=null)stock.netMargin=fin.profitMargins.raw*100;
     if(fin.returnOnEquity?.raw!=null)stock.roe=fin.returnOnEquity.raw*100;
     if(fin.returnOnAssets?.raw!=null)stock.roa=fin.returnOnAssets.raw*100;
+    if(fin.totalDebt?.raw!=null)stock.totalDebt=fin.totalDebt.raw;
+    if(fin.totalCash?.raw!=null)stock.totalCash=fin.totalCash.raw;
     if(fin.debtToEquity?.raw!=null)stock.debtEquity=fin.debtToEquity.raw/100;
     if(fin.currentRatio?.raw!=null)stock.currentRatio=fin.currentRatio.raw;
 
@@ -2416,6 +2422,7 @@ async function fetchStockData(ticker){
     if(profile?.[0]){const p=profile[0];stock.name=TNAMES[ticker]||p.companyName||ticker;stock.price=p.price;stock.marketCap=p.marketCap;stock.date=new Date().toISOString().slice(0,10).replace(/-/g,'.')}
     if(income?.[0]){const i=income[0];stock.revenue=i.revenue;stock.profit=i.netIncome;stock.ebit=i.operatingIncome||i.ebit;stock.epsDiluted=i.epsDiluted}
     if(cashflow?.[0]){const c=cashflow[0];stock.ocf=c.operatingCashFlow;stock.fcf=c.freeCashFlow;stock.sbc=c.stockBasedCompensation;stock.buybackRaw=Math.abs(c.commonStockRepurchased||0);stock.ocfSbc=(stock.ocf||0)-(stock.sbc||0);stock.fcfSbc=(stock.fcf||0)-(stock.sbc||0)}
+    if(profile?.[0]){const p=profile[0];if(p.totalDebt!=null)stock.totalDebt=p.totalDebt;if(p.cashAndCashEquivalents!=null)stock.totalCash=p.cashAndCashEquivalents}
     if(growth?.[0]){const g=growth[0];stock.revenueGrowth=(g.revenueGrowth||0)*100;stock.epsGrowth=(g.epsdilutedGrowth||g.epsgrowth||0)*100}
     if(income?.[0]){const i=income[0];if(i.revenue&&i.grossProfit)stock.grossMargin=i.grossProfit/i.revenue*100;if(i.revenue&&i.netIncome)stock.netMargin=i.netIncome/i.revenue*100;if(i.revenue&&(i.operatingIncome||i.ebit))stock.operatingMargin=(i.operatingIncome||i.ebit)/i.revenue*100}
     const km2=await fmpFetch('key-metrics-ttm',{symbol:ticker,limit:1});
@@ -2462,6 +2469,7 @@ async function addTrackerStock(){
   const inp=document.getElementById('st-add-input');
   const ticker=inp.value.trim().toUpperCase();
   if(!ticker)return;
+  if(!/^[A-Z0-9.]{1,10}$/.test(ticker)){showToast('Invalid ticker format','warning');return}
   if(tStocks[ticker]){showToast(ticker+' already tracked','warning');return}
   const addBtn=inp.nextElementSibling;
   tStocks[ticker]={ticker,name:TNAMES[ticker]||ticker};
@@ -2567,7 +2575,7 @@ function calcStockRatios(s){
   if(s.profit&&s.profit>0)r.pe=mc/s.profit;
   if(s.fcf&&s.fcf>0)r.pfcf=mc/s.fcf;
   if(s.ocf&&s.ocf>0)r.pocf=mc/s.ocf;
-  if(s.ebit&&s.ebit>0)r.evEbit=mc/s.ebit;
+  if(s.ebit&&s.ebit>0){const ev=mc+(s.totalDebt||0)-(s.totalCash||0);r.evEbit=ev/s.ebit}
   if(r.pe&&s.epsGrowth&&s.epsGrowth>0)r.peg=r.pe/s.epsGrowth;
   if(s.buybackRaw&&mc)r.buyback=(s.buybackRaw/mc)*100;
   return r;
@@ -2717,8 +2725,8 @@ function renderScatterChart(){
       plugins:{
         legend:{display:false},
         tooltip:{
-          backgroundColor:'rgba(26,29,39,0.95)',
-          borderColor:'#2e3347',
+          backgroundColor:cv('--surface')+'f2',
+          borderColor:cv('--border'),
           borderWidth:1,
           titleFont:{size:13,weight:'bold'},
           bodyFont:{size:12},
@@ -2734,14 +2742,14 @@ function renderScatterChart(){
       },
       scales:{
         x:{
-          title:{display:true,text:xDef.label,color:'#8b90a5',font:{size:12,weight:'600'}},
-          ticks:{color:'#8b90a5',font:{size:10}},
-          grid:{color:'rgba(46,51,71,0.5)'}
+          title:{display:true,text:xDef.label,color:cv('--text2'),font:{size:12,weight:'600'}},
+          ticks:{color:cv('--text2'),font:{size:10}},
+          grid:{color:cv('--border')+'80'}
         },
         y:{
-          title:{display:true,text:yDef.label,color:'#8b90a5',font:{size:12,weight:'600'}},
-          ticks:{color:'#8b90a5',font:{size:10},callback:v=>v+'%'},
-          grid:{color:'rgba(46,51,71,0.5)'}
+          title:{display:true,text:yDef.label,color:cv('--text2'),font:{size:12,weight:'600'}},
+          ticks:{color:cv('--text2'),font:{size:10},callback:v=>v+'%'},
+          grid:{color:cv('--border')+'80'}
         }
       }
     },
@@ -3076,10 +3084,10 @@ function renderMainChart(){
       maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{
-        legend:{labels:{color:'#8b90a5',font:{size:11},usePointStyle:true,pointStyle:'circle'}},
+        legend:{labels:{color:cv('--text2'),font:{size:11},usePointStyle:true,pointStyle:'circle'}},
         tooltip:{
-          backgroundColor:'rgba(26,29,39,0.95)',
-          borderColor:'#2e3347',
+          backgroundColor:cv('--surface')+'f2',
+          borderColor:cv('--border'),
           borderWidth:1,
           titleFont:{size:12},
           bodyFont:{size:11},
@@ -3098,13 +3106,13 @@ function renderMainChart(){
         x:{
           type:'time',
           time:{unit:'month',displayFormats:{month:'MMM yy'}},
-          ticks:{color:'#8b90a5',font:{size:9},maxTicksLimit:12},
-          grid:{color:'rgba(46,51,71,0.5)'}
+          ticks:{color:cv('--text2'),font:{size:9},maxTicksLimit:12},
+          grid:{color:cv('--border')+'80'}
         },
         y:{
-          ticks:{color:'#8b90a5',font:{size:10},callback:yCallback},
-          grid:{color:'rgba(46,51,71,0.5)'},
-          title:{display:true,text:yLabel,color:'#8b90a5'}
+          ticks:{color:cv('--text2'),font:{size:10},callback:yCallback},
+          grid:{color:cv('--border')+'80'},
+          title:{display:true,text:yLabel,color:cv('--text2')}
         }
       }
     }
@@ -3152,8 +3160,8 @@ function renderMiniCharts(){
       type:'line',
       data:{datasets:[{
         data:d.closes.map((v,i)=>({x:labels[i],y:v})),
-        borderColor:up?'#00b894':'#e17055',
-        backgroundColor:(up?'#00b894':'#e17055')+'15',
+        borderColor:up?cv('--green'):cv('--red'),
+        backgroundColor:(up?cv('--green'):cv('--red'))+'15',
         fill:true,borderWidth:1.5,pointRadius:0,tension:0.2
       }]},
       options:{
@@ -3166,8 +3174,8 @@ function renderMiniCharts(){
           }
         }},
         scales:{
-          x:{type:'time',time:{unit:'month',displayFormats:{month:'MMM'}},ticks:{color:'#8b90a5',font:{size:8},maxTicksLimit:6},grid:{display:false}},
-          y:{ticks:{color:'#8b90a5',font:{size:8},maxTicksLimit:4},grid:{color:'rgba(46,51,71,0.3)'}}
+          x:{type:'time',time:{unit:'month',displayFormats:{month:'MMM'}},ticks:{color:cv('--text2'),font:{size:8},maxTicksLimit:6},grid:{display:false}},
+          y:{ticks:{color:cv('--text2'),font:{size:8},maxTicksLimit:4},grid:{color:cv('--border')+'4d'}}
         }
       }
     });
@@ -3333,6 +3341,7 @@ const _origSaveSettings=saveTrackerSettings;
 saveTrackerSettings=function(){_origSaveSettings();scheduleCloudSave()};
 
 document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
+window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks()});
 window.addEventListener('load',()=>{
   if(isEncryptionEnabled()){
     document.getElementById('lock-screen').style.display='flex';
