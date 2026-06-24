@@ -196,6 +196,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .cp-assess-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
 .cp-assess-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px}
 .cp-assess-value{font-size:15px;font-weight:600;color:var(--text)}
+.cp-assess-value.positive{color:var(--green)}.cp-assess-value.negative{color:var(--red)}.cp-assess-value.warn{color:var(--orange)}
 .cp-thesis{grid-column:1/-1}
 .cp-thesis .cp-assess-value{font-size:13px;font-weight:400;line-height:1.5;color:var(--text2)}
 /* Pipeline status */
@@ -220,6 +221,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .cp-fin-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
 .cp-fin-value{font-size:18px;font-weight:700}
 .cp-fin-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.cp-hist-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cp-hist-chart{position:relative;height:240px}
+.cp-hist-loading{text-align:center;color:var(--text2);padding:40px 0;font-size:13px}
 /* Valuation tab */
 .cp-val-model{margin-bottom:20px}
 .cp-val-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
@@ -384,6 +388,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   .cp-type-tag{padding:4px 8px;font-size:10px}
   .cp-earn-grid{grid-template-columns:1fr}
   .cp-fin-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  .cp-hist-charts{grid-template-columns:1fr}
   .cp-val-details{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
   .cp-todo-add{flex-wrap:wrap}
   .cp-todo-add input[type=text]{min-width:0}
@@ -1638,6 +1643,15 @@ function showProfile(ticker){
     {l:'3Y Revenue CAGR',v:s.revCAGR3!=null?s.revCAGR3.toFixed(1)+'%':'-',cls:valClass(s.revCAGR3,5,15),tip:'revCAGR3'},
     {l:'EPS Growth',v:s.epsGrowth!=null?s.epsGrowth.toFixed(1)+'%':'-',cls:valClass(s.epsGrowth,5,15),tip:'epsGrowth'}
   ];
+  const healthItems=[
+    {l:'Gross Margin',v:s.grossMargin!=null?s.grossMargin.toFixed(1)+'%':'-',cls:valClass(s.grossMargin,20,40),tip:'grossMargin'},
+    {l:'Operating Margin',v:s.operatingMargin!=null?s.operatingMargin.toFixed(1)+'%':'-',cls:valClass(s.operatingMargin,10,20),tip:'operatingMargin'},
+    {l:'Net Margin',v:s.netMargin!=null?s.netMargin.toFixed(1)+'%':'-',cls:valClass(s.netMargin,5,15),tip:'netMargin'},
+    {l:'ROE',v:s.roe!=null?s.roe.toFixed(1)+'%':'-',cls:valClass(s.roe,10,15),tip:'roe'},
+    {l:'ROIC',v:s.roic!=null?s.roic.toFixed(1)+'%':'-',cls:valClass(s.roic,10,15),tip:'roic'},
+    {l:'Debt / Equity',v:s.debtEquity!=null?s.debtEquity.toFixed(2):'-',cls:s.debtEquity!=null?(s.debtEquity<=0.5?'positive':s.debtEquity<=1?'warn':'negative'):'',tip:'debtEquity'},
+    {l:'Current Ratio',v:s.currentRatio!=null?s.currentRatio.toFixed(2):'-',cls:s.currentRatio!=null?(s.currentRatio>=1.5?'positive':s.currentRatio>=1?'warn':'negative'):'',tip:'currentRatio'}
+  ];
   const assessItems=[
     {l:'Moat',v:s.moat||'-'},
     {l:'Risk',v:s.risk||'-'},
@@ -1646,6 +1660,10 @@ function showProfile(ticker){
     {l:'Expected Return',v:s.expectedReturn||'-'}
   ];
   growthItems.forEach(m=>{
+    const inner=`<div class="cp-assess-item"><div class="cp-assess-label">${m.l}</div><div class="cp-assess-value ${m.cls||''}">${m.v}</div></div>`;
+    h+=m.tip?tipWrap(m.tip,inner):inner;
+  });
+  healthItems.forEach(m=>{
     const inner=`<div class="cp-assess-item"><div class="cp-assess-label">${m.l}</div><div class="cp-assess-value ${m.cls||''}">${m.v}</div></div>`;
     h+=m.tip?tipWrap(m.tip,inner):inner;
   });
@@ -1683,6 +1701,8 @@ function switchProfileTab(name){
 }
 
 function closeProfile(){
+  Object.values(cpHistCharts).forEach(c=>{if(c)c.destroy()});
+  cpHistCharts={};
   profileTicker=null;
   document.getElementById('company-profile').style.display='none';
   document.querySelector('.company-tabs').style.display='';
@@ -1780,7 +1800,90 @@ function renderFinancials(ticker){
   });
   h+='</div></div>';
 
+  h+='<div class="card"><div class="card-title">Quality & Profitability</div><div class="cp-fin-grid">';
+  function qualClass(v,low,high){if(v==null||isNaN(v))return'';return v>=high?'positive':v>=low?'warn':'negative'}
+  function debtClass(v){if(v==null||isNaN(v))return'';return v<=0.5?'positive':v<=1?'warn':'negative'}
+  const qualItems=[
+    {l:'Gross Margin',v:s.grossMargin!=null?s.grossMargin.toFixed(1)+'%':'-',cls:qualClass(s.grossMargin,20,40)},
+    {l:'Operating Margin',v:s.operatingMargin!=null?s.operatingMargin.toFixed(1)+'%':'-',cls:qualClass(s.operatingMargin,10,20)},
+    {l:'Net Margin',v:s.netMargin!=null?s.netMargin.toFixed(1)+'%':'-',cls:qualClass(s.netMargin,5,15)},
+    {l:'ROE',v:s.roe!=null?s.roe.toFixed(1)+'%':'-',cls:qualClass(s.roe,10,15)},
+    {l:'ROIC',v:s.roic!=null?s.roic.toFixed(1)+'%':'-',cls:qualClass(s.roic,10,15)},
+    {l:'Debt / Equity',v:s.debtEquity!=null?s.debtEquity.toFixed(2):'-',cls:debtClass(s.debtEquity)},
+    {l:'Current Ratio',v:s.currentRatio!=null?s.currentRatio.toFixed(2):'-',cls:s.currentRatio!=null?(s.currentRatio>=1.5?'positive':s.currentRatio>=1?'warn':'negative'):''}
+  ];
+  qualItems.forEach(m=>{
+    h+=`<div class="cp-fin-item"><div class="cp-fin-label">${m.l}</div><div class="cp-fin-value ${m.cls||''}">${m.v}</div></div>`;
+  });
+  h+='</div></div>';
+
+  h+='<div class="card"><div class="card-title">Historical Trends (10 Year)</div>';
+  h+='<div id="cp-hist-loading" class="cp-hist-loading">Loading historical data...</div>';
+  h+='<div class="cp-hist-charts" id="cp-hist-charts" style="display:none">';
+  h+='<div class="cp-hist-chart"><canvas id="cp-hist-rev"></canvas></div>';
+  h+='<div class="cp-hist-chart"><canvas id="cp-hist-fcf"></canvas></div>';
+  h+='<div class="cp-hist-chart"><canvas id="cp-hist-eps"></canvas></div>';
+  h+='<div class="cp-hist-chart"><canvas id="cp-hist-margins"></canvas></div>';
+  h+='</div></div>';
+
   document.getElementById('cp-financials-content').innerHTML=h;
+  fetchHistoricalCharts(ticker);
+}
+
+let cpHistCharts={};
+async function fetchHistoricalCharts(ticker){
+  const startTicker=profileTicker;
+  try{
+    const [incData,cfData]=await Promise.all([
+      fmpFetch('income-statement',{symbol:ticker,limit:10}),
+      fmpFetch('cash-flow-statement',{symbol:ticker,limit:10})
+    ]);
+    if(profileTicker!==startTicker)return;
+    const loading=document.getElementById('cp-hist-loading');
+    const container=document.getElementById('cp-hist-charts');
+    if(!incData?.length&&!cfData?.length){
+      if(loading)loading.textContent='No historical data available';
+      return;
+    }
+    if(loading)loading.style.display='none';
+    if(container)container.style.display='';
+    const inc=(incData||[]).slice().reverse();
+    const cf=(cfData||[]).slice().reverse();
+    const years=inc.map(d=>d.calendarYear||d.date?.slice(0,4)||'');
+    const cfMap=Object.fromEntries(cf.map(d=>[d.calendarYear||d.date?.slice(0,4),d.freeCashFlow]));
+    const accent='#6c5ce7';const green='#27ae60';const blue='#3498db';const orange='#e67e22';
+    function mkChart(cid,key,label,data,color,type='bar'){
+      if(cpHistCharts[key])cpHistCharts[key].destroy();
+      const el=document.getElementById(cid);if(!el)return;
+      cpHistCharts[key]=new Chart(el.getContext('2d'),{
+        type,data:{labels:years,datasets:[{label,data,backgroundColor:color+'88',borderColor:color,borderWidth:type==='bar'?0:2,tension:0.2,pointRadius:type==='line'?3:0}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b90a5',font:{size:10}}}},
+          scales:{x:{ticks:{color:'#8b90a5',font:{size:9}},grid:{color:'rgba(46,51,71,0.3)'}},
+            y:{ticks:{color:'#8b90a5',font:{size:9},callback:v=>fmt(v)},grid:{color:'rgba(46,51,71,0.3)'}}}}
+      });
+    }
+    mkChart('cp-hist-rev','histRev','Revenue',inc.map(d=>d.revenue),accent);
+    mkChart('cp-hist-fcf','histFcf','Free Cash Flow',years.map(y=>cfMap[y]??null),green);
+    mkChart('cp-hist-eps','histEps','EPS (Diluted)',inc.map(d=>d.epsDiluted),blue,'line');
+    const margins=inc.map(d=>(d.revenue&&d.netIncome!=null)?(d.netIncome/d.revenue*100):null);
+    const grossMargins=inc.map(d=>(d.revenue&&d.grossProfit!=null)?(d.grossProfit/d.revenue*100):null);
+    if(cpHistCharts.histMargins)cpHistCharts.histMargins.destroy();
+    const mEl=document.getElementById('cp-hist-margins');
+    if(mEl){
+      cpHistCharts.histMargins=new Chart(mEl.getContext('2d'),{
+        type:'line',data:{labels:years,datasets:[
+          {label:'Gross Margin %',data:grossMargins,borderColor:orange,backgroundColor:orange+'44',tension:0.2,pointRadius:3,borderWidth:2},
+          {label:'Net Margin %',data:margins,borderColor:accent,backgroundColor:accent+'44',tension:0.2,pointRadius:3,borderWidth:2}
+        ]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b90a5',font:{size:10}}}},
+          scales:{x:{ticks:{color:'#8b90a5',font:{size:9}},grid:{color:'rgba(46,51,71,0.3)'}},
+            y:{ticks:{color:'#8b90a5',font:{size:9},callback:v=>typeof v==='number'?v.toFixed(0)+'%':v},grid:{color:'rgba(46,51,71,0.3)'}}}}
+      });
+    }
+  }catch(e){
+    const loading=document.getElementById('cp-hist-loading');
+    if(loading)loading.textContent='Failed to load historical data';
+  }
 }
 
 // Valuation tab
@@ -2090,7 +2193,14 @@ const METRIC_TIPS={
   buyback:{name:'Buyback Yield',formula:'Share Repurchases / Market Cap × 100',bench:'> 3% strong, 1-3% moderate, < 1% minimal',desc:'Percentage of market cap returned to shareholders via buybacks annually.'},
   revenueGrowth:{name:'Revenue Growth',formula:'(Revenue TTM - Revenue Prior) / Revenue Prior × 100',bench:'> 15% fast, 5-15% moderate, < 5% slow',desc:'Year-over-year revenue growth rate.'},
   revCAGR3:{name:'3Y Revenue CAGR',formula:'(Revenue Now / Revenue 3Y Ago)^(1/3) - 1',bench:'> 15% fast, 5-15% moderate, < 5% slow',desc:'Compound annual growth rate of revenue over 3 years. Smooths out single-year spikes.'},
-  epsGrowth:{name:'EPS Growth',formula:'(EPS TTM - EPS Prior) / EPS Prior × 100',bench:'> 15% strong, 5-15% moderate, < 5% weak',desc:'Year-over-year earnings per share growth.'}
+  epsGrowth:{name:'EPS Growth',formula:'(EPS TTM - EPS Prior) / EPS Prior × 100',bench:'> 15% strong, 5-15% moderate, < 5% weak',desc:'Year-over-year earnings per share growth.'},
+  grossMargin:{name:'Gross Margin',formula:'Gross Profit / Revenue × 100',bench:'> 40% strong, 20-40% fair, < 20% weak',desc:'Profitability before operating expenses. High = pricing power and competitive moat.'},
+  operatingMargin:{name:'Operating Margin',formula:'EBIT / Revenue × 100',bench:'> 20% excellent, 10-20% good, < 10% thin',desc:'Profitability from core operations. Shows operational efficiency.'},
+  netMargin:{name:'Net Margin',formula:'Net Income / Revenue × 100',bench:'> 15% strong, 5-15% healthy, < 5% thin',desc:'Bottom-line profitability after all expenses, taxes, and interest.'},
+  roe:{name:'Return on Equity',formula:'Net Income / Shareholder Equity × 100',bench:'> 15% excellent, 10-15% good, < 10% weak',desc:'How effectively the company uses shareholder capital to generate profit.'},
+  roic:{name:'Return on Invested Capital',formula:'NOPAT / (Equity + Debt - Cash) × 100',bench:'> 15% excellent, 10-15% good, < 10% weak',desc:'Return on all invested capital (debt + equity). Best measure of capital allocation.'},
+  debtEquity:{name:'Debt / Equity',formula:'Total Debt / Shareholder Equity',bench:'< 0.5 conservative, 0.5-1.0 moderate, > 1.0 leveraged',desc:'How much the company relies on debt. Lower = safer balance sheet.'},
+  currentRatio:{name:'Current Ratio',formula:'Current Assets / Current Liabilities',bench:'> 1.5 safe, 1.0-1.5 adequate, < 1.0 risky',desc:'Short-term liquidity. Above 1.0 means assets cover near-term obligations.'}
 };
 function tipWrap(key,innerHtml){
   const t=METRIC_TIPS[key];
@@ -2152,6 +2262,7 @@ let stSort={col:'ticker',dir:'asc'};
 let stExpanded={};
 
 function parseNum(s){s=String(s).trim().replace(/,/g,'').replace(/\s/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
+function asPct(v){if(v==null)return null;return Math.abs(v)<5?v*100:v}
 function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct)return parseFloat(v).toFixed(1);return typeof v==='number'?v.toFixed(2):v}
 
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -2257,6 +2368,15 @@ async function fetchYahooData(ticker){
       }
     }
 
+    // Quality metrics from Yahoo financialData
+    if(fin.grossMargins?.raw!=null)stock.grossMargin=fin.grossMargins.raw*100;
+    if(fin.operatingMargins?.raw!=null)stock.operatingMargin=fin.operatingMargins.raw*100;
+    if(fin.profitMargins?.raw!=null)stock.netMargin=fin.profitMargins.raw*100;
+    if(fin.returnOnEquity?.raw!=null)stock.roe=fin.returnOnEquity.raw*100;
+    if(fin.returnOnAssets?.raw!=null)stock.roa=fin.returnOnAssets.raw*100;
+    if(fin.debtToEquity?.raw!=null)stock.debtEquity=fin.debtToEquity.raw/100;
+    if(fin.currentRatio?.raw!=null)stock.currentRatio=fin.currentRatio.raw;
+
     // SBC not available from Yahoo financialData — keep existing manual value if any
     // Derive OCF-SBC and FCF-SBC (SBC = 0 if not manually entered)
     const sbc=stock.sbc||0;
@@ -2288,22 +2408,37 @@ async function fetchStockData(ticker){
     if(income?.[0]){const i=income[0];stock.revenue=i.revenue;stock.profit=i.netIncome;stock.ebit=i.operatingIncome||i.ebit;stock.epsDiluted=i.epsDiluted}
     if(cashflow?.[0]){const c=cashflow[0];stock.ocf=c.operatingCashFlow;stock.fcf=c.freeCashFlow;stock.sbc=c.stockBasedCompensation;stock.buybackRaw=Math.abs(c.commonStockRepurchased||0);stock.ocfSbc=(stock.ocf||0)-(stock.sbc||0);stock.fcfSbc=(stock.fcf||0)-(stock.sbc||0)}
     if(growth?.[0]){const g=growth[0];stock.revenueGrowth=(g.revenueGrowth||0)*100;stock.epsGrowth=(g.epsdilutedGrowth||g.epsgrowth||0)*100}
+    if(income?.[0]){const i=income[0];if(i.revenue&&i.grossProfit)stock.grossMargin=i.grossProfit/i.revenue*100;if(i.revenue&&i.netIncome)stock.netMargin=i.netIncome/i.revenue*100;if(i.revenue&&(i.operatingIncome||i.ebit))stock.operatingMargin=(i.operatingIncome||i.ebit)/i.revenue*100}
+    const km2=await fmpFetch('key-metrics-ttm',{symbol:ticker,limit:1});
+    if(km2?.[0]){const k=km2[0];if(k.roicTTM!=null)stock.roic=asPct(k.roicTTM);if(k.roeTTM!=null)stock.roe=asPct(k.roeTTM);if(k.debtToEquityTTM!=null)stock.debtEquity=k.debtToEquityTTM;if(k.currentRatioTTM!=null)stock.currentRatio=k.currentRatioTTM}
     stock._source='fmp';
     tStocks[ticker]=stock;
     return stock;
   }
 
-  // Yahoo succeeded — supplement SBC & buyback from FMP (if missing)
-  if(stock.sbc==null||stock.buybackRaw==null){
-    const cashflow=await fmpFetch('cash-flow-statement',{symbol:ticker,limit:1});
+  // Yahoo succeeded — supplement SBC, buyback, ROIC from FMP (if missing)
+  const needSbc=stock.sbc==null||stock.buybackRaw==null;
+  const needRoic=stock.roic==null;
+  if(needSbc||needRoic){
+    const fetches=[];
+    if(needSbc)fetches.push(fmpFetch('cash-flow-statement',{symbol:ticker,limit:1}));
+    else fetches.push(Promise.resolve(null));
+    if(needRoic)fetches.push(fmpFetch('key-metrics-ttm',{symbol:ticker,limit:1}));
+    else fetches.push(Promise.resolve(null));
+    const [cashflow,keyMetrics]=await Promise.all(fetches);
     if(cashflow?.[0]){
       const c=cashflow[0];
       if(stock.sbc==null&&c.stockBasedCompensation!=null)stock.sbc=c.stockBasedCompensation;
       if(stock.buybackRaw==null&&c.commonStockRepurchased!=null)stock.buybackRaw=Math.abs(c.commonStockRepurchased);
-      // Recalculate derived fields with SBC
       const sbc=stock.sbc||0;
       if(stock.ocf!=null)stock.ocfSbc=stock.ocf-sbc;
       if(stock.fcf!=null)stock.fcfSbc=stock.fcf-sbc;
+    }
+    if(keyMetrics?.[0]){
+      const km=keyMetrics[0];
+      if(km.roicTTM!=null)stock.roic=asPct(km.roicTTM);
+      if(stock.grossMargin==null&&km.grossProfitMarginTTM!=null)stock.grossMargin=asPct(km.grossProfitMarginTTM);
+      if(stock.roe==null&&km.roeTTM!=null)stock.roe=asPct(km.roeTTM);
     }
   }
 

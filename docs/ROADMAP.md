@@ -1,7 +1,7 @@
 # Stratos Ventures — Roadmap
 
-## Current Phase: Phase 2 — Company Profile Page
-Status: IN PROGRESS
+## Current Phase: Phase 3 — Research & Notes
+Status: NOT STARTED
 
 ---
 
@@ -36,12 +36,12 @@ Status: IN PROGRESS
 - [x] Add 10K/10Q tracking section
 - [x] Add investment thesis / notes section
 - [x] Pipeline status (Watchlist → Under review → Buy target → Owned)
-- [ ] Historical charts (10-30 year revenue, FCF, EPS) from FMP
+- [x] Historical charts (10-30 year revenue, FCF, EPS, margins) from FMP
 - [x] Company type tag (slow, medium, fast, cyclical, turnaround, asset)
 - [x] Per-company TODO list (analysis tasks, due dates, completion tracking)
 - [x] Metric tooltips: hover → definition, formula, calculation, source, benchmark
 - [x] Data override: click any metric to override API value (original preserved, "overridden" badge)
-- [ ] Auto-fill financial thresholds from API (green = meets threshold, red = fails)
+- [x] Auto-fill financial thresholds from API (green = meets threshold, red = fails)
 
 ## Phase 3: Research & Notes (1-2 sessions)
 > Investment journal, news notes, market journal.
