@@ -33,14 +33,14 @@ Status: IN PROGRESS
 - [x] Integrate existing calculator (DCF, Reverse DCF, ARIA, Money Back)
 - [x] Integrate existing tracker data
 - [x] Add earnings timeline (Q1, Q2... with checkboxes)
-- [ ] Add 10K/10Q tracking section
+- [x] Add 10K/10Q tracking section
 - [x] Add investment thesis / notes section
 - [x] Pipeline status (Watchlist → Under review → Buy target → Owned)
 - [ ] Historical charts (10-30 year revenue, FCF, EPS) from FMP
 - [x] Company type tag (slow, medium, fast, cyclical, turnaround, asset)
-- [ ] Per-company TODO list (analysis tasks, due dates, completion tracking)
-- [ ] Metric tooltips: hover → definition, formula, calculation, source, benchmark
-- [ ] Data override: click any metric to override API value (original preserved, "overridden" badge)
+- [x] Per-company TODO list (analysis tasks, due dates, completion tracking)
+- [x] Metric tooltips: hover → definition, formula, calculation, source, benchmark
+- [x] Data override: click any metric to override API value (original preserved, "overridden" badge)
 - [ ] Auto-fill financial thresholds from API (green = meets threshold, red = fails)
 
 ## Phase 3: Research & Notes (1-2 sessions)

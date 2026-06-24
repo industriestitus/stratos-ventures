@@ -250,6 +250,43 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .cp-earn-add input{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;width:80px;font-family:inherit}
 .cp-earn-add button{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s}
 .cp-earn-add button:hover{border-color:var(--accent);color:var(--text)}
+/* TODO list */
+.cp-todo-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.cp-todo-item:last-child{border-bottom:none}
+.cp-todo-item input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.cp-todo-text{flex:1;font-size:13px;color:var(--text)}
+.cp-todo-text.todo-done{text-decoration:line-through;color:var(--text2)}
+.cp-todo-due{font-size:11px;color:var(--text2);flex-shrink:0}
+.cp-todo-due.todo-overdue{color:var(--red)}
+.cp-todo-del{background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:2px 6px;opacity:.5;transition:opacity .2s}
+.cp-todo-del:hover{opacity:1;color:var(--red)}
+.cp-todo-add{display:flex;gap:8px;margin-top:10px;align-items:center}
+.cp-todo-add input[type=text]{flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;font-family:inherit}
+.cp-todo-add input[type=text]:focus{border-color:var(--accent)}
+.cp-todo-add input[type=date]{padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;font-family:inherit}
+.cp-todo-add button{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+.cp-todo-add button:hover{border-color:var(--accent);color:var(--text)}
+.cp-todo-count{font-size:11px;color:var(--text2);margin-top:6px}
+/* 10K/10Q tracking */
+.cp-filing-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.cp-filing-row:last-child{border-bottom:none}
+.cp-filing-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.cp-filing-label{font-size:12px;font-weight:500;color:var(--text2);min-width:42px;flex-shrink:0}
+.cp-filing-row input[type=text]{flex:1;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;font-family:inherit}
+.cp-filing-row input[type=text]:focus{border-color:var(--accent)}
+.cp-filing-row input[type=checkbox]:checked+.cp-filing-label{color:var(--green)}
+/* Metric tooltip */
+.cp-tip{position:relative;cursor:help}
+.cp-tip .cp-tiptext{visibility:hidden;opacity:0;position:absolute;z-index:20;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text);min-width:220px;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,.5);transition:opacity .15s;pointer-events:none;text-align:left;font-weight:400;line-height:1.5}
+.cp-tip:hover .cp-tiptext{visibility:visible;opacity:1}
+.cp-tiptext strong{color:var(--accent2);font-weight:600}
+.cp-tiptext .tip-formula{font-family:monospace;font-size:11px;color:var(--text2);background:var(--surface2);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:3px}
+.cp-tiptext .tip-bench{font-size:11px;color:var(--text2);margin-top:4px}
+/* Data override */
+.cp-overridable{cursor:pointer;transition:background .15s}
+.cp-overridable:hover{background:var(--surface2)}
+.cp-override-badge{font-size:9px;font-weight:600;color:var(--orange);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
+.cp-override-input{width:100%;padding:4px 8px;border-radius:4px;border:1px solid var(--accent);background:var(--surface2);color:var(--text);font-size:14px;font-weight:600;outline:none;text-align:center;font-family:inherit}
 /* Toast notifications */
 .toast-container{position:fixed;bottom:24px;right:24px;z-index:500;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .toast{pointer-events:auto;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--text2);border-radius:8px;padding:12px 36px 12px 14px;font-size:13px;color:var(--text);max-width:380px;min-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toast-in .3s ease;position:relative;line-height:1.4}
@@ -348,6 +385,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   .cp-earn-grid{grid-template-columns:1fr}
   .cp-fin-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
   .cp-val-details{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
+  .cp-todo-add{flex-wrap:wrap}
+  .cp-todo-add input[type=text]{min-width:0}
+  .cp-tip .cp-tiptext{left:0;transform:none;min-width:200px;max-width:280px}
 }
 @media(max-width:480px){
   .summary-row,.input-grid,.results-grid,.cp-metrics-grid,.cp-assessment-grid{grid-template-columns:1fr}
@@ -1545,20 +1585,22 @@ function showProfile(ticker){
   // Overview content
   let h='';
 
-  // Card 1: Key Metrics
+  // Card 1: Key Metrics (overridable)
   h+='<div class="card"><div class="card-title">Key Metrics</div><div class="cp-metrics-grid">';
+  const ovd=s.overriddenData||{};
   const metrics=[
-    {l:'Price',v:s.price?'$'+s.price.toFixed(2):'-'},
-    {l:'Market Cap',v:fmt(s.marketCap)},
-    {l:'Revenue',v:fmt(s.revenue)},
-    {l:'Net Income',v:fmt(s.profit)},
-    {l:'Operating CF',v:fmt(s.ocf)},
-    {l:'Free Cash Flow',v:fmt(s.fcf)},
-    {l:'SBC',v:fmt(s.sbc)},
-    {l:'FCF - SBC',v:fmt(s.fcfSbc)}
+    {l:'Price',v:s.price?'$'+s.price.toFixed(2):'-',f:'price'},
+    {l:'Market Cap',v:fmt(s.marketCap),f:'marketCap'},
+    {l:'Revenue',v:fmt(s.revenue),f:'revenue'},
+    {l:'Net Income',v:fmt(s.profit),f:'profit'},
+    {l:'Operating CF',v:fmt(s.ocf),f:'ocf'},
+    {l:'Free Cash Flow',v:fmt(s.fcf),f:'fcf'},
+    {l:'SBC',v:fmt(s.sbc),f:'sbc'},
+    {l:'FCF - SBC',v:fmt(s.fcfSbc),f:'fcfSbc'}
   ];
   metrics.forEach(m=>{
-    h+=`<div class="cp-metric"><div class="cp-metric-label">${m.l}</div><div class="cp-metric-value">${m.v||'-'}</div></div>`;
+    const isOvr=ovd[m.f]!=null;
+    h+=`<div class="cp-metric cp-overridable" ondblclick="startOverride('${escH(ticker)}','${m.f}',this)"><div class="cp-metric-label">${m.l}</div><div class="cp-metric-value">${m.v||'-'}</div>${isOvr?'<div class="cp-override-badge">overridden</div>':''}</div>`;
   });
   h+='</div></div>';
 
@@ -1570,30 +1612,31 @@ function showProfile(ticker){
     return v>=high?'positive':v<=low?'negative':'warn';
   }
   const vals=[
-    {l:'P/S',v:r.ps,f:v=>v?.toFixed(1),cls:valClass(r.ps,5,15,true)},
-    {l:'P/E',v:r.pe,f:v=>v?.toFixed(1),cls:valClass(r.pe,15,30,true)},
-    {l:'P/FCF',v:r.pfcf,f:v=>v?.toFixed(1),cls:valClass(r.pfcf,15,30,true)},
-    {l:'P/OCF',v:r.pocf,f:v=>v?.toFixed(1),cls:valClass(r.pocf,15,30,true)},
-    {l:'EV/EBIT',v:r.evEbit,f:v=>v?.toFixed(1),cls:valClass(r.evEbit,15,30,true)},
-    {l:'PEG',v:r.peg,f:v=>v?.toFixed(2),cls:valClass(r.peg,1,2,true)},
-    {l:'Money Back',v:c.moneyBack,f:v=>typeof v==='string'?v:v?.toFixed(1)+'y',cls:typeof c.moneyBack==='number'?valClass(c.moneyBack,5,10,true):'negative'},
-    {l:'ARIA CAGR',v:c.aria,f:v=>v?.toFixed(1)+'%',cls:valClass(c.aria,10,15)},
-    {l:'DCF Upside',v:c.dcf,f:v=>v?.toFixed(0)+'%',cls:valClass(c.dcf,0,30)},
-    {l:'Reverse DCF',v:c.reverseDcf,f:v=>v?.toFixed(1)+'%',cls:valClass(c.reverseDcf,5,15)},
-    {l:'Buyback Yield',v:r.buyback,f:v=>v?.toFixed(1)+'%',cls:valClass(r.buyback,1,3)}
+    {l:'P/S',v:r.ps,f:v=>v?.toFixed(1),cls:valClass(r.ps,5,15,true),tip:'ps'},
+    {l:'P/E',v:r.pe,f:v=>v?.toFixed(1),cls:valClass(r.pe,15,30,true),tip:'pe'},
+    {l:'P/FCF',v:r.pfcf,f:v=>v?.toFixed(1),cls:valClass(r.pfcf,15,30,true),tip:'pfcf'},
+    {l:'P/OCF',v:r.pocf,f:v=>v?.toFixed(1),cls:valClass(r.pocf,15,30,true),tip:'pocf'},
+    {l:'EV/EBIT',v:r.evEbit,f:v=>v?.toFixed(1),cls:valClass(r.evEbit,15,30,true),tip:'evEbit'},
+    {l:'PEG',v:r.peg,f:v=>v?.toFixed(2),cls:valClass(r.peg,1,2,true),tip:'peg'},
+    {l:'Money Back',v:c.moneyBack,f:v=>typeof v==='string'?v:v?.toFixed(1)+'y',cls:typeof c.moneyBack==='number'?valClass(c.moneyBack,5,10,true):'negative',tip:'moneyBack'},
+    {l:'ARIA CAGR',v:c.aria,f:v=>v?.toFixed(1)+'%',cls:valClass(c.aria,10,15),tip:'aria'},
+    {l:'DCF Upside',v:c.dcf,f:v=>v?.toFixed(0)+'%',cls:valClass(c.dcf,0,30),tip:'dcf'},
+    {l:'Reverse DCF',v:c.reverseDcf,f:v=>v?.toFixed(1)+'%',cls:valClass(c.reverseDcf,5,15),tip:'reverseDcf'},
+    {l:'Buyback Yield',v:r.buyback,f:v=>v?.toFixed(1)+'%',cls:valClass(r.buyback,1,3),tip:'buyback'}
   ];
   vals.forEach(m=>{
     const display=(m.v!=null&&(typeof m.v==='string'||!isNaN(m.v)))?m.f(m.v):'-';
-    h+=`<div class="cp-metric"><div class="cp-metric-label">${m.l}</div><div class="cp-metric-value ${m.cls}">${display}</div></div>`;
+    const inner=`<div class="cp-metric-label">${m.l}</div><div class="cp-metric-value ${m.cls}">${display}</div>`;
+    h+=tipWrap(m.tip,`<div class="cp-metric">${inner}</div>`);
   });
   h+='</div></div>';
 
   // Card 3: Assessment
   h+='<div class="card"><div class="card-title">Assessment</div><div class="cp-assessment-grid">';
   const growthItems=[
-    {l:'Revenue Growth',v:s.revenueGrowth!=null?s.revenueGrowth.toFixed(1)+'%':'-',cls:valClass(s.revenueGrowth,5,15)},
-    {l:'3Y Revenue CAGR',v:s.revCAGR3!=null?s.revCAGR3.toFixed(1)+'%':'-',cls:valClass(s.revCAGR3,5,15)},
-    {l:'EPS Growth',v:s.epsGrowth!=null?s.epsGrowth.toFixed(1)+'%':'-',cls:valClass(s.epsGrowth,5,15)}
+    {l:'Revenue Growth',v:s.revenueGrowth!=null?s.revenueGrowth.toFixed(1)+'%':'-',cls:valClass(s.revenueGrowth,5,15),tip:'revenueGrowth'},
+    {l:'3Y Revenue CAGR',v:s.revCAGR3!=null?s.revCAGR3.toFixed(1)+'%':'-',cls:valClass(s.revCAGR3,5,15),tip:'revCAGR3'},
+    {l:'EPS Growth',v:s.epsGrowth!=null?s.epsGrowth.toFixed(1)+'%':'-',cls:valClass(s.epsGrowth,5,15),tip:'epsGrowth'}
   ];
   const assessItems=[
     {l:'Moat',v:s.moat||'-'},
@@ -1603,7 +1646,8 @@ function showProfile(ticker){
     {l:'Expected Return',v:s.expectedReturn||'-'}
   ];
   growthItems.forEach(m=>{
-    h+=`<div class="cp-assess-item"><div class="cp-assess-label">${m.l}</div><div class="cp-assess-value ${m.cls||''}">${m.v}</div></div>`;
+    const inner=`<div class="cp-assess-item"><div class="cp-assess-label">${m.l}</div><div class="cp-assess-value ${m.cls||''}">${m.v}</div></div>`;
+    h+=m.tip?tipWrap(m.tip,inner):inner;
   });
   assessItems.forEach(m=>{
     h+=`<div class="cp-assess-item"><div class="cp-assess-label">${m.l}</div><div class="cp-assess-value">${escH(m.v)}</div></div>`;
@@ -1822,12 +1866,28 @@ function renderNotes(ticker){
   h+=`<textarea class="cp-notes-area" id="cp-research-input" placeholder="General research notes, observations, links, sources..." oninput="saveNote('${escH(ticker)}','research',this.value)" style="min-height:160px">${escH(s.notes.research||'')}</textarea>`;
   h+='<div class="cp-notes-saved" id="cp-research-saved"></div></div>';
 
+  // TODO list
+  h+='<div class="card"><div class="card-title">TODO List</div>';
+  h+='<div id="cp-todo-list">';
+  h+=renderTodos(ticker);
+  h+='</div>';
+  h+=`<div class="cp-todo-add"><input type="text" id="cp-todo-input" placeholder="New task..." onkeydown="if(event.key==='Enter')addTodo('${escH(ticker)}')"><input type="date" id="cp-todo-date"><button onclick="addTodo('${escH(ticker)}')">+ Add</button></div>`;
+  h+='</div>';
+
   // Earnings timeline
   h+='<div class="card"><div class="card-title">Earnings Timeline</div>';
   h+='<div class="cp-earn-grid" id="cp-earnings-grid">';
   h+=renderEarningsGrid(ticker);
   h+='</div>';
   h+=`<div class="cp-earn-add"><input type="number" id="cp-earn-new-year" placeholder="Year" value="${new Date().getFullYear()}"><button onclick="addEarningsYear('${escH(ticker)}')">+ Add Year</button></div>`;
+  h+='</div>';
+
+  // 10K/10Q tracking
+  h+='<div class="card"><div class="card-title">10-K / 10-Q Tracking</div>';
+  h+='<div class="cp-earn-grid" id="cp-filings-grid">';
+  h+=renderFilings(ticker);
+  h+='</div>';
+  h+=`<div class="cp-earn-add"><input type="number" id="cp-filing-new-year" placeholder="Year" value="${new Date().getFullYear()}"><button onclick="addFilingsYear('${escH(ticker)}')">+ Add Year</button></div>`;
   h+='</div>';
 
   document.getElementById('cp-notes-content').innerHTML=h;
@@ -1903,6 +1963,184 @@ function addEarningsYear(ticker){
   saveTrackerStocks();
   const grid=document.getElementById('cp-earnings-grid');
   if(grid)grid.innerHTML=renderEarningsGrid(ticker);
+}
+
+// Per-company TODO list
+let todoIdCounter=0;
+function initTodos(s){if(!s.todos)s.todos=[];return s.todos}
+function renderTodos(ticker){
+  const s=tStocks[ticker];if(!s)return'';
+  const todos=initTodos(s);
+  const today=new Date().toISOString().slice(0,10);
+  let h='';
+  todos.forEach(t=>{
+    if(!t.id)t.id=++todoIdCounter;
+    const overdue=t.due&&!t.done&&t.due<today;
+    h+=`<div class="cp-todo-item">`;
+    h+=`<input type="checkbox" ${t.done?'checked':''} aria-label="Mark complete: ${escH(t.text)}" onchange="toggleTodo('${escH(ticker)}',${t.id},this.checked)">`;
+    h+=`<span class="cp-todo-text${t.done?' todo-done':''}">${escH(t.text)}</span>`;
+    if(t.due)h+=`<span class="cp-todo-due${overdue?' todo-overdue':''}">${escH(t.due)}</span>`;
+    h+=`<button class="cp-todo-del" onclick="deleteTodo('${escH(ticker)}',${t.id})" title="Delete">&times;</button>`;
+    h+=`</div>`;
+  });
+  const doneCount=todos.filter(t=>t.done).length;
+  if(todos.length>0)h+=`<div class="cp-todo-count">${doneCount}/${todos.length} completed</div>`;
+  return h;
+}
+function addTodo(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  const input=document.getElementById('cp-todo-input');
+  const dateInput=document.getElementById('cp-todo-date');
+  const text=input?.value?.trim();if(!text)return;
+  initTodos(s);
+  s.todos.push({id:++todoIdCounter,text:text,due:dateInput?.value||'',done:false});
+  saveTrackerStocks();
+  input.value='';
+  if(dateInput)dateInput.value='';
+  const list=document.getElementById('cp-todo-list');
+  if(list)list.innerHTML=renderTodos(ticker);
+}
+function toggleTodo(ticker,id,checked){
+  const s=tStocks[ticker];if(!s||!s.todos)return;
+  const t=s.todos.find(x=>x.id===id);if(!t)return;
+  t.done=checked;
+  saveTrackerStocks();
+  const list=document.getElementById('cp-todo-list');
+  if(list)list.innerHTML=renderTodos(ticker);
+}
+function deleteTodo(ticker,id){
+  const s=tStocks[ticker];if(!s||!s.todos)return;
+  s.todos=s.todos.filter(x=>x.id!==id);
+  saveTrackerStocks();
+  const list=document.getElementById('cp-todo-list');
+  if(list)list.innerHTML=renderTodos(ticker);
+}
+
+// 10K/10Q Tracking
+function initFilings(s){if(!s.filings)s.filings={};return s.filings}
+function renderFilings(ticker){
+  const s=tStocks[ticker];if(!s)return'';
+  const filings=initFilings(s);
+  const years=Object.keys(filings).sort((a,b)=>b-a);
+  if(years.length===0){
+    const cy=new Date().getFullYear();
+    filings[cy]={'10K':{done:false,note:''},'Q1':{done:false,note:''},'Q2':{done:false,note:''},'Q3':{done:false,note:''}};
+    saveTrackerStocks();
+    years.push(String(cy));
+  }
+  let h='';
+  years.forEach(yr=>{
+    const eyr=escH(yr);
+    h+=`<div class="cp-earn-year"><div class="cp-earn-year-label">${eyr}</div>`;
+    ['10K','Q1','Q2','Q3'].forEach(f=>{
+      if(!filings[yr][f])filings[yr][f]={done:false,note:''};
+      const fi=filings[yr][f];
+      const label=f==='10K'?'10-K (Annual)':'10-Q ('+f+')';
+      h+=`<div class="cp-filing-row">`;
+      h+=`<input type="checkbox" id="filing-${eyr}-${f}" ${fi.done?'checked':''} onchange="toggleFiling('${escH(ticker)}','${eyr}','${f}',this.checked)">`;
+      h+=`<span class="cp-filing-label">${escH(f)}</span>`;
+      h+=`<input type="text" value="${escH(fi.note||'')}" placeholder="${escH(label)} notes..." onchange="saveFilingNote('${escH(ticker)}','${eyr}','${f}',this.value)">`;
+      h+=`</div>`;
+    });
+    h+=`</div>`;
+  });
+  return h;
+}
+function toggleFiling(ticker,year,filing,checked){
+  const s=tStocks[ticker];if(!s)return;
+  initFilings(s);
+  if(!s.filings[year])return;
+  if(!s.filings[year][filing])s.filings[year][filing]={done:false,note:''};
+  s.filings[year][filing].done=checked;
+  saveTrackerStocks();
+}
+function saveFilingNote(ticker,year,filing,value){
+  const s=tStocks[ticker];if(!s)return;
+  initFilings(s);
+  if(!s.filings[year])return;
+  if(!s.filings[year][filing])s.filings[year][filing]={done:false,note:''};
+  s.filings[year][filing].note=value;
+  saveTrackerStocks();
+}
+function addFilingsYear(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  initFilings(s);
+  const yrRaw=document.getElementById('cp-filing-new-year')?.value;
+  const yr=parseInt(yrRaw,10);
+  if(!yr||yr<1900||yr>2100)return;
+  if(s.filings[yr]){showToast('Year '+yr+' already exists','warning');return}
+  s.filings[yr]={'10K':{done:false,note:''},'Q1':{done:false,note:''},'Q2':{done:false,note:''},'Q3':{done:false,note:''}};
+  saveTrackerStocks();
+  const grid=document.getElementById('cp-filings-grid');
+  if(grid)grid.innerHTML=renderFilings(ticker);
+}
+
+// Metric tooltips definitions
+const METRIC_TIPS={
+  ps:{name:'Price / Sales',formula:'Market Cap / Revenue',bench:'< 5 cheap, 5-15 fair, > 15 expensive',desc:'How much you pay per $1 of revenue.'},
+  pe:{name:'Price / Earnings',formula:'Market Cap / Net Income',bench:'< 15 cheap, 15-25 fair, > 30 expensive',desc:'How much you pay per $1 of profit. Lower = cheaper.'},
+  pfcf:{name:'Price / Free Cash Flow',formula:'Market Cap / FCF',bench:'< 15 cheap, 15-25 fair, > 30 expensive',desc:'How much you pay per $1 of free cash flow. More reliable than P/E.'},
+  pocf:{name:'Price / Operating CF',formula:'Market Cap / OCF',bench:'< 15 cheap, 15-25 fair, > 30 expensive',desc:'How much you pay per $1 of operating cash flow.'},
+  evEbit:{name:'EV / EBIT',formula:'Enterprise Value / EBIT',bench:'< 15 cheap, 15-25 fair, > 30 expensive',desc:'Capital-structure-neutral valuation. Better for comparing leveraged vs unleveraged companies.'},
+  peg:{name:'PEG Ratio',formula:'P/E / EPS Growth %',bench:'< 1.0 undervalued, 1.0-2.0 fair, > 2.0 expensive',desc:'P/E adjusted for growth. A PEG of 1 means you pay fair value for growth.'},
+  moneyBack:{name:'Money Back',formula:'Years until cumulative FCF-SBC ≥ Market Cap',bench:'< 5y excellent, 5-10y good, > 10y slow',desc:'How many years of cash flow to "earn back" the entire purchase price.'},
+  aria:{name:'ARIA (Annual Return)',formula:'(Implied MCap at exit / Current MCap)^(1/years) - 1',bench:'> 15% great, 10-15% good, < 10% mediocre',desc:'Expected annual return if the company reaches an exit multiple on projected FCF.'},
+  dcf:{name:'DCF Upside',formula:'(Equity Value - Market Cap) / Market Cap × 100',bench:'> 30% undervalued, 0-30% fair, < 0% overvalued',desc:'How much the stock is under/overvalued based on discounted cash flow model.'},
+  reverseDcf:{name:'Reverse DCF',formula:'Solve for growth that justifies current price',bench:'< 5% low expectations, 5-15% moderate, > 15% high expectations',desc:'What growth rate the market is pricing in. If it is higher than you expect, the stock may be overvalued.'},
+  buyback:{name:'Buyback Yield',formula:'Share Repurchases / Market Cap × 100',bench:'> 3% strong, 1-3% moderate, < 1% minimal',desc:'Percentage of market cap returned to shareholders via buybacks annually.'},
+  revenueGrowth:{name:'Revenue Growth',formula:'(Revenue TTM - Revenue Prior) / Revenue Prior × 100',bench:'> 15% fast, 5-15% moderate, < 5% slow',desc:'Year-over-year revenue growth rate.'},
+  revCAGR3:{name:'3Y Revenue CAGR',formula:'(Revenue Now / Revenue 3Y Ago)^(1/3) - 1',bench:'> 15% fast, 5-15% moderate, < 5% slow',desc:'Compound annual growth rate of revenue over 3 years. Smooths out single-year spikes.'},
+  epsGrowth:{name:'EPS Growth',formula:'(EPS TTM - EPS Prior) / EPS Prior × 100',bench:'> 15% strong, 5-15% moderate, < 5% weak',desc:'Year-over-year earnings per share growth.'}
+};
+function tipWrap(key,innerHtml){
+  const t=METRIC_TIPS[key];
+  if(!t)return innerHtml;
+  return`<div class="cp-tip">${innerHtml}<div class="cp-tiptext"><strong>${escH(t.name)}</strong><br>${escH(t.desc)}<div class="tip-formula">${escH(t.formula)}</div><div class="tip-bench">${escH(t.bench)}</div></div></div>`;
+}
+
+// Data override
+function startOverride(ticker,field,el){
+  const s=tStocks[ticker];if(!s)return;
+  if(!s.overriddenData)s.overriddenData={};
+  const current=s[field];
+  const display=el.closest('.cp-metric')||el.closest('.cp-fin-item');
+  if(!display)return;
+  const valEl=display.querySelector('.cp-metric-value,.cp-fin-value');
+  if(!valEl)return;
+  if(valEl.querySelector('.cp-override-input'))return;
+  const input=document.createElement('input');
+  input.className='cp-override-input';
+  input.type='text';
+  input.value=current!=null?String(current):'';
+  input.placeholder='Enter value...';
+  const origHTML=valEl.innerHTML;
+  valEl.innerHTML='';
+  valEl.appendChild(input);
+  input.focus();
+  input.select();
+  let done=false,cancelled=false;
+  function finish(){
+    if(done||cancelled)return;
+    done=true;
+    const raw=input.value.trim();
+    if(raw===''){
+      delete s.overriddenData[field];
+      if(s._origData&&s._origData[field]!=null)s[field]=s._origData[field];
+      saveTrackerStocks();
+      showProfile(ticker);
+      return;
+    }
+    const parsed=parseNum(raw);
+    if(isNaN(parsed)||parsed===0){valEl.innerHTML=origHTML;return}
+    if(!s._origData)s._origData={};
+    if(s._origData[field]==null)s._origData[field]=current;
+    s.overriddenData[field]=parsed;
+    s[field]=parsed;
+    saveTrackerStocks();
+    showProfile(ticker);
+  }
+  input.addEventListener('blur',finish);
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')input.blur();if(e.key==='Escape'){cancelled=true;valEl.innerHTML=origHTML}});
 }
 
 // ====== STOCK TRACKER ======
