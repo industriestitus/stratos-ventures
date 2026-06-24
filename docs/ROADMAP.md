@@ -1,6 +1,6 @@
 # Stratos Ventures — Roadmap
 
-## Current Phase: Phase 1 — App Shell & Navigation
+## Current Phase: Phase 2 — Company Profile Page
 Status: IN PROGRESS
 
 ---
@@ -30,14 +30,14 @@ Status: IN PROGRESS
 ## Phase 2: Company Profile Page (2-3 sessions)
 > The core of the app — everything about a company in one place.
 
-- [ ] Integrate existing calculator (DCF, Reverse DCF, ARIA, Money Back)
-- [ ] Integrate existing tracker data
-- [ ] Add earnings timeline (Q1, Q2... with checkboxes)
+- [x] Integrate existing calculator (DCF, Reverse DCF, ARIA, Money Back)
+- [x] Integrate existing tracker data
+- [x] Add earnings timeline (Q1, Q2... with checkboxes)
 - [ ] Add 10K/10Q tracking section
-- [ ] Add investment thesis / notes section
-- [ ] Pipeline status (Watchlist → Under review → Buy target → Owned)
+- [x] Add investment thesis / notes section
+- [x] Pipeline status (Watchlist → Under review → Buy target → Owned)
 - [ ] Historical charts (10-30 year revenue, FCF, EPS) from FMP
-- [ ] Company type tag (slow, medium, fast, cyclical, turnaround, asset)
+- [x] Company type tag (slow, medium, fast, cyclical, turnaround, asset)
 - [ ] Per-company TODO list (analysis tasks, due dates, completion tracking)
 - [ ] Metric tooltips: hover → definition, formula, calculation, source, benchmark
 - [ ] Data override: click any metric to override API value (original preserved, "overridden" badge)
@@ -65,6 +65,8 @@ Status: IN PROGRESS
 - [ ] Multi-currency conversion (live rates)
 - [ ] Monthly snapshots (manual or auto)
 - [ ] P&L calculation per position and total
+- [ ] TWR (time-weighted return) for benchmark comparison
+- [ ] MWR/XIRR (money-weighted return) for personal performance
 
 ## Phase 5: Dashboard (2-3 sessions)
 > Portfolio overview, metrics, alerts.
@@ -148,7 +150,7 @@ Status: IN PROGRESS
 ---
 
 ## Open Questions
-- [ ] Cost basis method: FIFO, LIFO, or average? — decide at Phase 4 start
+(none currently)
 
 ## Decisions Made
 - ✅ Platform: Unified web app (not Electron)
@@ -157,6 +159,8 @@ Status: IN PROGRESS
 - ✅ Data: FMP + Finnhub + Yahoo (all free tier)
 - ✅ Notes: Markdown inside app, exportable
 - ✅ Mobile: responsive design, not native app
-- ✅ Benchmark: S&P 500
+- ✅ Benchmark: S&P 500 + MSCI World (both, user-selectable)
 - ✅ Currency effect: show both combined and separated (stock return vs FX return)
 - ✅ Non-stock assets: custom asset with manual value entry
+- ✅ Cost basis: Average cost (EU broker standard, simplest for multi-broker buy & hold)
+- ✅ Returns: TWR + MWR/XIRR + Simple P&L (all three)

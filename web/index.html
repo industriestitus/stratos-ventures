@@ -198,6 +198,58 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .cp-assess-value{font-size:15px;font-weight:600;color:var(--text)}
 .cp-thesis{grid-column:1/-1}
 .cp-thesis .cp-assess-value{font-size:13px;font-weight:400;line-height:1.5;color:var(--text2)}
+/* Pipeline status */
+.cp-pipeline{display:flex;gap:0;margin-bottom:4px}
+.cp-pipe-step{display:flex;align-items:center;gap:6px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--text2);background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:all .2s;white-space:nowrap}
+.cp-pipe-step:first-child{border-radius:6px 0 0 6px}
+.cp-pipe-step:last-child{border-radius:0 6px 6px 0}
+.cp-pipe-step:not(:first-child){border-left:none}
+.cp-pipe-step:hover{background:var(--surface2);color:var(--text)}
+.cp-pipe-step.pipe-active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cp-pipe-step.pipe-active+.cp-pipe-step{border-left-color:var(--accent)}
+/* Company type tag */
+.cp-type-wrap{display:flex;gap:6px;flex-wrap:wrap}
+.cp-type-tag{padding:4px 10px;font-size:11px;font-weight:600;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .2s}
+.cp-type-tag:hover{border-color:var(--accent);color:var(--text)}
+.cp-type-tag.type-active{border-color:var(--accent);background:rgba(108,92,231,.2);color:var(--accent2)}
+/* Financials tab */
+.cp-fin-section{margin-bottom:20px}
+.cp-fin-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.cp-fin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.cp-fin-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.cp-fin-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.cp-fin-value{font-size:18px;font-weight:700}
+.cp-fin-sub{font-size:11px;color:var(--text2);margin-top:2px}
+/* Valuation tab */
+.cp-val-model{margin-bottom:20px}
+.cp-val-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cp-val-model-title{font-size:14px;font-weight:600;color:var(--text)}
+.cp-val-badge{padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.cp-val-details{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.cp-val-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px}
+.cp-val-item-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px}
+.cp-val-item-value{font-size:16px;font-weight:700}
+.cp-val-assumptions{margin-top:10px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2);line-height:1.6}
+.cp-val-assumptions strong{color:var(--text);font-weight:600}
+/* Notes tab */
+.cp-notes-area{width:100%;min-height:200px;padding:14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:14px;font-family:inherit;resize:vertical;outline:none;line-height:1.6}
+.cp-notes-area:focus{border-color:var(--accent)}
+.cp-notes-saved{font-size:11px;color:var(--text2);margin-top:6px}
+/* Earnings timeline */
+.cp-earn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.cp-earn-year{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.cp-earn-year-label{font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px}
+.cp-earn-q{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.cp-earn-q:last-child{border-bottom:none}
+.cp-earn-q input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.cp-earn-q label{font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;flex-shrink:0;min-width:26px}
+.cp-earn-q input[type=text]{flex:1;padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;font-family:inherit}
+.cp-earn-q input[type=text]:focus{border-color:var(--accent)}
+.cp-earn-q input[type=checkbox]:checked+label{color:var(--green)}
+.cp-earn-add{margin-top:12px;display:flex;gap:8px;align-items:center}
+.cp-earn-add input{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;width:80px;font-family:inherit}
+.cp-earn-add button{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s}
+.cp-earn-add button:hover{border-color:var(--accent);color:var(--text)}
 /* Toast notifications */
 .toast-container{position:fixed;bottom:24px;right:24px;z-index:500;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .toast{pointer-events:auto;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--text2);border-radius:8px;padding:12px 36px 12px 14px;font-size:13px;color:var(--text);max-width:380px;min-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toast-in .3s ease;position:relative;line-height:1.4}
@@ -289,10 +341,18 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   .cp-metric-value{font-size:16px}
   .toast-container{left:12px;right:12px;bottom:80px}
   .toast{max-width:100%;min-width:0}
+  .cp-pipeline{flex-wrap:wrap;gap:4px}
+  .cp-pipe-step{border-radius:6px!important;border:1px solid var(--border)!important;padding:6px 10px;font-size:10px}
+  .cp-type-wrap{gap:4px}
+  .cp-type-tag{padding:4px 8px;font-size:10px}
+  .cp-earn-grid{grid-template-columns:1fr}
+  .cp-fin-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  .cp-val-details{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
 }
 @media(max-width:480px){
   .summary-row,.input-grid,.results-grid,.cp-metrics-grid,.cp-assessment-grid{grid-template-columns:1fr}
   .cp-name{font-size:16px}
+  .cp-fin-grid{grid-template-columns:1fr 1fr}
   .st-controls{flex-direction:column}
   .st-controls input,.st-controls button{width:100%!important}
   .st-controls div[style*="flex:1"]{display:none}
@@ -753,6 +813,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           </button>
         </div>
       </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:10px">
+        <div class="cp-pipeline" id="cp-pipeline"></div>
+        <div class="cp-type-wrap" id="cp-type-wrap"></div>
+      </div>
     </div>
     <div class="cp-tabs">
       <button class="tab active" onclick="switchProfileTab('overview')">Overview</button>
@@ -765,27 +829,18 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <div id="cp-overview-content"></div>
     </div>
     <div id="cp-panel-financials" class="cp-panel" style="display:none">
-      <div class="card placeholder-section">
-        <h2>Financials</h2>
-        <p>Detailed financial statements and historical data. Coming in Phase 2.</p>
-      </div>
+      <div id="cp-financials-content"></div>
     </div>
     <div id="cp-panel-valuation" class="cp-panel" style="display:none">
-      <div class="card placeholder-section">
-        <h2>Valuation</h2>
-        <p>DCF models, comparables, and scenario analysis. Coming in Phase 3.</p>
-      </div>
+      <div id="cp-valuation-content"></div>
     </div>
     <div id="cp-panel-notes" class="cp-panel" style="display:none">
-      <div class="card placeholder-section">
-        <h2>Notes</h2>
-        <p>Research notes, earnings call summaries, and analysis. Coming in Phase 3.</p>
-      </div>
+      <div id="cp-notes-content"></div>
     </div>
     <div id="cp-panel-checklist" class="cp-panel" style="display:none">
       <div class="card placeholder-section">
         <h2>Checklist</h2>
-        <p>Investment checklist and due diligence tracker. Coming in Phase 4.</p>
+        <p>Investment checklist and due diligence tracker. Coming in Phase 7.</p>
       </div>
     </div>
   </div><!-- end company-profile -->
@@ -1560,6 +1615,15 @@ function showProfile(ticker){
 
   document.getElementById('cp-overview-content').innerHTML=h;
 
+  // Render pipeline & company type
+  renderPipeline(ticker);
+  renderCompanyType(ticker);
+
+  // Render all tab content
+  renderFinancials(ticker);
+  renderValuation(ticker);
+  renderNotes(ticker);
+
   // Reset to overview tab
   switchProfileTab('overview');
 }
@@ -1579,6 +1643,266 @@ function closeProfile(){
   document.getElementById('company-profile').style.display='none';
   document.querySelector('.company-tabs').style.display='';
   switchCompanyTab('tracker');
+}
+
+// Pipeline & Company Type
+const PIPE_STAGES=['Watchlist','Under review','Buy target','Owned'];
+const COMPANY_TYPES=['slow','medium','fast','cyclical','turnaround','asset'];
+
+function renderPipeline(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  const cur=s.pipeline||'';
+  const el=document.getElementById('cp-pipeline');
+  el.innerHTML=PIPE_STAGES.map(st=>`<button class="cp-pipe-step${cur===st?' pipe-active':''}" onclick="setPipeline('${escH(ticker)}','${st}')">${escH(st)}</button>`).join('');
+}
+function setPipeline(ticker,stage){
+  const s=tStocks[ticker];if(!s)return;
+  s.pipeline=s.pipeline===stage?'':stage;
+  saveTrackerStocks();
+  renderPipeline(ticker);
+}
+function renderCompanyType(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  const cur=s.companyType||'';
+  const el=document.getElementById('cp-type-wrap');
+  el.innerHTML=COMPANY_TYPES.map(t=>`<button class="cp-type-tag${cur===t?' type-active':''}" onclick="setCompanyType('${escH(ticker)}','${t}')">${escH(t)}</button>`).join('');
+}
+function setCompanyType(ticker,type){
+  const s=tStocks[ticker];if(!s)return;
+  s.companyType=s.companyType===type?'':type;
+  saveTrackerStocks();
+  renderCompanyType(ticker);
+}
+
+// Financials tab
+function renderFinancials(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  const r=calcStockRatios(s);
+  let h='';
+
+  h+='<div class="card"><div class="card-title">Income Statement</div><div class="cp-fin-grid">';
+  const incItems=[
+    {l:'Revenue',v:fmt(s.revenue),sub:s.revenueGrowth!=null?(s.revenueGrowth>=0?'+':'')+s.revenueGrowth.toFixed(1)+'% YoY':null,cls:s.revenueGrowth!=null?(s.revenueGrowth>=5?'positive':s.revenueGrowth<0?'negative':'warn'):''},
+    {l:'Net Income',v:fmt(s.profit),sub:s.profit&&s.revenue?(s.profit/s.revenue*100).toFixed(1)+'% margin':null},
+    {l:'EBIT',v:fmt(s.ebit),sub:s.ebit&&s.revenue?(s.ebit/s.revenue*100).toFixed(1)+'% margin':null},
+    {l:'EBITDA',v:fmt(s.ebitda)},
+    {l:'EPS (Diluted)',v:s.epsDiluted?'$'+s.epsDiluted.toFixed(2):'-',sub:s.epsGrowth!=null?(s.epsGrowth>=0?'+':'')+s.epsGrowth.toFixed(1)+'% growth':null,cls:s.epsGrowth!=null?(s.epsGrowth>=5?'positive':s.epsGrowth<0?'negative':'warn'):''},
+    {l:'SBC',v:fmt(s.sbc),sub:s.sbc&&s.revenue?(s.sbc/s.revenue*100).toFixed(1)+'% of rev':null}
+  ];
+  incItems.forEach(m=>{
+    h+=`<div class="cp-fin-item"><div class="cp-fin-label">${m.l}</div><div class="cp-fin-value ${m.cls||''}">${m.v||'-'}</div>${m.sub?`<div class="cp-fin-sub">${m.sub}</div>`:''}</div>`;
+  });
+  h+='</div></div>';
+
+  h+='<div class="card"><div class="card-title">Cash Flow</div><div class="cp-fin-grid">';
+  const cfItems=[
+    {l:'Operating CF',v:fmt(s.ocf),sub:s.ocf&&s.revenue?(s.ocf/s.revenue*100).toFixed(1)+'% OCF margin':null},
+    {l:'Free Cash Flow',v:fmt(s.fcf),sub:s.fcf&&s.revenue?(s.fcf/s.revenue*100).toFixed(1)+'% FCF margin':null},
+    {l:'OCF - SBC',v:fmt(s.ocfSbc)},
+    {l:'FCF - SBC',v:fmt(s.fcfSbc),sub:s.fcfSbc&&s.revenue?(s.fcfSbc/s.revenue*100).toFixed(1)+'% margin':null},
+    {l:'Buybacks',v:fmt(s.buybackRaw),sub:r.buyback!=null?r.buyback.toFixed(1)+'% yield':null}
+  ];
+  cfItems.forEach(m=>{
+    h+=`<div class="cp-fin-item"><div class="cp-fin-label">${m.l}</div><div class="cp-fin-value">${m.v||'-'}</div>${m.sub?`<div class="cp-fin-sub">${m.sub}</div>`:''}</div>`;
+  });
+  h+='</div></div>';
+
+  h+='<div class="card"><div class="card-title">Growth</div><div class="cp-fin-grid">';
+  const grItems=[
+    {l:'Revenue Growth (TTM)',v:s.revenueGrowth!=null?s.revenueGrowth.toFixed(1)+'%':'-',cls:s.revenueGrowth!=null?(s.revenueGrowth>=10?'positive':s.revenueGrowth>=0?'warn':'negative'):''},
+    {l:'3Y Revenue CAGR',v:s.revCAGR3!=null?s.revCAGR3.toFixed(1)+'%':'-',cls:s.revCAGR3!=null?(s.revCAGR3>=10?'positive':s.revCAGR3>=0?'warn':'negative'):''},
+    {l:'EPS Growth',v:s.epsGrowth!=null?s.epsGrowth.toFixed(1)+'%':'-',cls:s.epsGrowth!=null?(s.epsGrowth>=10?'positive':s.epsGrowth>=0?'warn':'negative'):''},
+    {l:'Rev Growth Y1',v:s.revGrowthY1!=null?s.revGrowthY1.toFixed(1)+'%':'-'},
+    {l:'Rev Growth Y2',v:s.revGrowthY2!=null?s.revGrowthY2.toFixed(1)+'%':'-'},
+    {l:'Rev Growth Y3',v:s.revGrowthY3!=null?s.revGrowthY3.toFixed(1)+'%':'-'}
+  ];
+  grItems.forEach(m=>{
+    h+=`<div class="cp-fin-item"><div class="cp-fin-label">${m.l}</div><div class="cp-fin-value ${m.cls||''}">${m.v}</div></div>`;
+  });
+  h+='</div></div>';
+
+  h+='<div class="card"><div class="card-title">Valuation Ratios</div><div class="cp-fin-grid">';
+  function ratioClass(v,low,high){if(v==null||isNaN(v))return'';return v<=low?'positive':v>=high?'negative':'warn'}
+  const ratItems=[
+    {l:'P/S',v:r.ps?.toFixed(1),cls:ratioClass(r.ps,5,15)},
+    {l:'P/E',v:r.pe?.toFixed(1),cls:ratioClass(r.pe,15,30)},
+    {l:'P/FCF',v:r.pfcf?.toFixed(1),cls:ratioClass(r.pfcf,15,30)},
+    {l:'P/OCF',v:r.pocf?.toFixed(1),cls:ratioClass(r.pocf,15,30)},
+    {l:'EV/EBIT',v:r.evEbit?.toFixed(1),cls:ratioClass(r.evEbit,15,30)},
+    {l:'PEG',v:r.peg?.toFixed(2),cls:ratioClass(r.peg,1,2)}
+  ];
+  ratItems.forEach(m=>{
+    h+=`<div class="cp-fin-item"><div class="cp-fin-label">${m.l}</div><div class="cp-fin-value ${m.cls||''}">${m.v||'-'}</div></div>`;
+  });
+  h+='</div></div>';
+
+  document.getElementById('cp-financials-content').innerHTML=h;
+}
+
+// Valuation tab
+function renderValuation(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  const c=calcStockCalcs(s);
+  const r=calcStockRatios(s);
+  const st=stSettings();
+  const ov=s.overrides||{};
+  const g1=ov.g1??st.g1,g2=ov.g2??st.g2,g3=ov.g3??st.g3;
+  const dr=ov.dr??st.dr,tg=ov.tg??st.tg,em=ov.em??st.em;
+  let h='';
+
+  function badge(v,low,high,suffix,invert){
+    if(v==null||isNaN(v))return'<span class="cp-val-badge" style="background:var(--surface);color:var(--text2)">N/A</span>';
+    const cls=invert?(v<=low?'positive':v>=high?'negative':'warn'):(v>=high?'positive':v<=low?'negative':'warn');
+    return`<span class="cp-val-badge ${cls}" style="background:${cls==='positive'?'rgba(0,184,148,.15)':cls==='negative'?'rgba(225,112,85,.15)':'rgba(253,203,110,.15)'}">${typeof v==='string'?v:v.toFixed(1)}${suffix||''}</span>`;
+  }
+
+  // DCF
+  h+='<div class="card cp-val-model"><div class="cp-val-header"><div class="cp-val-model-title">DCF (Perpetuity)</div>'+badge(c.dcf,0,30,'%')+'</div>';
+  h+='<div class="cp-val-details">';
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Upside/Downside</div><div class="cp-val-item-value ${c.dcf!=null?(c.dcf>=30?'positive':c.dcf>=0?'warn':'negative'):''}">${c.dcf!=null?c.dcf.toFixed(1)+'%':'-'}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">FCF-SBC (Y0)</div><div class="cp-val-item-value">${fmt(s.fcfSbc)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Market Cap</div><div class="cp-val-item-value">${fmt(s.marketCap)}</div></div>`;
+  h+='</div>';
+  h+=`<div class="cp-val-assumptions"><strong>Assumptions:</strong> Growth Y1-5: ${g1}%, Y6-10: ${g2}%, Y11-15: ${g3}% · DR: ${dr}% · Terminal: ${tg}%</div>`;
+  h+='</div>';
+
+  // Reverse DCF
+  h+='<div class="card cp-val-model"><div class="cp-val-header"><div class="cp-val-model-title">Reverse DCF</div>'+badge(c.reverseDcf,5,15,'%')+'</div>';
+  h+='<div class="cp-val-details">';
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Implied Growth</div><div class="cp-val-item-value ${c.reverseDcf!=null?(c.reverseDcf<=5?'positive':c.reverseDcf>=15?'negative':'warn'):''}">${c.reverseDcf!=null?c.reverseDcf.toFixed(1)+'%':'-'}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">P/FCF-SBC</div><div class="cp-val-item-value">${s.fcfSbc&&s.marketCap?(s.marketCap/s.fcfSbc).toFixed(1)+'x':'-'}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">FCF-SBC Yield</div><div class="cp-val-item-value">${s.fcfSbc&&s.marketCap?(s.fcfSbc/s.marketCap*100).toFixed(1)+'%':'-'}</div></div>`;
+  h+='</div>';
+  h+=`<div class="cp-val-assumptions"><strong>What growth rate is priced in?</strong> If the stock needs >${dr}% growth to justify its price, the market expects a lot.</div>`;
+  h+='</div>';
+
+  // ARIA
+  h+='<div class="card cp-val-model"><div class="cp-val-header"><div class="cp-val-model-title">ARIA (Annual Return)</div>'+badge(c.aria,10,15,'%')+'</div>';
+  h+='<div class="cp-val-details">';
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">10Y CAGR @ ${em}x</div><div class="cp-val-item-value ${c.aria!=null?(c.aria>=15?'positive':c.aria>=10?'warn':'negative'):''}">${c.aria!=null?c.aria.toFixed(1)+'%':'-'}</div></div>`;
+  if(s.fcfSbc&&s.marketCap){
+    const fcf10=s.fcfSbc*Math.pow(1+g1/100,5)*Math.pow(1+g2/100,5);
+    h+=`<div class="cp-val-item"><div class="cp-val-item-label">Implied MCap Y10</div><div class="cp-val-item-value">${fmt(fcf10*em)}</div></div>`;
+    h+=`<div class="cp-val-item"><div class="cp-val-item-label">FCF-SBC Y10</div><div class="cp-val-item-value">${fmt(fcf10)}</div></div>`;
+  }
+  h+='</div>';
+  h+=`<div class="cp-val-assumptions"><strong>Assumptions:</strong> Exit multiple: ${em}x · Growth Y1-5: ${g1}%, Y6-10: ${g2}%</div>`;
+  h+='</div>';
+
+  // Money Back
+  h+='<div class="card cp-val-model"><div class="cp-val-header"><div class="cp-val-model-title">Money Back</div>'+badge(typeof c.moneyBack==='number'?c.moneyBack:null,5,10,'y',true)+'</div>';
+  h+='<div class="cp-val-details">';
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Payback Period</div><div class="cp-val-item-value ${typeof c.moneyBack==='number'?(c.moneyBack<=5?'positive':c.moneyBack<=10?'warn':'negative'):'negative'}">${typeof c.moneyBack==='number'?c.moneyBack.toFixed(1)+' years':c.moneyBack||'-'}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Market Cap</div><div class="cp-val-item-value">${fmt(s.marketCap)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">FCF-SBC (Y0)</div><div class="cp-val-item-value">${fmt(s.fcfSbc)}</div></div>`;
+  h+='</div>';
+  h+=`<div class="cp-val-assumptions"><strong>How many years</strong> of cumulative FCF-SBC to pay back the entire market cap?</div>`;
+  h+='</div>';
+
+  // Open in calculator button
+  h+=`<div style="text-align:center;margin-top:8px"><button class="btn btn-secondary" onclick="const t=profileTicker;closeProfile();loadStockToCalc(t)" style="padding:10px 24px">Open Full Calculator (DCF tables, charts, sensitivity)</button></div>`;
+
+  document.getElementById('cp-valuation-content').innerHTML=h;
+}
+
+// Notes tab
+function renderNotes(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  if(!s.notes)s.notes={thesis:'',research:'',earnings:{}};
+  if(typeof s.notes==='string'){s.notes={thesis:s.notes,research:'',earnings:{}}}
+  let h='';
+
+  // Thesis
+  h+='<div class="card"><div class="card-title">Investment Thesis</div>';
+  h+=`<textarea class="cp-notes-area" id="cp-thesis-input" placeholder="Why is this a good investment? What is your edge?" oninput="saveNote('${escH(ticker)}','thesis',this.value)" style="min-height:120px">${escH(s.notes.thesis||'')}</textarea>`;
+  h+='<div class="cp-notes-saved" id="cp-thesis-saved"></div></div>';
+
+  // Research notes
+  h+='<div class="card"><div class="card-title">Research Notes</div>';
+  h+=`<textarea class="cp-notes-area" id="cp-research-input" placeholder="General research notes, observations, links, sources..." oninput="saveNote('${escH(ticker)}','research',this.value)" style="min-height:160px">${escH(s.notes.research||'')}</textarea>`;
+  h+='<div class="cp-notes-saved" id="cp-research-saved"></div></div>';
+
+  // Earnings timeline
+  h+='<div class="card"><div class="card-title">Earnings Timeline</div>';
+  h+='<div class="cp-earn-grid" id="cp-earnings-grid">';
+  h+=renderEarningsGrid(ticker);
+  h+='</div>';
+  h+=`<div class="cp-earn-add"><input type="number" id="cp-earn-new-year" placeholder="Year" value="${new Date().getFullYear()}"><button onclick="addEarningsYear('${escH(ticker)}')">+ Add Year</button></div>`;
+  h+='</div>';
+
+  document.getElementById('cp-notes-content').innerHTML=h;
+}
+
+let noteTimers={};
+function saveNote(ticker,field,value){
+  const s=tStocks[ticker];if(!s)return;
+  if(!s.notes)s.notes={thesis:'',research:'',earnings:{}};
+  s.notes[field]=value;
+  if(field==='thesis')s.thesis=value;
+  clearTimeout(noteTimers[field]);
+  noteTimers[field]=setTimeout(()=>{
+    saveTrackerStocks();
+    const el=document.getElementById('cp-'+field+'-saved');
+    if(el){el.textContent='Saved';setTimeout(()=>{if(el)el.textContent=''},2000)}
+  },500);
+}
+
+function renderEarningsGrid(ticker){
+  const s=tStocks[ticker];if(!s)return'';
+  if(!s.notes)s.notes={thesis:'',research:'',earnings:{}};
+  if(!s.notes.earnings)s.notes.earnings={};
+  const earnings=s.notes.earnings;
+  const years=Object.keys(earnings).sort((a,b)=>b-a);
+  if(years.length===0){
+    const cy=new Date().getFullYear();
+    earnings[cy]={Q1:{done:false,note:''},Q2:{done:false,note:''},Q3:{done:false,note:''},Q4:{done:false,note:''}};
+    saveTrackerStocks();
+    years.push(String(cy));
+  }
+  let h='';
+  years.forEach(yr=>{
+    const eyr=escH(yr);
+    h+=`<div class="cp-earn-year"><div class="cp-earn-year-label">${eyr}</div>`;
+    ['Q1','Q2','Q3','Q4'].forEach(q=>{
+      if(!earnings[yr][q])earnings[yr][q]={done:false,note:''};
+      const eq=earnings[yr][q];
+      h+=`<div class="cp-earn-q">`;
+      h+=`<input type="checkbox" id="earn-${eyr}-${q}" ${eq.done?'checked':''} onchange="toggleEarning('${escH(ticker)}','${eyr}','${q}',this.checked)">`;
+      h+=`<label for="earn-${eyr}-${q}">${q}</label>`;
+      h+=`<input type="text" value="${escH(eq.note||'')}" placeholder="Notes..." onchange="saveEarningNote('${escH(ticker)}','${eyr}','${q}',this.value)">`;
+      h+=`</div>`;
+    });
+    h+='</div>';
+  });
+  return h;
+}
+
+function toggleEarning(ticker,year,quarter,checked){
+  const s=tStocks[ticker];if(!s||!s.notes||!s.notes.earnings)return;
+  if(!s.notes.earnings[year])return;
+  if(!s.notes.earnings[year][quarter])s.notes.earnings[year][quarter]={done:false,note:''};
+  s.notes.earnings[year][quarter].done=checked;
+  saveTrackerStocks();
+}
+function saveEarningNote(ticker,year,quarter,value){
+  const s=tStocks[ticker];if(!s||!s.notes||!s.notes.earnings)return;
+  if(!s.notes.earnings[year])return;
+  if(!s.notes.earnings[year][quarter])s.notes.earnings[year][quarter]={done:false,note:''};
+  s.notes.earnings[year][quarter].note=value;
+  saveTrackerStocks();
+}
+function addEarningsYear(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  if(!s.notes)s.notes={thesis:'',research:'',earnings:{}};
+  if(!s.notes.earnings)s.notes.earnings={};
+  const yrRaw=document.getElementById('cp-earn-new-year')?.value;
+  const yr=parseInt(yrRaw,10);
+  if(!yr||yr<1900||yr>2100)return;
+  if(s.notes.earnings[yr]){showToast('Year '+yr+' already exists','warning');return}
+  s.notes.earnings[yr]={Q1:{done:false,note:''},Q2:{done:false,note:''},Q3:{done:false,note:''},Q4:{done:false,note:''}};
+  saveTrackerStocks();
+  const grid=document.getElementById('cp-earnings-grid');
+  if(grid)grid.innerHTML=renderEarningsGrid(ticker);
 }
 
 // ====== STOCK TRACKER ======
