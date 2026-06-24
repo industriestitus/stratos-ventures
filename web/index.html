@@ -1253,7 +1253,7 @@ function setBtnLoading(btn,loading,origText){
 
 // ====== CALCULATOR (existing) ======
 const charts = {};
-function fmt(n,dec=0){if(n==null||isNaN(n))return'-';if(Math.abs(n)>=1e12)return(n/1e12).toFixed(1)+'T';if(Math.abs(n)>=1e9)return(n/1e9).toFixed(1)+'B';if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e4)return(n/1e3).toFixed(1)+'K';return n.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
+function fmt(n,dec=0){if(n==null||!isFinite(n))return'-';if(Math.abs(n)>=1e12)return(n/1e12).toFixed(1)+'T';if(Math.abs(n)>=1e9)return(n/1e9).toFixed(1)+'B';if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e4)return(n/1e3).toFixed(1)+'K';return n.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
 function V(id){return parseFloat(document.getElementById(id)?.value)||0}
 function T(id,t){const e=document.getElementById(id);if(e)e.textContent=t}
 
@@ -1299,7 +1299,7 @@ function calcDCF(prefix,useExit){
   const fcfSum=pvs.reduce((a,b)=>a+b,0);
   let tv,tvLabel;
   if(useExit){tv=fcfs[10]*em;tvLabel='Terminal Value ('+em+'x)'}
-  else{tv=(fcfs[10]*(1+tg))/(dr-tg);tvLabel='Terminal Value'}
+  else{tv=dr>tg?(fcfs[10]*(1+tg))/(dr-tg):NaN;tvLabel='Terminal Value'}
   const pvTV=tv/Math.pow(1+dr,10);
   const ev=fcfSum+pvTV,eq=ev+cash-debt,up=(eq-mc)/mc;
   return{fcfs,pvs,fcfSum,tv,pvTV,ev,eq,up,tvLabel,mc};
@@ -1652,7 +1652,7 @@ function showProfile(ticker){
     {l:'Net Margin',v:s.netMargin!=null?s.netMargin.toFixed(1)+'%':'-',cls:valClass(s.netMargin,5,15),tip:'netMargin'},
     {l:'ROE',v:s.roe!=null?s.roe.toFixed(1)+'%':'-',cls:valClass(s.roe,10,15),tip:'roe'},
     {l:'ROIC',v:s.roic!=null?s.roic.toFixed(1)+'%':'-',cls:valClass(s.roic,10,15),tip:'roic'},
-    {l:'Debt / Equity',v:s.debtEquity!=null?s.debtEquity.toFixed(2):'-',cls:s.debtEquity!=null?(s.debtEquity<=0.5?'positive':s.debtEquity<=1?'warn':'negative'):'',tip:'debtEquity'},
+    {l:'Debt / Equity',v:s.debtEquity!=null?s.debtEquity.toFixed(2):'-',cls:s.debtEquity!=null?(s.debtEquity<0?'negative':s.debtEquity<=0.5?'positive':s.debtEquity<=1?'warn':'negative'):'',tip:'debtEquity'},
     {l:'Current Ratio',v:s.currentRatio!=null?s.currentRatio.toFixed(2):'-',cls:s.currentRatio!=null?(s.currentRatio>=1.5?'positive':s.currentRatio>=1?'warn':'negative'):'',tip:'currentRatio'}
   ];
   const assessItems=[
@@ -1701,6 +1701,7 @@ function switchProfileTab(name){
   document.querySelectorAll('.cp-tabs .tab').forEach(b=>{
     b.classList.toggle('active',b.textContent.toLowerCase()===name);
   });
+  if(name==='financials')Object.values(cpHistCharts).forEach(c=>{if(c)c.resize()});
 }
 
 function closeProfile(){
@@ -1805,7 +1806,7 @@ function renderFinancials(ticker){
 
   h+='<div class="card"><div class="card-title">Quality & Profitability</div><div class="cp-fin-grid">';
   function qualClass(v,low,high){if(v==null||isNaN(v))return'';return v>=high?'positive':v>=low?'warn':'negative'}
-  function debtClass(v){if(v==null||isNaN(v))return'';return v<=0.5?'positive':v<=1?'warn':'negative'}
+  function debtClass(v){if(v==null||isNaN(v))return'';if(v<0)return'negative';return v<=0.5?'positive':v<=1?'warn':'negative'}
   const qualItems=[
     {l:'Gross Margin',v:s.grossMargin!=null?s.grossMargin.toFixed(1)+'%':'-',cls:qualClass(s.grossMargin,20,40)},
     {l:'Operating Margin',v:s.operatingMargin!=null?s.operatingMargin.toFixed(1)+'%':'-',cls:qualClass(s.operatingMargin,10,20)},
@@ -2244,6 +2245,7 @@ function startOverride(ticker,field,el){
       showProfile(ticker);
       return;
     }
+    if(!/[\d]/.test(raw)){valEl.innerHTML=origHTML;return}
     const parsed=parseNum(raw);
     if(isNaN(parsed)){valEl.innerHTML=origHTML;return}
     if(!s._origData)s._origData={};
@@ -2297,7 +2299,7 @@ function loadTrackerSettings(){
   Object.keys(map).forEach(k=>{if(s[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=s[k]}});
 }
 
-function saveTrackerStocks(){localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}
+function saveTrackerStocks(){try{localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}catch(e){showToast('Storage full — export your data to avoid data loss','error',8000)}}
 
 function loadTrackerStocks(){
   const d=localStorage.getItem('tracker_stocks_v1');
