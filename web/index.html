@@ -767,10 +767,68 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
 .rv-questions{margin-top:16px}
 .rv-question{margin-bottom:16px}
 .rv-question label{font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
+/* ====== CHECKLIST ====== */
+.cl-summary{display:flex;align-items:center;gap:16px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;flex-wrap:wrap}
+.cl-summary-progress{flex:1;min-width:120px}
+.cl-summary-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:6px}
+.cl-summary-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+.cl-summary-pct{font-size:22px;font-weight:700;color:var(--text)}
+.cl-summary-label{font-size:11px;color:var(--text2)}
+.cl-summary-stats{display:flex;gap:16px;font-size:12px;color:var(--text2)}
+.cl-summary-stat{text-align:center}
+.cl-summary-stat strong{display:block;font-size:16px;color:var(--text)}
+.cl-section{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden}
+.cl-section-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--surface);cursor:pointer;user-select:none;transition:background .2s}
+.cl-section-header:hover{background:var(--surface2)}
+.cl-section-num{font-size:11px;font-weight:700;color:var(--accent);background:rgba(108,92,231,.12);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cl-section-title{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+.cl-section-progress{width:60px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;flex-shrink:0}
+.cl-section-progress-fill{height:100%;background:var(--green);border-radius:2px;transition:width .3s}
+.cl-section-pct{font-size:11px;color:var(--text2);width:32px;text-align:right;flex-shrink:0}
+.cl-section-chevron{color:var(--text2);transition:transform .2s;flex-shrink:0}
+.cl-section.open .cl-section-chevron{transform:rotate(180deg)}
+.cl-section-body{display:none;padding:16px;border-top:1px solid var(--border);background:var(--bg)}
+.cl-section.open .cl-section-body{display:block}
+.cl-field{margin-bottom:14px}
+.cl-field:last-child{margin-bottom:0}
+.cl-field label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px}
+.cl-field textarea,.cl-field input[type=text],.cl-field input[type=number],.cl-field select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;box-sizing:border-box}
+.cl-field textarea{resize:vertical;min-height:60px}
+.cl-field textarea:focus,.cl-field input:focus,.cl-field select:focus{border-color:var(--accent);outline:none}
+.cl-rating{display:flex;gap:4px;margin-top:4px}
+.cl-rating button{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.cl-rating button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cl-rating button:hover{border-color:var(--accent)}
+.cl-check-row{display:flex;align-items:center;gap:8px;padding:6px 0}
+.cl-check-row input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.cl-check-row label{font-size:13px;color:var(--text);cursor:pointer;flex:1}
+.cl-check-row.cl-flagged label{color:var(--red)}
+.cl-risk-list{margin-top:8px}
+.cl-risk-item{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;background:var(--surface)}
+.cl-risk-item input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px;color:var(--text);font-size:12px;font-family:inherit}
+.cl-risk-item select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px;color:var(--text);font-size:11px;font-family:inherit}
+.cl-risk-status-on_track{color:var(--green)}.cl-risk-status-broken{color:var(--red)}.cl-risk-status-unclear{color:var(--orange)}
+.cl-risk-item button{background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:4px}
+.cl-risk-item button:hover{color:var(--red)}
+.cl-threshold{display:flex;align-items:center;gap:8px;padding:6px 0}
+.cl-threshold-icon{font-size:16px}
+.cl-threshold-label{font-size:13px;color:var(--text);flex:1}
+.cl-qf-entry{border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;background:var(--surface)}
+.cl-qf-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cl-qf-quarter{font-weight:600;font-size:13px;color:var(--accent)}
+.cl-qf-date{font-size:11px;color:var(--text2)}
+.cl-qf-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cl-log-entry{font-size:11px;color:var(--text2);padding:6px 0;border-bottom:1px solid var(--border)}
+.cl-log-entry:last-child{border-bottom:none}
+.cl-hybrid-section{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
+.cl-hybrid-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.cl-hybrid-count{font-size:11px;color:var(--text2);font-weight:400}
 @media(max-width:600px){
   .fw-tabs,.rv-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
   .fw-scoring-row{flex-direction:column;align-items:stretch}
   .fw-scoring-row label{width:auto}
+  .cl-qf-fields{grid-template-columns:1fr}
+  .cl-summary{flex-direction:column;align-items:stretch}
 }
 </style>
 </head>
@@ -1322,10 +1380,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
       <div id="cp-notes-content"></div>
     </div>
     <div id="cp-panel-checklist" class="cp-panel" style="display:none">
-      <div class="card placeholder-section">
-        <h2>Checklist</h2>
-        <p>Investment checklist and due diligence tracker. Coming in Phase 7.</p>
-      </div>
+      <div id="cp-checklist-content"></div>
     </div>
     <div id="cp-panel-dividends" class="cp-panel" style="display:none">
       <div id="cp-dividends-content"></div>
@@ -4775,6 +4830,7 @@ function switchProfileTab(name){
   });
   if(name==='financials')Object.values(cpHistCharts).forEach(c=>{if(c)c.resize()});
   if(name==='dividends'&&profileTicker)renderProfileDividends(profileTicker);
+  if(name==='checklist'&&profileTicker)renderChecklist(profileTicker);
 }
 
 function closeProfile(){
@@ -6909,6 +6965,519 @@ function deleteFwEntry(type,id){
   const panelMap={principle:'principles',rule:'rules',trait:'traits',avoid:'avoid'};
   renderFwPanel(panelMap[type]);
   showToast('Deleted','success');
+}
+
+// ====== CHECKLIST ======
+const CL_SECTIONS=[
+  {key:'company_details',title:'Company Details',num:1,fields:[
+    {k:'businessModel',label:'Business Model',type:'textarea',ph:'What does the company do? How does it make money?'},
+    {k:'tam',label:'Total Addressable Market',type:'textarea',ph:'TAM estimate and source'},
+    {k:'revenueSplit',label:'Revenue Split',type:'textarea',ph:'Breakdown by segment/geography/product'},
+    {k:'moatDescription',label:'Moat Description',type:'textarea',ph:'What is the durable competitive advantage?'},
+    {k:'competitiveAdvantage',label:'Competitive Advantage',type:'textarea',ph:'Why will this company win vs competitors?'},
+    {k:'customers',label:'Customer Profile',type:'textarea',ph:'Who pays? Customer concentration risk?'},
+    {k:'geographicMix',label:'Geographic Mix',type:'textarea',ph:'Revenue by geography'}
+  ]},
+  {key:'moat',title:'Moat Analysis',num:2,fields:[
+    {k:'pricingPower',label:'Pricing Power — Evidence',type:'textarea',ph:'Evidence of pricing power'},
+    {k:'pricingPowerRating',label:'Pricing Power — Rating',type:'rating'},
+    {k:'switchingCosts',label:'Switching Costs — Evidence',type:'textarea',ph:'How hard is it for customers to leave?'},
+    {k:'switchingCostsRating',label:'Switching Costs — Rating',type:'rating'},
+    {k:'networkEffects',label:'Network Effects — Evidence',type:'textarea',ph:'Does value increase with more users?'},
+    {k:'networkEffectsRating',label:'Network Effects — Rating',type:'rating'},
+    {k:'brandStrength',label:'Brand Strength — Evidence',type:'textarea',ph:'Brand recognition and loyalty'},
+    {k:'brandStrengthRating',label:'Brand Strength — Rating',type:'rating'},
+    {k:'costAdvantage',label:'Cost Advantage — Evidence',type:'textarea',ph:'Scale, process, or structural cost advantages'},
+    {k:'costAdvantageRating',label:'Cost Advantage — Rating',type:'rating'},
+    {k:'intangibleAssets',label:'Intangible Assets — Evidence',type:'textarea',ph:'Patents, licenses, regulatory moats'},
+    {k:'intangibleAssetsRating',label:'Intangible Assets — Rating',type:'rating'},
+    {k:'overallMoatRating',label:'Overall Moat Rating',type:'select',opts:['','None','Narrow','Wide']}
+  ]},
+  {key:'management',title:'Management',num:3,fields:[
+    {k:'ceoName',label:'CEO Name',type:'text',ph:'Current CEO'},
+    {k:'ceoTenure',label:'CEO Tenure',type:'text',ph:'Years in role'},
+    {k:'trackRecord',label:'Track Record',type:'textarea',ph:'Past decisions, capital allocation history'},
+    {k:'insiderOwnership',label:'Insider Ownership',type:'text',ph:'Percentage or description'},
+    {k:'compensationNotes',label:'Compensation',type:'textarea',ph:'Reasonable? Aligned with shareholders?'},
+    {k:'capitalAllocation',label:'Capital Allocation',type:'textarea',ph:'Buybacks, dividends, reinvestment, M&A'},
+    {k:'culturalNotes',label:'Culture',type:'textarea',ph:'Company culture observations'},
+    {k:'boardQuality',label:'Board Quality',type:'textarea',ph:'Independent? Experienced? Diverse?'}
+  ]},
+  {key:'industry',title:'Industry & Competitors',num:4,fields:[
+    {k:'marketShareEstimate',label:'Market Share',type:'text',ph:'Estimated market share'},
+    {k:'industryGrowthRate',label:'Industry Growth Rate',type:'text',ph:'Annual growth rate'},
+    {k:'competitorList',label:'Key Competitors',type:'textarea',ph:'Main competitors and their strengths'},
+    {k:'concentrationLevel',label:'Concentration Level',type:'select',opts:['','Fragmented','Consolidated','Oligopoly','Monopoly']},
+    {k:'barriersToEntry',label:'Barriers to Entry',type:'textarea',ph:'What stops new competitors?'},
+    {k:'regulatoryEnvironment',label:'Regulatory Environment',type:'textarea',ph:'Regulatory risks and protections'},
+    {k:'disruptionRisk',label:'Disruption Risk',type:'textarea',ph:'Technology or business model disruption risk'}
+  ]},
+  {key:'risks',title:'Risks',num:5,fields:'dynamic_risks'},
+  {key:'financials',title:'Financial Analysis',num:6,fields:'auto_thresholds'},
+  {key:'valuation',title:'Valuation',num:7,fields:[
+    {k:'dcfFairValue',label:'DCF Fair Value',type:'text',ph:'Intrinsic value from DCF model'},
+    {k:'peRatio',label:'Current P/E',type:'text',ph:'Price-to-Earnings ratio'},
+    {k:'pegRatio',label:'PEG Ratio',type:'text',ph:'P/E divided by growth rate'},
+    {k:'reverseDcfGrowth',label:'Reverse DCF Implied Growth',type:'text',ph:'Growth rate implied by current price'},
+    {k:'moneyBackYears',label:'Money Back Years',type:'text',ph:'Years to recoup investment from FCF'},
+    {k:'ariaScore',label:'ARIA Score',type:'text',ph:'Adjusted Return on Invested Assets'},
+    {k:'currentValuation',label:'Valuation Assessment',type:'select',opts:['','Deeply Undervalued','Undervalued','Fair','Overvalued','Deeply Overvalued']},
+    {k:'valuationNotes',label:'Notes',type:'textarea',ph:'Additional valuation thoughts'}
+  ]},
+  {key:'buy_sell',title:'Buy/Sell Decision',num:8,fields:[
+    {k:'thesis',label:'Investment Thesis',type:'textarea',ph:'1-3 sentence thesis: why own this?'},
+    {k:'expectedCagr',label:'Expected CAGR (%)',type:'number',ph:'Target annual return'},
+    {k:'edge',label:'My Edge',type:'textarea',ph:'What do I know/believe that the market doesn\'t?'},
+    {k:'bearArgument1',label:'Bear Argument #1',type:'textarea',ph:'Strongest case against owning this'},
+    {k:'bearArgument2',label:'Bear Argument #2',type:'textarea',ph:'Second bear case'},
+    {k:'bearArgument3',label:'Bear Argument #3',type:'textarea',ph:'Third bear case'},
+    {k:'sellTrigger1',label:'Sell Trigger #1',type:'textarea',ph:'I will sell if...'},
+    {k:'sellTrigger2',label:'Sell Trigger #2',type:'textarea',ph:'I will sell if...'},
+    {k:'sellTrigger3',label:'Sell Trigger #3',type:'textarea',ph:'I will sell if...'},
+    {k:'buyPrice',label:'Target Buy Price',type:'number',ph:'Price I want to buy at'},
+    {k:'sellPrice',label:'Target Sell Price',type:'number',ph:'Price I would sell at'}
+  ]},
+  {key:'research_sources',title:'Research Sources',num:9,fields:'checkboxes'},
+  {key:'psychology',title:'Psychology Check',num:10,fields:[
+    {k:'convictionLevel',label:'Conviction Level (1-10)',type:'rating10'},
+    {k:'fomoCheck',label:'FOMO Check',type:'textarea',ph:'Am I buying because everyone else is?'},
+    {k:'patienceCheck',label:'Patience Check',type:'textarea',ph:'Am I willing to hold 5+ years?'},
+    {k:'contraryEvidence',label:'Contrary Evidence',type:'textarea',ph:'Have I actively sought opposing views?'},
+    {k:'downsidePrepared',label:'Downside Prepared',type:'textarea',ph:'Can I stomach a 50% drawdown?'},
+    {k:'positionSizeComfort',label:'Position Size Comfort',type:'textarea',ph:'Is the position size appropriate for my conviction?'}
+  ]},
+  {key:'quarterly_followup',title:'Quarterly Follow-up',num:11,fields:'dynamic_quarters'},
+  {key:'change_log',title:'Change Tracking',num:12,fields:'auto_log'}
+];
+
+const CL_RESEARCH_SOURCES=['10-K','10-Q','Earnings Call','Investor Presentation','Annual Report','YouTube Analysis','Reddit/Forums','Twitter/X','Analyst Reports','News Articles'];
+
+const CL_THRESHOLDS=[
+  {k:'revenueGrowthOk',label:'Revenue growing (3yr CAGR > 0)'},
+  {k:'marginTrendOk',label:'Margins stable or expanding'},
+  {k:'debtLevelOk',label:'Debt manageable (D/E < 2)'},
+  {k:'fcfPositiveOk',label:'Free Cash Flow positive'},
+  {k:'roicAbove15Ok',label:'ROIC > 15%'},
+  {k:'sbcReasonableOk',label:'SBC reasonable (SBC/Rev < 10%)'}
+];
+
+let clExpanded={};
+let clSaveTimer=null;
+
+function ensureChecklist(ticker){
+  if(!tStocks[ticker])return;
+  if(!tStocks[ticker].checklist){
+    tStocks[ticker].checklist={sections:{},idealTraitChecks:{},avoidChecks:{},overallProgress:0,lastUpdated:''};
+  }
+  const cl=tStocks[ticker].checklist;
+  CL_SECTIONS.forEach(s=>{if(!cl.sections[s.key])cl.sections[s.key]={}});
+  if(!cl.sections.risks.items)cl.sections.risks.items=[];
+  if(!cl.sections.quarterly_followup.entries)cl.sections.quarterly_followup.entries=[];
+  if(!cl.sections.change_log.entries)cl.sections.change_log.entries=[];
+  return cl;
+}
+
+function renderChecklist(ticker){
+  const container=document.getElementById('cp-checklist-content');
+  if(!container||!tStocks[ticker])return;
+  const cl=ensureChecklist(ticker);
+  calcClProgress(ticker);
+
+  const traitCount=fwData.idealTraits.length;
+  const traitChecked=traitCount?fwData.idealTraits.filter(t=>cl.idealTraitChecks[t.id]).length:0;
+  const avoidCount=fwData.avoidList.length;
+  const avoidChecked=avoidCount?fwData.avoidList.filter(a=>cl.avoidChecks[a.id]).length:0;
+
+  let h=`<div class="cl-summary">
+    <div class="cl-summary-progress">
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span class="cl-summary-pct">${cl.overallProgress}%</span>
+        <span class="cl-summary-label">Overall Progress</span>
+      </div>
+      <div class="cl-summary-bar"><div class="cl-summary-fill" style="width:${cl.overallProgress}%"></div></div>
+    </div>
+    <div class="cl-summary-stats">
+      ${traitCount?`<div class="cl-summary-stat"><strong>${traitChecked}/${traitCount}</strong>Ideal Traits</div>`:''}
+      ${avoidCount?`<div class="cl-summary-stat"><strong style="color:${avoidChecked?'var(--red)':'var(--green)'}}">${avoidChecked}</strong>Red Flags</div>`:''}
+    </div>
+  </div>`;
+
+  CL_SECTIONS.forEach(sec=>{
+    const secData=cl.sections[sec.key]||{};
+    const pct=secData.progress||0;
+    const isOpen=clExpanded[ticker+'_'+sec.key];
+    h+=`<div class="cl-section${isOpen?' open':''}" id="cl-sec-${sec.key}">
+      <div class="cl-section-header" onclick="toggleClSection('${escH(ticker)}','${sec.key}')">
+        <span class="cl-section-num">${sec.num}</span>
+        <span class="cl-section-title">${sec.title}</span>
+        <div class="cl-section-progress"><div class="cl-section-progress-fill" style="width:${pct}%"></div></div>
+        <span class="cl-section-pct">${pct}%</span>
+        <span class="cl-section-chevron">▼</span>
+      </div>
+      <div class="cl-section-body">${isOpen?renderClSectionBody(ticker,sec):''}</div>
+    </div>`;
+  });
+
+  if(traitCount){
+    h+=`<div class="cl-hybrid-section">
+      <div class="cl-hybrid-title">✅ Ideal Company Traits <span class="cl-hybrid-count">${traitChecked}/${traitCount} met</span></div>`;
+    fwData.idealTraits.forEach(t=>{
+      const checked=cl.idealTraitChecks[t.id]?'checked':'';
+      h+=`<div class="cl-check-row"><input type="checkbox" id="cl-trait-${t.id}" ${checked} onchange="saveClTrait('${escH(ticker)}',${t.id},this.checked)"><label for="cl-trait-${t.id}">${escH(t.label)}</label></div>`;
+    });
+    h+=`</div>`;
+  }
+  if(avoidCount){
+    h+=`<div class="cl-hybrid-section">
+      <div class="cl-hybrid-title">🚩 Red Flags / Avoid <span class="cl-hybrid-count">${avoidChecked} present</span></div>`;
+    fwData.avoidList.forEach(a=>{
+      const checked=cl.avoidChecks[a.id]?'checked':'';
+      h+=`<div class="cl-check-row cl-flagged"><input type="checkbox" id="cl-avoid-${a.id}" ${checked} onchange="saveClAvoid('${escH(ticker)}',${a.id},this.checked)"><label for="cl-avoid-${a.id}">${escH(a.label)}</label></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  container.innerHTML=h;
+}
+
+function toggleClSection(ticker,key){
+  const k=ticker+'_'+key;
+  clExpanded[k]=!clExpanded[k];
+  const sec=document.getElementById('cl-sec-'+key);
+  if(!sec)return;
+  sec.classList.toggle('open');
+  if(clExpanded[k]){
+    const body=sec.querySelector('.cl-section-body');
+    const sectionDef=CL_SECTIONS.find(s=>s.key===key);
+    if(body&&sectionDef)body.innerHTML=renderClSectionBody(ticker,sectionDef);
+  }
+}
+
+function renderClSectionBody(ticker,sec){
+  const cl=tStocks[ticker]?.checklist;
+  if(!cl)return'';
+  const data=cl.sections[sec.key]||{};
+
+  if(sec.fields==='dynamic_risks')return renderClRisks(ticker,data);
+  if(sec.fields==='auto_thresholds')return renderClFinancials(ticker,data);
+  if(sec.fields==='checkboxes')return renderClSources(ticker,data);
+  if(sec.fields==='dynamic_quarters')return renderClQuarters(ticker,data);
+  if(sec.fields==='auto_log')return renderClLog(ticker,data);
+
+  let h='';
+  sec.fields.forEach(f=>{
+    const val=data[f.k]||'';
+    if(f.type==='textarea'){
+      h+=`<div class="cl-field"><label>${f.label}</label><textarea placeholder="${escH(f.ph||'')}" onchange="saveClField('${escH(ticker)}','${sec.key}','${f.k}',this.value)" oninput="debounceSaveClField('${escH(ticker)}','${sec.key}','${f.k}',this.value)">${escH(val)}</textarea></div>`;
+    }else if(f.type==='text'){
+      h+=`<div class="cl-field"><label>${f.label}</label><input type="text" placeholder="${escH(f.ph||'')}" value="${escH(val)}" onchange="saveClField('${escH(ticker)}','${sec.key}','${f.k}',this.value)"></div>`;
+    }else if(f.type==='number'){
+      h+=`<div class="cl-field"><label>${f.label}</label><input type="number" placeholder="${escH(f.ph||'')}" value="${escH(val)}" step="any" onchange="saveClField('${escH(ticker)}','${sec.key}','${f.k}',this.value)"></div>`;
+    }else if(f.type==='select'){
+      h+=`<div class="cl-field"><label>${f.label}</label><select onchange="saveClField('${escH(ticker)}','${sec.key}','${f.k}',this.value)">${f.opts.map(o=>`<option value="${escH(o)}"${val===o?' selected':''}>${o||'— Select —'}</option>`).join('')}</select></div>`;
+    }else if(f.type==='rating'){
+      h+=`<div class="cl-field"><label>${f.label}</label><div class="cl-rating">${[1,2,3,4,5].map(n=>`<button class="${parseInt(val)===n?'active':''}" onclick="saveClField('${escH(ticker)}','${sec.key}','${f.k}','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('')}</div></div>`;
+    }else if(f.type==='rating10'){
+      h+=`<div class="cl-field"><label>${f.label}</label><div class="cl-rating">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="${parseInt(val)===n?'active':''}" onclick="saveClField('${escH(ticker)}','${sec.key}','${f.k}','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('')}</div></div>`;
+    }
+  });
+  return h;
+}
+
+function renderClRisks(ticker,data){
+  const items=data.items||[];
+  let h=`<button class="btn btn-primary" onclick="addClRisk('${escH(ticker)}')" style="margin-bottom:12px;font-size:12px;padding:6px 14px">+ Add Risk</button>`;
+  if(!items.length){h+=`<div style="color:var(--text2);font-size:12px">No risks tracked yet.</div>`;return h}
+  h+=`<div class="cl-risk-list">`;
+  items.forEach((r,i)=>{
+    const statusClass='cl-risk-status-'+r.status;
+    h+=`<div class="cl-risk-item">
+      <input type="text" value="${escH(r.description||'')}" onchange="updateClRisk('${escH(ticker)}',${i},'description',this.value)" placeholder="Describe the risk...">
+      <select class="${statusClass}" onchange="updateClRisk('${escH(ticker)}',${i},'status',this.value)">
+        <option value="on_track"${r.status==='on_track'?' selected':''}>ON TRACK</option>
+        <option value="broken"${r.status==='broken'?' selected':''}>BROKEN</option>
+        <option value="unclear"${r.status==='unclear'?' selected':''}>UNCLEAR</option>
+      </select>
+      <button onclick="removeClRisk('${escH(ticker)}',${i})" title="Remove">✕</button>
+    </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
+
+function addClRisk(ticker){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  cl.sections.risks.items.push({description:'',status:'unclear',addedDate:new Date().toISOString().slice(0,10),lastReviewDate:''});
+  clLogChange(ticker,'risk_added','risks','','New risk');
+  saveTrackerStocks();
+  renderChecklist(ticker);
+}
+
+function updateClRisk(ticker,idx,field,value){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  const item=cl.sections.risks.items[idx];
+  if(!item)return;
+  const old=item[field];
+  item[field]=value;
+  if(field==='status'){item.lastReviewDate=new Date().toISOString().slice(0,10);renderChecklist(ticker)}
+  clLogChange(ticker,'risk_updated','risks.'+field,old,value);
+  calcClProgress(ticker);
+  saveTrackerStocks();
+}
+
+function removeClRisk(ticker,idx){
+  if(!confirm('Remove this risk?'))return;
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  const removed=cl.sections.risks.items.splice(idx,1)[0];
+  clLogChange(ticker,'risk_removed','risks',removed?.description||'','');
+  calcClProgress(ticker);
+  saveTrackerStocks();
+  renderChecklist(ticker);
+}
+
+function renderClFinancials(ticker,data){
+  const s=tStocks[ticker]||{};
+  let h='';
+  CL_THRESHOLDS.forEach(t=>{
+    let autoVal=null;
+    if(t.k==='revenueGrowthOk'&&s.revenueGrowth3Y!=null)autoVal=s.revenueGrowth3Y>0;
+    if(t.k==='marginTrendOk'&&s.netMargin!=null)autoVal=s.netMargin>0;
+    if(t.k==='debtLevelOk'&&s.debtToEquity!=null)autoVal=s.debtToEquity<2;
+    if(t.k==='fcfPositiveOk'&&s.fcfPerShare!=null)autoVal=s.fcfPerShare>0;
+    if(t.k==='roicAbove15Ok'&&s.roic!=null)autoVal=s.roic>15;
+    if(t.k==='sbcReasonableOk'&&s.sbcRatio!=null)autoVal=s.sbcRatio<10;
+    const val=data[t.k]!=null?data[t.k]:autoVal;
+    const icon=val===true?'✅':val===false?'❌':'⬜';
+    h+=`<div class="cl-threshold">
+      <span class="cl-threshold-icon">${icon}</span>
+      <span class="cl-threshold-label">${t.label}</span>
+      <select style="width:80px;font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:4px;color:var(--text)" onchange="saveClField('${escH(ticker)}','financials','${t.k}',this.value==='true'?true:this.value==='false'?false:null)">
+        <option value=""${val==null?' selected':''}>Auto</option>
+        <option value="true"${val===true?' selected':''}>Pass</option>
+        <option value="false"${val===false?' selected':''}>Fail</option>
+      </select>
+    </div>`;
+  });
+  h+=`<div class="cl-field" style="margin-top:12px"><label>Financial Notes</label><textarea placeholder="Additional financial analysis notes..." onchange="saveClField('${escH(ticker)}','financials','notes',this.value)" oninput="debounceSaveClField('${escH(ticker)}','financials','notes',this.value)">${escH(data.notes||'')}</textarea></div>`;
+  return h;
+}
+
+function renderClSources(ticker,data){
+  let h='';
+  CL_RESEARCH_SOURCES.forEach((src,i)=>{
+    const k='src_'+i;
+    const checked=data[k]?'checked':'';
+    h+=`<div class="cl-check-row"><input type="checkbox" id="cl-src-${i}" ${checked} onchange="saveClField('${escH(ticker)}','research_sources','${k}',this.checked)"><label for="cl-src-${i}">${escH(src)}</label></div>`;
+  });
+  h+=`<div class="cl-field" style="margin-top:12px"><label>Other Sources</label><textarea placeholder="Other research sources..." onchange="saveClField('${escH(ticker)}','research_sources','otherSources',this.value)" oninput="debounceSaveClField('${escH(ticker)}','research_sources','otherSources',this.value)">${escH(data.otherSources||'')}</textarea></div>`;
+  return h;
+}
+
+function renderClQuarters(ticker,data){
+  const entries=data.entries||[];
+  let h=`<button class="btn btn-primary" onclick="addClQuarter('${escH(ticker)}')" style="margin-bottom:12px;font-size:12px;padding:6px 14px">+ Add Quarter</button>`;
+  if(!entries.length){h+=`<div style="color:var(--text2);font-size:12px">No quarterly follow-ups yet.</div>`;return h}
+  entries.slice().reverse().forEach((e,ri)=>{
+    const i=entries.length-1-ri;
+    h+=`<div class="cl-qf-entry">
+      <div class="cl-qf-header">
+        <span class="cl-qf-quarter">${escH(e.quarter||'')}</span>
+        <span class="cl-qf-date">${e.date||''}</span>
+        <button style="margin-left:auto;background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px" onclick="removeClQuarter('${escH(ticker)}',${i})" title="Remove">✕</button>
+      </div>
+      <div class="cl-qf-fields">
+        <div class="cl-field"><label>Numbers OK?</label><select onchange="updateClQuarter('${escH(ticker)}',${i},'numbersOk',this.value)">
+          <option value=""${e.numbersOk==null?' selected':''}>—</option><option value="yes"${e.numbersOk==='yes'?' selected':''}>Yes</option><option value="no"${e.numbersOk==='no'?' selected':''}>No</option>
+        </select></div>
+        <div class="cl-field"><label>Thesis Intact?</label><select onchange="updateClQuarter('${escH(ticker)}',${i},'thesisIntact',this.value)">
+          <option value=""${e.thesisIntact==null?' selected':''}>—</option><option value="yes"${e.thesisIntact==='yes'?' selected':''}>Yes</option><option value="no"${e.thesisIntact==='no'?' selected':''}>No</option>
+        </select></div>
+        <div class="cl-field"><label>Action</label><select onchange="updateClQuarter('${escH(ticker)}',${i},'action',this.value)">
+          <option value=""${!e.action?' selected':''}>—</option><option value="hold"${e.action==='hold'?' selected':''}>Hold</option><option value="add"${e.action==='add'?' selected':''}>Add</option><option value="trim"${e.action==='trim'?' selected':''}>Trim</option><option value="sell"${e.action==='sell'?' selected':''}>Sell</option>
+        </select></div>
+        <div class="cl-field"><label>News/Developments</label><textarea rows="2" onchange="updateClQuarter('${escH(ticker)}',${i},'news',this.value)">${escH(e.news||'')}</textarea></div>
+      </div>
+      <div class="cl-field" style="margin-top:8px"><label>Notes</label><textarea rows="2" onchange="updateClQuarter('${escH(ticker)}',${i},'notes',this.value)">${escH(e.notes||'')}</textarea></div>
+    </div>`;
+  });
+  return h;
+}
+
+function addClQuarter(ticker){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  const entries=cl.sections.quarterly_followup.entries;
+  const now=new Date();
+  const q='Q'+Math.ceil((now.getMonth()+1)/3)+' '+now.getFullYear();
+  entries.push({quarter:q,date:now.toISOString().slice(0,10),numbersOk:null,thesisIntact:null,action:'',news:'',notes:''});
+  clLogChange(ticker,'quarter_added','quarterly_followup','',q);
+  saveTrackerStocks();
+  renderChecklist(ticker);
+}
+
+function updateClQuarter(ticker,idx,field,value){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  const entry=cl.sections.quarterly_followup.entries[idx];
+  if(!entry)return;
+  const old=entry[field];
+  clLogChange(ticker,'quarter_updated','quarterly_followup.'+field,old,value);
+  entry[field]=value;
+  calcClProgress(ticker);
+  saveTrackerStocks();
+}
+
+function removeClQuarter(ticker,idx){
+  if(!confirm('Remove this quarter?'))return;
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  cl.sections.quarterly_followup.entries.splice(idx,1);
+  calcClProgress(ticker);
+  saveTrackerStocks();
+  renderChecklist(ticker);
+}
+
+function renderClLog(ticker,data){
+  const entries=data.entries||[];
+  if(!entries.length)return'<div style="color:var(--text2);font-size:12px">No changes recorded yet. Changes are tracked automatically when you edit checklist fields.</div>';
+  let h='';
+  entries.slice().reverse().slice(0,50).forEach(e=>{
+    h+=`<div class="cl-log-entry">
+      <strong>${e.event||''}</strong> — ${e.field||''}: <em>${escH(String(e.oldValue||'')).substring(0,40)}</em> → <em>${escH(String(e.newValue||'')).substring(0,40)}</em>
+      <span style="float:right">${e.timestamp||''}</span>
+    </div>`;
+  });
+  if(entries.length>50)h+=`<div style="color:var(--text2);font-size:11px;margin-top:8px">Showing last 50 of ${entries.length} changes</div>`;
+  return h;
+}
+
+function saveClField(ticker,section,field,value){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  const old=cl.sections[section][field];
+  cl.sections[section][field]=value;
+  if(old!==value&&!(old==null&&value==null))clLogChange(ticker,'field_changed',section+'.'+field,old,value);
+  cl.lastUpdated=new Date().toISOString();
+  calcClProgress(ticker);
+  saveTrackerStocks();
+}
+
+function debounceSaveClField(ticker,section,field,value){
+  if(clSaveTimer)clearTimeout(clSaveTimer);
+  clSaveTimer=setTimeout(()=>saveClField(ticker,section,field,value),500);
+}
+
+function saveClTrait(ticker,traitId,checked){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  clLogChange(ticker,checked?'trait_checked':'trait_unchecked','idealTraits.'+traitId,!checked,checked);
+  cl.idealTraitChecks[traitId]=checked;
+  cl.lastUpdated=new Date().toISOString();
+  saveTrackerStocks();
+  const countEl=document.querySelector('.cl-hybrid-title .cl-hybrid-count');
+  if(countEl){
+    const total=fwData.idealTraits.length;
+    const met=fwData.idealTraits.filter(t=>cl.idealTraitChecks[t.id]).length;
+    countEl.textContent=met+'/'+total+' met';
+  }
+}
+
+function saveClAvoid(ticker,avoidId,checked){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  clLogChange(ticker,checked?'avoid_flagged':'avoid_cleared','avoidList.'+avoidId,!checked,checked);
+  cl.avoidChecks[avoidId]=checked;
+  cl.lastUpdated=new Date().toISOString();
+  saveTrackerStocks();
+  const countEls=document.querySelectorAll('.cl-hybrid-title .cl-hybrid-count');
+  if(countEls.length>=2){
+    const count=fwData.avoidList.filter(a=>cl.avoidChecks[a.id]).length;
+    countEls[1].textContent=count+' present';
+  }
+}
+
+function clLogChange(ticker,event,field,oldValue,newValue){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  cl.sections.change_log.entries.push({
+    timestamp:new Date().toISOString().slice(0,16).replace('T',' '),
+    event,field,
+    oldValue:oldValue!=null?String(oldValue).substring(0,100):'',
+    newValue:newValue!=null?String(newValue).substring(0,100):''
+  });
+}
+
+function calcClProgress(ticker){
+  const cl=tStocks[ticker]?.checklist;
+  if(!cl)return;
+  let totalPct=0,sectionCount=0;
+
+  CL_SECTIONS.forEach(sec=>{
+    const data=cl.sections[sec.key]||{};
+    let filled=0,total=0;
+
+    if(sec.key==='change_log'){
+      data.progress=100;totalPct+=100;sectionCount++;return;
+    }
+    if(sec.key==='risks'){
+      const items=data.items||[];
+      if(!items.length){data.progress=0}else{
+        filled=items.filter(r=>r.description&&r.description.trim()).length;
+        total=items.length;
+        data.progress=total?Math.round(filled/total*100):0;
+      }
+      totalPct+=data.progress;sectionCount++;return;
+    }
+    if(sec.key==='quarterly_followup'){
+      const entries=data.entries||[];
+      if(!entries.length){data.progress=0}else{
+        entries.forEach(e=>{
+          if(e.numbersOk)filled++;total++;
+          if(e.thesisIntact)filled++;total++;
+          if(e.action)filled++;total++;
+        });
+        data.progress=total?Math.round(filled/total*100):0;
+      }
+      totalPct+=data.progress;sectionCount++;return;
+    }
+    if(sec.fields==='auto_thresholds'){
+      const s=tStocks[ticker]||{};
+      CL_THRESHOLDS.forEach(t=>{
+        total++;
+        if(data[t.k]!=null){filled++;return}
+        let av=null;
+        if(t.k==='revenueGrowthOk'&&s.revenueGrowth3Y!=null)av=s.revenueGrowth3Y>0;
+        if(t.k==='marginTrendOk'&&s.netMargin!=null)av=s.netMargin>0;
+        if(t.k==='debtLevelOk'&&s.debtToEquity!=null)av=s.debtToEquity<2;
+        if(t.k==='fcfPositiveOk'&&s.fcfPerShare!=null)av=s.fcfPerShare>0;
+        if(t.k==='roicAbove15Ok'&&s.roic!=null)av=s.roic>15;
+        if(t.k==='sbcReasonableOk'&&s.sbcRatio!=null)av=s.sbcRatio<10;
+        if(av!=null)filled++;
+      });
+      if(data.notes&&data.notes.trim())filled++;total++;
+      data.progress=total?Math.round(filled/total*100):0;
+      totalPct+=data.progress;sectionCount++;return;
+    }
+    if(sec.fields==='checkboxes'){
+      CL_RESEARCH_SOURCES.forEach((_,i)=>{total++;if(data['src_'+i])filled++});
+      if(data.otherSources&&data.otherSources.trim())filled++;total++;
+      data.progress=total?Math.round(filled/total*100):0;
+      totalPct+=data.progress;sectionCount++;return;
+    }
+
+    sec.fields.forEach(f=>{
+      total++;
+      const v=data[f.k];
+      if(f.type==='number'?v!=null&&v!=='':v!=null&&v!==''&&v!==0&&v!==false)filled++;
+    });
+    data.progress=total?Math.round(filled/total*100):0;
+    totalPct+=data.progress;sectionCount++;
+  });
+
+  cl.overallProgress=sectionCount?Math.round(totalPct/sectionCount):0;
 }
 
 // ====== REVIEWS ======
