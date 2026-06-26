@@ -2175,12 +2175,12 @@ function calcMoneyBack(){
     if(cum[i]>=mc&&mby===null){mby=i;el.classList.add('money-back-marker')}
   }
   let interp=mby!==null?mby:'>15';
-  if(mby!==null&&mby>0)interp=(mby-1+(mc-cum[mby-1])/(cum[mby]-cum[mby-1])).toFixed(1);
+  if(mby!==null&&mby>0&&cum[mby]!==cum[mby-1])interp=(mby-1+(mc-cum[mby-1])/(cum[mby]-cum[mby-1])).toFixed(1);
   document.getElementById('mb-results').innerHTML=`
     <div class="result-box"><div class="label">Money Back in</div><div class="value ${mby!==null&&mby<=10?'positive':'negative'}">${interp} years</div></div>
     <div class="result-box"><div class="label">Market Cap</div><div class="value neutral">${fmt(mc)}</div></div>
     <div class="result-box"><div class="label">Y15 Cumulative</div><div class="value neutral">${fmt(cum[15])}</div></div>
-    <div class="result-box"><div class="label">Coverage (Y15)</div><div class="value ${cum[15]/mc>=1?'positive':'negative'}">${(cum[15]/mc).toFixed(2)}x</div></div>`;
+    <div class="result-box"><div class="label">Coverage (Y15)</div><div class="value ${mc>0&&cum[15]/mc>=1?'positive':'negative'}">${mc>0?(cum[15]/mc).toFixed(2)+'x':'—'}</div></div>`;
   const lbls=[];for(let i=0;i<=15;i++)lbls.push('Y'+i);
   renderChart('mb-chart','mb',lbls,
     [{label:'Cumulative FCF-SBC',data:cum,borderColor:cv('--accent'),backgroundColor:cv('--accent')+'26',fill:true},
@@ -2189,7 +2189,7 @@ function calcMoneyBack(){
     {yLabel:'Value'});
   const el2=document.getElementById('sum-mb-val');el2.textContent=interp+(mby!==null?' yrs':'');
   el2.className='sc-value '+(mby!==null&&mby<=10?'positive':'negative');
-  document.getElementById('sum-mb-sub').textContent='coverage '+(cum[15]/mc).toFixed(1)+'x';
+  document.getElementById('sum-mb-sub').textContent=mc>0?'coverage '+(cum[15]/mc).toFixed(1)+'x':'—';
 }
 
 function renderChart(cid,key,labels,datasets,opts={}){
@@ -2440,7 +2440,7 @@ function deleteAccount(id){
 // ---- Positions ----
 function getPositionPrice(pos){
   if(pos.currentPrice!=null&&pos.currentPrice!=='')return parseFloat(pos.currentPrice);
-  if(pos.ticker&&tStocks[pos.ticker]&&tStocks[pos.ticker].price)return parseFloat(tStocks[pos.ticker].price);
+  if(pos.ticker&&tStocks[pos.ticker]&&tStocks[pos.ticker].price!=null)return parseFloat(tStocks[pos.ticker].price);
   return null;
 }
 
@@ -3364,7 +3364,7 @@ function saveDashBenchmark(){try{localStorage.setItem('dashboard_benchmark_v1',J
 function loadDash52wHighs(){try{const d=JSON.parse(localStorage.getItem('dashboard_52w_highs_v1'));if(d&&typeof d==='object')db52wHighs=d}catch(e){}}
 function saveDash52wHighs(){try{localStorage.setItem('dashboard_52w_highs_v1',JSON.stringify(db52wHighs))}catch(e){}}
 
-function dbNextId(arr){if(!arr.length)return 1;let mx=0;for(let i=0;i<arr.length;i++){const id=arr[i].id||0;if(id>mx)mx=id}return mx+1}
+function dbNextId(arr){return pfNextId(arr)}
 
 function dbValClass(v,low,high,invert){
   if(v==null||isNaN(v))return'';
@@ -3573,7 +3573,7 @@ function renderDbAlerts(){
 
   alerts.sort((a,b)=>a.sev==='danger'&&b.sev!=='danger'?-1:b.sev==='danger'&&a.sev!=='danger'?1:a.ticker.localeCompare(b.ticker));
   el.innerHTML=alerts.map(a=>`<div class="db-alert ${a.sev}">
-    <span class="db-alert-icon">${a.sev==='danger'?'&#9888;':'&#9888;'}</span>
+    <span class="db-alert-icon">${a.sev==='danger'?'&#9888;':'&#9432;'}</span>
     <span class="db-alert-ticker" onclick="showSection('companies');showProfile('${escH(a.ticker)}')">${escH(a.ticker)}</span>
     <span class="db-alert-msg">${escH(a.msg)}</span>
     <span class="db-alert-val">${escH(String(a.value))}</span>
@@ -3609,7 +3609,7 @@ function renderDbBenchmark(){
   }
 
   const prices=dbBenchmark.prices;
-  const spyFirst=prices[0].close;
+  const spyFirst=prices[0].close||1;
   const spyLast=prices[prices.length-1].close;
   const spyReturn=(spyLast-spyFirst)/spyFirst;
 
@@ -3940,7 +3940,7 @@ function renderResearchFeed(type){
 function renderResearchEntry(e){
   const t=e._type;
   const dateStr=e.date?formatNoteDate(e.date):'';
-  const typeBadge=`<span class="research-entry-type research-entry-type--${t}">${t}</span>`;
+  const typeBadge=`<span class="research-entry-type research-entry-type--${escH(t)}">${escH(t)}</span>`;
   let tickerBadge='';
   if(e.ticker)tickerBadge=`<a class="research-entry-ticker" onclick="showSection('companies');showProfile('${escH(e.ticker)}')">${escH(e.ticker)}</a>`;
   let actionBadge='';
@@ -4348,7 +4348,7 @@ function renderRelatedEntries(ticker){
       journal.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
       h+=journal.slice(0,5).map(e=>{
         const preview=(e.content||'').substring(0,80)+(e.content&&e.content.length>80?'...':'');
-        const actionBadge=e.action&&e.action!=='note'?`<span class="research-entry-action research-entry-action--${e.action}" style="font-size:10px">${e.action}</span>`:'';
+        const actionBadge=e.action&&e.action!=='note'?`<span class="research-entry-action research-entry-action--${escH(e.action)}" style="font-size:10px">${escH(e.action)}</span>`:'';
         return`<div class="cp-related-entry" onclick="showSection('research');setTimeout(()=>{openResearchEntry('journal',${e.id})},100)"><span class="cp-related-date">${formatNoteDate(e.date)}</span>${actionBadge}<span class="cp-related-preview">${escH(preview)}</span></div>`;
       }).join('');
       if(journal.length>5)h+=`<div style="text-align:center;margin-top:8px"><button class="btn btn-secondary" onclick="showSection('research')" style="font-size:11px;padding:4px 12px">View all ${journal.length} entries</button></div>`;
@@ -5110,7 +5110,7 @@ let stExpanded={};
 
 function parseNum(s){s=String(s).trim().replace(/,/g,'').replace(/\s/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
 function asPct(v){if(v==null)return null;return Math.abs(v)<1&&Math.abs(v)>0?v*100:v}
-function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct)return parseFloat(v).toFixed(1);return typeof v==='number'?v.toFixed(2):v}
+function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct){const n=parseFloat(v);return isFinite(n)?n.toFixed(1):''}return typeof v==='number'?(isFinite(v)?v.toFixed(2):''):v}
 
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
@@ -5391,13 +5391,13 @@ function calcStockCalcs(s){
   for(let i=1;i<=15;i++)cum.push(cum[i-1]+fcfs[i]);
   let mby=null;
   for(let i=0;i<=15;i++){if(cum[i]>=mc&&mby===null)mby=i}
-  if(mby!==null&&mby>0)res.moneyBack=parseFloat((mby-1+(mc-cum[mby-1])/(cum[mby]-cum[mby-1])).toFixed(1));
+  if(mby!==null&&mby>0&&cum[mby]!==cum[mby-1])res.moneyBack=parseFloat((mby-1+(mc-cum[mby-1])/(cum[mby]-cum[mby-1])).toFixed(1));
   else if(mby===0)res.moneyBack=0;
   else res.moneyBack='>15';
 
   // Aria (Year 10 at exit multiple)
   const ariaIMC=fcfs[10]*em;
-  res.aria=(Math.pow(ariaIMC/mc,1/10)-1)*100;
+  if(mc>0&&ariaIMC>0)res.aria=(Math.pow(ariaIMC/mc,1/10)-1)*100;
 
   return res;
 }
@@ -5780,7 +5780,7 @@ function importTrackerFile(e){
       const d=JSON.parse(ev.target.result);
       if(d.stocks){Object.assign(tStocks,d.stocks);saveTrackerStocks()}
       if(d.settings){
-        const map={apiKey:'st-apikey',workerUrl:'st-worker',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
+        const map={g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
         Object.keys(map).forEach(k=>{if(d.settings[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=d.settings[k]}});
         saveTrackerSettings();
       }
@@ -6140,7 +6140,7 @@ async function cloudLoad(){
     let cloud=d.data;
     if(isEncryptedBlob(cloud)){
       if(!_encPass){console.warn('Cloud data encrypted but no password');return false}
-      try{cloud=await decryptPayload(_encPass,cloud)}catch(e){console.warn('Decrypt failed',e);setStatus('sync-status','Decryption failed — wrong password?',false);return false}
+      try{cloud=await decryptPayload(_encPass,cloud)}catch(e){console.warn('Decrypt failed',e);setStatus('sync-status','Decryption failed — wrong password?',false);showToast('Cloud sync decryption failed','error');return false}
     }
     const localTs=parseInt(localStorage.getItem('sync_ts')||'0');
     if(cloud.ts&&cloud.ts>localTs){
