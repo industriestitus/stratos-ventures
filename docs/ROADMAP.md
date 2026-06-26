@@ -164,6 +164,8 @@ Status: COMPLETE (2026-06-26)
 - [ ] Cloud sync conflict resolution (merge strategy instead of last-write-wins)
 - [ ] Multi-tab localStorage sync (StorageEvent listener to prevent stale reads)
 - [ ] Lazy-load charts (defer Chart.js rendering until canvas is visible)
+- [ ] Import merge strategy: Object.assign vs full replace — make consistent with cloud sync behavior
+- [ ] CSV import locale detection (European vs US number formats in same file)
 
 ---
 
