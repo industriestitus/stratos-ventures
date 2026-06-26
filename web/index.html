@@ -1393,6 +1393,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
       <button class="tab" onclick="switchProfileTab('checklist')">Checklist</button>
       <button class="tab" onclick="switchProfileTab('dividends')">Dividends</button>
       <button class="tab" onclick="switchProfileTab('scores')">Scores</button>
+      <button class="tab" onclick="switchProfileTab('insider')">Insider</button>
     </div>
     <div id="cp-panel-overview" class="cp-panel active">
       <div id="cp-overview-content"></div>
@@ -1414,6 +1415,9 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
     </div>
     <div id="cp-panel-scores" class="cp-panel" style="display:none">
       <div id="cp-scores-content"></div>
+    </div>
+    <div id="cp-panel-insider" class="cp-panel" style="display:none">
+      <div id="cp-insider-content"></div>
     </div>
   </div><!-- end company-profile -->
 
@@ -1647,6 +1651,15 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
     </div>
     <button class="conn-btn" style="background:#a29bfe;color:#fff" onclick="testFmp()">Test</button>
     <div class="conn-status" id="fmp-status"></div>
+  </div>
+
+  <div class="conn-row">
+    <div class="input-group">
+      <label>Finnhub API Key</label>
+      <input type="text" id="st-finnhub" placeholder="Enter Finnhub API key (free at finnhub.io)" oninput="saveTrackerSettings()">
+    </div>
+    <button class="conn-btn" style="background:#fd9644;color:#fff" onclick="testFinnhub()">Test</button>
+    <div class="conn-status" id="finnhub-status"></div>
   </div>
 
   <div class="conn-row">
@@ -4834,7 +4847,7 @@ function showProfile(ticker){
 }
 
 function switchProfileTab(name){
-  ['overview','financials','valuation','notes','checklist','dividends','scores'].forEach(t=>{
+  ['overview','financials','valuation','notes','checklist','dividends','scores','insider'].forEach(t=>{
     const el=document.getElementById('cp-panel-'+t);
     if(el){el.style.display=t===name?'':'none';el.classList.toggle('active',t===name)}
   });
@@ -4845,6 +4858,7 @@ function switchProfileTab(name){
   if(name==='dividends'&&profileTicker)renderProfileDividends(profileTicker);
   if(name==='checklist'&&profileTicker)renderChecklist(profileTicker);
   if(name==='scores'&&profileTicker)renderScoreBreakdown(profileTicker);
+  if(name==='insider'&&profileTicker)renderInsiderTrading(profileTicker);
 }
 
 function renderScoreBreakdown(ticker){
@@ -4916,6 +4930,99 @@ function renderScoreBreakdown(ticker){
     });
     h+=`</table></div>`;
   });
+
+  el.innerHTML=h;
+}
+
+let _insiderCache={};
+
+async function fetchInsiderTrading(ticker){
+  const key=stSettings().finnhubKey;
+  if(!key)return null;
+  const cached=_insiderCache[ticker];
+  if(cached&&Date.now()-cached.ts<3600000)return cached.data;
+  try{
+    const r=await fetch('https://finnhub.io/api/v1/stock/insider-transactions?symbol='+encodeURIComponent(ticker)+'&token='+encodeURIComponent(key));
+    if(!r.ok)return r.status===429?{rateLimited:true}:null;
+    const d=await r.json();
+    const data=d.data||[];
+    _insiderCache[ticker]={data,ts:Date.now()};
+    return data;
+  }catch(e){return null}
+}
+
+async function renderInsiderTrading(ticker){
+  const el=document.getElementById('cp-insider-content');
+  const key=stSettings().finnhubKey;
+  if(!key){
+    el.innerHTML='<div class="card"><p style="color:var(--text2)">Finnhub API key not set — go to <a href="#" onclick="showSection(\'settings\');return false" style="color:var(--accent)">Settings</a> to add your free key from <a href="https://finnhub.io" target="_blank" style="color:var(--accent)">finnhub.io</a></p></div>';
+    return;
+  }
+  el.innerHTML='<div class="card"><p style="color:var(--text2)">Loading insider transactions...</p></div>';
+  const result=await fetchInsiderTrading(ticker);
+  if(result&&result.rateLimited){
+    el.innerHTML='<div class="card"><p style="color:var(--text2)">Finnhub rate limit reached — try again in a minute.</p></div>';
+    return;
+  }
+  const txns=result;
+  if(!txns||!txns.length){
+    el.innerHTML='<div class="card"><p style="color:var(--text2)">No insider trading data available for '+escH(ticker)+'.</p></div>';
+    return;
+  }
+
+  const buys=txns.filter(t=>t.change>0);
+  const sells=txns.filter(t=>t.change<0);
+  const totalBought=buys.reduce((s,t)=>s+t.change,0);
+  const totalSold=sells.reduce((s,t)=>s+Math.abs(t.change),0);
+  const netShares=totalBought-totalSold;
+  const last3m=txns.filter(t=>{const d=new Date(t.transactionDate);return d>=new Date(Date.now()-90*86400000)});
+  const last3mBuys=last3m.filter(t=>t.change>0).length;
+  const last3mSells=last3m.filter(t=>t.change<0).length;
+
+  let h='<div class="card"><div class="card-title">Insider Trading Summary</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">';
+  h+=`<div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">Total Transactions</div><div style="font-size:20px;font-weight:700;color:var(--text);margin-top:4px">${txns.length}</div></div>`;
+  h+=`<div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">Buys / Sells</div><div style="font-size:20px;font-weight:700;margin-top:4px"><span style="color:var(--green)">${buys.length}</span> / <span style="color:var(--red)">${sells.length}</span></div></div>`;
+  h+=`<div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">Net Shares</div><div style="font-size:20px;font-weight:700;color:${netShares>=0?'var(--green)':'var(--red)'};margin-top:4px">${netShares>=0?'+':''}${fmt(netShares)}</div></div>`;
+  h+=`<div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">Last 90 Days</div><div style="font-size:20px;font-weight:700;margin-top:4px"><span style="color:var(--green)">${last3mBuys}B</span> / <span style="color:var(--red)">${last3mSells}S</span></div></div>`;
+  h+='</div>';
+
+  const uniqueNames=[...new Set(txns.map(t=>t.name))];
+  const nameStats=uniqueNames.map(name=>{
+    const nt=txns.filter(t=>t.name===name);
+    const nb=nt.filter(t=>t.change>0);
+    const ns=nt.filter(t=>t.change<0);
+    const net=nt.reduce((s,t)=>s+t.change,0);
+    const lastDate=nt.reduce((m,t)=>t.transactionDate>m?t.transactionDate:m,'');
+    return{name,count:nt.length,buys:nb.length,sells:ns.length,net,lastDate};
+  }).sort((a,b)=>b.lastDate.localeCompare(a.lastDate));
+
+  h+='<div class="card-title" style="margin-top:8px">Key Insiders</div>';
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+  h+='<tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2);font-weight:500">Name</th><th style="text-align:center;padding:6px 8px;color:var(--text2);font-weight:500">Txns</th><th style="text-align:center;padding:6px 8px;color:var(--text2);font-weight:500">Buys</th><th style="text-align:center;padding:6px 8px;color:var(--text2);font-weight:500">Sells</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Net Shares</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Last Activity</th></tr>';
+  const showInsiders=nameStats.slice(0,20);
+  showInsiders.forEach(ns=>{
+    h+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">${escH(ns.name)}</td><td style="text-align:center;padding:6px 8px">${ns.count}</td><td style="text-align:center;padding:6px 8px;color:var(--green)">${ns.buys}</td><td style="text-align:center;padding:6px 8px;color:var(--red)">${ns.sells}</td><td style="text-align:right;padding:6px 8px;color:${ns.net>=0?'var(--green)':'var(--red)'}">${ns.net>=0?'+':''}${fmt(ns.net)}</td><td style="text-align:right;padding:6px 8px;color:var(--text2)">${ns.lastDate}</td></tr>`;
+  });
+  if(nameStats.length>20)h+=`<tr><td colspan="6" style="text-align:center;padding:8px;color:var(--text2);font-size:12px">Showing top 20 of ${nameStats.length} insiders</td></tr>`;
+  h+='</table></div></div>';
+
+  h+='<div class="card"><div class="card-title">Transaction History</div>';
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+  h+='<tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2);font-weight:500">Date</th><th style="text-align:left;padding:6px 8px;color:var(--text2);font-weight:500">Name</th><th style="text-align:center;padding:6px 8px;color:var(--text2);font-weight:500">Type</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Shares</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Price</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Value</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Shares After</th></tr>';
+  const sorted=[...txns].sort((a,b)=>(b.transactionDate||'').localeCompare(a.transactionDate||''));
+  const txnLimit=100;
+  sorted.forEach((t,i)=>{
+    const hide=i>=txnLimit&&sorted.length>txnLimit;
+    const typeLabel=t.transactionCode==='P'?'Buy':t.transactionCode==='S'?'Sell':t.transactionCode==='A'?'Award':t.transactionCode==='M'?'Option Ex.':t.transactionCode==='F'?'Tax':t.transactionCode==='G'?'Gift':t.transactionCode||'Other';
+    const typeColor=t.transactionCode==='P'?'var(--green)':t.transactionCode==='S'?'var(--red)':t.transactionCode==='A'?'#a29bfe':t.transactionCode==='M'?'#fd9644':'var(--text2)';
+    const shareColor=t.transactionCode==='P'?'var(--green)':t.transactionCode==='S'?'var(--red)':'var(--text2)';
+    const price=t.transactionPrice;
+    const value=(price&&t.change)?Math.abs(price*t.change):null;
+    h+=`<tr${hide?' class="insider-hidden-row" style="display:none;border-bottom:1px solid var(--border)"':' style="border-bottom:1px solid var(--border)"'}><td style="padding:6px 8px;white-space:nowrap">${escH(t.transactionDate||'')}</td><td style="padding:6px 8px">${escH(t.name||'')}</td><td style="text-align:center;padding:6px 8px;color:${typeColor};font-weight:600">${typeLabel}</td><td style="text-align:right;padding:6px 8px;color:${shareColor}">${t.change>0?'+':''}${fmt(t.change)}</td><td style="text-align:right;padding:6px 8px">${price?'$'+price.toFixed(2):'-'}</td><td style="text-align:right;padding:6px 8px">${value?'$'+fmt(value):'-'}</td><td style="text-align:right;padding:6px 8px;color:var(--text2)">${t.share!=null?fmt(t.share):'-'}</td></tr>`;
+  });
+  if(sorted.length>txnLimit)h+=`<tr id="insider-show-all-row"><td colspan="7" style="text-align:center;padding:10px"><button onclick="document.querySelectorAll('.insider-hidden-row').forEach(r=>r.style.display='');document.getElementById('insider-show-all-row').remove()" style="background:var(--surface2);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:6px 16px;cursor:pointer;font-size:12px">Show all ${sorted.length} transactions</button></td></tr>`;
+  h+='</table></div></div>';
 
   el.innerHTML=h;
 }
@@ -5519,6 +5626,7 @@ function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;
 function stSettings(){
   return{
     apiKey:document.getElementById('st-apikey')?.value||'',
+    finnhubKey:document.getElementById('st-finnhub')?.value||'',
     workerUrl:(document.getElementById('st-worker')?.value||'').replace(/\/$/,''),
     syncKey:document.getElementById('st-synckey')?.value||'',
     g1:parseFloat(document.getElementById('st-g1')?.value)||10,
@@ -5536,7 +5644,7 @@ function saveTrackerSettings(){localStorage.setItem('tracker_settings',JSON.stri
 function loadTrackerSettings(){
   let s={};
   try{s=JSON.parse(localStorage.getItem('tracker_settings')||'{}')}catch(e){s={}}
-  const map={apiKey:'st-apikey',workerUrl:'st-worker',syncKey:'st-synckey',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
+  const map={apiKey:'st-apikey',finnhubKey:'st-finnhub',workerUrl:'st-worker',syncKey:'st-synckey',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
   Object.keys(map).forEach(k=>{if(s[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=s[k]}});
 }
 
@@ -8193,6 +8301,18 @@ async function testWorker(){
   }catch(e){setStatus('worker-status','Connection failed',false)}
 }
 
+async function testFinnhub(){
+  const key=stSettings().finnhubKey;
+  if(!key){setStatus('finnhub-status','Enter key first',false);return}
+  setStatus('finnhub-status','Testing...','');
+  try{
+    const r=await fetch('https://finnhub.io/api/v1/stock/insider-transactions?symbol=AAPL&token='+encodeURIComponent(key));
+    if(r.ok){const d=await r.json();setStatus('finnhub-status',d.data?.length?'Connected ✓':'No data (check key)',d.data?.length?true:false)}
+    else if(r.status===401||r.status===403)setStatus('finnhub-status','Invalid key',false);
+    else setStatus('finnhub-status','Error ('+r.status+')',false);
+  }catch(e){setStatus('finnhub-status','Connection failed',false)}
+}
+
 async function testFmp(){
   const key=stSettings().apiKey;
   if(!key){setStatus('fmp-status','Enter key first',false);return}
@@ -8296,7 +8416,7 @@ async function cloudLoad(){
     if(cloud.ts&&cloud.ts>localTs){
       if(cloud.stocks){tStocks=cloud.stocks;saveTrackerStocks()}
       if(cloud.settings){
-        const map={apiKey:'st-apikey',workerUrl:'st-worker',syncKey:'st-synckey',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
+        const map={apiKey:'st-apikey',finnhubKey:'st-finnhub',workerUrl:'st-worker',syncKey:'st-synckey',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
         Object.keys(map).forEach(k=>{if(cloud.settings[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=cloud.settings[k]}});
         saveTrackerSettings();
       }
