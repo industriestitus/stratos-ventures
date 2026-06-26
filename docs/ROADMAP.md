@@ -1,7 +1,10 @@
 # Stratos Ventures — Roadmap
 
-## Current Phase: Phase 4 — Portfolio Module
+## Current Phase: Phase 5 — Dashboard
 Status: NOT STARTED
+
+## Completed: Phase 4 — Portfolio Module
+Status: COMPLETE (2026-06-26)
 
 ## Completed: Phase 3 — Research & Notes
 Status: COMPLETE (2026-06-26)
@@ -60,16 +63,16 @@ Status: COMPLETE (2026-06-26)
 ## Phase 4: Portfolio Module (2-3 sessions)
 > Multi-broker, multi-currency portfolio tracking.
 
-- [ ] Broker accounts setup (name, currency)
-- [ ] Positions: ticker + account + shares + avg cost
-- [ ] CSV/Excel import (IBKR, Degiro formats)
-- [ ] Manual add/edit/delete positions
-- [ ] Transaction history: buy/sell/dividend logging
-- [ ] Multi-currency conversion (live rates)
-- [ ] Monthly snapshots (manual or auto)
-- [ ] P&L calculation per position and total
-- [ ] TWR (time-weighted return) for benchmark comparison
-- [ ] MWR/XIRR (money-weighted return) for personal performance
+- [x] Broker accounts setup (name, currency)
+- [x] Positions: ticker + account + shares + avg cost
+- [x] CSV/Excel import (IBKR, Degiro formats)
+- [x] Manual add/edit/delete positions
+- [x] Transaction history: buy/sell/dividend logging
+- [x] Multi-currency conversion (live rates)
+- [x] Monthly snapshots (manual or auto)
+- [x] P&L calculation per position and total
+- [x] TWR (time-weighted return) for benchmark comparison
+- [x] MWR/XIRR (money-weighted return) for personal performance
 
 ## Phase 5: Dashboard (2-3 sessions)
 > Portfolio overview, metrics, alerts.
