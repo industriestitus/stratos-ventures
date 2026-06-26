@@ -3950,7 +3950,7 @@ function renderDbBenchmark(){
   const prices=dbBenchmark.prices;
   const spyFirst=prices[0]?.close;
   const spyLast=prices[prices.length-1]?.close;
-  if(!spyFirst||!spyLast){document.getElementById('db-w-benchmark').innerHTML='<div class="db-empty">Benchmark data unavailable</div>';return}
+  if(!spyFirst||!spyLast){el.innerHTML='<div class="db-empty">Benchmark data unavailable</div>';return}
   const spyReturn=(spyLast-spyFirst)/spyFirst;
 
   const sorted=[...pfSnapshots].sort((a,b)=>a.date.localeCompare(b.date));
