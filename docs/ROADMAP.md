@@ -103,11 +103,11 @@ Status: COMPLETE (2026-06-26)
 > Investment principles, checklists, review templates — your "investing operating system."
 
 ### Framework Tab — Your Investing Lens
-- [ ] Investment principles/approach (GARP, compounding, "buy good companies, don't overpay, do nothing")
-- [ ] Portfolio rules (sell losers, add to winners, position sizing rules)
-- [ ] Ideal company traits checklist (30+ traits: moat, organic growth, pricing power, etc.)
-- [ ] What I avoid / red flags (high R&D, commodity, dual class, acquisition-based growth, etc.)
-- [ ] Position scoring calculator (CAGR × Conviction × Risk multipliers)
+- [x] Investment principles/approach (GARP, compounding, "buy good companies, don't overpay, do nothing")
+- [x] Portfolio rules (sell losers, add to winners, position sizing rules)
+- [x] Ideal company traits checklist (30+ traits: moat, organic growth, pricing power, etc.)
+- [x] What I avoid / red flags (high R&D, commodity, dual class, acquisition-based growth, etc.)
+- [x] Position scoring calculator (CAGR × Conviction × Risk multipliers)
 
 ### Per-Company Analysis Checklist (12 sections)
 - [ ] Company Details section (business model, TAM, revenue split, moat, competitive advantage)
@@ -123,10 +123,10 @@ Status: COMPLETE (2026-06-26)
 - [ ] Quarterly Follow-up section (numbers, news, thesis check, action, timeline view)
 - [ ] Change Tracking (auto: timestamps, quarter, position size, audit trail — never delete)
 
-### Reviews
-- [ ] Weekly review template with pre-defined questions
-- [ ] Monthly review template (portfolio health check)
-- [ ] Quarterly review template (per-company, linked to checklist)
+### Reviews (separate tab)
+- [x] Weekly review template with pre-defined questions (7 questions)
+- [x] Monthly review template (portfolio health check, 8 questions)
+- [x] Quarterly review template (per-company, 10 questions)
 
 ## Phase 8: Stock Scores & Screening (1-2 sessions)
 > Auto-calculated scores and filtering.
@@ -136,8 +136,8 @@ Status: COMPLETE (2026-06-26)
 - [ ] Basic screener with filters
 - [ ] Insider trading display (from Finnhub)
 
-## Phase 9: Export & Polish (1 session)
-> Full data portability and UI polish.
+## Phase 9: Export, Polish & D1 Migration (2-3 sessions)
+> Full data portability, UI polish, and server-side database migration.
 
 - [ ] JSON full backup/restore (unified: calculator + tracker + notes in one file)
 - [ ] CSV export (positions, transactions)
@@ -146,6 +146,9 @@ Status: COMPLETE (2026-06-26)
 - [ ] CSV import for positions
 - [ ] Hash-based routing with browser back/forward button support
 - [ ] Data versioning & migration system (schema version in localStorage, auto-upgrade on load)
+- [ ] D1 migration: Worker CRUD API endpoints for all tables (schema already in docs/d1-schema.sql)
+- [ ] D1 migration: localStorage → D1 one-time data migration tool
+- [ ] D1 migration: Switch app to read/write D1 via Worker API (localStorage as offline cache)
 
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.

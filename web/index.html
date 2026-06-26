@@ -702,6 +702,76 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   .st-controls input,.st-controls button{width:100%!important}
   .st-controls div[style*="flex:1"]{display:none}
 }
+/* ====== FRAMEWORK ====== */
+.fw-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.fw-panel{display:none}.fw-panel.active{display:block}
+.fw-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.fw-header h3{margin:0;font-size:16px;font-weight:600;color:var(--text)}
+.fw-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;transition:border-color .2s}
+.fw-card:hover{border-color:var(--accent)}
+.fw-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.fw-card-title{font-size:14px;font-weight:600;color:var(--text);margin:0}
+.fw-card-actions{display:flex;gap:4px;flex-shrink:0}
+.fw-card-actions button{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px;border-radius:4px;transition:all .2s}
+.fw-card-actions button:hover{color:var(--text);background:var(--surface2)}
+.fw-card-body{font-size:13px;color:var(--text2);line-height:1.6}
+.fw-card-body p{margin:0 0 8px}
+.fw-card-body p:last-child{margin-bottom:0}
+.fw-list{list-style:none;padding:0;margin:0}
+.fw-list-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;background:var(--surface);transition:border-color .2s}
+.fw-list-item:hover{border-color:var(--accent)}
+.fw-list-cat{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--accent2);background:rgba(108,92,231,.1);padding:2px 6px;border-radius:3px;white-space:nowrap}
+.fw-list-label{flex:1;font-size:13px;color:var(--text)}
+.fw-list-actions{display:flex;gap:2px}
+.fw-list-actions button{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px;border-radius:4px;font-size:12px}
+.fw-list-actions button:hover{color:var(--text);background:var(--surface2)}
+.fw-empty{text-align:center;padding:32px;color:var(--text2);font-size:13px}
+.fw-scoring{max-width:500px}
+.fw-scoring-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.fw-scoring-row label{width:100px;font-size:13px;font-weight:500;color:var(--text2)}
+.fw-scoring-row input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:14px;font-family:inherit}
+.fw-scoring-row input:focus{border-color:var(--accent);outline:none}
+.fw-scoring-result{background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:20px;text-align:center;margin-top:16px}
+.fw-scoring-score{font-size:32px;font-weight:700;color:var(--accent)}
+.fw-scoring-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.fw-scoring-interp{font-size:13px;color:var(--text2);margin-top:8px}
+.fw-modal-form label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px;margin-top:12px}
+.fw-modal-form label:first-child{margin-top:0}
+.fw-modal-form input,.fw-modal-form textarea,.fw-modal-form select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;box-sizing:border-box}
+.fw-modal-form input:focus,.fw-modal-form textarea:focus,.fw-modal-form select:focus{border-color:var(--accent);outline:none}
+.fw-modal-form textarea{resize:vertical;min-height:80px}
+/* ====== REVIEWS ====== */
+.rv-tabs{display:flex;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.rv-panel{display:none}.rv-panel.active{display:block}
+.rv-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.rv-header h3{margin:0;font-size:16px;font-weight:600;color:var(--text)}
+.rv-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;cursor:pointer;transition:border-color .2s}
+.rv-entry:hover{border-color:var(--accent)}
+.rv-entry-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.rv-entry-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;padding:2px 8px;border-radius:3px}
+.rv-entry-type--weekly{color:#00b894;background:rgba(0,184,148,.12)}
+.rv-entry-type--monthly{color:#6c5ce7;background:rgba(108,92,231,.12)}
+.rv-entry-type--quarterly{color:#e17055;background:rgba(225,112,85,.12)}
+.rv-entry-date{font-size:12px;color:var(--text2)}
+.rv-entry-ticker{font-size:11px;font-weight:600;color:var(--accent2);background:rgba(108,92,231,.1);padding:1px 6px;border-radius:3px}
+.rv-entry-summary{font-size:13px;color:var(--text2);line-height:1.5}
+.rv-entry-actions{display:flex;gap:4px;margin-left:auto}
+.rv-entry-actions button{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px;border-radius:4px;font-size:12px}
+.rv-entry-actions button:hover{color:var(--text);background:var(--surface2)}
+.rv-empty{text-align:center;padding:32px;color:var(--text2);font-size:13px}
+.rv-modal-form label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:4px;margin-top:12px}
+.rv-modal-form label:first-child{margin-top:0}
+.rv-modal-form input,.rv-modal-form textarea,.rv-modal-form select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit;box-sizing:border-box}
+.rv-modal-form input:focus,.rv-modal-form textarea:focus,.rv-modal-form select:focus{border-color:var(--accent);outline:none}
+.rv-modal-form textarea{resize:vertical;min-height:60px}
+.rv-questions{margin-top:16px}
+.rv-question{margin-bottom:16px}
+.rv-question label{font-size:13px;font-weight:500;color:var(--text);margin-bottom:6px}
+@media(max-width:600px){
+  .fw-tabs,.rv-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .fw-scoring-row{flex-direction:column;align-items:stretch}
+  .fw-scoring-row label{width:auto}
+}
 </style>
 </head>
 <body>
@@ -773,6 +843,10 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
     <button class="nav-item" onclick="showSection('framework')" data-section="framework">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="12" width="14" height="4" rx="1"/><rect x="5" y="6" width="10" height="4" rx="1"/><rect x="7" y="0" width="6" height="4" rx="1"/></svg>
       <span>Framework</span>
+    </button>
+    <button class="nav-item" onclick="showSection('reviews')" data-section="reviews">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12v14H4z"/><path d="M7 8h6M7 11h6M7 14h4"/></svg>
+      <span>Reviews</span>
     </button>
     <div class="nav-spacer"></div>
     <button class="nav-item" onclick="showSection('settings')" data-section="settings">
@@ -1435,13 +1509,34 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   <div id="research-panel-search" class="research-panel"></div>
 </div>
 
-<!-- ====== SECTION: FRAMEWORK (placeholder) ====== -->
+<!-- ====== SECTION: FRAMEWORK ====== -->
 <div class="content" id="section-framework" style="display:none">
-  <div class="card placeholder-section">
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="12" width="14" height="4" rx="1"/><rect x="5" y="6" width="10" height="4" rx="1"/><rect x="7" y="0" width="6" height="4" rx="1"/></svg>
-    <h2>Framework</h2>
-    <p>Investment principles, checklists, and review templates. Coming in Phase 7.</p>
+  <div class="fw-tabs">
+    <button class="tab active" onclick="switchFwTab('principles')" data-fwtab="principles">Principles</button>
+    <button class="tab" onclick="switchFwTab('rules')" data-fwtab="rules">Portfolio Rules</button>
+    <button class="tab" onclick="switchFwTab('traits')" data-fwtab="traits">Ideal Traits</button>
+    <button class="tab" onclick="switchFwTab('avoid')" data-fwtab="avoid">Avoid List</button>
+    <button class="tab" onclick="switchFwTab('scoring')" data-fwtab="scoring">Position Scoring</button>
   </div>
+  <div id="fw-panel-principles" class="fw-panel active"></div>
+  <div id="fw-panel-rules" class="fw-panel"></div>
+  <div id="fw-panel-traits" class="fw-panel"></div>
+  <div id="fw-panel-avoid" class="fw-panel"></div>
+  <div id="fw-panel-scoring" class="fw-panel"></div>
+</div>
+
+<!-- ====== SECTION: REVIEWS ====== -->
+<div class="content" id="section-reviews" style="display:none">
+  <div class="rv-tabs">
+    <button class="tab active" onclick="switchRvTab('all')" data-rvtab="all">All</button>
+    <button class="tab" onclick="switchRvTab('weekly')" data-rvtab="weekly">Weekly</button>
+    <button class="tab" onclick="switchRvTab('monthly')" data-rvtab="monthly">Monthly</button>
+    <button class="tab" onclick="switchRvTab('quarterly')" data-rvtab="quarterly">Quarterly</button>
+  </div>
+  <div id="rv-panel-all" class="rv-panel active"></div>
+  <div id="rv-panel-weekly" class="rv-panel"></div>
+  <div id="rv-panel-monthly" class="rv-panel"></div>
+  <div id="rv-panel-quarterly" class="rv-panel"></div>
 </div>
 
 <!-- ====== SECTION: SETTINGS ====== -->
@@ -1557,6 +1652,10 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   <button class="more-menu-item" onclick="showSection('framework')">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="12" width="14" height="4" rx="1"/><rect x="5" y="6" width="10" height="4" rx="1"/><rect x="7" y="0" width="6" height="4" rx="1"/></svg>
     <span>Framework</span>
+  </button>
+  <button class="more-menu-item" onclick="showSection('reviews')">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h12v14H4z"/><path d="M7 8h6M7 11h6M7 14h4"/></svg>
+    <span>Reviews</span>
   </button>
   <button class="more-menu-item" onclick="showSection('settings')">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="3"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M3.4 3.4l1.4 1.4M15.2 15.2l1.4 1.4M3.4 16.6l1.4-1.4M15.2 4.8l1.4-1.4"/></svg>
@@ -1851,6 +1950,62 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   <div class="pf-modal-actions">
     <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
     <button class="btn btn-primary" onclick="savePosition()">Save</button>
+  </div>
+</div>
+</div>
+
+<!-- Framework Modal -->
+<div class="modal-overlay" id="fw-modal">
+<div class="modal">
+  <h3 id="fw-modal-title">Add Principle</h3>
+  <div class="fw-modal-form">
+    <label>Title</label>
+    <input type="text" id="fw-modal-title-input" placeholder="e.g. Buy good companies, don't overpay">
+    <label id="fw-modal-content-label">Description (Markdown)</label>
+    <textarea id="fw-modal-content-input" placeholder="Describe your principle or rule..."></textarea>
+    <label id="fw-modal-category-label" style="display:none">Category</label>
+    <input type="text" id="fw-modal-category-input" placeholder="e.g. Growth, Quality, Risk" style="display:none">
+  </div>
+  <input type="hidden" id="fw-modal-edit-id">
+  <input type="hidden" id="fw-modal-type">
+  <div class="modal-actions">
+    <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveFwEntry()">Save</button>
+  </div>
+</div>
+</div>
+
+<!-- Reviews Modal -->
+<div class="modal-overlay" id="rv-entry-modal">
+<div class="modal" style="max-width:640px">
+  <h3 id="rv-modal-title">New Review</h3>
+  <div class="rv-modal-form">
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px">
+        <label>Type</label>
+        <select id="rv-modal-type" onchange="renderRvQuestions()">
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="quarterly">Quarterly</option>
+        </select>
+      </div>
+      <div style="flex:1;min-width:120px">
+        <label>Date</label>
+        <input type="date" id="rv-modal-date">
+      </div>
+      <div style="flex:1;min-width:120px;display:none" id="rv-modal-ticker-wrap">
+        <label>Company (optional)</label>
+        <input type="text" id="rv-modal-ticker" placeholder="e.g. AAPL">
+      </div>
+    </div>
+    <div id="rv-modal-questions" class="rv-questions"></div>
+    <label style="margin-top:16px">Summary / Key Takeaway</label>
+    <textarea id="rv-modal-summary" placeholder="What's the main insight from this review?"></textarea>
+  </div>
+  <input type="hidden" id="rv-modal-edit-id">
+  <div class="modal-actions">
+    <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveReview()">Save</button>
   </div>
 </div>
 </div>
@@ -2337,7 +2492,7 @@ function renderSavedStocks(){
 }
 function showExportModal(){
   const s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
-  document.getElementById('export-data').value=JSON.stringify({version:6,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,dashboard52wHighs:db52wHighs,dividendHistory:divHistory,dividendSettings:divSettings},null,2);
+  document.getElementById('export-data').value=JSON.stringify({version:7,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,dashboard52wHighs:db52wHighs,dividendHistory:divHistory,dividendSettings:divSettings,frameworkData:fwData,reviewsData:rvData},null,2);
   document.getElementById('export-modal').classList.add('active');
 }
 function showImportModal(){document.getElementById('import-data').value='';document.getElementById('import-modal').classList.add('active')}
@@ -2364,16 +2519,20 @@ function doImport(){
     if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs()}
     if(d.dividendHistory&&typeof d.dividendHistory==='object'){divHistory=d.dividendHistory;saveDividendHistory()}
     if(d.dividendSettings&&typeof d.dividendSettings==='object'){Object.assign(divSettings,d.dividendSettings);saveDivSettings()}
+    if(d.frameworkData&&typeof d.frameworkData==='object'){fwData=d.frameworkData;saveFramework()}
+    if(d.reviewsData&&typeof d.reviewsData==='object'){rvData=d.reviewsData;saveReviews()}
     closeModals();showToast('Imported!','success');recalcAll();
     renderSavedStocks();renderTracker();renderResearch();
     const vis=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
     if(vis==='portfolio')renderPortfolioOverview();
     if(vis==='dashboard')renderDashboard();
+    if(vis==='framework')renderFramework();
+    if(vis==='reviews')renderReviews();
   }catch(e){showToast('Invalid JSON data.','error')}
 }
 
 // Section switching
-const SECTIONS=['dashboard','companies','portfolio','research','framework','settings'];
+const SECTIONS=['dashboard','companies','portfolio','research','framework','reviews','settings'];
 
 function showSection(name){
   SECTIONS.forEach(s=>{
@@ -2386,7 +2545,7 @@ function showSection(name){
   document.querySelectorAll('#bottom-nav .bnav-item').forEach(b=>{
     b.classList.toggle('active',b.dataset.section===name);
   });
-  if(['framework','settings'].includes(name)){
+  if(['framework','reviews','settings'].includes(name)){
     document.querySelector('#bottom-nav .bnav-item[data-section="more"]')?.classList.add('active');
   }
   closeMoreMenu();
@@ -2399,6 +2558,8 @@ function showSection(name){
   if(name==='research')renderResearch();
   if(name==='portfolio')renderPortfolioOverview();
   if(name==='dashboard')renderDashboard();
+  if(name==='framework')renderFramework();
+  if(name==='reviews')renderReviews();
 }
 
 function switchCompanyTab(name){
@@ -6534,6 +6695,403 @@ function renderMiniCharts(){
   });
 }
 
+// ====== FRAMEWORK ======
+let fwData={principles:[],portfolioRules:[],idealTraits:[],avoidList:[],scoringWeights:{cagr:1,conviction:1,risk:1},_nextId:1};
+
+function loadFramework(){
+  try{const d=JSON.parse(localStorage.getItem('framework_v1'));if(d&&typeof d==='object'){fwData=d;if(!fwData.principles)fwData.principles=[];if(!fwData.portfolioRules)fwData.portfolioRules=[];if(!fwData.idealTraits)fwData.idealTraits=[];if(!fwData.avoidList)fwData.avoidList=[];if(!fwData.scoringWeights)fwData.scoringWeights={cagr:1,conviction:1,risk:1};if(!fwData._nextId)fwData._nextId=1}}catch(e){}
+}
+function saveFramework(){try{localStorage.setItem('framework_v1',JSON.stringify(fwData))}catch(e){showToast('Storage full — export your data','error',8000)}}
+
+function fwNextId(){return fwData._nextId++}
+
+function switchFwTab(name){
+  document.querySelectorAll('.fw-panel').forEach(p=>p.classList.remove('active'));
+  const panel=document.getElementById('fw-panel-'+name);
+  if(panel)panel.classList.add('active');
+  document.querySelectorAll('.fw-tabs .tab').forEach(b=>b.classList.toggle('active',b.dataset.fwtab===name));
+  renderFwPanel(name);
+}
+
+function renderFramework(){renderFwPanel('principles')}
+
+function renderFwPanel(name){
+  if(name==='principles')renderFwCards('principles','Investment Principles','principle','Add a guiding investment principle');
+  else if(name==='rules')renderFwCards('rules','Portfolio Rules','rule','Add a portfolio management rule');
+  else if(name==='traits')renderFwList('traits','Ideal Company Traits','trait','Add traits you look for in great companies');
+  else if(name==='avoid')renderFwList('avoid','Red Flags / Avoid','avoid','Add patterns you avoid in investments');
+  else if(name==='scoring')renderFwScoring();
+}
+
+function renderFwCards(panelKey,title,itemType,emptyMsg){
+  const arr=panelKey==='principles'?fwData.principles:fwData.portfolioRules;
+  const panel=document.getElementById('fw-panel-'+panelKey);
+  let h=`<div class="fw-header"><h3>${title}</h3><button class="btn btn-primary" onclick="openFwModal('${itemType}')">+ Add</button></div>`;
+  if(!arr.length){h+=`<div class="fw-empty">${emptyMsg}</div>`;panel.innerHTML=h;return}
+  arr.sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+  arr.forEach(item=>{
+    const body=typeof marked!=='undefined'&&typeof DOMPurify!=='undefined'?DOMPurify.sanitize(marked.parse(item.content||'')):escH(item.content||'');
+    h+=`<div class="fw-card">
+      <div class="fw-card-header">
+        <h4 class="fw-card-title">${escH(item.title)}</h4>
+        <div class="fw-card-actions">
+          <button onclick="openFwModal('${itemType}',${item.id})" title="Edit">✏️</button>
+          <button onclick="deleteFwEntry('${itemType}',${item.id})" title="Delete">🗑️</button>
+        </div>
+      </div>
+      <div class="fw-card-body">${body||'<em style="color:var(--text2)">No description</em>'}</div>
+    </div>`;
+  });
+  panel.innerHTML=h;
+}
+
+function renderFwList(panelKey,title,itemType,emptyMsg){
+  const arr=panelKey==='traits'?fwData.idealTraits:fwData.avoidList;
+  const panel=document.getElementById('fw-panel-'+panelKey);
+  let h=`<div class="fw-header"><h3>${title}</h3><button class="btn btn-primary" onclick="openFwModal('${itemType}')">+ Add</button></div>`;
+  if(!arr.length){h+=`<div class="fw-empty">${emptyMsg}</div>`;panel.innerHTML=h;return}
+  const cats={};
+  arr.sort((a,b)=>(a.sortOrder||0)-(b.sortOrder||0));
+  arr.forEach(item=>{const c=item.category||'General';if(!cats[c])cats[c]=[];cats[c].push(item)});
+  Object.keys(cats).sort().forEach(cat=>{
+    h+=`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px">${escH(cat)}</div><div class="fw-list">`;
+    cats[cat].forEach(item=>{
+      h+=`<div class="fw-list-item">
+        <span class="fw-list-label">${escH(item.label)}</span>
+        <div class="fw-list-actions">
+          <button onclick="openFwModal('${itemType}',${item.id})" title="Edit">✏️</button>
+          <button onclick="deleteFwEntry('${itemType}',${item.id})" title="Delete">🗑️</button>
+        </div>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  });
+  panel.innerHTML=h;
+}
+
+function renderFwScoring(){
+  const panel=document.getElementById('fw-panel-scoring');
+  panel.innerHTML=`
+    <div class="fw-header"><h3>Position Scoring Calculator</h3></div>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:20px">Score = Expected CAGR × Conviction × Risk Multiplier. Use this to compare and rank potential investments.</p>
+    <div class="fw-scoring">
+      <div class="fw-scoring-row">
+        <label>Expected CAGR %</label>
+        <input type="number" id="fw-sc-cagr" value="15" min="0" max="100" step="0.5" oninput="calcFwScore()">
+      </div>
+      <div class="fw-scoring-row">
+        <label>Conviction (1-10)</label>
+        <input type="number" id="fw-sc-conviction" value="7" min="1" max="10" step="1" oninput="calcFwScore()">
+      </div>
+      <div class="fw-scoring-row">
+        <label>Risk (0.5-1.5)</label>
+        <input type="number" id="fw-sc-risk" value="1.0" min="0.5" max="1.5" step="0.1" oninput="calcFwScore()">
+      </div>
+      <div class="fw-scoring-result">
+        <div class="fw-scoring-score" id="fw-sc-result">10.5</div>
+        <div class="fw-scoring-label">Position Score</div>
+        <div class="fw-scoring-interp" id="fw-sc-interp">Weak or risky</div>
+      </div>
+      <p style="color:var(--text2);font-size:11px;margin-top:16px"><strong>Guide:</strong> Score &gt;100 = Strong candidate, 50-100 = Worth considering, &lt;50 = Weak or risky</p>
+    </div>`;
+  calcFwScore();
+}
+
+function calcFwScore(){
+  const cagr=parseFloat(document.getElementById('fw-sc-cagr')?.value)||0;
+  const conv=parseFloat(document.getElementById('fw-sc-conviction')?.value)||1;
+  const risk=parseFloat(document.getElementById('fw-sc-risk')?.value)||1;
+  const score=cagr*conv*risk/10;
+  const el=document.getElementById('fw-sc-result');
+  const interp=document.getElementById('fw-sc-interp');
+  if(el)el.textContent=score.toFixed(1);
+  if(interp){
+    if(score>=100)interp.textContent='Strong candidate';
+    else if(score>=50)interp.textContent='Worth considering';
+    else interp.textContent='Weak or risky';
+  }
+}
+
+function openFwModal(type,editId){
+  const modal=document.getElementById('fw-modal');
+  const titleEl=document.getElementById('fw-modal-title');
+  const titleIn=document.getElementById('fw-modal-title-input');
+  const contentIn=document.getElementById('fw-modal-content-input');
+  const contentLabel=document.getElementById('fw-modal-content-label');
+  const catIn=document.getElementById('fw-modal-category-input');
+  const catLabel=document.getElementById('fw-modal-category-label');
+  document.getElementById('fw-modal-edit-id').value=editId||'';
+  document.getElementById('fw-modal-type').value=type;
+
+  const isList=type==='trait'||type==='avoid';
+  contentLabel.style.display=isList?'none':'';
+  contentIn.style.display=isList?'none':'';
+  catLabel.style.display=isList?'':'none';
+  catIn.style.display=isList?'':'none';
+
+  if(isList){
+    titleIn.placeholder=type==='trait'?'e.g. Organic revenue growth':'e.g. Acquisition-based growth';
+    catIn.placeholder='e.g. Growth, Quality, Risk';
+  }else{
+    titleIn.placeholder=type==='principle'?'e.g. Buy good companies, don\'t overpay':'e.g. Max 10% per position';
+  }
+
+  const labels={principle:'Principle',rule:'Portfolio Rule',trait:'Ideal Trait',avoid:'Avoid / Red Flag'};
+  if(editId){
+    titleEl.textContent='Edit '+labels[type];
+    const item=getFwItem(type,editId);
+    if(item){
+      titleIn.value=isList?item.label:item.title;
+      contentIn.value=item.content||'';
+      catIn.value=item.category||'';
+    }
+  }else{
+    titleEl.textContent='Add '+labels[type];
+    titleIn.value='';contentIn.value='';catIn.value='';
+  }
+  modal.classList.add('active');
+  titleIn.focus();
+}
+
+function getFwItem(type,id){
+  if(type==='principle')return fwData.principles.find(x=>x.id===id);
+  if(type==='rule')return fwData.portfolioRules.find(x=>x.id===id);
+  if(type==='trait')return fwData.idealTraits.find(x=>x.id===id);
+  if(type==='avoid')return fwData.avoidList.find(x=>x.id===id);
+}
+
+function getFwArr(type){
+  if(type==='principle')return fwData.principles;
+  if(type==='rule')return fwData.portfolioRules;
+  if(type==='trait')return fwData.idealTraits;
+  if(type==='avoid')return fwData.avoidList;
+}
+
+function saveFwEntry(){
+  const type=document.getElementById('fw-modal-type').value;
+  const editId=parseInt(document.getElementById('fw-modal-edit-id').value)||0;
+  const titleVal=document.getElementById('fw-modal-title-input').value.trim();
+  const contentVal=document.getElementById('fw-modal-content-input').value.trim();
+  const catVal=document.getElementById('fw-modal-category-input').value.trim();
+  const isList=type==='trait'||type==='avoid';
+
+  if(!titleVal){showToast('Title is required','error');return}
+
+  const arr=getFwArr(type);
+  if(editId){
+    const item=arr.find(x=>x.id===editId);
+    if(item){
+      if(isList){item.label=titleVal;item.category=catVal||'General'}
+      else{item.title=titleVal;item.content=contentVal}
+    }
+  }else{
+    const id=fwNextId();
+    if(isList){
+      arr.push({id,label:titleVal,category:catVal||'General',sortOrder:arr.length});
+    }else{
+      arr.push({id,title:titleVal,content:contentVal,sortOrder:arr.length});
+    }
+  }
+
+  saveFramework();
+  closeModals();
+  const panelMap={principle:'principles',rule:'rules',trait:'traits',avoid:'avoid'};
+  renderFwPanel(panelMap[type]);
+  showToast(editId?'Updated':'Added','success');
+}
+
+function deleteFwEntry(type,id){
+  if(!confirm('Delete this item?'))return;
+  const arr=getFwArr(type);
+  const idx=arr.findIndex(x=>x.id===id);
+  if(idx>=0)arr.splice(idx,1);
+  saveFramework();
+  const panelMap={principle:'principles',rule:'rules',trait:'traits',avoid:'avoid'};
+  renderFwPanel(panelMap[type]);
+  showToast('Deleted','success');
+}
+
+// ====== REVIEWS ======
+const RV_QUESTIONS={
+  weekly:[
+    {id:'w1',label:'What trades did I make this week and why?'},
+    {id:'w2',label:'What companies did I research this week?'},
+    {id:'w3',label:'Did I follow my investment process/checklist?'},
+    {id:'w4',label:'What news/events affected my portfolio?'},
+    {id:'w5',label:'Did I make any emotional decisions?'},
+    {id:'w6',label:'What is my top priority for next week?'},
+    {id:'w7',label:'Portfolio performance this week (%)'}
+  ],
+  monthly:[
+    {id:'m1',label:'Portfolio total return this month vs benchmark'},
+    {id:'m2',label:'Top 3 winners and why'},
+    {id:'m3',label:'Top 3 losers and why'},
+    {id:'m4',label:'Did I follow my portfolio rules (position sizing, diversification)?'},
+    {id:'m5',label:'Any positions I should add to or trim?'},
+    {id:'m6',label:'Are all investment theses still intact?'},
+    {id:'m7',label:'New companies added to watchlist'},
+    {id:'m8',label:'Key learnings or insights this month'}
+  ],
+  quarterly:[
+    {id:'q1',label:'Company ticker'},
+    {id:'q2',label:'Were quarterly numbers in line with expectations?'},
+    {id:'q3',label:'Revenue growth vs previous quarter and YoY'},
+    {id:'q4',label:'Margin trends (expanding/contracting)?'},
+    {id:'q5',label:'Management commentary highlights'},
+    {id:'q6',label:'Any changes to competitive position?'},
+    {id:'q7',label:'Is the original investment thesis still valid?'},
+    {id:'q8',label:'Updated conviction level (1-10)'},
+    {id:'q9',label:'Action decision (Hold / Add / Trim / Sell)'},
+    {id:'q10',label:'Notes and next steps'}
+  ]
+};
+
+let rvData={entries:[],_nextId:1};
+
+function loadReviews(){
+  try{const d=JSON.parse(localStorage.getItem('reviews_v1'));if(d&&typeof d==='object'){rvData=d;if(!rvData.entries)rvData.entries=[];if(!rvData._nextId)rvData._nextId=1}}catch(e){}
+}
+function saveReviews(){try{localStorage.setItem('reviews_v1',JSON.stringify(rvData))}catch(e){showToast('Storage full — export your data','error',8000)}}
+
+function rvNextId(){return rvData._nextId++}
+
+function switchRvTab(name){
+  document.querySelectorAll('.rv-panel').forEach(p=>p.classList.remove('active'));
+  const panel=document.getElementById('rv-panel-'+name);
+  if(panel)panel.classList.add('active');
+  document.querySelectorAll('.rv-tabs .tab').forEach(b=>b.classList.toggle('active',b.dataset.rvtab===name));
+  renderRvFeed(name);
+}
+
+function renderReviews(){renderRvFeed('all')}
+
+function renderRvFeed(type){
+  const panel=document.getElementById('rv-panel-'+type);
+  if(!panel)return;
+  let entries=rvData.entries.slice();
+  if(type!=='all')entries=entries.filter(e=>e.type===type);
+  entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  let h=`<div class="rv-header"><h3>${type==='all'?'All Reviews':type.charAt(0).toUpperCase()+type.slice(1)+' Reviews'}</h3><button class="btn btn-primary" onclick="openReview('${type==='all'?'weekly':type}')">+ New Review</button></div>`;
+
+  if(!entries.length){
+    h+=`<div class="rv-empty">No reviews yet. Start by adding your first ${type==='all'?'':type+' '}review.</div>`;
+    panel.innerHTML=h;return;
+  }
+
+  entries.forEach(e=>{
+    const typeLabel=e.type||'weekly';
+    const preview=e.summary?escH(e.summary).substring(0,120)+(e.summary.length>120?'…':''):'';
+    const answeredCount=Object.values(e.answers||{}).filter(v=>v&&v.trim()).length;
+    const totalCount=(RV_QUESTIONS[e.type]||[]).length;
+    h+=`<div class="rv-entry" onclick="openReview('${typeLabel}',${e.id})">
+      <div class="rv-entry-header">
+        <span class="rv-entry-type rv-entry-type--${typeLabel}">${typeLabel}</span>
+        <span class="rv-entry-date">${formatNoteDate(e.date)}</span>
+        ${e.companyTicker?`<span class="rv-entry-ticker">${escH(e.companyTicker)}</span>`:''}
+        <span style="font-size:11px;color:var(--text2)">${answeredCount}/${totalCount} answered</span>
+        <div class="rv-entry-actions">
+          <button onclick="event.stopPropagation();deleteReview(${e.id})" title="Delete">🗑️</button>
+        </div>
+      </div>
+      ${preview?`<div class="rv-entry-summary">${preview}</div>`:''}
+    </div>`;
+  });
+  panel.innerHTML=h;
+}
+
+function openReview(type,editId){
+  const modal=document.getElementById('rv-entry-modal');
+  const titleEl=document.getElementById('rv-modal-title');
+  const typeSelect=document.getElementById('rv-modal-type');
+  const dateInput=document.getElementById('rv-modal-date');
+  const tickerInput=document.getElementById('rv-modal-ticker');
+  const summaryInput=document.getElementById('rv-modal-summary');
+  document.getElementById('rv-modal-edit-id').value=editId||'';
+
+  if(editId){
+    const entry=rvData.entries.find(e=>e.id===editId);
+    if(!entry)return;
+    titleEl.textContent='Edit Review';
+    typeSelect.value=entry.type;
+    dateInput.value=entry.date||'';
+    tickerInput.value=entry.companyTicker||'';
+    summaryInput.value=entry.summary||'';
+    renderRvQuestions(entry.answers);
+  }else{
+    titleEl.textContent='New Review';
+    typeSelect.value=type||'weekly';
+    dateInput.value=new Date().toISOString().slice(0,10);
+    tickerInput.value='';
+    summaryInput.value='';
+    renderRvQuestions();
+  }
+  modal.classList.add('active');
+}
+
+function renderRvQuestions(existingAnswers){
+  const type=document.getElementById('rv-modal-type').value;
+  const questions=RV_QUESTIONS[type]||[];
+  const container=document.getElementById('rv-modal-questions');
+  const tickerWrap=document.getElementById('rv-modal-ticker-wrap');
+  tickerWrap.style.display=type==='quarterly'?'':'none';
+  let h='';
+  questions.forEach(q=>{
+    const val=existingAnswers?existingAnswers[q.id]||'':'';
+    if(q.id==='q1')return; // ticker is handled separately
+    h+=`<div class="rv-question">
+      <label>${escH(q.label)}</label>
+      <textarea id="rv-a-${q.id}" rows="2">${escH(val)}</textarea>
+    </div>`;
+  });
+  container.innerHTML=h;
+}
+
+function saveReview(){
+  const type=document.getElementById('rv-modal-type').value;
+  const date=document.getElementById('rv-modal-date').value;
+  const ticker=document.getElementById('rv-modal-ticker').value.trim().toUpperCase();
+  const summary=document.getElementById('rv-modal-summary').value.trim();
+  const editId=parseInt(document.getElementById('rv-modal-edit-id').value)||0;
+
+  if(!date){showToast('Date is required','error');return}
+
+  const questions=RV_QUESTIONS[type]||[];
+  const answers={};
+  if(type==='quarterly'&&ticker)answers.q1=ticker;
+  questions.forEach(q=>{
+    if(q.id==='q1')return;
+    const el=document.getElementById('rv-a-'+q.id);
+    if(el)answers[q.id]=el.value.trim();
+  });
+
+  const now=new Date().toISOString();
+  if(editId){
+    const entry=rvData.entries.find(e=>e.id===editId);
+    if(entry){
+      entry.type=type;entry.date=date;entry.companyTicker=ticker;
+      entry.answers=answers;entry.summary=summary;entry.updatedAt=now;
+    }
+  }else{
+    rvData.entries.push({id:rvNextId(),type,date,companyTicker:ticker,answers,summary,createdAt:now,updatedAt:now});
+  }
+
+  saveReviews();
+  closeModals();
+  const activeTab=document.querySelector('.rv-tabs .tab.active');
+  renderRvFeed(activeTab?.dataset.rvtab||'all');
+  showToast(editId?'Review updated':'Review added','success');
+}
+
+function deleteReview(id){
+  if(!confirm('Delete this review?'))return;
+  rvData.entries=rvData.entries.filter(e=>e.id!==id);
+  saveReviews();
+  const activeTab=document.querySelector('.rv-tabs .tab.active');
+  renderRvFeed(activeTab?.dataset.rvtab||'all');
+  showToast('Deleted','success');
+}
+
 // ====== CLOUD SYNC & CONNECTION TESTS ======
 function getSyncKey(){return stSettings().syncKey||''}
 let syncTimer=null;
@@ -6624,7 +7182,9 @@ async function cloudSave(){
     dashboardBenchmark:dbBenchmark,
     dashboard52wHighs:db52wHighs,
     dividendHistory:divHistory,
-    dividendSettings:divSettings
+    dividendSettings:divSettings,
+    frameworkData:fwData,
+    reviewsData:rvData
   };
   let body=payload;
   if(_encPass&&isEncryptionEnabled()){
@@ -6683,6 +7243,8 @@ async function cloudLoad(){
       if(cloud.dashboard52wHighs&&typeof cloud.dashboard52wHighs==='object'){db52wHighs=cloud.dashboard52wHighs;saveDash52wHighs()}
       if(cloud.dividendHistory&&typeof cloud.dividendHistory==='object'){divHistory=cloud.dividendHistory;saveDividendHistory()}
       if(cloud.dividendSettings&&typeof cloud.dividendSettings==='object'){Object.assign(divSettings,cloud.dividendSettings);saveDivSettings()}
+      if(cloud.frameworkData&&typeof cloud.frameworkData==='object'){fwData=cloud.frameworkData;saveFramework()}
+      if(cloud.reviewsData&&typeof cloud.reviewsData==='object'){rvData=cloud.reviewsData;saveReviews()}
       localStorage.setItem('sync_ts',String(cloud.ts));
       lastSyncTs=cloud.ts;
       console.log('Cloud sync loaded',new Date(cloud.ts).toLocaleTimeString());
@@ -6709,6 +7271,8 @@ async function autoLoad(){
   loadDash52wHighs();
   loadDividendHistory();
   loadDivSettings();
+  loadFramework();
+  loadReviews();
   initTodoCounter();
   const l=localStorage.getItem('valuation_last_v2');
   if(l){try{loadData(JSON.parse(l))}catch(e){}}
@@ -6719,6 +7283,8 @@ async function autoLoad(){
     const vis=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
     if(vis==='portfolio')renderPortfolioOverview();
     if(vis==='dashboard')renderDashboard();
+    if(vis==='framework')renderFramework();
+    if(vis==='reviews')renderReviews();
   }
   const bcSel=document.getElementById('pf-base-currency');
   if(bcSel)bcSel.value=pfExchangeRates.baseCurrency||'HUF';
@@ -6760,9 +7326,13 @@ const _origSaveDivHist=saveDividendHistory;
 saveDividendHistory=function(){_origSaveDivHist();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 const _origSaveDivSettings=saveDivSettings;
 saveDivSettings=function(){_origSaveDivSettings();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveFramework=saveFramework;
+saveFramework=function(){_origSaveFramework();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveReviews=saveReviews;
+saveReviews=function(){_origSaveReviews();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 
 document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
-window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks();saveResearchNotes();savePortfolioAccounts();savePortfolioPositions();savePortfolioTransactions();savePortfolioSnapshots();saveExchangeRates();saveDashTodos();saveDashFiSettings();saveDashBenchmark();saveDash52wHighs();saveDividendHistory();saveDivSettings()});
+window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks();saveResearchNotes();savePortfolioAccounts();savePortfolioPositions();savePortfolioTransactions();savePortfolioSnapshots();saveExchangeRates();saveDashTodos();saveDashFiSettings();saveDashBenchmark();saveDash52wHighs();saveDividendHistory();saveDivSettings();saveFramework();saveReviews()});
 window.addEventListener('load',()=>{
   if(isEncryptionEnabled()){
     document.getElementById('lock-screen').style.display='flex';
