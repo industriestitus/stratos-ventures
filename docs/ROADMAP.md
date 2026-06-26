@@ -147,8 +147,11 @@ Status: COMPLETE (2026-06-26)
 - [x] Markdown export (notes + framework)
 - [x] QA: 6 bugs fixed (restore rollback, back button routing, CSV escaping, dropdown close, sort mutation, URL revoke)
 
-### Session 2 — TODO
-- [ ] D1 migration: Worker CRUD API endpoints for all tables (schema already in docs/d1-schema.sql)
+### Session 2 — COMPLETE (2026-06-27)
+- [x] D1 migration: Worker CRUD API endpoints for all 21 tables (generic CRUD + batch upsert)
+- [x] Special endpoints: /api/companies/:symbol/full (all child data), /api/notes/search (FTS5), /api/migrate (bulk import)
+- [x] Auth (X-Sync-Key) + CORS (PUT/DELETE) + PRAGMA foreign_keys on all /api/* routes
+- [x] QA: 8 bugs fixed (filtered count, batch text PK, FTS cascade cleanup, migration error handling, D1 bind limits, missing columns)
 
 ### Session 3 — TODO
 - [ ] D1 migration: localStorage → D1 one-time data migration tool
