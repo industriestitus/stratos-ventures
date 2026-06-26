@@ -7137,6 +7137,29 @@ function renderChecklist(ticker){
     h+=`</div>`;
   }
 
+  const relatedReviews=rvData.entries.filter(e=>e.companyTicker===ticker).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  h+=`<div class="cl-hybrid-section">
+    <div class="cl-hybrid-title">📝 Related Reviews <span class="cl-hybrid-count">${relatedReviews.length} review${relatedReviews.length!==1?'s':''}</span></div>
+    <button class="btn btn-primary" onclick="showSection('reviews');setTimeout(()=>openReview('quarterly',null,'${escH(ticker)}'),100)" style="font-size:12px;padding:6px 14px;margin-bottom:8px">+ New Quarterly Review for ${escH(ticker)}</button>`;
+  if(relatedReviews.length){
+    relatedReviews.slice(0,5).forEach(e=>{
+      const answeredCount=Object.values(e.answers||{}).filter(v=>v&&v.trim()).length;
+      const totalCount=(RV_QUESTIONS[e.type]||[]).length;
+      h+=`<div class="rv-entry" onclick="showSection('reviews');setTimeout(()=>openReview('${escH(e.type)}',${e.id}),100)" style="cursor:pointer;margin-bottom:6px">
+        <div class="rv-entry-header">
+          <span class="rv-entry-type rv-entry-type--${escH(e.type)}">${escH(e.type)}</span>
+          <span class="rv-entry-date">${formatNoteDate(e.date)}</span>
+          <span style="font-size:11px;color:var(--text2)">${answeredCount}/${totalCount}</span>
+        </div>
+        ${e.summary?`<div class="rv-entry-summary">${escH(e.summary).substring(0,80)}${e.summary.length>80?'…':''}</div>`:''}
+      </div>`;
+    });
+    if(relatedReviews.length>5)h+=`<div style="color:var(--text2);font-size:11px;margin-top:4px">+${relatedReviews.length-5} more — view in Reviews tab</div>`;
+  }else{
+    h+=`<div style="color:var(--text2);font-size:12px">No reviews for this company yet.</div>`;
+  }
+  h+=`</div>`;
+
   container.innerHTML=h;
 }
 
@@ -7557,7 +7580,7 @@ function renderRvFeed(type){
       <div class="rv-entry-header">
         <span class="rv-entry-type rv-entry-type--${typeLabel}">${typeLabel}</span>
         <span class="rv-entry-date">${formatNoteDate(e.date)}</span>
-        ${e.companyTicker?`<span class="rv-entry-ticker">${escH(e.companyTicker)}</span>`:''}
+        ${e.companyTicker?`<span class="rv-entry-ticker" onclick="event.stopPropagation();showSection('companies');showProfile('${escH(e.companyTicker)}')" style="cursor:pointer" title="Open ${escH(e.companyTicker)} profile">${escH(e.companyTicker)}</span>`:''}
         <span style="font-size:11px;color:var(--text2)">${answeredCount}/${totalCount} answered</span>
         <div class="rv-entry-actions">
           <button onclick="event.stopPropagation();deleteReview(${e.id})" title="Delete">🗑️</button>
@@ -7569,7 +7592,7 @@ function renderRvFeed(type){
   panel.innerHTML=h;
 }
 
-function openReview(type,editId){
+function openReview(type,editId,prefillTicker){
   const modal=document.getElementById('rv-entry-modal');
   const titleEl=document.getElementById('rv-modal-title');
   const typeSelect=document.getElementById('rv-modal-type');
@@ -7591,7 +7614,7 @@ function openReview(type,editId){
     titleEl.textContent='New Review';
     typeSelect.value=type||'weekly';
     dateInput.value=new Date().toISOString().slice(0,10);
-    tickerInput.value='';
+    tickerInput.value=prefillTicker||'';
     summaryInput.value='';
     renderRvQuestions();
   }
