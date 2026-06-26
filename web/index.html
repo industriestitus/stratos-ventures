@@ -1718,6 +1718,38 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
     </div>
   </div>
 
+<div class="card">
+  <div class="card-title">Data Management</div>
+  <p style="color:var(--text2);font-size:12px;margin-bottom:14px">Backup downloads a full snapshot. Restore replaces all data with a backup file.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+    <button class="btn btn-primary" onclick="downloadBackup()">Download Backup</button>
+    <button class="btn btn-secondary" onclick="doRestore()">Restore from Backup</button>
+  </div>
+  <div style="border-top:1px solid var(--border);padding-top:14px">
+    <p style="color:var(--text2);font-size:12px;margin-bottom:10px">Import merges data without replacing. Export saves individual data types.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
+      <button class="btn btn-secondary" onclick="showImportModal()">Import JSON</button>
+      <div style="position:relative;display:inline-block">
+        <button class="btn btn-secondary" onclick="showCsvExportMenu()">Export CSV &#9662;</button>
+        <div id="csv-export-menu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 0;z-index:100;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,.3)">
+          <button onclick="exportCsvPositions();showCsvExportMenu()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer">Positions</button>
+          <button onclick="exportCsvTransactions();showCsvExportMenu()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer">Transactions</button>
+          <button onclick="exportCsvNotes();showCsvExportMenu()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer">Notes</button>
+          <button onclick="exportCsvReviews();showCsvExportMenu()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer">Reviews</button>
+          <button onclick="exportCsvFramework();showCsvExportMenu()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer">Framework</button>
+        </div>
+      </div>
+      <div style="position:relative;display:inline-block">
+        <button class="btn btn-secondary" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">Export Markdown &#9662;</button>
+        <div style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 0;z-index:100;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,.3)">
+          <button onclick="exportMarkdownNotes();this.parentElement.style.display='none'" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer">Notes</button>
+          <button onclick="exportMarkdownFramework();this.parentElement.style.display='none'" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer">Framework</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- end section-settings -->
 
 </main><!-- end main-content -->
@@ -2602,13 +2634,18 @@ function renderSavedStocks(){
 }
 function showExportModal(){
   const s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
-  document.getElementById('export-data').value=JSON.stringify({version:7,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,dashboard52wHighs:db52wHighs,dividendHistory:divHistory,dividendSettings:divSettings,frameworkData:fwData,reviewsData:rvData},null,2);
+  document.getElementById('export-data').value=JSON.stringify({version:SCHEMA_VERSION,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,dashboard52wHighs:db52wHighs,dividendHistory:divHistory,dividendSettings:divSettings,frameworkData:fwData,reviewsData:rvData},null,2);
   document.getElementById('export-modal').classList.add('active');
 }
 function showImportModal(){document.getElementById('import-data').value='';document.getElementById('import-modal').classList.add('active')}
 function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'))}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModals()});
-document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))closeModals()});
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('modal-overlay'))closeModals();
+  const csvMenu=document.getElementById('csv-export-menu');
+  if(csvMenu&&csvMenu.style.display!=='none'&&!e.target.closest('#csv-export-menu')&&!e.target.closest('[onclick*="showCsvExportMenu"]'))csvMenu.style.display='none';
+  document.querySelectorAll('#section-settings [style*="position:absolute"]').forEach(m=>{if(m.style.display!=='none'&&!m.contains(e.target)&&!e.target.nextElementSibling?.contains?.(m))m.style.display='none'});
+});
 function downloadExport(){
   const b=new Blob([document.getElementById('export-data').value],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(b);a.download=(document.getElementById('stockName').value.trim()||'valuation')+'_export.json';a.click();URL.revokeObjectURL(a.href);
@@ -2643,10 +2680,271 @@ function doImport(){
   }catch(e){showToast('Invalid JSON data.','error')}
 }
 
-// Section switching
+// ====== BACKUP / RESTORE / EXPORT ======
+function _gatherAllData(){
+  return{version:SCHEMA_VERSION,format:'backup',exportedAt:new Date().toISOString(),
+    current:getAllData(),savedStocks:JSON.parse(localStorage.getItem('valuation_stocks')||'{}'),
+    researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,
+    portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,
+    dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,
+    dashboard52wHighs:db52wHighs,dividendHistory:divHistory,dividendSettings:divSettings,
+    frameworkData:fwData,reviewsData:rvData};
+}
+
+function downloadBackup(){
+  try{
+    const data=_gatherAllData();
+    const date=new Date().toISOString().slice(0,10);
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='stratos-backup-'+date+'.json';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+    showToast('Backup downloaded','success');
+  }catch(e){showToast('Backup failed: '+e.message,'error')}
+}
+
+function doRestore(){
+  const input=document.createElement('input');
+  input.type='file';input.accept='.json';
+  input.onchange=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{
+      try{
+        const d=JSON.parse(ev.target.result);
+        if(!d.version){showToast('Invalid backup file — no version field','error');return}
+        if(!confirm('This will REPLACE ALL your data with the backup file.\n\nCurrent data will be lost. Continue?'))return;
+        const keepKeys=['enc_salt','enc_verify','enc_recovery','enc_skipped','schema_version','tracker_settings'];
+        const snapshot={};
+        Object.keys(localStorage).forEach(k=>{snapshot[k]=localStorage.getItem(k)});
+        const memSnapshot={tStocks:tStocks,researchNotes,pfAccounts,pfPositions,pfTransactions,pfSnapshots,pfExchangeRates,dbTodos,dbFiSettings,dbBenchmark,db52wHighs,divHistory,divSettings,fwData,rvData};
+        try{
+        const allKeys=Object.keys(localStorage);
+        allKeys.forEach(k=>{if(!keepKeys.includes(k))localStorage.removeItem(k)});
+        tStocks={};researchNotes={journal:[],news:[],market:[],_nextId:1};
+        pfAccounts=[];pfPositions=[];pfTransactions=[];pfSnapshots=[];
+        pfExchangeRates={baseCurrency:'HUF',rates:{},lastFetched:null};
+        dbTodos=[];dbFiSettings={targetAmount:500000,monthlyExpenses:2000,monthlySavings:1000};
+        dbBenchmark={ticker:'SPY',prices:[],fetchedAt:null};db52wHighs={};
+        divHistory={};divSettings={taxRate:15,forecastMonths:12,customTaxRates:{}};
+        fwData={principles:[],portfolioRules:[],idealTraits:[],avoidList:[],_nextId:1};
+        rvData={entries:[],_nextId:1};
+        if(d.current)loadData(d.current);
+        if(d.savedStocks)localStorage.setItem('valuation_stocks',JSON.stringify(d.savedStocks));
+        if(d.trackerStocks){tStocks=d.trackerStocks;saveTrackerStocks()}
+        if(d.researchNotes){researchNotes=d.researchNotes;saveResearchNotes()}
+        if(d.portfolioAccounts&&Array.isArray(d.portfolioAccounts)){pfAccounts=d.portfolioAccounts;savePortfolioAccounts()}
+        if(d.portfolioPositions&&Array.isArray(d.portfolioPositions)){pfPositions=d.portfolioPositions;savePortfolioPositions()}
+        if(d.portfolioTransactions&&Array.isArray(d.portfolioTransactions)){pfTransactions=d.portfolioTransactions;savePortfolioTransactions()}
+        if(d.portfolioSnapshots&&Array.isArray(d.portfolioSnapshots)){pfSnapshots=d.portfolioSnapshots;savePortfolioSnapshots()}
+        if(d.portfolioExchangeRates){pfExchangeRates=d.portfolioExchangeRates;saveExchangeRates()}
+        if(d.dashboardTodos&&Array.isArray(d.dashboardTodos)){dbTodos=d.dashboardTodos;saveDashTodos()}
+        if(d.dashboardFiSettings&&typeof d.dashboardFiSettings==='object'){dbFiSettings=d.dashboardFiSettings;saveDashFiSettings()}
+        if(d.dashboardBenchmark&&typeof d.dashboardBenchmark==='object'){dbBenchmark=d.dashboardBenchmark;saveDashBenchmark()}
+        if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs()}
+        if(d.dividendHistory&&typeof d.dividendHistory==='object'){divHistory=d.dividendHistory;saveDividendHistory()}
+        if(d.dividendSettings&&typeof d.dividendSettings==='object'){divSettings=d.dividendSettings;saveDivSettings()}
+        if(d.frameworkData&&typeof d.frameworkData==='object'){fwData=d.frameworkData;fwData._nextId=Math.max(fwData._nextId||0,...(fwData.principles||[]).map(x=>x.id||0),...(fwData.portfolioRules||[]).map(x=>x.id||0),...(fwData.idealTraits||[]).map(x=>x.id||0),...(fwData.avoidList||[]).map(x=>x.id||0),0)+1;saveFramework()}
+        if(d.reviewsData&&typeof d.reviewsData==='object'){rvData=d.reviewsData;rvData._nextId=Math.max(rvData._nextId||0,...(rvData.entries||[]).map(x=>x.id||0),0)+1;saveReviews()}
+        localStorage.setItem('schema_version',String(SCHEMA_VERSION));
+        showToast('Backup restored successfully!','success');
+        recalcAll();renderSavedStocks();renderTracker();renderResearch();
+        handleRoute();
+        }catch(restoreErr){
+          Object.keys(localStorage).forEach(k=>localStorage.removeItem(k));
+          Object.entries(snapshot).forEach(([k,v])=>localStorage.setItem(k,v));
+          tStocks=memSnapshot.tStocks;researchNotes=memSnapshot.researchNotes;
+          pfAccounts=memSnapshot.pfAccounts;pfPositions=memSnapshot.pfPositions;
+          pfTransactions=memSnapshot.pfTransactions;pfSnapshots=memSnapshot.pfSnapshots;
+          pfExchangeRates=memSnapshot.pfExchangeRates;dbTodos=memSnapshot.dbTodos;
+          dbFiSettings=memSnapshot.dbFiSettings;dbBenchmark=memSnapshot.dbBenchmark;
+          db52wHighs=memSnapshot.db52wHighs;divHistory=memSnapshot.divHistory;
+          divSettings=memSnapshot.divSettings;fwData=memSnapshot.fwData;rvData=memSnapshot.rvData;
+          showToast('Restore failed — original data preserved: '+restoreErr.message,'error');
+        }
+      }catch(e){showToast('Restore failed: '+e.message,'error')}
+    };
+    r.onerror=()=>showToast('Could not read file','error');
+    r.readAsText(f);
+  };
+  input.click();
+}
+
+// CSV helpers
+function _csvEscape(v){
+  const s=String(v??'');
+  if(s.includes(',')||s.includes('"')||s.includes('\n')||s.includes('\r'))return'"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+function _csvRow(vals){return vals.map(_csvEscape).join(',')}
+function _downloadCsv(filename,headers,rows){
+  const bom='﻿';
+  const csv=bom+_csvRow(headers)+'\n'+rows.map(r=>_csvRow(r)).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=filename;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+}
+
+function exportCsvPositions(){
+  const headers=['Ticker','Account','Shares','Avg Cost','Currency','Created'];
+  const rows=pfPositions.map(p=>{
+    const acc=pfAccounts.find(a=>a.id===p.accountId);
+    return[p.ticker,acc?acc.name:'',p.shares,p.avgCost,acc?acc.currency:'',p.createdAt||''];
+  });
+  _downloadCsv('stratos-positions.csv',headers,rows);
+}
+
+function exportCsvTransactions(){
+  const headers=['Date','Ticker','Account','Type','Shares','Price/Share','Total','Fees','Currency','Notes'];
+  const rows=pfTransactions.map(t=>{
+    const acc=pfAccounts.find(a=>a.id===t.accountId);
+    return[t.date,t.ticker,acc?acc.name:'',t.type,t.shares,t.pricePerShare,t.totalAmount,t.fees||0,t.currency||'',t.notes||''];
+  });
+  _downloadCsv('stratos-transactions.csv',headers,rows);
+}
+
+function exportCsvNotes(){
+  const headers=['Date','Type','Ticker','Title','Content','Source','URL'];
+  const rows=[];
+  ['journal','news','market'].forEach(type=>{
+    (researchNotes[type]||[]).forEach(n=>{
+      rows.push([n.date||'',type,n.ticker||'',n.title||'',n.content||'',n.sourceName||n.source||'',n.sourceUrl||'']);
+    });
+  });
+  Object.entries(tStocks).forEach(([ticker,s])=>{
+    (s.notes||[]).forEach(n=>{
+      rows.push([n.date||'','earnings',ticker,n.title||n.quarter||'',n.content||'','','']);
+    });
+  });
+  _downloadCsv('stratos-notes.csv',headers,rows);
+}
+
+function exportCsvReviews(){
+  const headers=['Date','Type','Ticker','Summary','Answers'];
+  const rows=(rvData.entries||[]).map(e=>{
+    const ans=e.answers?Object.entries(e.answers).map(([k,v])=>k+': '+v).join(' | '):'';
+    return[e.date||'',e.type||'',e.companyTicker||'',e.summary||'',ans];
+  });
+  _downloadCsv('stratos-reviews.csv',headers,rows);
+}
+
+function exportCsvFramework(){
+  const headers=['Category','Title','Content'];
+  const rows=[];
+  (fwData.principles||[]).forEach(p=>rows.push(['Principle',p.title||'',p.content||'']));
+  (fwData.portfolioRules||[]).forEach(p=>rows.push(['Portfolio Rule',p.title||'',p.content||'']));
+  (fwData.idealTraits||[]).forEach(p=>rows.push(['Ideal Trait',p.title||'',p.content||'']));
+  (fwData.avoidList||[]).forEach(p=>rows.push(['Avoid',p.title||'',p.content||'']));
+  _downloadCsv('stratos-framework.csv',headers,rows);
+}
+
+function showCsvExportMenu(){
+  const el=document.getElementById('csv-export-menu');
+  if(el)el.style.display=el.style.display==='none'?'':'none';
+}
+
+// Markdown export
+function exportMarkdownNotes(){
+  try{
+    let md='# Stratos Ventures — Notes Export\n\n';
+    md+='> Exported: '+new Date().toISOString().slice(0,10)+'\n\n';
+    const types=[
+      {key:'journal',label:'Investment Journal'},
+      {key:'news',label:'News Notes'},
+      {key:'market',label:'Market Journal'}
+    ];
+    types.forEach(({key,label})=>{
+      const notes=researchNotes[key]||[];
+      if(!notes.length)return;
+      md+='## '+label+'\n\n';
+      notes.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(n=>{
+        md+='### '+(n.date||'No date');
+        if(n.ticker)md+=' — '+n.ticker;
+        md+='\n\n';
+        if(n.title)md+='**'+n.title+'**\n\n';
+        if(n.content)md+=n.content+'\n\n';
+        if(n.sourceName||n.sourceUrl)md+='_Source: '+(n.sourceName||'')+(n.sourceUrl?' ('+n.sourceUrl+')':'')+'_\n\n';
+        md+='---\n\n';
+      });
+    });
+    // Company earnings notes
+    const earningsNotes=[];
+    Object.entries(tStocks).forEach(([ticker,s])=>{
+      (s.notes||[]).forEach(n=>earningsNotes.push({...n,ticker}));
+    });
+    if(earningsNotes.length){
+      md+='## Earnings Notes\n\n';
+      earningsNotes.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(n=>{
+        md+='### '+(n.date||'No date')+' — '+n.ticker;
+        if(n.quarter)md+=' ('+n.quarter+')';
+        md+='\n\n';
+        if(n.content)md+=n.content+'\n\n';
+        md+='---\n\n';
+      });
+    }
+    const date=new Date().toISOString().slice(0,10);
+    const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='stratos-notes-'+date+'.md';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+    showToast('Notes exported as Markdown','success');
+  }catch(e){showToast('Markdown export failed: '+e.message,'error')}
+}
+
+function exportMarkdownFramework(){
+  try{
+    let md='# Stratos Ventures — Investment Framework\n\n';
+    md+='> Exported: '+new Date().toISOString().slice(0,10)+'\n\n';
+    const sections=[
+      {key:'principles',label:'Investment Principles'},
+      {key:'portfolioRules',label:'Portfolio Rules'},
+      {key:'idealTraits',label:'Ideal Company Traits'},
+      {key:'avoidList',label:'What I Avoid / Red Flags'}
+    ];
+    sections.forEach(({key,label})=>{
+      const items=fwData[key]||[];
+      if(!items.length)return;
+      md+='## '+label+'\n\n';
+      items.forEach(item=>{
+        md+='### '+((item.title||'Untitled'))+'\n\n';
+        if(item.content)md+=item.content+'\n\n';
+      });
+    });
+    const date=new Date().toISOString().slice(0,10);
+    const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='stratos-framework-'+date+'.md';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),10000);
+    showToast('Framework exported as Markdown','success');
+  }catch(e){showToast('Markdown export failed: '+e.message,'error')}
+}
+
+// Data versioning
+const SCHEMA_VERSION=8;
+const MIGRATIONS=[];
+MIGRATIONS[7]=function(){};
+
+function runMigrations(){
+  let v=parseInt(localStorage.getItem('schema_version')||'7');
+  if(v>=SCHEMA_VERSION)return;
+  for(;v<SCHEMA_VERSION;v++){
+    if(MIGRATIONS[v]){
+      try{MIGRATIONS[v]()}catch(e){console.error('Migration v'+v+' failed:',e);showToast('Data migration failed','error');return}
+    }
+  }
+  localStorage.setItem('schema_version',String(SCHEMA_VERSION));
+}
+
+// Section switching & hash-based routing
 const SECTIONS=['dashboard','companies','portfolio','research','framework','reviews','settings'];
+let _routingInProgress=false;
 
 function showSection(name){
+  if(!_routingInProgress&&SECTIONS.includes(name)){
+    window.location.hash='#'+name;
+    return;
+  }
   SECTIONS.forEach(s=>{
     const el=document.getElementById('section-'+s);
     if(el)el.style.display=s===name?'':'none';
@@ -2673,6 +2971,34 @@ function showSection(name){
   if(name==='framework')renderFramework();
   if(name==='reviews')renderReviews();
 }
+
+function handleRoute(){
+  const hash=window.location.hash.slice(1)||'companies';
+  _routingInProgress=true;
+  if(hash.startsWith('company/')){
+    const ticker=decodeURIComponent(hash.slice(8));
+    showSection('companies');
+    if(tStocks[ticker]){
+      showProfile(ticker);
+    }else{
+      showToast('Company not found: '+ticker,'warning');
+    }
+  }else if(SECTIONS.includes(hash)){
+    if(profileTicker){
+      Object.values(cpHistCharts).forEach(c=>{if(c)c.destroy()});
+      cpHistCharts={};
+      profileTicker=null;
+      document.getElementById('company-profile').style.display='none';
+      document.querySelector('.company-tabs').style.display='';
+    }
+    showSection(hash);
+  }else{
+    showSection('companies');
+  }
+  _routingInProgress=false;
+}
+
+window.addEventListener('hashchange',handleRoute);
 
 function switchCompanyTab(name){
   ['calculator','tracker','charts'].forEach(t=>{
@@ -2856,7 +3182,7 @@ function renderPositions(){
     if(!isNaN(cost))totalCost+=cost;
     if(mktVal!=null&&!isNaN(mktVal))totalValue+=mktVal;
     const pnlClass=pnl!=null?(pnl>=0?'pf-positive':'pf-negative'):'';
-    const tickerLink=tStocks[pos.ticker]?`onclick="showSection('companies');showProfile('${escH(pos.ticker)}')" class="pf-pos-ticker"`:'class="pf-pos-ticker"';
+    const tickerLink=tStocks[pos.ticker]?`onclick="showProfile('${escH(pos.ticker)}')" class="pf-pos-ticker"`:'class="pf-pos-ticker"';
     return`<tr>
       <td><span ${tickerLink}>${escH(pos.ticker||'—')}</span><div class="pf-pos-name">${escH(pos.name||'')}</div></td>
       <td>${escH(getAccountName(pos.accountId))}</td>
@@ -3913,7 +4239,7 @@ function renderDbAlerts(){
   alerts.sort((a,b)=>a.sev==='danger'&&b.sev!=='danger'?-1:b.sev==='danger'&&a.sev!=='danger'?1:a.ticker.localeCompare(b.ticker));
   el.innerHTML=alerts.map(a=>`<div class="db-alert ${a.sev}">
     <span class="db-alert-icon">${a.sev==='danger'?'&#9888;':'&#9432;'}</span>
-    <span class="db-alert-ticker" onclick="showSection('companies');showProfile('${escH(a.ticker)}')">${escH(a.ticker)}</span>
+    <span class="db-alert-ticker" onclick="showProfile('${escH(a.ticker)}')">${escH(a.ticker)}</span>
     <span class="db-alert-msg">${escH(a.msg)}</span>
     <span class="db-alert-val">${escH(String(a.value))}</span>
   </div>`).join('');
@@ -4042,7 +4368,7 @@ function renderDbDipFinder(){
   let html='<table class="db-dip-table"><thead><tr><th>Ticker</th><th>Price</th><th>52w High</th><th>Dip</th></tr></thead><tbody>';
   dips.slice(0,15).forEach(d=>{
     const cls=d.dipPct<=-20?'negative':'warn';
-    html+=`<tr><td class="dip-ticker" onclick="showSection('companies');showProfile('${escH(d.ticker)}')">${escH(d.ticker)}</td>
+    html+=`<tr><td class="dip-ticker" onclick="showProfile('${escH(d.ticker)}')">${escH(d.ticker)}</td>
       <td>${d.price.toFixed(2)}</td><td>${d.high52.toFixed(2)}</td>
       <td class="${cls}">${d.dipPct.toFixed(1)}%</td></tr>`;
   });
@@ -4191,7 +4517,7 @@ function renderDbTodoSummary(){
 
   Object.entries(groups).forEach(([source,items])=>{
     const isCompany=items[0].type==='company';
-    html+=`<div class="db-todo-group-title" ${isCompany?`onclick="showSection('companies');showProfile('${escH(source)}')" style="cursor:pointer"`:''}>
+    html+=`<div class="db-todo-group-title" ${isCompany?`onclick="showProfile('${escH(source)}')" style="cursor:pointer"`:''}>
       ${escH(source)}</div>`;
     items.forEach(t=>{
       const overdue=t.due&&t.due<today;
@@ -4282,7 +4608,7 @@ function renderResearchEntry(e){
   const dateStr=e.date?formatNoteDate(e.date):'';
   const typeBadge=`<span class="research-entry-type research-entry-type--${escH(t)}">${escH(t)}</span>`;
   let tickerBadge='';
-  if(e.ticker)tickerBadge=`<a class="research-entry-ticker" onclick="showSection('companies');showProfile('${escH(e.ticker)}')">${escH(e.ticker)}</a>`;
+  if(e.ticker)tickerBadge=`<a class="research-entry-ticker" onclick="showProfile('${escH(e.ticker)}')">${escH(e.ticker)}</a>`;
   let actionBadge='';
   if(t==='journal'&&e.action&&e.action!=='note')actionBadge=`<span class="research-entry-action research-entry-action--${escH(e.action)}">${escH(e.action)}</span>`;
   const pinnedClass=e.pinned?'pinned-entry':'';
@@ -4658,7 +4984,7 @@ function searchNotes(query){
     if(e._companyNote){
       const label=e._type==='thesis'?'Investment Thesis':'Research Notes';
       const preview=highlightSnippet(e.content,query,120);
-      return`<div class="research-entry" onclick="showSection('companies');showProfile('${escH(e.ticker)}');setTimeout(()=>switchProfileTab('notes'),100)" style="cursor:pointer"><div class="research-entry-header"><span class="research-entry-type research-entry-type--journal">${label}</span><a class="research-entry-ticker">${escH(e.ticker)}</a></div><div class="research-entry-body" style="font-size:12px">${preview}</div></div>`;
+      return`<div class="research-entry" onclick="showProfile('${escH(e.ticker)}');setTimeout(()=>switchProfileTab('notes'),100)" style="cursor:pointer"><div class="research-entry-header"><span class="research-entry-type research-entry-type--journal">${label}</span><a class="research-entry-ticker">${escH(e.ticker)}</a></div><div class="research-entry-body" style="font-size:12px">${preview}</div></div>`;
     }
     return renderResearchEntry(e);
   }).join('');
@@ -4729,6 +5055,17 @@ function showProfile(ticker){
   const s=tStocks[ticker];
   if(!s)return;
   profileTicker=ticker;
+  if(!_routingInProgress){
+    const target='#company/'+encodeURIComponent(ticker);
+    if(window.location.hash===target){
+      _routingInProgress=true;
+      showProfile(ticker);
+      _routingInProgress=false;
+    }else{
+      window.location.hash=target;
+    }
+    return;
+  }
   document.querySelector('.company-tabs').style.display='none';
   document.querySelectorAll('.company-panel').forEach(p=>p.style.display='none');
   const prof=document.getElementById('company-profile');
@@ -5043,6 +5380,7 @@ function closeProfile(){
   document.getElementById('company-profile').style.display='none';
   document.querySelector('.company-tabs').style.display='';
   switchCompanyTab('tracker');
+  if(!_routingInProgress)window.location.hash='#companies';
 }
 
 // Pipeline & Company Type
@@ -5986,7 +6324,7 @@ function renderDivBreakdownTable(breakdown){
   }
   body.innerHTML=sorted.map(b=>{
     const freqCls='div-freq-'+(b.frequency||'unknown').replace(/\s/g,'-');
-    return `<tr style="cursor:pointer" onclick="showSection('companies');showProfile('${escH(b.ticker)}')">
+    return `<tr style="cursor:pointer" onclick="showProfile('${escH(b.ticker)}')">
       <td><strong>${escH(b.ticker)}</strong></td>
       <td class="num">${b.shares.toLocaleString()}</td>
       <td class="num">${b.annualDPS.toFixed(4)}</td>
@@ -8187,7 +8525,7 @@ function renderRvFeed(type){
       <div class="rv-entry-header">
         <span class="rv-entry-type rv-entry-type--${typeLabel}">${typeLabel}</span>
         <span class="rv-entry-date">${formatNoteDate(e.date)}</span>
-        ${e.companyTicker?`<span class="rv-entry-ticker" onclick="event.stopPropagation();showSection('companies');showProfile('${escH(e.companyTicker)}')" style="cursor:pointer" title="Open ${escH(e.companyTicker)} profile">${escH(e.companyTicker)}</span>`:''}
+        ${e.companyTicker?`<span class="rv-entry-ticker" onclick="event.stopPropagation();showProfile('${escH(e.companyTicker)}')" style="cursor:pointer" title="Open ${escH(e.companyTicker)} profile">${escH(e.companyTicker)}</span>`:''}
         <span style="font-size:11px;color:var(--text2)">${answeredCount}/${totalCount} answered</span>
         <div class="rv-entry-actions">
           <button onclick="event.stopPropagation();deleteReview(${e.id})" title="Delete">🗑️</button>
@@ -8468,6 +8806,7 @@ async function cloudLoad(){
 // Auto save/load
 async function autoLoad(){
   if(typeof marked!=='undefined')marked.setOptions({breaks:true,gfm:true});
+  runMigrations();
   loadTrackerSettings();
   loadTrackerStocks();
   loadResearchNotes();
@@ -8501,6 +8840,7 @@ async function autoLoad(){
   if(bcSel)bcSel.value=pfExchangeRates.baseCurrency||'HUF';
   const rateStatus=document.getElementById('pf-rate-status');
   if(rateStatus&&pfExchangeRates.lastFetched)rateStatus.textContent='Last: '+new Date(pfExchangeRates.lastFetched).toLocaleDateString();
+  handleRoute();
 }
 function autoSave(){
   localStorage.setItem('valuation_last_v2',JSON.stringify(getAllData()));

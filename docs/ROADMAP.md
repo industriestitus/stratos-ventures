@@ -139,16 +139,20 @@ Status: COMPLETE (2026-06-26)
 ## Phase 9: Export, Polish & D1 Migration (2-3 sessions)
 > Full data portability, UI polish, and server-side database migration.
 
-- [ ] JSON full backup/restore (unified: calculator + tracker + notes in one file)
-- [ ] CSV export (positions, transactions)
-- [ ] Excel export (multi-sheet)
-- [ ] Markdown export (notes, journal, analysis)
-- [ ] CSV import for positions
-- [ ] Hash-based routing with browser back/forward button support
-- [ ] Data versioning & migration system (schema version in localStorage, auto-upgrade on load)
+### Session 1 — COMPLETE (2026-06-27)
+- [x] Hash-based routing with browser back/forward button support (#section + #company/TICKER)
+- [x] Data versioning & migration system (SCHEMA_VERSION=8, MIGRATIONS array, auto-upgrade on load)
+- [x] JSON full backup/restore (v8 format, restore=overwrite + import=merge, Data Management UI in Settings)
+- [x] CSV export (5 files: positions, transactions, notes, reviews, framework — UTF-8 BOM)
+- [x] Markdown export (notes + framework)
+- [x] QA: 6 bugs fixed (restore rollback, back button routing, CSV escaping, dropdown close, sort mutation, URL revoke)
+
+### Session 2 — TODO
 - [ ] D1 migration: Worker CRUD API endpoints for all tables (schema already in docs/d1-schema.sql)
+
+### Session 3 — TODO
 - [ ] D1 migration: localStorage → D1 one-time data migration tool
-- [ ] D1 migration: Switch app to read/write D1 via Worker API (localStorage as offline cache)
+- [ ] D1 migration: Switch app to read/write D1 via Worker API (D1 only, no offline)
 
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
