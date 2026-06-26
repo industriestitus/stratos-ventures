@@ -314,6 +314,11 @@ async function handleMigrate(body, db, origin) {
   const companyIdMap = {};
   const accountIdMap = {};
 
+  // Clear existing data (FK cascades handle child tables)
+  const clearTables = ['companies','notes','broker_accounts','portfolio_snapshots','exchange_rates','general_todos','framework_entries','reviews','valuations'];
+  for (const t of clearTables) { try { await db.prepare(`DELETE FROM ${t}`).run(); } catch(e) {} }
+  try { await db.prepare("DELETE FROM app_settings WHERE key NOT IN ('schema_version')").run(); } catch(e) {}
+
   // 1. Companies from trackerStocks
   const trackerStocks = body.trackerStocks || {};
   for (const [ticker, s] of Object.entries(trackerStocks)) {
@@ -660,7 +665,7 @@ async function handleApi(path, method, url, request, env, origin) {
             if (item[col] !== undefined) { cols.push(col); vals.push(item[col]); ph.push('?'); }
           }
           if (cols.length) {
-            const r = await db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')})`).bind(...vals).run();
+            const r = await db.prepare(`INSERT OR REPLACE INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')})`).bind(...vals).run();
             results.push({ [pk]: r.meta.last_row_id, action: 'inserted' });
           }
         }
@@ -780,7 +785,7 @@ export default {
 
     // D1 CRUD API: /api/*
     if (path.startsWith('/api/')) {
-      const key = request.headers.get('X-Sync-Key');
+      const key = request.headers.get('X-Sync-Key') || url.searchParams.get('key');
       if (key !== env.SYNC_SECRET) {
         return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
       }

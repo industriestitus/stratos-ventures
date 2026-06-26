@@ -153,9 +153,13 @@ Status: COMPLETE (2026-06-26)
 - [x] Auth (X-Sync-Key) + CORS (PUT/DELETE) + PRAGMA foreign_keys on all /api/* routes
 - [x] QA: 8 bugs fixed (filtered count, batch text PK, FTS cascade cleanup, migration error handling, D1 bind limits, missing columns)
 
-### Session 3 — TODO
-- [ ] D1 migration: localStorage → D1 one-time data migration tool
-- [ ] D1 migration: Switch app to read/write D1 via Worker API (D1 only, no offline)
+### Session 3 — COMPLETE (2026-06-27)
+- [x] API client layer (API object with _fetch, get/post/put/del, scheduleSave, flushAll, sendBeacon)
+- [x] D1 migration tool UI in Settings (test connection, one-click migrate, progress overlay)
+- [x] All 16 load/save function pairs rewritten with D1 API branches
+- [x] autoLoad() async: Phase 1 loads companies (builds ID map), Phase 2 loads all else in parallel
+- [x] beforeunload flushAll with sendBeacon fallback for reliable page-close saves
+- [x] QA: 2 rounds, 20+ bugs fixed (data loss on unload, FK violations, snapshot positions, checklist template mapping, re-migration data clearing, duplicate exchange rates, null company_id filtering)
 
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
