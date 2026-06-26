@@ -473,6 +473,45 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   .pf-account-card{flex-direction:column;align-items:flex-start;gap:10px}
   .pf-summary-bar{flex-direction:column;gap:8px}
 }
+/* Dividends */
+.div-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.div-cal-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.div-cal-header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.div-cal-nav{display:flex;align-items:center;gap:10px}
+.div-cal-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:13px}
+.div-cal-nav button:hover{border-color:var(--accent)}
+.div-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.div-cal-day-hdr{text-align:center;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text2);padding:4px 0}
+.div-cal-day{text-align:center;padding:6px 2px;font-size:12px;color:var(--text2);border-radius:6px;min-height:36px;position:relative}
+.div-cal-day.has-div{background:rgba(116,185,255,.1);color:var(--blue);font-weight:600;cursor:pointer}
+.div-cal-day.has-div:hover{background:rgba(116,185,255,.2)}
+.div-cal-day.today{border:1px solid var(--accent)}
+.div-cal-day.empty{opacity:.3}
+.div-cal-dot{width:5px;height:5px;border-radius:50%;background:var(--blue);margin:2px auto 0}
+.div-cal-tooltip{position:absolute;z-index:100;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:12px;min-width:140px;text-align:left;box-shadow:0 4px 12px rgba(0,0,0,.3);left:50%;transform:translateX(-50%);top:100%}
+.div-freq-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase}
+.div-freq-quarterly{background:rgba(116,185,255,.15);color:var(--blue)}
+.div-freq-monthly{background:rgba(0,184,148,.15);color:var(--green)}
+.div-freq-semi-annual{background:rgba(253,203,110,.15);color:var(--orange)}
+.div-freq-annual{background:rgba(162,155,254,.15);color:var(--accent)}
+.div-freq-unknown{background:rgba(139,144,165,.15);color:var(--text2)}
+.div-table{width:100%;border-collapse:collapse;font-size:13px}
+.div-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text2);background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer}
+.div-table th.num{text-align:right}
+.div-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.div-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+.div-table tr:hover{background:var(--surface2)}
+.div-table tr:last-child td{border-bottom:none}
+.div-settings-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.div-settings-row label{font-size:12px;color:var(--text2)}
+.div-settings-row input{width:70px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px}
+@media(max-width:768px){
+  .div-summary-grid{grid-template-columns:repeat(2,1fr)}
+  #div-charts-row{grid-template-columns:1fr!important}
+  .div-cal-grid{font-size:11px}
+  .div-table{font-size:12px}
+  .div-table th,.div-table td{padding:6px 6px}
+}
 /* Dashboard */
 .db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
 .db-hero{grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-wrap:wrap;gap:20px;align-items:center}
@@ -1194,6 +1233,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
       <button class="tab" onclick="switchProfileTab('valuation')">Valuation</button>
       <button class="tab" onclick="switchProfileTab('notes')">Notes</button>
       <button class="tab" onclick="switchProfileTab('checklist')">Checklist</button>
+      <button class="tab" onclick="switchProfileTab('dividends')">Dividends</button>
     </div>
     <div id="cp-panel-overview" class="cp-panel active">
       <div id="cp-overview-content"></div>
@@ -1213,6 +1253,9 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
         <p>Investment checklist and due diligence tracker. Coming in Phase 7.</p>
       </div>
     </div>
+    <div id="cp-panel-dividends" class="cp-panel" style="display:none">
+      <div id="cp-dividends-content"></div>
+    </div>
   </div><!-- end company-profile -->
 
 </div><!-- end section-companies -->
@@ -1224,6 +1267,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
     <button class="tab" onclick="switchPortfolioTab('accounts')">Accounts</button>
     <button class="tab" onclick="switchPortfolioTab('positions')">Positions</button>
     <button class="tab" onclick="switchPortfolioTab('transactions')">Transactions</button>
+    <button class="tab" onclick="switchPortfolioTab('dividends')">Dividends</button>
   </div>
 
   <div id="pf-panel-overview">
@@ -1318,6 +1362,56 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
     </div>
     <div id="pf-tx-summary"></div>
     <div id="pf-transactions-list" style="overflow-x:auto"></div>
+  </div>
+
+  <div id="pf-panel-dividends" style="display:none">
+    <div class="pf-header">
+      <h3>Dividend Income</h3>
+      <div class="pf-filters">
+        <div class="div-settings-row" style="margin-bottom:0">
+          <label>Tax %</label>
+          <input type="number" id="div-tax-rate" value="15" min="0" max="100" step="1" onchange="updateDivTaxRate(this.value)">
+        </div>
+        <button class="btn btn-secondary" onclick="fetchAllDividendData()" style="padding:8px 16px;font-size:13px" id="div-fetch-btn">Fetch Data</button>
+      </div>
+    </div>
+    <div id="div-summary-cards" class="div-summary-grid"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px" id="div-charts-row">
+      <div class="card">
+        <div class="card-title">Monthly Income Forecast</div>
+        <div class="chart-container" style="position:relative;height:220px"><canvas id="div-chart-forecast"></canvas></div>
+      </div>
+      <div class="div-cal-wrap">
+        <div class="div-cal-header-row">
+          <div class="card-title" style="margin-bottom:0">Payment Calendar</div>
+          <div class="div-cal-nav">
+            <button onclick="divCalNav(-1)" aria-label="Previous month">&larr;</button>
+            <span id="div-cal-month-label"></span>
+            <button onclick="divCalNav(1)" aria-label="Next month">&rarr;</button>
+          </div>
+        </div>
+        <div id="div-calendar-grid"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Income Breakdown</div>
+      <div style="overflow-x:auto">
+        <table class="div-table" id="div-breakdown-table">
+          <thead><tr>
+            <th onclick="sortDivTable('ticker')">Ticker</th>
+            <th class="num" onclick="sortDivTable('shares')">Shares</th>
+            <th class="num" onclick="sortDivTable('annualDPS')">Annual DPS</th>
+            <th onclick="sortDivTable('frequency')">Freq</th>
+            <th class="num" onclick="sortDivTable('grossIncome')">Gross</th>
+            <th class="num" onclick="sortDivTable('netIncome')">Net</th>
+            <th class="num" onclick="sortDivTable('yieldOnCost')">Yield on Cost</th>
+            <th class="num" onclick="sortDivTable('currentYield')">Current Yield</th>
+            <th class="num" onclick="sortDivTable('growth5y')">5Y Growth</th>
+          </tr></thead>
+          <tbody id="div-breakdown-body"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2243,7 +2337,7 @@ function renderSavedStocks(){
 }
 function showExportModal(){
   const s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
-  document.getElementById('export-data').value=JSON.stringify({version:5,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,dashboard52wHighs:db52wHighs},null,2);
+  document.getElementById('export-data').value=JSON.stringify({version:6,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,dashboard52wHighs:db52wHighs,dividendHistory:divHistory,dividendSettings:divSettings},null,2);
   document.getElementById('export-modal').classList.add('active');
 }
 function showImportModal(){document.getElementById('import-data').value='';document.getElementById('import-modal').classList.add('active')}
@@ -2268,6 +2362,8 @@ function doImport(){
     if(d.dashboardFiSettings&&typeof d.dashboardFiSettings==='object'){Object.assign(dbFiSettings,d.dashboardFiSettings);saveDashFiSettings()}
     if(d.dashboardBenchmark&&typeof d.dashboardBenchmark==='object'){dbBenchmark=d.dashboardBenchmark;saveDashBenchmark()}
     if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs()}
+    if(d.dividendHistory&&typeof d.dividendHistory==='object'){divHistory=d.dividendHistory;saveDividendHistory()}
+    if(d.dividendSettings&&typeof d.dividendSettings==='object'){Object.assign(divSettings,d.dividendSettings);saveDivSettings()}
     closeModals();showToast('Imported!','success');recalcAll();
     renderSavedStocks();renderTracker();renderResearch();
     const vis=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
@@ -2344,7 +2440,7 @@ function savePortfolioTransactions(){
 function pfNextId(arr){if(!arr.length)return 1;let mx=0;for(let i=0;i<arr.length;i++){const id=arr[i].id||0;if(id>mx)mx=id}return mx+1}
 
 function switchPortfolioTab(name){
-  const tabs=['overview','accounts','positions','transactions'];
+  const tabs=['overview','accounts','positions','transactions','dividends'];
   tabs.forEach(t=>{
     const el=document.getElementById('pf-panel-'+t);
     if(el)el.style.display=t===name?'':'none';
@@ -2356,6 +2452,7 @@ function switchPortfolioTab(name){
   if(name==='accounts')renderAccounts();
   if(name==='positions')renderPositions();
   if(name==='transactions')renderTransactions();
+  if(name==='dividends')renderDividendsTab();
 }
 
 // ---- Accounts ----
@@ -4508,7 +4605,7 @@ function showProfile(ticker){
 }
 
 function switchProfileTab(name){
-  ['overview','financials','valuation','notes','checklist'].forEach(t=>{
+  ['overview','financials','valuation','notes','checklist','dividends'].forEach(t=>{
     const el=document.getElementById('cp-panel-'+t);
     if(el){el.style.display=t===name?'':'none';el.classList.toggle('active',t===name)}
   });
@@ -4516,6 +4613,7 @@ function switchProfileTab(name){
     b.classList.toggle('active',b.textContent.toLowerCase()===name);
   });
   if(name==='financials')Object.values(cpHistCharts).forEach(c=>{if(c)c.resize()});
+  if(name==='dividends'&&profileTicker)renderProfileDividends(profileTicker);
 }
 
 function closeProfile(){
@@ -5147,6 +5245,425 @@ function loadTrackerStocks(){
     DEFAULT_TICKERS.forEach(t=>{tStocks[t]={ticker:t,name:TNAMES[t]||t}});
     saveTrackerStocks();
   }
+}
+
+// ======== DIVIDEND MODULE ========
+let divHistory={};
+let divSettings={taxRate:15,forecastMonths:12,customTaxRates:{}};
+let divCalYear=new Date().getFullYear();
+let divCalMonth=new Date().getMonth();
+let divSortCol='netIncome';
+let divSortAsc=false;
+let divForecastChart=null;
+let divProfileChart=null;
+
+function loadDividendHistory(){
+  try{const d=JSON.parse(localStorage.getItem('dividend_history_v1'));if(d&&typeof d==='object')divHistory=d}catch(e){}
+}
+function saveDividendHistory(){
+  try{localStorage.setItem('dividend_history_v1',JSON.stringify(divHistory))}catch(e){showToast('Storage full — could not save dividend data','error')}
+}
+function loadDivSettings(){
+  try{const d=JSON.parse(localStorage.getItem('dividend_settings_v1'));if(d&&typeof d==='object')Object.assign(divSettings,d)}catch(e){}
+}
+function saveDivSettings(){
+  try{localStorage.setItem('dividend_settings_v1',JSON.stringify(divSettings))}catch(e){}
+}
+
+function updateDivTaxRate(val){
+  divSettings.taxRate=Math.max(0,Math.min(100,parseFloat(val)||0));
+  saveDivSettings();
+  renderDividendsTab();
+}
+
+function detectDivFrequency(sorted){
+  if(sorted.length<2)return 'unknown';
+  const intervals=[];
+  for(let i=0;i<Math.min(sorted.length-1,8);i++){
+    const d1=new Date(sorted[i].date),d2=new Date(sorted[i+1].date);
+    intervals.push((d1-d2)/86400000);
+  }
+  const avg=intervals.reduce((a,b)=>a+b,0)/intervals.length;
+  if(avg<45)return 'monthly';
+  if(avg<120)return 'quarterly';
+  if(avg<200)return 'semi-annual';
+  return 'annual';
+}
+
+function calcDivGrowthCAGR(sorted,years){
+  if(sorted.length<2)return null;
+  const now=new Date();
+  const cutoffRecent=new Date(now.getFullYear()-1,now.getMonth(),now.getDate()).toISOString().slice(0,10);
+  const cutoffOld=new Date(now.getFullYear()-years-1,now.getMonth(),now.getDate()).toISOString().slice(0,10);
+  const cutoffOldEnd=new Date(now.getFullYear()-years,now.getMonth(),now.getDate()).toISOString().slice(0,10);
+  const recentAnnual=sorted.filter(d=>d.date>=cutoffRecent).reduce((s,d)=>s+(d.adjDividend||d.dividend||0),0);
+  const oldAnnual=sorted.filter(d=>d.date>=cutoffOld&&d.date<cutoffOldEnd).reduce((s,d)=>s+(d.adjDividend||d.dividend||0),0);
+  if(!oldAnnual||!recentAnnual)return null;
+  return (Math.pow(recentAnnual/oldAnnual,1/years)-1)*100;
+}
+
+function calcDivMetrics(history,ticker){
+  const sorted=[...history].sort((a,b)=>b.date.localeCompare(a.date));
+  const frequency=detectDivFrequency(sorted);
+  const oneYearAgo=new Date(Date.now()-365*86400000).toISOString().slice(0,10);
+  const ttm=sorted.filter(d=>d.date>=oneYearAgo);
+  const annualDPS=ttm.reduce((sum,d)=>sum+(d.adjDividend||d.dividend||0),0);
+  const s=tStocks[ticker];
+  const price=s?.price;
+  const yieldPct=price?(annualDPS/price*100):null;
+  const eps=s?.epsDiluted;
+  const payoutRatio=eps&&eps>0?(annualDPS/eps*100):null;
+  const growthRate1y=calcDivGrowthCAGR(sorted,1);
+  const growthRate3y=calcDivGrowthCAGR(sorted,3);
+  const growthRate5y=calcDivGrowthCAGR(sorted,5);
+  const growthRate10y=calcDivGrowthCAGR(sorted,10);
+  return{yield:yieldPct,payoutRatio,annualDPS,frequency,growthRate1y,growthRate3y,growthRate5y,growthRate10y};
+}
+
+async function fetchDividendHistory(ticker){
+  const data=await fmpFetch('historical-price-full/stock_dividend/'+encodeURIComponent(ticker),{});
+  if(data?.historical?.length){
+    const hist=data.historical.map(d=>({
+      date:d.date,paymentDate:d.paymentDate||d.date,recordDate:d.recordDate||'',
+      declarationDate:d.declarationDate||'',adjDividend:d.adjDividend||d.dividend||0,dividend:d.dividend||0
+    }));
+    const metrics=calcDivMetrics(hist,ticker);
+    divHistory[ticker]={history:hist,...metrics,lastFetched:new Date().toISOString()};
+    saveDividendHistory();
+    return divHistory[ticker];
+  }
+  return null;
+}
+
+async function fetchAllDividendData(){
+  const btn=document.getElementById('div-fetch-btn');
+  if(btn)btn.disabled=true;
+  const tickers=[...new Set(pfPositions.map(p=>p.ticker).filter(Boolean))];
+  const stale=tickers.filter(t=>{
+    const dh=divHistory[t];
+    return !dh||!dh.lastFetched||(Date.now()-new Date(dh.lastFetched).getTime()>86400000);
+  });
+  if(!stale.length){
+    showToast('Dividend data is up to date','success');
+    if(btn)btn.disabled=false;
+    return;
+  }
+  showToast(`Fetching dividends for ${stale.length} ticker(s)...`,'info');
+  let fetched=0;
+  for(const ticker of stale){
+    await fetchDividendHistory(ticker);
+    fetched++;
+    if(btn)btn.textContent=`${fetched}/${stale.length}...`;
+    if(fetched<stale.length)await new Promise(r=>setTimeout(r,350));
+  }
+  if(btn){btn.textContent='Fetch Data';btn.disabled=false}
+  showToast(`Dividend data loaded for ${fetched} ticker(s)`,'success');
+  renderDividendsTab();
+}
+
+function calcPortfolioDividendIncome(){
+  const base=getBaseCurrency();
+  let totalAnnualGross=0,totalAnnualNet=0,totalCost=0,totalValue=0;
+  const breakdown=[];
+  pfPositions.forEach(pos=>{
+    const dh=divHistory[pos.ticker];
+    const shares=parseFloat(pos.shares)||0;
+    const avgCost=parseFloat(pos.avgCost)||0;
+    const annualDPS=dh?.annualDPS||0;
+    if(!annualDPS||!shares)return;
+    const grossIncome=shares*annualDPS;
+    const taxRate=divSettings.customTaxRates[pos.ticker]??divSettings.taxRate;
+    const netIncome=grossIncome*(1-taxRate/100);
+    const cost=shares*avgCost;
+    const yieldOnCost=cost>0?(grossIncome/cost*100):0;
+    const price=tStocks[pos.ticker]?.price||parseFloat(pos.currentPrice)||0;
+    const mktVal=shares*price;
+    const currentYield=mktVal>0?(grossIncome/mktVal*100):0;
+    const cur=pos.currency||'USD';
+    const grossConverted=convertCurrency(grossIncome,cur,base)||grossIncome;
+    const netConverted=convertCurrency(netIncome,cur,base)||netIncome;
+    const costConverted=convertCurrency(cost,cur,base)||cost;
+    const valConverted=convertCurrency(mktVal,cur,base)||mktVal;
+    totalAnnualGross+=grossConverted;
+    totalAnnualNet+=netConverted;
+    totalCost+=costConverted;
+    totalValue+=valConverted;
+    breakdown.push({
+      ticker:pos.ticker,shares,annualDPS,frequency:dh?.frequency||'unknown',
+      grossIncome:grossConverted,netIncome:netConverted,yieldOnCost,currentYield,
+      growth5y:dh?.growthRate5y,currency:cur
+    });
+  });
+  const portfolioYieldOnCost=totalCost>0?(totalAnnualGross/totalCost*100):0;
+  const portfolioCurrentYield=totalValue>0?(totalAnnualGross/totalValue*100):0;
+  const avgGrowth5y=breakdown.filter(b=>b.growth5y!=null);
+  const weightedGrowth=avgGrowth5y.length?avgGrowth5y.reduce((s,b)=>s+b.growth5y*b.grossIncome,0)/avgGrowth5y.reduce((s,b)=>s+b.grossIncome,0):null;
+  return{totalAnnualGross,totalAnnualNet,portfolioYieldOnCost,portfolioCurrentYield,
+    dividendPayers:breakdown.length,totalPositions:pfPositions.length,
+    avgGrowth5y:weightedGrowth,breakdown};
+}
+
+function calcDividendForecast(months){
+  const base=getBaseCurrency();
+  const result=[];
+  const now=new Date();
+  for(let i=0;i<months;i++){
+    const m=new Date(now.getFullYear(),now.getMonth()+i,1);
+    result.push({month:m.toISOString().slice(0,7),label:m.toLocaleDateString('en',{month:'short',year:'2-digit'}),income:0,byTicker:{}});
+  }
+  pfPositions.forEach(pos=>{
+    const dh=divHistory[pos.ticker];
+    if(!dh?.history?.length||!dh.annualDPS)return;
+    const shares=parseFloat(pos.shares)||0;
+    if(!shares)return;
+    const taxRate=divSettings.customTaxRates[pos.ticker]??divSettings.taxRate;
+    const cur=pos.currency||'USD';
+    const sorted=[...dh.history].sort((a,b)=>b.date.localeCompare(a.date));
+    const recentPayments=sorted.slice(0,12);
+    const payMonths=recentPayments.map(p=>parseInt((p.paymentDate||p.date).slice(5,7)));
+    const uniqueMonths=[...new Set(payMonths)];
+    const latestDPS=recentPayments.length>0?(dh.annualDPS/(uniqueMonths.length||1)):0;
+    result.forEach(slot=>{
+      const slotMonth=parseInt(slot.month.slice(5,7));
+      if(uniqueMonths.includes(slotMonth)){
+        const gross=shares*latestDPS;
+        const net=gross*(1-taxRate/100);
+        const converted=convertCurrency(net,cur,base)||net;
+        slot.income+=converted;
+        slot.byTicker[pos.ticker]=(slot.byTicker[pos.ticker]||0)+converted;
+      }
+    });
+  });
+  return result;
+}
+
+function getPaymentsForMonth(year,month){
+  const monthStr=`${year}-${String(month+1).padStart(2,'0')}`;
+  const payments={};
+  pfPositions.forEach(pos=>{
+    const dh=divHistory[pos.ticker];
+    if(!dh?.history)return;
+    dh.history.forEach(d=>{
+      const pDate=d.paymentDate||d.date;
+      if(pDate.startsWith(monthStr)){
+        const day=parseInt(pDate.slice(8,10));
+        if(!payments[day])payments[day]=[];
+        const shares=parseFloat(pos.shares)||0;
+        payments[day].push({ticker:pos.ticker,amount:(d.adjDividend||d.dividend)*shares});
+      }
+    });
+  });
+  return payments;
+}
+
+function renderDividendsTab(){
+  divCalYear=new Date().getFullYear();
+  divCalMonth=new Date().getMonth();
+  const taxInput=document.getElementById('div-tax-rate');
+  if(taxInput)taxInput.value=divSettings.taxRate;
+  const income=calcPortfolioDividendIncome();
+  const base=getBaseCurrency();
+  const fmt=v=>base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const cards=document.getElementById('div-summary-cards');
+  if(cards)cards.innerHTML=[
+    {label:'Annual Income (Net)',value:base+' '+fmt(income.totalAnnualNet),sub:'Gross: '+base+' '+fmt(income.totalAnnualGross)},
+    {label:'Monthly (Avg)',value:base+' '+fmt(income.totalAnnualNet/12),sub:fmt(income.totalAnnualGross/12)+' gross'},
+    {label:'Yield on Cost',value:income.portfolioYieldOnCost.toFixed(2)+'%',sub:'Current: '+income.portfolioCurrentYield.toFixed(2)+'%'},
+    {label:'Dividend Payers',value:income.dividendPayers+' / '+income.totalPositions,sub:'positions pay dividends'},
+    {label:'Avg Growth (5Y)',value:income.avgGrowth5y!=null?income.avgGrowth5y.toFixed(1)+'%':'N/A',sub:'weighted by income'}
+  ].map(c=>`<div class="pf-summary-card"><div class="pf-summary-card-label">${c.label}</div><div class="pf-summary-card-value">${c.value}</div><div class="pf-summary-card-sub">${c.sub}</div></div>`).join('');
+
+  renderDivForecastChart();
+  renderDivCalendar(divCalYear,divCalMonth);
+  renderDivBreakdownTable(income.breakdown);
+}
+
+function renderDivForecastChart(){
+  const forecast=calcDividendForecast(12);
+  const base=getBaseCurrency();
+  const canvas=document.getElementById('div-chart-forecast');
+  if(!canvas)return;
+  if(divForecastChart){divForecastChart.destroy();divForecastChart=null}
+  const allTickers=[...new Set(forecast.flatMap(f=>Object.keys(f.byTicker)))];
+  const colors=['#6c5ce7','#74b9ff','#00b894','#fdcb6e','#e17055','#a29bfe','#55efc4','#fab1a0','#81ecec','#ff7675'];
+  const datasets=allTickers.map((ticker,i)=>({
+    label:ticker,
+    data:forecast.map(f=>f.byTicker[ticker]||0),
+    backgroundColor:colors[i%colors.length],
+    borderRadius:3
+  }));
+  divForecastChart=new Chart(canvas,{
+    type:'bar',
+    data:{labels:forecast.map(f=>f.label),datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:allTickers.length<=8,labels:{color:'#8b90a5',font:{size:10}}},
+        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${base} ${ctx.raw.toFixed(2)}`}}},
+      scales:{
+        x:{stacked:true,ticks:{color:'#8b90a5',font:{size:10}},grid:{display:false}},
+        y:{stacked:true,ticks:{color:'#8b90a5',font:{size:10},callback:v=>base+' '+v.toLocaleString()},grid:{color:'rgba(139,144,165,.1)'}}
+      }
+    }
+  });
+}
+
+function renderDivCalendar(year,month){
+  const grid=document.getElementById('div-calendar-grid');
+  const label=document.getElementById('div-cal-month-label');
+  if(!grid||!label)return;
+  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  label.textContent=monthNames[month]+' '+year;
+  const firstDay=new Date(year,month,1).getDay();
+  const offset=firstDay===0?6:firstDay-1;
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const today=new Date();
+  const isCurrentMonth=today.getFullYear()===year&&today.getMonth()===month;
+  const payments=getPaymentsForMonth(year,month);
+  const base=getBaseCurrency();
+  let html='<div class="div-cal-grid">';
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{html+=`<div class="div-cal-day-hdr">${d}</div>`});
+  for(let i=0;i<offset;i++)html+='<div class="div-cal-day empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const isToday=isCurrentMonth&&today.getDate()===d;
+    const pays=payments[d];
+    const cls=['div-cal-day'];
+    if(pays)cls.push('has-div');
+    if(isToday)cls.push('today');
+    let tooltip='';
+    if(pays){
+      const details=pays.map(p=>`${p.ticker}: ${base} ${p.amount.toFixed(2)}`).join('<br>');
+      tooltip=`<div class="div-cal-tooltip" style="display:none">${details}</div>`;
+    }
+    html+=`<div class="${cls.join(' ')}" ${pays?`onmouseenter="this.querySelector('.div-cal-tooltip').style.display=''" onmouseleave="this.querySelector('.div-cal-tooltip').style.display='none'"`:''}>${d}${pays?'<div class="div-cal-dot"></div>':''}${tooltip}</div>`;
+  }
+  html+='</div>';
+  grid.innerHTML=html;
+}
+
+function divCalNav(dir){
+  divCalMonth+=dir;
+  if(divCalMonth>11){divCalMonth=0;divCalYear++}
+  if(divCalMonth<0){divCalMonth=11;divCalYear--}
+  renderDivCalendar(divCalYear,divCalMonth);
+}
+
+function renderDivBreakdownTable(breakdown){
+  const body=document.getElementById('div-breakdown-body');
+  if(!body)return;
+  const base=getBaseCurrency();
+  const fmt=v=>base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  let sorted=[...breakdown];
+  sorted.sort((a,b)=>{
+    let va=a[divSortCol],vb=b[divSortCol];
+    if(va==null)va=-Infinity;if(vb==null)vb=-Infinity;
+    if(typeof va==='string')return divSortAsc?va.localeCompare(vb):vb.localeCompare(va);
+    return divSortAsc?va-vb:vb-va;
+  });
+  if(!sorted.length){
+    body.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--text2)">No dividend-paying positions found. Click "Fetch Data" to load dividend history.</td></tr>';
+    return;
+  }
+  body.innerHTML=sorted.map(b=>{
+    const freqCls='div-freq-'+(b.frequency||'unknown').replace(/\s/g,'-');
+    return `<tr style="cursor:pointer" onclick="showProfile('${escH(b.ticker)}')">
+      <td><strong>${escH(b.ticker)}</strong></td>
+      <td class="num">${b.shares.toLocaleString()}</td>
+      <td class="num">${b.annualDPS.toFixed(4)}</td>
+      <td><span class="div-freq-badge ${freqCls}">${b.frequency}</span></td>
+      <td class="num">${fmt(b.grossIncome)}</td>
+      <td class="num">${fmt(b.netIncome)}</td>
+      <td class="num">${b.yieldOnCost.toFixed(2)}%</td>
+      <td class="num">${b.currentYield.toFixed(2)}%</td>
+      <td class="num">${b.growth5y!=null?b.growth5y.toFixed(1)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function sortDivTable(col){
+  if(divSortCol===col)divSortAsc=!divSortAsc;
+  else{divSortCol=col;divSortAsc=col==='ticker'}
+  const income=calcPortfolioDividendIncome();
+  renderDivBreakdownTable(income.breakdown);
+}
+
+// Company Profile Dividends
+function renderProfileDividends(ticker){
+  const c=document.getElementById('cp-dividends-content');
+  if(!c)return;
+  const dh=divHistory[ticker];
+  if(!dh||!dh.history?.length){
+    c.innerHTML=`<div class="card" style="text-align:center;padding:32px">
+      <p style="color:var(--text2);margin-bottom:12px">No dividend data for ${escH(ticker)}.</p>
+      <button class="btn btn-primary" onclick="fetchProfileDividends('${escH(ticker)}')" id="cp-div-fetch-btn">Fetch Dividend History</button>
+    </div>`;
+    return;
+  }
+  const metrics=calcDivMetrics(dh.history,ticker);
+  const fmtP=v=>v!=null?v.toFixed(2)+'%':'N/A';
+  let html=`<div class="div-summary-grid">
+    <div class="pf-summary-card"><div class="pf-summary-card-label">Dividend Yield</div><div class="pf-summary-card-value">${fmtP(metrics.yield)}</div></div>
+    <div class="pf-summary-card"><div class="pf-summary-card-label">Payout Ratio</div><div class="pf-summary-card-value">${fmtP(metrics.payoutRatio)}</div></div>
+    <div class="pf-summary-card"><div class="pf-summary-card-label">Annual DPS (TTM)</div><div class="pf-summary-card-value">${metrics.annualDPS.toFixed(4)}</div></div>
+    <div class="pf-summary-card"><div class="pf-summary-card-label">Frequency</div><div class="pf-summary-card-value"><span class="div-freq-badge div-freq-${(metrics.frequency||'unknown').replace(/\s/g,'-')}">${metrics.frequency}</span></div></div>
+    <div class="pf-summary-card"><div class="pf-summary-card-label">1Y Growth</div><div class="pf-summary-card-value">${fmtP(metrics.growthRate1y)}</div></div>
+    <div class="pf-summary-card"><div class="pf-summary-card-label">3Y Growth</div><div class="pf-summary-card-value">${fmtP(metrics.growthRate3y)}</div></div>
+    <div class="pf-summary-card"><div class="pf-summary-card-label">5Y Growth</div><div class="pf-summary-card-value">${fmtP(metrics.growthRate5y)}</div></div>
+    <div class="pf-summary-card"><div class="pf-summary-card-label">10Y Growth</div><div class="pf-summary-card-value">${fmtP(metrics.growthRate10y)}</div></div>
+  </div>`;
+  html+=`<div class="card" style="margin-bottom:16px">
+    <div class="card-title">Annual Dividend Per Share</div>
+    <div class="chart-container" style="position:relative;height:220px"><canvas id="cp-div-chart"></canvas></div>
+  </div>`;
+  const sorted=[...dh.history].sort((a,b)=>b.date.localeCompare(a.date));
+  html+=`<div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-title" style="margin-bottom:0">Payment History</div>
+      <button class="btn btn-secondary" onclick="fetchProfileDividends('${escH(ticker)}')" style="padding:6px 14px;font-size:12px">Refresh</button>
+    </div>
+    <div style="overflow-x:auto"><table class="div-table"><thead><tr>
+      <th>Ex-Date</th><th>Payment Date</th><th class="num">Amount</th><th class="num">Adj Amount</th>
+    </tr></thead><tbody>`;
+  html+=sorted.slice(0,40).map(d=>`<tr>
+    <td>${d.date}</td><td>${d.paymentDate||'—'}</td>
+    <td class="num">${d.dividend.toFixed(4)}</td><td class="num">${d.adjDividend.toFixed(4)}</td>
+  </tr>`).join('');
+  html+=`</tbody></table></div></div>`;
+  c.innerHTML=html;
+  renderProfileDivChart(ticker,sorted);
+}
+
+function renderProfileDivChart(ticker,sorted){
+  const canvas=document.getElementById('cp-div-chart');
+  if(!canvas)return;
+  if(divProfileChart){divProfileChart.destroy();divProfileChart=null}
+  const byYear={};
+  sorted.forEach(d=>{
+    const yr=d.date.slice(0,4);
+    byYear[yr]=(byYear[yr]||0)+(d.adjDividend||d.dividend||0);
+  });
+  const years=Object.keys(byYear).sort();
+  divProfileChart=new Chart(canvas,{
+    type:'bar',
+    data:{
+      labels:years,
+      datasets:[{label:'DPS',data:years.map(y=>byYear[y]),backgroundColor:'#74b9ff',borderRadius:3}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{color:'#8b90a5',font:{size:10}},grid:{display:false}},
+        y:{ticks:{color:'#8b90a5',font:{size:10}},grid:{color:'rgba(139,144,165,.1)'}}
+      }
+    }
+  });
+}
+
+async function fetchProfileDividends(ticker){
+  const btn=document.getElementById('cp-div-fetch-btn');
+  if(btn){btn.disabled=true;btn.textContent='Loading...'}
+  await fetchDividendHistory(ticker);
+  renderProfileDividends(ticker);
 }
 
 // FMP API
@@ -6105,7 +6622,9 @@ async function cloudSave(){
     dashboardTodos:dbTodos,
     dashboardFiSettings:dbFiSettings,
     dashboardBenchmark:dbBenchmark,
-    dashboard52wHighs:db52wHighs
+    dashboard52wHighs:db52wHighs,
+    dividendHistory:divHistory,
+    dividendSettings:divSettings
   };
   let body=payload;
   if(_encPass&&isEncryptionEnabled()){
@@ -6162,6 +6681,8 @@ async function cloudLoad(){
       if(cloud.dashboardFiSettings&&typeof cloud.dashboardFiSettings==='object'){Object.assign(dbFiSettings,cloud.dashboardFiSettings);saveDashFiSettings()}
       if(cloud.dashboardBenchmark&&typeof cloud.dashboardBenchmark==='object'){dbBenchmark=cloud.dashboardBenchmark;saveDashBenchmark()}
       if(cloud.dashboard52wHighs&&typeof cloud.dashboard52wHighs==='object'){db52wHighs=cloud.dashboard52wHighs;saveDash52wHighs()}
+      if(cloud.dividendHistory&&typeof cloud.dividendHistory==='object'){divHistory=cloud.dividendHistory;saveDividendHistory()}
+      if(cloud.dividendSettings&&typeof cloud.dividendSettings==='object'){Object.assign(divSettings,cloud.dividendSettings);saveDivSettings()}
       localStorage.setItem('sync_ts',String(cloud.ts));
       lastSyncTs=cloud.ts;
       console.log('Cloud sync loaded',new Date(cloud.ts).toLocaleTimeString());
@@ -6186,6 +6707,8 @@ async function autoLoad(){
   loadDashFiSettings();
   loadDashBenchmark();
   loadDash52wHighs();
+  loadDividendHistory();
+  loadDivSettings();
   initTodoCounter();
   const l=localStorage.getItem('valuation_last_v2');
   if(l){try{loadData(JSON.parse(l))}catch(e){}}
@@ -6233,9 +6756,13 @@ const _origSaveDashBench=saveDashBenchmark;
 saveDashBenchmark=function(){_origSaveDashBench();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 const _origSaveDash52w=saveDash52wHighs;
 saveDash52wHighs=function(){_origSaveDash52w();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveDivHist=saveDividendHistory;
+saveDividendHistory=function(){_origSaveDivHist();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveDivSettings=saveDivSettings;
+saveDivSettings=function(){_origSaveDivSettings();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 
 document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
-window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks();saveResearchNotes();savePortfolioAccounts();savePortfolioPositions();savePortfolioTransactions();savePortfolioSnapshots();saveExchangeRates();saveDashTodos();saveDashFiSettings();saveDashBenchmark();saveDash52wHighs()});
+window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks();saveResearchNotes();savePortfolioAccounts();savePortfolioPositions();savePortfolioTransactions();savePortfolioSnapshots();saveExchangeRates();saveDashTodos();saveDashFiSettings();saveDashBenchmark();saveDash52wHighs();saveDividendHistory();saveDivSettings()});
 window.addEventListener('load',()=>{
   if(isEncryptionEnabled()){
     document.getElementById('lock-screen').style.display='flex';

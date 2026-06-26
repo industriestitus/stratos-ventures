@@ -1,5 +1,8 @@
 # Stratos Ventures — Roadmap
 
+## Completed: Phase 6 — Dividend Module
+Status: COMPLETE (2026-06-26)
+
 ## Completed: Phase 5 — Dashboard
 Status: COMPLETE (2026-06-26)
 
@@ -90,11 +93,11 @@ Status: COMPLETE (2026-06-26)
 ## Phase 6: Dividend Module (1 session)
 > Dividend tracking and income forecasting.
 
-- [ ] Dividend history per company (from FMP + Yahoo)
-- [ ] Dividend yield, payout ratio, growth rate
-- [ ] Payment schedule calendar
-- [ ] Monthly/quarterly income forecast
-- [ ] Portfolio total dividend income
+- [x] Dividend history per company (from FMP + Yahoo)
+- [x] Dividend yield, payout ratio, growth rate
+- [x] Payment schedule calendar
+- [x] Monthly/quarterly income forecast
+- [x] Portfolio total dividend income
 
 ## Phase 7: Framework & Reviews (2-3 sessions)
 > Investment principles, checklists, review templates — your "investing operating system."
