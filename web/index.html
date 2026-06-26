@@ -473,6 +473,80 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   .pf-account-card{flex-direction:column;align-items:flex-start;gap:10px}
   .pf-summary-bar{flex-direction:column;gap:8px}
 }
+/* Dashboard */
+.db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+.db-hero{grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;flex-wrap:wrap;gap:20px;align-items:center}
+.db-hero-main{flex:1;min-width:200px}
+.db-hero-label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.db-hero-value{font-size:36px;font-weight:700;color:var(--text);line-height:1.1}
+.db-hero-sub{font-size:13px;color:var(--text2);margin-top:4px}
+.db-hero-metrics{display:flex;flex-wrap:wrap;gap:16px}
+.db-hero-metric{text-align:center;min-width:90px}
+.db-hero-metric .hm-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px}
+.db-hero-metric .hm-value{font-size:18px;font-weight:700;margin-top:2px}
+.db-widget{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.db-widget-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.db-alloc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.db-alloc-item{text-align:center}
+.db-alloc-item .db-alloc-label{font-size:11px;color:var(--text2);margin-bottom:4px}
+.db-alloc-item canvas{max-height:160px}
+.db-metrics-table{width:100%;border-collapse:collapse}
+.db-metrics-table td{padding:8px 6px;font-size:13px;border-bottom:1px solid var(--border)}
+.db-metrics-table td:first-child{color:var(--text2);font-weight:500}
+.db-metrics-table td:last-child{text-align:right;font-weight:600}
+.db-alert{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--surface2);margin-bottom:6px;font-size:13px}
+.db-alert:last-child{margin-bottom:0}
+.db-alert-icon{font-size:16px;flex-shrink:0}
+.db-alert-ticker{font-weight:600;color:var(--accent2);cursor:pointer;min-width:50px}
+.db-alert-msg{flex:1;color:var(--text2)}
+.db-alert-val{font-weight:600;flex-shrink:0}
+.db-alert.danger .db-alert-icon{color:var(--red)}
+.db-alert.danger .db-alert-val{color:var(--red)}
+.db-alert.warning .db-alert-icon{color:var(--orange)}
+.db-alert.warning .db-alert-val{color:var(--orange)}
+.db-no-alerts{text-align:center;padding:20px;color:var(--green);font-size:14px}
+.db-dip-table{width:100%;border-collapse:collapse}
+.db-dip-table th{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;padding:6px;text-align:left;border-bottom:1px solid var(--border)}
+.db-dip-table td{padding:8px 6px;font-size:13px;border-bottom:1px solid var(--border)}
+.db-dip-table .dip-ticker{font-weight:600;color:var(--accent2);cursor:pointer}
+.db-benchmark{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+.db-bench-card{flex:1;min-width:120px;background:var(--surface2);border-radius:8px;padding:14px;text-align:center}
+.db-bench-card .bc-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
+.db-bench-card .bc-value{font-size:20px;font-weight:700}
+.db-fi-progress{display:flex;align-items:center;gap:20px;margin-bottom:16px}
+.db-fi-ring{position:relative;width:120px;height:120px;flex-shrink:0}
+.db-fi-ring svg{width:100%;height:100%}
+.db-fi-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--text)}
+.db-fi-details{flex:1}
+.db-fi-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.db-fi-row:last-child{border-bottom:none}
+.db-fi-row span:first-child{color:var(--text2)}
+.db-fi-row span:last-child{font-weight:600}
+.db-fi-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.db-fi-form .input-group{margin-bottom:0}
+.db-todo-input{display:flex;gap:8px;margin-bottom:10px;align-items:center}
+.db-todo-input input[type=text]{flex:1;padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;font-family:inherit}
+.db-todo-input input[type=text]:focus{border-color:var(--accent)}
+.db-todo-input input[type=date]{padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;font-family:inherit}
+.db-todo-input button{padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
+.db-todo-input button:hover{border-color:var(--accent);color:var(--text)}
+.db-todo-summary{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.db-todo-badge{background:var(--surface2);border-radius:8px;padding:8px 14px;font-size:12px;color:var(--text2)}
+.db-todo-badge strong{font-size:16px;display:block;margin-bottom:2px;color:var(--text)}
+.db-todo-badge.overdue strong{color:var(--red)}
+.db-todo-group-title{font-size:11px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:.3px;margin:10px 0 4px;padding-top:8px;border-top:1px solid var(--border)}
+.db-todo-group-title:first-child{border-top:none;margin-top:0;padding-top:0}
+.db-bench-chart{position:relative;height:220px;margin-top:12px}
+.db-empty{text-align:center;padding:24px;color:var(--text2);font-size:13px}
+@media(max-width:768px){
+  .db-grid{grid-template-columns:1fr}
+  .db-hero{padding:16px}
+  .db-hero-value{font-size:28px}
+  .db-alloc-grid{grid-template-columns:1fr}
+  .db-fi-progress{flex-direction:column;align-items:center}
+  .db-fi-form{grid-template-columns:1fr}
+  .db-benchmark{flex-direction:column}
+}
 /* Toast notifications */
 .toast-container{position:fixed;bottom:24px;right:24px;z-index:500;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .toast{pointer-events:auto;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--text2);border-radius:8px;padding:12px 36px 12px 14px;font-size:13px;color:var(--text);max-width:380px;min-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toast-in .3s ease;position:relative;line-height:1.4}
@@ -673,10 +747,74 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
 
 <!-- ====== SECTION: DASHBOARD (placeholder) ====== -->
 <div class="content" id="section-dashboard" style="display:none">
-  <div class="card placeholder-section">
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
-    <h2>Dashboard</h2>
-    <p>Portfolio overview, alerts, and key metrics at a glance. Coming in Phase 5.</p>
+  <div class="db-grid">
+    <!-- Hero: Portfolio Summary -->
+    <div class="db-hero" id="db-hero">
+      <div class="db-hero-main">
+        <div class="db-hero-label">Portfolio Value</div>
+        <div class="db-hero-value" id="db-total-value">-</div>
+        <div class="db-hero-sub" id="db-total-sub"></div>
+      </div>
+      <div class="db-hero-metrics" id="db-hero-metrics"></div>
+    </div>
+
+    <!-- Allocation Charts -->
+    <div class="db-widget" id="db-alloc-widget">
+      <div class="db-widget-title">Allocation</div>
+      <div class="db-alloc-grid">
+        <div class="db-alloc-item"><div class="db-alloc-label">By Ticker</div><canvas id="db-alloc-ticker"></canvas></div>
+        <div class="db-alloc-item"><div class="db-alloc-label">By Account</div><canvas id="db-alloc-account"></canvas></div>
+        <div class="db-alloc-item"><div class="db-alloc-label">By Type</div><canvas id="db-alloc-type"></canvas></div>
+        <div class="db-alloc-item"><div class="db-alloc-label">By Currency</div><canvas id="db-alloc-currency"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Terry Smith Metrics -->
+    <div class="db-widget" id="db-smith-widget">
+      <div class="db-widget-title">Portfolio Quality (Weighted)</div>
+      <div id="db-smith-content"></div>
+    </div>
+
+    <!-- Red Flag Alerts -->
+    <div class="db-widget" id="db-alerts-widget">
+      <div class="db-widget-title">Red Flag Alerts <span id="db-alerts-count" style="font-size:11px;color:var(--text2);font-weight:400"></span></div>
+      <div id="db-alerts-content"></div>
+    </div>
+
+    <!-- Benchmark -->
+    <div class="db-widget" id="db-benchmark-widget">
+      <div class="db-widget-title">Benchmark (S&P 500) <button onclick="fetchBenchmarkData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit">Refresh</button></div>
+      <div id="db-benchmark-content"></div>
+    </div>
+
+    <!-- Dip Finder -->
+    <div class="db-widget" id="db-dip-widget">
+      <div class="db-widget-title">Dip Finder <button onclick="fetchDipData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit">Refresh</button></div>
+      <div id="db-dip-content"></div>
+    </div>
+
+    <!-- FI Tracker -->
+    <div class="db-widget" id="db-fi-widget">
+      <div class="db-widget-title">Financial Independence</div>
+      <div id="db-fi-content"></div>
+    </div>
+
+    <!-- TODO Summary -->
+    <div class="db-widget" id="db-todo-summary-widget">
+      <div class="db-widget-title">TODO Summary</div>
+      <div id="db-todo-summary-content"></div>
+    </div>
+
+    <!-- General TODO List -->
+    <div class="db-widget" id="db-todo-widget">
+      <div class="db-widget-title">General TODO</div>
+      <div class="db-todo-input">
+        <input type="text" id="db-todo-text" placeholder="New task..." onkeydown="if(event.key==='Enter')addDashTodo()">
+        <input type="date" id="db-todo-due">
+        <button onclick="addDashTodo()">Add</button>
+      </div>
+      <div id="db-todo-list"></div>
+    </div>
   </div>
 </div>
 
@@ -2105,7 +2243,7 @@ function renderSavedStocks(){
 }
 function showExportModal(){
   const s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
-  document.getElementById('export-data').value=JSON.stringify({version:4,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots},null,2);
+  document.getElementById('export-data').value=JSON.stringify({version:5,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,dashboard52wHighs:db52wHighs},null,2);
   document.getElementById('export-modal').classList.add('active');
 }
 function showImportModal(){document.getElementById('import-data').value='';document.getElementById('import-modal').classList.add('active')}
@@ -2126,6 +2264,10 @@ function doImport(){
     if(d.portfolioTransactions&&Array.isArray(d.portfolioTransactions)){pfTransactions=d.portfolioTransactions;savePortfolioTransactions()}
     if(d.portfolioSnapshots&&Array.isArray(d.portfolioSnapshots)){pfSnapshots=d.portfolioSnapshots;savePortfolioSnapshots()}
     if(d.portfolioExchangeRates){pfExchangeRates=d.portfolioExchangeRates;saveExchangeRates()}
+    if(d.dashboardTodos&&Array.isArray(d.dashboardTodos)){dbTodos=d.dashboardTodos;saveDashTodos()}
+    if(d.dashboardFiSettings&&typeof d.dashboardFiSettings==='object'){Object.assign(dbFiSettings,d.dashboardFiSettings);saveDashFiSettings()}
+    if(d.dashboardBenchmark&&typeof d.dashboardBenchmark==='object'){dbBenchmark=d.dashboardBenchmark;saveDashBenchmark()}
+    if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs()}
     closeModals();showToast('Imported!','success');recalcAll()
   }catch(e){showToast('Invalid JSON data.','error')}
 }
@@ -2155,7 +2297,8 @@ function showSection(name){
     if(active&&active.id==='company-panel-charts')initCharts();
   }
   if(name==='research')renderResearch();
-  if(name==='portfolio')renderPortfolioOverview()
+  if(name==='portfolio')renderPortfolioOverview();
+  if(name==='dashboard')renderDashboard();
 }
 
 function switchCompanyTab(name){
@@ -3193,6 +3336,517 @@ function importCsvTransactions(){
   closeModals();
   renderTransactions();
   showToast(`Imported ${imported} transactions${skipped?' ('+skipped+' skipped)':''}`,'success');
+}
+
+// ====== DASHBOARD (Phase 5) ======
+let _dbCharts={};
+let dbTodos=[];
+let dbFiSettings={targetAmount:500000,monthlyExpenses:2000,monthlySavings:1000,assumedReturnRate:8};
+let dbBenchmark={ticker:'SPY',prices:[],fetchedAt:null};
+let db52wHighs={};
+
+function loadDashTodos(){try{const d=JSON.parse(localStorage.getItem('dashboard_todos_v1'));if(Array.isArray(d))dbTodos=d}catch(e){}}
+function saveDashTodos(){try{localStorage.setItem('dashboard_todos_v1',JSON.stringify(dbTodos))}catch(e){showToast('Storage full','error')}}
+function loadDashFiSettings(){try{const d=JSON.parse(localStorage.getItem('dashboard_fi_settings_v1'));if(d&&typeof d==='object')Object.assign(dbFiSettings,d)}catch(e){}}
+function saveDashFiSettings(){try{localStorage.setItem('dashboard_fi_settings_v1',JSON.stringify(dbFiSettings))}catch(e){}}
+function loadDashBenchmark(){try{const d=JSON.parse(localStorage.getItem('dashboard_benchmark_v1'));if(d&&typeof d==='object')dbBenchmark=d}catch(e){}}
+function saveDashBenchmark(){try{localStorage.setItem('dashboard_benchmark_v1',JSON.stringify(dbBenchmark))}catch(e){}}
+function loadDash52wHighs(){try{const d=JSON.parse(localStorage.getItem('dashboard_52w_highs_v1'));if(d&&typeof d==='object')db52wHighs=d}catch(e){}}
+function saveDash52wHighs(){try{localStorage.setItem('dashboard_52w_highs_v1',JSON.stringify(db52wHighs))}catch(e){}}
+
+function dbNextId(arr){if(!arr.length)return 1;let mx=0;for(let i=0;i<arr.length;i++){const id=arr[i].id||0;if(id>mx)mx=id}return mx+1}
+
+function dbValClass(v,low,high,invert){
+  if(v==null||isNaN(v))return'';
+  if(invert)return v<=low?'positive':v>=high?'negative':'warn';
+  return v>=high?'positive':v<=low?'negative':'warn';
+}
+
+function renderDashboard(){
+  renderDbPortfolioSummary();
+  renderDbAllocCharts();
+  renderDbSmithMetrics();
+  renderDbAlerts();
+  renderDbBenchmark();
+  renderDbDipFinder();
+  renderDbFiTracker();
+  renderDbTodoSummary();
+  renderDbTodoList();
+}
+
+// ---- 5A: Portfolio Summary ----
+function renderDbPortfolioSummary(){
+  const base=getBaseCurrency();
+  let totalCost=0,totalValue=0,totalDiv=0;
+  pfPositions.forEach(pos=>{
+    const price=getPositionPrice(pos);
+    const shares=parseFloat(pos.shares)||0;
+    const avg=parseFloat(pos.avgCost)||0;
+    totalCost+=convertCurrency(shares*avg,pos.currency||'USD',base)||(shares*avg);
+    const mktVal=price!=null?shares*price:0;
+    totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+  });
+  pfTransactions.filter(t=>t.type==='dividend').forEach(t=>{
+    const amt=parseFloat(t.totalAmount)||0;
+    totalDiv+=convertCurrency(amt,t.currency||'USD',base)||amt;
+  });
+  const pnl=totalValue-totalCost;
+  const pnlPct=totalCost>0?(pnl/totalCost*100):0;
+  const twrData=calcTWR();
+  const xirr=calcXIRR();
+
+  const valEl=document.getElementById('db-total-value');
+  const subEl=document.getElementById('db-total-sub');
+  if(!pfPositions.length){
+    valEl.textContent='No positions yet';
+    valEl.style.fontSize='18px';
+    subEl.textContent='Add positions in the Portfolio tab to see your dashboard.';
+    document.getElementById('db-hero-metrics').innerHTML='';
+    return;
+  }
+  valEl.style.fontSize='';
+  valEl.textContent=formatMoney(totalValue,base);
+
+  let deltaText='';
+  if(pfSnapshots.length){
+    const sorted=[...pfSnapshots].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const lastSnap=sorted[0];
+    const delta=totalValue-lastSnap.totalValue;
+    deltaText=`${delta>=0?'+':''}${formatMoney(delta,base)} since ${lastSnap.date}`;
+  }
+  subEl.textContent=deltaText;
+
+  const metrics=[];
+  metrics.push({label:'P&L',value:(pnl>=0?'+':'')+formatMoney(pnl,base),cls:pnl>=0?'positive':'negative'});
+  metrics.push({label:'P&L %',value:(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%',cls:pnlPct>=0?'positive':'negative'});
+  metrics.push({label:'Dividends',value:formatMoney(totalDiv,base),cls:'positive'});
+  metrics.push({label:'Positions',value:pfPositions.length,cls:''});
+  if(twrData)metrics.push({label:'TWR',value:(twrData.annualized>=0?'+':'')+(twrData.annualized*100).toFixed(1)+'%',cls:twrData.annualized>=0?'positive':'negative'});
+  if(xirr!=null)metrics.push({label:'XIRR',value:(xirr>=0?'+':'')+(xirr*100).toFixed(1)+'%',cls:xirr>=0?'positive':'negative'});
+
+  document.getElementById('db-hero-metrics').innerHTML=metrics.map(m=>`<div class="db-hero-metric"><div class="hm-label">${m.label}</div><div class="hm-value ${m.cls}">${m.value}</div></div>`).join('');
+}
+
+// ---- 5A: Allocation Charts ----
+function renderDbAllocCharts(){
+  if(!pfPositions.length){
+    document.getElementById('db-alloc-widget').style.display='none';
+    return;
+  }
+  document.getElementById('db-alloc-widget').style.display='';
+  const base=getBaseCurrency();
+  const groupKeys=['ticker','account','type','currency'];
+  const text2=getComputedStyle(document.documentElement).getPropertyValue('--text2').trim();
+  const baseColors=['#6c5ce7','#74b9ff','#00b894','#fdcb6e','#e17055','#a29bfe','#55efc4','#ffeaa7','#fab1a0','#81ecec','#dfe6e9','#636e72'];
+
+  groupKeys.forEach(groupBy=>{
+    const groups={};
+    pfPositions.forEach(pos=>{
+      const price=getPositionPrice(pos);
+      const shares=parseFloat(pos.shares)||0;
+      const mktVal=price!=null?shares*price:0;
+      const valInBase=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+      let key;
+      if(groupBy==='ticker')key=pos.ticker||'?';
+      else if(groupBy==='account')key=getAccountName(pos.accountId);
+      else if(groupBy==='type')key=pos.assetType||'other';
+      else key=pos.currency||'USD';
+      groups[key]=(groups[key]||0)+valInBase;
+    });
+    const sorted=Object.entries(groups).sort((a,b)=>b[1]-a[1]);
+    const labels=sorted.map(([k])=>k);
+    const data=sorted.map(([,v])=>v);
+    const colors=baseColors.slice();
+    while(colors.length<data.length)colors.push(`hsl(${(colors.length*47)%360},60%,55%)`);
+
+    const canvasId='db-alloc-'+groupBy;
+    if(_dbCharts[canvasId])_dbCharts[canvasId].destroy();
+    _dbCharts[canvasId]=new Chart(document.getElementById(canvasId),{
+      type:'doughnut',
+      data:{labels,datasets:[{data,backgroundColor:colors.slice(0,data.length),borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${formatMoney(ctx.parsed,base)}`}}},cutout:'60%'}
+    });
+  });
+}
+
+// ---- 5B: Terry Smith Weighted Metrics ----
+function renderDbSmithMetrics(){
+  const el=document.getElementById('db-smith-content');
+  if(!pfPositions.length){el.innerHTML='<div class="db-empty">Add positions to see weighted portfolio metrics.</div>';return}
+
+  const base=getBaseCurrency();
+  let totalValue=0;
+  const posData=[];
+  pfPositions.forEach(pos=>{
+    const price=getPositionPrice(pos);
+    const shares=parseFloat(pos.shares)||0;
+    const mktVal=price!=null?shares*price:0;
+    const valInBase=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+    totalValue+=valInBase;
+    const s=tStocks[pos.ticker];
+    if(s&&valInBase>0){
+      const r=calcStockRatios(s);
+      posData.push({valInBase,s,r});
+    }
+  });
+  if(!posData.length||totalValue<=0){el.innerHTML='<div class="db-empty">No stock data available for owned positions.</div>';return}
+
+  const metricDefs=[
+    {key:'pe',label:'P/E',src:'r',lo:15,hi:30,invert:true},
+    {key:'ps',label:'P/S',src:'r',lo:5,hi:15,invert:true},
+    {key:'pfcf',label:'P/FCF',src:'r',lo:15,hi:30,invert:true},
+    {key:'roe',label:'ROE',src:'s',lo:10,hi:15,invert:false,pct:true},
+    {key:'roic',label:'ROIC',src:'s',lo:10,hi:15,invert:false,pct:true},
+    {key:'grossMargin',label:'Gross Margin',src:'s',lo:30,hi:50,invert:false,pct:true},
+    {key:'operatingMargin',label:'Op. Margin',src:'s',lo:10,hi:20,invert:false,pct:true},
+    {key:'netMargin',label:'Net Margin',src:'s',lo:5,hi:15,invert:false,pct:true},
+  ];
+
+  let html='<table class="db-metrics-table">';
+  metricDefs.forEach(md=>{
+    let weightedSum=0,weightSum=0;
+    posData.forEach(pd=>{
+      const val=md.src==='r'?pd.r[md.key]:pd.s[md.key];
+      if(val!=null&&isFinite(val)){
+        const w=pd.valInBase/totalValue;
+        weightedSum+=w*val;
+        weightSum+=w;
+      }
+    });
+    if(weightSum<=0){html+=`<tr><td>${md.label}</td><td>-</td></tr>`;return}
+    const avg=weightedSum/weightSum;
+    const cls=dbValClass(avg,md.lo,md.hi,md.invert);
+    const display=md.pct?avg.toFixed(1)+'%':avg.toFixed(1);
+    html+=`<tr><td>${md.label}</td><td class="${cls}">${display}</td></tr>`;
+  });
+  html+='</table>';
+  el.innerHTML=html;
+}
+
+// ---- 5B: Red Flag Alerts ----
+function renderDbAlerts(){
+  const el=document.getElementById('db-alerts-content');
+  const countEl=document.getElementById('db-alerts-count');
+  if(!pfPositions.length){el.innerHTML='<div class="db-empty">Add positions to see alerts.</div>';countEl.textContent='';return}
+
+  const ownedTickers=new Set(pfPositions.map(p=>p.ticker));
+  const alerts=[];
+  const checks=[
+    {field:'grossMargin',op:'<',val:20,msg:'Low gross margin',sev:'warning',src:'s'},
+    {field:'operatingMargin',op:'<',val:10,msg:'Low operating margin',sev:'warning',src:'s'},
+    {field:'debtEquity',op:'>',val:1.5,msg:'High leverage',sev:'danger',src:'s'},
+    {field:'revenueGrowth',op:'<',val:0,msg:'Revenue declining',sev:'danger',src:'s'},
+    {field:'currentRatio',op:'<',val:1,msg:'Liquidity risk',sev:'danger',src:'s'},
+    {field:'roe',op:'<',val:5,msg:'Poor capital returns',sev:'warning',src:'s'},
+    {field:'pe',op:'>',val:60,msg:'Expensive valuation',sev:'warning',src:'r'},
+  ];
+
+  ownedTickers.forEach(ticker=>{
+    const s=tStocks[ticker];
+    if(!s)return;
+    const r=calcStockRatios(s);
+    checks.forEach(c=>{
+      const v=c.src==='r'?r[c.field]:s[c.field];
+      if(v==null||!isFinite(v))return;
+      const triggered=c.op==='<'?v<c.val:v>c.val;
+      if(triggered){
+        const display=c.field.includes('Margin')||c.field==='roe'||c.field==='revenueGrowth'?v.toFixed(1)+'%':v.toFixed(1);
+        alerts.push({ticker,msg:c.msg,value:display,sev:c.sev});
+      }
+    });
+  });
+
+  countEl.textContent=alerts.length?`(${alerts.length})`:'';
+  if(!alerts.length){el.innerHTML='<div class="db-no-alerts">&#10003; No red flags detected</div>';return}
+
+  alerts.sort((a,b)=>a.sev==='danger'&&b.sev!=='danger'?-1:b.sev==='danger'&&a.sev!=='danger'?1:a.ticker.localeCompare(b.ticker));
+  el.innerHTML=alerts.map(a=>`<div class="db-alert ${a.sev}">
+    <span class="db-alert-icon">${a.sev==='danger'?'&#9888;':'&#9888;'}</span>
+    <span class="db-alert-ticker" onclick="showSection('companies');showProfile('${escH(a.ticker)}')">${escH(a.ticker)}</span>
+    <span class="db-alert-msg">${escH(a.msg)}</span>
+    <span class="db-alert-val">${escH(String(a.value))}</span>
+  </div>`).join('');
+}
+
+// ---- 5C: Benchmark ----
+async function fetchBenchmarkData(){
+  if(!pfSnapshots.length){showToast('Take portfolio snapshots first to compare with benchmark','warning');return}
+  const sorted=[...pfSnapshots].sort((a,b)=>a.date.localeCompare(b.date));
+  const from=sorted[0].date;
+  const to=sorted[sorted.length-1].date;
+  showToast('Fetching S&P 500 data...','success');
+  const data=await fmpFetch('historical-price-full/SPY',{from,to});
+  if(!data||!data.historical||!data.historical.length){showToast('Could not fetch benchmark data','error');return}
+  dbBenchmark={ticker:'SPY',prices:data.historical.map(d=>({date:d.date,close:d.close})).reverse(),fetchedAt:new Date().toISOString()};
+  saveDashBenchmark();
+  renderDbBenchmark();
+  showToast('Benchmark data updated','success');
+}
+
+function renderDbBenchmark(){
+  const el=document.getElementById('db-benchmark-content');
+  const twrData=calcTWR();
+
+  if(!pfSnapshots.length||pfSnapshots.length<2){
+    el.innerHTML='<div class="db-empty">Need at least 2 portfolio snapshots to compare with benchmark.</div>';
+    return;
+  }
+  if(!dbBenchmark.prices.length){
+    el.innerHTML='<div class="db-empty">Click Refresh to fetch S&P 500 data for comparison.</div>';
+    return;
+  }
+
+  const prices=dbBenchmark.prices;
+  const spyFirst=prices[0].close;
+  const spyLast=prices[prices.length-1].close;
+  const spyReturn=(spyLast-spyFirst)/spyFirst;
+
+  const sorted=[...pfSnapshots].sort((a,b)=>a.date.localeCompare(b.date));
+  const days=(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/(86400000);
+  const spyAnn=days>365?Math.pow(1+spyReturn,365/days)-1:spyReturn;
+
+  const pfReturn=twrData?twrData.annualized:0;
+  const alpha=pfReturn-spyAnn;
+
+  let html='<div class="db-benchmark">';
+  html+=`<div class="db-bench-card"><div class="bc-label">Portfolio TWR</div><div class="bc-value ${pfReturn>=0?'positive':'negative'}">${(pfReturn*100).toFixed(1)}%</div></div>`;
+  html+=`<div class="db-bench-card"><div class="bc-label">S&P 500</div><div class="bc-value ${spyReturn>=0?'positive':'negative'}">${(spyAnn*100).toFixed(1)}%</div></div>`;
+  html+=`<div class="db-bench-card"><div class="bc-label">Alpha</div><div class="bc-value ${alpha>=0?'positive':'negative'}">${alpha>=0?'+':''}${(alpha*100).toFixed(1)}%</div></div>`;
+  html+='</div>';
+
+  if(sorted.length>=3&&prices.length>=2){
+    html+=`<div class="db-bench-chart"><canvas id="db-bench-canvas"></canvas></div>`;
+  }
+
+  if(dbBenchmark.fetchedAt){
+    html+=`<div style="font-size:11px;color:var(--text2);margin-top:8px">Last updated: ${new Date(dbBenchmark.fetchedAt).toLocaleDateString()}</div>`;
+  }
+  el.innerHTML=html;
+
+  if(sorted.length>=3&&prices.length>=2){
+    const pfLabels=sorted.map(s=>s.date);
+    const baseVal=sorted[0].totalValue||1;
+    const pfData=sorted.map(s=>s.totalValue/baseVal*100);
+    const spyData=pfLabels.map(date=>{
+      const p=prices.findLast(pr=>pr.date<=date);
+      return p?(p.close/spyFirst*100):100;
+    });
+
+    const accent=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    const text2=getComputedStyle(document.documentElement).getPropertyValue('--text2').trim();
+    const border=getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
+
+    if(_dbCharts['bench'])_dbCharts['bench'].destroy();
+    _dbCharts['bench']=new Chart(document.getElementById('db-bench-canvas'),{
+      type:'line',
+      data:{labels:pfLabels,datasets:[
+        {label:'Portfolio',data:pfData,borderColor:accent,backgroundColor:'transparent',tension:.3,pointRadius:3},
+        {label:'S&P 500',data:spyData,borderColor:'#fdcb6e',backgroundColor:'transparent',tension:.3,pointRadius:2,borderDash:[4,4]}
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:text2,font:{size:11}}}},
+        scales:{x:{ticks:{color:text2,font:{size:10}},grid:{color:border+'44'}},y:{ticks:{color:text2,font:{size:10},callback:v=>v.toFixed(0)},grid:{color:border+'44'}}}}
+    });
+  }
+}
+
+// ---- 5C: Dip Finder ----
+async function fetchDipData(){
+  const tickers=Object.keys(tStocks);
+  if(!tickers.length){showToast('No tracked stocks','warning');return}
+  showToast('Fetching 52-week highs...','success');
+  const batchSize=20;
+  for(let i=0;i<tickers.length;i+=batchSize){
+    const batch=tickers.slice(i,i+batchSize).join(',');
+    const data=await fmpFetch('quote/'+batch);
+    if(data&&Array.isArray(data)){
+      data.forEach(q=>{
+        if(q.symbol&&q.yearHigh)db52wHighs[q.symbol]={high52:q.yearHigh,fetchedAt:new Date().toISOString()};
+      });
+    }
+  }
+  saveDash52wHighs();
+  renderDbDipFinder();
+  showToast('52-week highs updated','success');
+}
+
+function renderDbDipFinder(){
+  const el=document.getElementById('db-dip-content');
+  const tickers=Object.keys(tStocks);
+  if(!tickers.length){el.innerHTML='<div class="db-empty">No tracked stocks.</div>';return}
+  if(!Object.keys(db52wHighs).length){el.innerHTML='<div class="db-empty">Click Refresh to fetch 52-week high data.</div>';return}
+
+  const dips=[];
+  tickers.forEach(ticker=>{
+    const s=tStocks[ticker];
+    const h=db52wHighs[ticker];
+    if(!s||!s.price||!h||!h.high52)return;
+    const dipPct=((s.price-h.high52)/h.high52)*100;
+    if(dipPct<-10)dips.push({ticker,price:s.price,high52:h.high52,dipPct});
+  });
+  dips.sort((a,b)=>a.dipPct-b.dipPct);
+
+  if(!dips.length){el.innerHTML='<div class="db-empty">No stocks down more than 10% from 52-week high.</div>';return}
+
+  let html='<table class="db-dip-table"><thead><tr><th>Ticker</th><th>Price</th><th>52w High</th><th>Dip</th></tr></thead><tbody>';
+  dips.slice(0,15).forEach(d=>{
+    const cls=d.dipPct<=-20?'negative':'warn';
+    html+=`<tr><td class="dip-ticker" onclick="showSection('companies');showProfile('${escH(d.ticker)}')">${escH(d.ticker)}</td>
+      <td>${d.price.toFixed(2)}</td><td>${d.high52.toFixed(2)}</td>
+      <td class="${cls}">${d.dipPct.toFixed(1)}%</td></tr>`;
+  });
+  html+='</tbody></table>';
+  el.innerHTML=html;
+}
+
+// ---- 5D: FI Tracker ----
+function renderDbFiTracker(){
+  const el=document.getElementById('db-fi-content');
+  const base=getBaseCurrency();
+  let currentValue=0;
+  pfPositions.forEach(pos=>{
+    const price=getPositionPrice(pos);
+    const shares=parseFloat(pos.shares)||0;
+    const mktVal=price!=null?shares*price:0;
+    currentValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+  });
+
+  const fi=dbFiSettings;
+  const target=fi.targetAmount||1;
+  const progress=Math.min((currentValue/target)*100,100);
+  const fiBy4pct=fi.monthlyExpenses*12*25;
+  const monthlyRate=(fi.assumedReturnRate||8)/100/12;
+  let yearsToFi=null;
+  if(monthlyRate>0&&fi.monthlySavings>0){
+    const fv=target;
+    const pv=currentValue;
+    const pmt=fi.monthlySavings;
+    if(fv>pv){
+      const n=Math.log((fv*monthlyRate+pmt)/(pv*monthlyRate+pmt))/Math.log(1+monthlyRate);
+      yearsToFi=n/12;
+    }else{yearsToFi=0}
+  }
+
+  const coastFi=target/Math.pow(1+(fi.assumedReturnRate||8)/100,25);
+
+  const circumference=2*Math.PI*50;
+  const offset=circumference*(1-progress/100);
+
+  let html=`<div class="db-fi-progress">
+    <div class="db-fi-ring">
+      <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--border)" stroke-width="8"/>
+      <circle cx="60" cy="60" r="50" fill="none" stroke="var(--accent)" stroke-width="8" stroke-linecap="round"
+        stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" transform="rotate(-90 60 60)"/></svg>
+      <div class="db-fi-pct">${progress.toFixed(0)}%</div>
+    </div>
+    <div class="db-fi-details">
+      <div class="db-fi-row"><span>Current Value</span><span>${formatMoney(currentValue,base)}</span></div>
+      <div class="db-fi-row"><span>Target</span><span>${formatMoney(target,base)}</span></div>
+      <div class="db-fi-row"><span>4% Rule FI Number</span><span>${formatMoney(fiBy4pct,base)}</span></div>
+      ${yearsToFi!=null?`<div class="db-fi-row"><span>Projected FI</span><span class="positive">${yearsToFi<=0?'Reached!':yearsToFi.toFixed(1)+' years'}</span></div>`:''}
+      <div class="db-fi-row"><span>Coast FI (25yr)</span><span>${formatMoney(coastFi,base)}</span></div>
+    </div>
+  </div>
+  <div class="db-fi-form">
+    <div class="input-group"><label>Target Amount</label><input type="number" value="${fi.targetAmount}" onchange="dbFiSettings.targetAmount=parseFloat(this.value)||0;saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label>Monthly Expenses</label><input type="number" value="${fi.monthlyExpenses}" onchange="dbFiSettings.monthlyExpenses=parseFloat(this.value)||0;saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label>Monthly Savings</label><input type="number" value="${fi.monthlySavings}" onchange="dbFiSettings.monthlySavings=parseFloat(this.value)||0;saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label>Assumed Return %</label><input type="number" value="${fi.assumedReturnRate}" step="0.5" onchange="dbFiSettings.assumedReturnRate=parseFloat(this.value)||0;saveDashFiSettings();renderDbFiTracker()"></div>
+  </div>`;
+  el.innerHTML=html;
+}
+
+// ---- 5D: General TODO List ----
+function addDashTodo(){
+  const textEl=document.getElementById('db-todo-text');
+  const dueEl=document.getElementById('db-todo-due');
+  const text=textEl.value.trim();
+  if(!text){showToast('Enter a task','error');return}
+  dbTodos.push({id:dbNextId(dbTodos),text,due:dueEl.value||'',done:false,createdAt:new Date().toISOString()});
+  saveDashTodos();
+  textEl.value='';dueEl.value='';
+  renderDbTodoList();
+  renderDbTodoSummary();
+}
+
+function toggleDashTodo(id){
+  const t=dbTodos.find(x=>x.id===id);
+  if(t){t.done=!t.done;saveDashTodos();renderDbTodoList();renderDbTodoSummary()}
+}
+
+function deleteDashTodo(id){
+  dbTodos=dbTodos.filter(x=>x.id!==id);
+  saveDashTodos();renderDbTodoList();renderDbTodoSummary();
+}
+
+function renderDbTodoList(){
+  const el=document.getElementById('db-todo-list');
+  if(!dbTodos.length){el.innerHTML='<div class="db-empty">No tasks yet.</div>';return}
+  const today=new Date().toISOString().split('T')[0];
+  const sorted=[...dbTodos].sort((a,b)=>{
+    if(a.done!==b.done)return a.done?1:-1;
+    if(a.due&&b.due)return a.due.localeCompare(b.due);
+    if(a.due)return -1;if(b.due)return 1;return 0;
+  });
+  el.innerHTML=sorted.map(t=>{
+    const overdue=!t.done&&t.due&&t.due<today;
+    return`<div class="cp-todo-item">
+      <input type="checkbox" ${t.done?'checked':''} onchange="toggleDashTodo(${t.id})">
+      <span class="cp-todo-text ${t.done?'todo-done':''}">${escH(t.text)}</span>
+      ${t.due?`<span class="cp-todo-due ${overdue?'todo-overdue':''}">${t.due}</span>`:''}
+      <button class="cp-todo-del" onclick="deleteDashTodo(${t.id})" title="Delete">&times;</button>
+    </div>`;
+  }).join('');
+}
+
+// ---- 5D: TODO Summary ----
+function renderDbTodoSummary(){
+  const el=document.getElementById('db-todo-summary-content');
+  const today=new Date().toISOString().split('T')[0];
+  const weekEnd=new Date(Date.now()+7*86400000).toISOString().split('T')[0];
+
+  const allTodos=[];
+  Object.entries(tStocks).forEach(([ticker,s])=>{
+    if(!s.todos)return;
+    s.todos.filter(t=>!t.done).forEach(t=>allTodos.push({...t,source:ticker,type:'company'}));
+  });
+  dbTodos.filter(t=>!t.done).forEach(t=>allTodos.push({...t,source:'General',type:'general'}));
+
+  const overdue=allTodos.filter(t=>t.due&&t.due<today).length;
+  const thisWeek=allTodos.filter(t=>t.due&&t.due>=today&&t.due<=weekEnd).length;
+
+  let html=`<div class="db-todo-summary">
+    <div class="db-todo-badge"><strong>${allTodos.length}</strong>Pending</div>
+    <div class="db-todo-badge overdue"><strong>${overdue}</strong>Overdue</div>
+    <div class="db-todo-badge"><strong>${thisWeek}</strong>This week</div>
+  </div>`;
+
+  if(!allTodos.length){html+='<div class="db-empty">All done! No pending tasks.</div>';el.innerHTML=html;return}
+
+  allTodos.sort((a,b)=>{
+    if(a.due&&b.due)return a.due.localeCompare(b.due);
+    if(a.due)return -1;if(b.due)return 1;return 0;
+  });
+
+  const groups={};
+  allTodos.slice(0,20).forEach(t=>{
+    if(!groups[t.source])groups[t.source]=[];
+    groups[t.source].push(t);
+  });
+
+  Object.entries(groups).forEach(([source,items])=>{
+    const isCompany=items[0].type==='company';
+    html+=`<div class="db-todo-group-title" ${isCompany?`onclick="showSection('companies');showProfile('${escH(source)}')" style="cursor:pointer"`:''}>
+      ${escH(source)}</div>`;
+    items.forEach(t=>{
+      const overdue=t.due&&t.due<today;
+      html+=`<div class="cp-todo-item" style="border-bottom:1px solid var(--border);padding:6px 0">
+        <span class="cp-todo-text">${escH(t.text)}</span>
+        ${t.due?`<span class="cp-todo-due ${overdue?'todo-overdue':''}">${t.due}</span>`:''}
+      </div>`;
+    });
+  });
+
+  el.innerHTML=html;
 }
 
 // ====== RESEARCH & NOTES (Phase 3) ======
@@ -5431,7 +6085,11 @@ async function cloudSave(){
     portfolioPositions:pfPositions,
     portfolioTransactions:pfTransactions,
     portfolioExchangeRates:pfExchangeRates,
-    portfolioSnapshots:pfSnapshots
+    portfolioSnapshots:pfSnapshots,
+    dashboardTodos:dbTodos,
+    dashboardFiSettings:dbFiSettings,
+    dashboardBenchmark:dbBenchmark,
+    dashboard52wHighs:db52wHighs
   };
   let body=payload;
   if(_encPass&&isEncryptionEnabled()){
@@ -5484,6 +6142,10 @@ async function cloudLoad(){
       if(cloud.portfolioTransactions){pfTransactions=cloud.portfolioTransactions;savePortfolioTransactions()}
       if(cloud.portfolioExchangeRates){pfExchangeRates=cloud.portfolioExchangeRates;saveExchangeRates()}
       if(cloud.portfolioSnapshots){pfSnapshots=cloud.portfolioSnapshots;savePortfolioSnapshots()}
+      if(cloud.dashboardTodos&&Array.isArray(cloud.dashboardTodos)){dbTodos=cloud.dashboardTodos;saveDashTodos()}
+      if(cloud.dashboardFiSettings&&typeof cloud.dashboardFiSettings==='object'){Object.assign(dbFiSettings,cloud.dashboardFiSettings);saveDashFiSettings()}
+      if(cloud.dashboardBenchmark&&typeof cloud.dashboardBenchmark==='object'){dbBenchmark=cloud.dashboardBenchmark;saveDashBenchmark()}
+      if(cloud.dashboard52wHighs&&typeof cloud.dashboard52wHighs==='object'){db52wHighs=cloud.dashboard52wHighs;saveDash52wHighs()}
       localStorage.setItem('sync_ts',String(cloud.ts));
       lastSyncTs=cloud.ts;
       console.log('Cloud sync loaded',new Date(cloud.ts).toLocaleTimeString());
@@ -5504,6 +6166,10 @@ async function autoLoad(){
   loadPortfolioTransactions();
   loadExchangeRates();
   loadPortfolioSnapshots();
+  loadDashTodos();
+  loadDashFiSettings();
+  loadDashBenchmark();
+  loadDash52wHighs();
   initTodoCounter();
   const l=localStorage.getItem('valuation_last_v2');
   if(l){try{loadData(JSON.parse(l))}catch(e){}}
@@ -5539,9 +6205,17 @@ const _origSavePfSnapshots=savePortfolioSnapshots;
 savePortfolioSnapshots=function(){_origSavePfSnapshots();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 const _origSaveExRates=saveExchangeRates;
 saveExchangeRates=function(){_origSaveExRates();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveDashTodos=saveDashTodos;
+saveDashTodos=function(){_origSaveDashTodos();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveDashFi=saveDashFiSettings;
+saveDashFiSettings=function(){_origSaveDashFi();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveDashBench=saveDashBenchmark;
+saveDashBenchmark=function(){_origSaveDashBench();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveDash52w=saveDash52wHighs;
+saveDash52wHighs=function(){_origSaveDash52w();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 
 document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
-window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks();saveResearchNotes();savePortfolioAccounts();savePortfolioPositions();savePortfolioTransactions();savePortfolioSnapshots();saveExchangeRates()});
+window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks();saveResearchNotes();savePortfolioAccounts();savePortfolioPositions();savePortfolioTransactions();savePortfolioSnapshots();saveExchangeRates();saveDashTodos();saveDashFiSettings()});
 window.addEventListener('load',()=>{
   if(isEncryptionEnabled()){
     document.getElementById('lock-screen').style.display='flex';

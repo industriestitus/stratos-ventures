@@ -1,7 +1,7 @@
 # Stratos Ventures — Roadmap
 
-## Current Phase: Phase 5 — Dashboard
-Status: NOT STARTED
+## Completed: Phase 5 — Dashboard
+Status: COMPLETE (2026-06-26)
 
 ## Completed: Phase 4 — Portfolio Module
 Status: COMPLETE (2026-06-26)
@@ -77,15 +77,15 @@ Status: COMPLETE (2026-06-26)
 ## Phase 5: Dashboard (2-3 sessions)
 > Portfolio overview, metrics, alerts.
 
-- [ ] Portfolio total value with currency conversion
-- [ ] Pie charts: by ticker, account, currency, asset class, sector
-- [ ] Terry Smith metrics: weighted P/E, P/S, P/FCF, ROE, ROIC, margins
-- [ ] Benchmark comparison (S&P 500)
-- [ ] Red flag alerts (margin drops, debt rises, revenue slows)
-- [ ] Dip Finder widget
-- [ ] Financial Independence tracker
-- [ ] General TODO list (not company-specific — current tasks, reminders)
-- [ ] TODO summary widget ("X open tasks across Y companies")
+- [x] Portfolio total value with currency conversion
+- [x] Pie charts: by ticker, account, currency, asset class, sector
+- [x] Terry Smith metrics: weighted P/E, P/S, P/FCF, ROE, ROIC, margins
+- [x] Benchmark comparison (S&P 500)
+- [x] Red flag alerts (margin drops, debt rises, revenue slows)
+- [x] Dip Finder widget
+- [x] Financial Independence tracker
+- [x] General TODO list (not company-specific — current tasks, reminders)
+- [x] TODO summary widget ("X open tasks across Y companies")
 
 ## Phase 6: Dividend Module (1 session)
 > Dividend tracking and income forecasting.
