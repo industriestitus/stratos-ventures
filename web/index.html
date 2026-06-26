@@ -2052,12 +2052,12 @@ function calcDCFP(){
     <div class="result-box"><div class="label">PV Terminal</div><div class="value neutral">${fmt(r.pvTV)}</div></div>
     <div class="result-box"><div class="label">Enterprise Value</div><div class="value neutral">${fmt(r.ev)}</div></div>
     <div class="result-box"><div class="label">Equity Value</div><div class="value neutral">${fmt(r.eq)}</div></div>
-    <div class="result-box"><div class="label">Upside/Downside</div><div class="value ${r.up>=0?'positive':'negative'}">${r.up>=0?'+':''}${(r.up*100).toFixed(1)}%</div></div>`;
+    <div class="result-box"><div class="label">Upside/Downside</div><div class="value ${isFinite(r.up)?(r.up>=0?'positive':'negative'):'neutral'}">${isFinite(r.up)?((r.up>=0?'+':'')+(r.up*100).toFixed(1)+'%'):'—'}</div></div>`;
   renderChart('dcfp-chart','dcfp',['Y0','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'],
     [{label:'FCF-SBC',data:r.fcfs,borderColor:cv('--accent'),backgroundColor:cv('--accent')+'1a',fill:true},
      {label:'Discounted FCF',data:[null,...r.pvs.slice(1)],borderColor:cv('--blue'),backgroundColor:cv('--blue')+'1a',fill:true}]);
-  const el=document.getElementById('sum-dcfp-val');el.textContent=fmt(r.eq);el.className='sc-value '+(r.up>=0?'positive':'negative');
-  document.getElementById('sum-dcfp-sub').textContent=(r.up>=0?'+':'')+(r.up*100).toFixed(1)+'% upside';
+  const el=document.getElementById('sum-dcfp-val');el.textContent=fmt(r.eq);el.className='sc-value '+(isFinite(r.up)?(r.up>=0?'positive':'negative'):'neutral');
+  document.getElementById('sum-dcfp-sub').textContent=isFinite(r.up)?((r.up>=0?'+':'')+(r.up*100).toFixed(1)+'% upside'):'—';
 }
 
 function calcDCFE(){
@@ -2068,12 +2068,12 @@ function calcDCFE(){
     <div class="result-box"><div class="label">PV Terminal</div><div class="value neutral">${fmt(r.pvTV)}</div></div>
     <div class="result-box"><div class="label">Enterprise Value</div><div class="value neutral">${fmt(r.ev)}</div></div>
     <div class="result-box"><div class="label">Equity Value</div><div class="value neutral">${fmt(r.eq)}</div></div>
-    <div class="result-box"><div class="label">Upside/Downside</div><div class="value ${r.up>=0?'positive':'negative'}">${r.up>=0?'+':''}${(r.up*100).toFixed(1)}%</div></div>`;
+    <div class="result-box"><div class="label">Upside/Downside</div><div class="value ${isFinite(r.up)?(r.up>=0?'positive':'negative'):'neutral'}">${isFinite(r.up)?((r.up>=0?'+':'')+(r.up*100).toFixed(1)+'%'):'—'}</div></div>`;
   renderChart('dcfe-chart','dcfe',['Y0','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'],
     [{label:'FCF-SBC',data:r.fcfs,borderColor:cv('--accent'),backgroundColor:cv('--accent')+'1a',fill:true},
      {label:'Discounted FCF',data:[null,...r.pvs.slice(1)],borderColor:cv('--blue'),backgroundColor:cv('--blue')+'1a',fill:true}]);
-  const el=document.getElementById('sum-dcfe-val');el.textContent=fmt(r.eq);el.className='sc-value '+(r.up>=0?'positive':'negative');
-  document.getElementById('sum-dcfe-sub').textContent=(r.up>=0?'+':'')+(r.up*100).toFixed(1)+'% upside';
+  const el=document.getElementById('sum-dcfe-val');el.textContent=fmt(r.eq);el.className='sc-value '+(isFinite(r.up)?(r.up>=0?'positive':'negative'):'neutral');
+  document.getElementById('sum-dcfe-sub').textContent=isFinite(r.up)?((r.up>=0?'+':'')+(r.up*100).toFixed(1)+'% upside'):'—';
 }
 
 function solveGrowth(fcf0,dr,fadeYears,terminalFn){
@@ -2268,7 +2268,11 @@ function doImport(){
     if(d.dashboardFiSettings&&typeof d.dashboardFiSettings==='object'){Object.assign(dbFiSettings,d.dashboardFiSettings);saveDashFiSettings()}
     if(d.dashboardBenchmark&&typeof d.dashboardBenchmark==='object'){dbBenchmark=d.dashboardBenchmark;saveDashBenchmark()}
     if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs()}
-    closeModals();showToast('Imported!','success');recalcAll()
+    closeModals();showToast('Imported!','success');recalcAll();
+    renderSavedStocks();renderTracker();renderResearch();
+    const vis=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
+    if(vis==='portfolio')renderPortfolioOverview();
+    if(vis==='dashboard')renderDashboard();
   }catch(e){showToast('Invalid JSON data.','error')}
 }
 
@@ -2486,7 +2490,7 @@ function renderPositions(){
     return`<tr>
       <td><span ${tickerLink}>${escH(pos.ticker||'—')}</span><div class="pf-pos-name">${escH(pos.name||'')}</div></td>
       <td>${escH(getAccountName(pos.accountId))}</td>
-      <td><span class="pf-badge pf-badge-${pos.assetType||'other'}">${escH(pos.assetType||'other')}</span></td>
+      <td><span class="pf-badge pf-badge-${escH(pos.assetType||'other')}">${escH(pos.assetType||'other')}</span></td>
       <td class="num">${fmt(shares,shares%1?4:0)}</td>
       <td class="num">${fmt(avg,2)}</td>
       <td class="num">${price!=null?fmt(price,2):'—'}</td>
@@ -2676,7 +2680,7 @@ function renderTransactions(){
     const price=t.pricePerShare!=null?fmt(parseFloat(t.pricePerShare),2):'—';
     return`<tr>
       <td>${escH(t.date||'')}</td>
-      <td><span class="pf-badge pf-badge-${t.type}">${escH(t.type)}</span></td>
+      <td><span class="pf-badge pf-badge-${escH(t.type)}">${escH(t.type)}</span></td>
       <td style="font-weight:600">${escH(t.ticker||'—')}</td>
       <td>${escH(getAccountName(t.accountId))}</td>
       <td class="num">${shares}</td>
@@ -2766,6 +2770,7 @@ function saveTransaction(){
   const editId=parseInt(document.getElementById('pf-tx-edit-id').value)||0;
 
   if(!date){showToast('Date is required','error');return}
+  if(date>new Date().toISOString().slice(0,10)){showToast('Date cannot be in the future','error');return}
   if(!ticker){showToast('Ticker is required','error');return}
   if(!accountId){showToast('Select an account','error');return}
   if(isNaN(totalAmount)||totalAmount<=0){showToast('Enter a valid total amount','error');return}
@@ -2798,8 +2803,8 @@ function deleteTransaction(id){
 }
 
 function recalcPositionFromTransactions(ticker,accountId){
-  const txs=pfTransactions.filter(t=>t.ticker===ticker&&t.accountId===accountId&&(t.type==='buy'||t.type==='sell'));
-  if(!txs.length){showToast('No buy/sell transactions found for this position','error');return}
+  const txs=pfTransactions.filter(t=>t.ticker===ticker&&t.accountId===accountId&&(t.type==='buy'||t.type==='sell'||t.type==='split'));
+  if(!txs.length){showToast('No buy/sell/split transactions found for this position','error');return}
   txs.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   let shares=0,totalCost=0;
   txs.forEach(t=>{
@@ -2809,6 +2814,9 @@ function recalcPositionFromTransactions(ticker,accountId){
     else if(t.type==='sell'){
       if(shares>0)totalCost=totalCost*Math.max(0,(1-s/shares));
       shares-=s;
+    }else if(t.type==='split'&&s>0){
+      shares=shares*s;
+      if(shares>0)totalCost=totalCost;
     }
   });
   if(shares<0){shares=0;totalCost=0}
@@ -2907,9 +2915,9 @@ function calcTWR(){
       if(t.type==='buy')cf+=converted;
       else if(t.type==='sell')cf-=converted;
     });
-    if(vStart+cf>0){
+    if(vStart+cf>0&&vEnd>=0){
       const r=(vEnd-(vStart+cf))/(vStart+cf);
-      twr*=(1+r);
+      if(isFinite(r))twr*=(1+r);
     }
   }
   twr-=1;
@@ -3000,9 +3008,11 @@ function renderSummaryCards(){
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
     const cost=shares*avg;
-    const mktVal=price!=null?shares*price:0;
-    totalCost+=convertCurrency(cost,pos.currency||'USD',base)||cost;
-    totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+    if(price!=null){
+      const mktVal=shares*price;
+      totalCost+=convertCurrency(cost,pos.currency||'USD',base)||cost;
+      totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+    }
   });
   pfTransactions.filter(t=>t.type==='dividend').forEach(t=>{
     const amt=parseFloat(t.totalAmount)||0;
@@ -3198,7 +3208,7 @@ function currencySymbol(code){
 }
 
 function formatMoney(amount,currency){
-  if(amount==null||isNaN(amount))return'—';
+  if(amount==null||!isFinite(amount))return'—';
   const sym=currencySymbol(currency||getBaseCurrency());
   if(currency==='HUF')return Math.round(amount).toLocaleString('hu-HU')+' '+sym;
   return sym+amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -3382,9 +3392,11 @@ function renderDbPortfolioSummary(){
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
-    totalCost+=convertCurrency(shares*avg,pos.currency||'USD',base)||(shares*avg);
-    const mktVal=price!=null?shares*price:0;
-    totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+    if(price!=null){
+      totalCost+=convertCurrency(shares*avg,pos.currency||'USD',base)||(shares*avg);
+      const mktVal=shares*price;
+      totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+    }
   });
   pfTransactions.filter(t=>t.type==='dividend').forEach(t=>{
     const amt=parseFloat(t.totalAmount)||0;
@@ -3721,8 +3733,12 @@ function renderDbFiTracker(){
     const pv=currentValue;
     const pmt=fi.monthlySavings;
     if(fv>pv){
-      const n=Math.log((fv*monthlyRate+pmt)/(pv*monthlyRate+pmt))/Math.log(1+monthlyRate);
-      yearsToFi=n/12;
+      const num=fv*monthlyRate+pmt;
+      const den=pv*monthlyRate+pmt;
+      if(num>0&&den>0){
+        const n=Math.log(num/den)/Math.log(1+monthlyRate);
+        yearsToFi=isFinite(n)?n/12:null;
+      }
     }else{yearsToFi=0}
   }
 
@@ -3747,10 +3763,10 @@ function renderDbFiTracker(){
     </div>
   </div>
   <div class="db-fi-form">
-    <div class="input-group"><label>Target Amount</label><input type="number" value="${fi.targetAmount}" onchange="dbFiSettings.targetAmount=parseFloat(this.value)||0;saveDashFiSettings();renderDbFiTracker()"></div>
-    <div class="input-group"><label>Monthly Expenses</label><input type="number" value="${fi.monthlyExpenses}" onchange="dbFiSettings.monthlyExpenses=parseFloat(this.value)||0;saveDashFiSettings();renderDbFiTracker()"></div>
-    <div class="input-group"><label>Monthly Savings</label><input type="number" value="${fi.monthlySavings}" onchange="dbFiSettings.monthlySavings=parseFloat(this.value)||0;saveDashFiSettings();renderDbFiTracker()"></div>
-    <div class="input-group"><label>Assumed Return %</label><input type="number" value="${fi.assumedReturnRate}" step="0.5" onchange="dbFiSettings.assumedReturnRate=parseFloat(this.value)||0;saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label>Target Amount</label><input type="number" min="0" value="${fi.targetAmount}" onchange="dbFiSettings.targetAmount=Math.max(0,parseFloat(this.value)||0);saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label>Monthly Expenses</label><input type="number" min="0" value="${fi.monthlyExpenses}" onchange="dbFiSettings.monthlyExpenses=Math.max(0,parseFloat(this.value)||0);saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label>Monthly Savings</label><input type="number" min="0" value="${fi.monthlySavings}" onchange="dbFiSettings.monthlySavings=Math.max(0,parseFloat(this.value)||0);saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label>Assumed Return %</label><input type="number" min="0" max="50" value="${fi.assumedReturnRate}" step="0.5" onchange="dbFiSettings.assumedReturnRate=Math.max(0,Math.min(50,parseFloat(this.value)||0));saveDashFiSettings();renderDbFiTracker()"></div>
   </div>`;
   el.innerHTML=html;
 }
@@ -3928,7 +3944,7 @@ function renderResearchEntry(e){
   let tickerBadge='';
   if(e.ticker)tickerBadge=`<a class="research-entry-ticker" onclick="showSection('companies');showProfile('${escH(e.ticker)}')">${escH(e.ticker)}</a>`;
   let actionBadge='';
-  if(t==='journal'&&e.action&&e.action!=='note')actionBadge=`<span class="research-entry-action research-entry-action--${e.action}">${e.action}</span>`;
+  if(t==='journal'&&e.action&&e.action!=='note')actionBadge=`<span class="research-entry-action research-entry-action--${escH(e.action)}">${escH(e.action)}</span>`;
   const pinnedClass=e.pinned?'pinned-entry':'';
   const pinIcon=e.pinned?'📌':'📍';
   const pinTitle=e.pinned?'Unpin':'Pin';
@@ -4087,7 +4103,7 @@ function updateImagesGrid(){
   if(!wrap||!grid)return;
   if(!_reImages.length){wrap.style.display='none';return}
   wrap.style.display='';
-  grid.innerHTML=_reImages.map((img,i)=>`<div style="position:relative"><img src="${img.data}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"><button onclick="removeReImage(${i})" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1">×</button></div>`).join('');
+  grid.innerHTML=_reImages.filter(img=>img.data&&/^data:image\//.test(img.data)).map((img,i)=>`<div style="position:relative"><img src="${escH(img.data)}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"><button onclick="removeReImage(${i})" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1">×</button></div>`).join('');
 }
 
 function removeReImage(idx){
@@ -5093,7 +5109,7 @@ let stSort={col:'ticker',dir:'asc'};
 let stExpanded={};
 
 function parseNum(s){s=String(s).trim().replace(/,/g,'').replace(/\s/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
-function asPct(v){if(v==null)return null;return Math.abs(v)<=1?v*100:v}
+function asPct(v){if(v==null)return null;return Math.abs(v)<1&&Math.abs(v)>0?v*100:v}
 function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct)return parseFloat(v).toFixed(1);return typeof v==='number'?v.toFixed(2):v}
 
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
@@ -6176,7 +6192,11 @@ async function autoLoad(){
   recalcAll();
   updateEncStatus();
   const loaded=await cloudLoad();
-  if(loaded){recalcAll();renderSavedStocks();renderResearch()}
+  if(loaded){recalcAll();renderSavedStocks();renderResearch();renderTracker();
+    const vis=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
+    if(vis==='portfolio')renderPortfolioOverview();
+    if(vis==='dashboard')renderDashboard();
+  }
   const bcSel=document.getElementById('pf-base-currency');
   if(bcSel)bcSel.value=pfExchangeRates.baseCurrency||'HUF';
   const rateStatus=document.getElementById('pf-rate-status');
@@ -6215,7 +6235,7 @@ const _origSaveDash52w=saveDash52wHighs;
 saveDash52wHighs=function(){_origSaveDash52w();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 
 document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
-window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks();saveResearchNotes();savePortfolioAccounts();savePortfolioPositions();savePortfolioTransactions();savePortfolioSnapshots();saveExchangeRates();saveDashTodos();saveDashFiSettings()});
+window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks();saveResearchNotes();savePortfolioAccounts();savePortfolioPositions();savePortfolioTransactions();savePortfolioSnapshots();saveExchangeRates();saveDashTodos();saveDashFiSettings();saveDashBenchmark();saveDash52wHighs()});
 window.addEventListener('load',()=>{
   if(isEncryptionEnabled()){
     document.getElementById('lock-screen').style.display='flex';
