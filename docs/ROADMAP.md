@@ -1,7 +1,7 @@
 # Stratos Ventures — Roadmap
 
 ## Current Phase: Phase 3 — Research & Notes
-Status: NOT STARTED
+Status: IN PROGRESS
 
 ---
 
@@ -46,13 +46,13 @@ Status: NOT STARTED
 ## Phase 3: Research & Notes (1-2 sessions)
 > Investment journal, news notes, market journal.
 
-- [ ] Investment journal: date + ticker + text (why bought/sold)
-- [ ] Earnings notes: per-company, per-quarter, Markdown
-- [ ] News notes: date + source + excerpt + comment
-- [ ] Market journal: macro notes (not company-specific)
-- [ ] Search across all notes
-- [ ] Markdown editor (simple, not a full WYSIWYG)
-- [ ] Image support in notes (paste/upload screenshots, charts, diagrams into company analysis notes)
+- [x] Investment journal: date + ticker + text (why bought/sold)
+- [x] Earnings notes: per-company, per-quarter, Markdown
+- [x] News notes: date + source + excerpt + comment
+- [x] Market journal: macro notes (not company-specific)
+- [x] Search across all notes
+- [x] Markdown editor (simple, not a full WYSIWYG)
+- [x] Image support in notes (paste/upload screenshots, charts, diagrams into company analysis notes)
 
 ## Phase 4: Portfolio Module (2-3 sessions)
 > Multi-broker, multi-currency portfolio tracking.

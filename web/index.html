@@ -25,6 +25,8 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
 <style>
 :root { --bg:#0f1117; --surface:#1a1d27; --surface2:#232734; --border:#2e3347; --text:#e4e7f1; --text2:#8b90a5; --accent:#6c5ce7; --accent2:#a29bfe; --green:#00b894; --red:#e17055; --orange:#fdcb6e; --blue:#74b9ff; --radius:10px; }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -292,6 +294,95 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
 .cp-overridable:hover{background:var(--surface2)}
 .cp-override-badge{font-size:9px;font-weight:600;color:var(--orange);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
 .cp-override-input{width:100%;padding:4px 8px;border-radius:4px;border:1px solid var(--accent);background:var(--surface2);color:var(--text);font-size:14px;font-weight:600;outline:none;text-align:center;font-family:inherit}
+/* Research section */
+.research-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.research-header h2{font-size:20px;font-weight:700;flex:1;min-width:150px}
+.research-search{padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;outline:none;width:240px;font-family:inherit}
+.research-search:focus{border-color:var(--accent)}
+.research-search::placeholder{color:var(--text2)}
+.research-tabs{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto}
+.research-tab{padding:7px 16px;font-size:12px;font-weight:500;border-radius:8px;border:none;background:transparent;color:var(--text2);cursor:pointer;transition:all .2s;white-space:nowrap;font-family:inherit}
+.research-tab:hover{background:var(--surface2);color:var(--text)}
+.research-tab.active{background:var(--accent);color:#fff}
+.research-panel{display:none}.research-panel.active{display:block}
+.research-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;transition:border-color .2s}
+.research-entry:hover{border-color:var(--accent)}
+.research-entry-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.research-entry-date{font-size:12px;color:var(--text2);font-weight:500}
+.research-entry-type{font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.3px}
+.research-entry-type--journal{background:rgba(108,92,231,.15);color:var(--accent2)}
+.research-entry-type--news{background:rgba(116,185,255,.15);color:var(--blue)}
+.research-entry-type--market{background:rgba(253,203,110,.15);color:var(--orange)}
+.research-entry-ticker{font-size:12px;font-weight:600;color:var(--accent2);cursor:pointer;text-decoration:none}
+.research-entry-ticker:hover{text-decoration:underline}
+.research-entry-action{font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;text-transform:uppercase}
+.research-entry-action--buy{background:rgba(0,184,148,.15);color:var(--green)}
+.research-entry-action--sell{background:rgba(225,112,85,.15);color:var(--red)}
+.research-entry-action--add,.research-entry-action--trim{background:rgba(116,185,255,.15);color:var(--blue)}
+.research-entry-action--note{background:rgba(139,144,165,.15);color:var(--text2)}
+.research-entry-actions{margin-left:auto;display:flex;gap:4px}
+.research-entry-actions button{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px;border-radius:4px;font-size:14px;line-height:1;transition:all .15s}
+.research-entry-actions button:hover{color:var(--text);background:var(--surface2)}
+.research-entry-actions button.pinned{color:var(--orange)}
+.research-entry-body{font-size:13px;line-height:1.7;color:var(--text)}
+.research-entry-meta{margin-top:8px;font-size:12px;color:var(--text2)}
+.research-entry-meta a{color:var(--blue);text-decoration:none}
+.research-entry-meta a:hover{text-decoration:underline}
+.research-entry-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.research-entry-tag{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface2);color:var(--text2)}
+.research-entry-excerpt{background:var(--surface2);border-left:3px solid var(--blue);padding:8px 12px;border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.5;font-style:italic}
+.research-empty{text-align:center;padding:60px 20px;color:var(--text2)}
+.research-empty svg{width:48px;height:48px;opacity:.4;margin-bottom:12px}
+.research-empty p{font-size:14px;margin-bottom:16px}
+.research-entry.pinned-entry{border-color:var(--orange);border-style:solid}
+/* Markdown editor */
+.md-wrap{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface2)}
+.md-wrap:focus-within{border-color:var(--accent)}
+.md-toolbar{display:flex;align-items:center;gap:2px;padding:4px 6px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.md-toolbar button{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px 6px;border-radius:4px;font-size:13px;font-weight:600;font-family:'Courier New',monospace;line-height:1;transition:all .15s}
+.md-toolbar button:hover{background:var(--surface2);color:var(--text)}
+.md-toolbar .md-sep{width:1px;height:16px;background:var(--border);margin:0 2px}
+.md-toolbar .md-toggle{margin-left:auto;font-family:inherit;font-weight:500;font-size:11px;color:var(--accent2);text-transform:uppercase;letter-spacing:.3px}
+.md-toolbar .md-toggle.active{color:var(--green)}
+.md-editor{width:100%;min-height:160px;padding:12px;border:none;background:transparent;color:var(--text);font-size:13px;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;resize:vertical;outline:none;line-height:1.6}
+.md-preview{padding:12px;font-size:13px;line-height:1.7;color:var(--text);min-height:160px;display:none}
+.md-preview.active{display:block}
+.md-preview h1{font-size:20px;font-weight:700;margin:16px 0 8px;color:var(--text)}
+.md-preview h2{font-size:17px;font-weight:600;margin:14px 0 6px;color:var(--text)}
+.md-preview h3{font-size:14px;font-weight:600;margin:12px 0 4px;color:var(--text)}
+.md-preview p{margin:0 0 8px}
+.md-preview a{color:var(--blue);text-decoration:none}
+.md-preview a:hover{text-decoration:underline}
+.md-preview code{background:var(--surface);padding:1px 5px;border-radius:4px;font-size:12px;font-family:'JetBrains Mono','Fira Code','Consolas',monospace;color:var(--accent2)}
+.md-preview pre{background:var(--surface);padding:12px;border-radius:6px;overflow-x:auto;margin:8px 0}
+.md-preview pre code{background:none;padding:0}
+.md-preview blockquote{border-left:3px solid var(--accent);padding:4px 12px;margin:8px 0;color:var(--text2)}
+.md-preview ul,.md-preview ol{padding-left:20px;margin:4px 0 8px}
+.md-preview li{margin:2px 0}
+.md-preview img{max-width:100%;border-radius:6px;margin:8px 0}
+.md-preview hr{border:none;border-top:1px solid var(--border);margin:12px 0}
+.md-preview strong{color:var(--text);font-weight:600}
+.md-preview table{width:100%;border-collapse:collapse;margin:8px 0}
+.md-preview th,.md-preview td{border:1px solid var(--border);padding:6px 10px;text-align:left;font-size:12px}
+.md-preview th{background:var(--surface);font-weight:600}
+/* Research modal */
+.research-modal{max-width:700px!important}
+.research-modal h3{font-size:16px;font-weight:600;margin-bottom:16px}
+.research-modal-fields{display:flex;flex-direction:column;gap:12px}
+.research-modal-row{display:flex;gap:12px;flex-wrap:wrap}
+.research-modal-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px}
+.research-modal-field label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px}
+.research-modal-field input,.research-modal-field select,.research-modal-field textarea{padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;outline:none;font-family:inherit}
+.research-modal-field input:focus,.research-modal-field select:focus,.research-modal-field textarea:focus{border-color:var(--accent)}
+.research-modal-field textarea{min-height:60px;resize:vertical;line-height:1.5}
+.research-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.search-highlight{background:rgba(108,92,231,.3);padding:1px 2px;border-radius:2px}
+/* Related entries in company profile */
+.cp-related-entry{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.cp-related-entry:last-child{border-bottom:none}
+.cp-related-entry:hover{background:var(--surface2);margin:0 -8px;padding:8px;border-radius:6px;border-bottom-color:transparent}
+.cp-related-date{font-size:11px;color:var(--text2);flex-shrink:0}
+.cp-related-preview{font-size:12px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* Toast notifications */
 .toast-container{position:fixed;bottom:24px;right:24px;z-index:500;display:flex;flex-direction:column;gap:8px;pointer-events:none}
 .toast{pointer-events:auto;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--text2);border-radius:8px;padding:12px 36px 12px 14px;font-size:13px;color:var(--text);max-width:380px;min-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toast-in .3s ease;position:relative;line-height:1.4}
@@ -389,6 +480,11 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   .cp-type-tag{padding:4px 8px;font-size:10px}
   .cp-earn-grid{grid-template-columns:1fr}
   .cp-fin-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}
+  .research-header{flex-direction:column;align-items:stretch}
+  .research-search{width:100%}
+  .research-modal{width:95%!important}
+  .research-modal-row{flex-direction:column}
+  .research-entry-actions{margin-left:0;margin-top:4px}
   .cp-hist-charts{grid-template-columns:1fr}
   .cp-val-details{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
   .cp-todo-add{flex-wrap:wrap}
@@ -902,13 +998,24 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   </div>
 </div>
 
-<!-- ====== SECTION: RESEARCH (placeholder) ====== -->
+<!-- ====== SECTION: RESEARCH ====== -->
 <div class="content" id="section-research" style="display:none">
-  <div class="card placeholder-section">
-    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>
-    <h2>Research</h2>
-    <p>Investment journal, earnings notes, and market research. Coming in Phase 3.</p>
+  <div class="research-header">
+    <h2>Research & Notes</h2>
+    <button class="btn btn-primary" onclick="openResearchEntry()" style="padding:8px 16px;font-size:13px">+ New Entry</button>
+    <input type="text" class="research-search" id="research-search" placeholder="Search all notes..." oninput="debounceResearchSearch()">
   </div>
+  <div class="research-tabs">
+    <button class="research-tab active" data-rtab="all" onclick="switchResearchTab('all')">All</button>
+    <button class="research-tab" data-rtab="journal" onclick="switchResearchTab('journal')">Journal</button>
+    <button class="research-tab" data-rtab="news" onclick="switchResearchTab('news')">News</button>
+    <button class="research-tab" data-rtab="market" onclick="switchResearchTab('market')">Market</button>
+  </div>
+  <div id="research-panel-all" class="research-panel active"></div>
+  <div id="research-panel-journal" class="research-panel"></div>
+  <div id="research-panel-news" class="research-panel"></div>
+  <div id="research-panel-market" class="research-panel"></div>
+  <div id="research-panel-search" class="research-panel"></div>
 </div>
 
 <!-- ====== SECTION: FRAMEWORK (placeholder) ====== -->
@@ -1022,6 +1129,105 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
 <!-- Modals -->
 <div class="modal-overlay" id="export-modal"><div class="modal"><h3>Export Data</h3><textarea id="export-data" readonly></textarea><div class="modal-actions"><button class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('export-data').value);showToast('Copied to clipboard','success')">Copy</button><button class="btn btn-secondary" onclick="downloadExport()">Download JSON</button><button class="btn btn-secondary" onclick="closeModals()">Close</button></div></div></div>
 <div class="modal-overlay" id="import-modal"><div class="modal"><h3>Import Data</h3><textarea id="import-data" placeholder="Paste JSON data here..."></textarea><div class="modal-actions"><button class="btn btn-primary" onclick="doImport()">Import</button><label class="btn btn-secondary" style="cursor:pointer">Load File<input type="file" accept=".json" style="display:none" onchange="loadImportFile(event)"></label><button class="btn btn-secondary" onclick="closeModals()">Cancel</button></div></div></div>
+
+<div class="modal-overlay" id="research-entry-modal">
+<div class="modal research-modal">
+  <h3 id="research-modal-title">New Entry</h3>
+  <div class="research-modal-fields">
+    <div class="research-modal-row">
+      <div class="research-modal-field" id="research-modal-type-wrap">
+        <label>Type</label>
+        <select id="re-type" onchange="updateResearchModalFields()">
+          <option value="journal">Journal</option>
+          <option value="news">News</option>
+          <option value="market">Market</option>
+        </select>
+      </div>
+      <div class="research-modal-field">
+        <label>Date</label>
+        <input type="date" id="re-date">
+      </div>
+      <div class="research-modal-field" id="re-ticker-wrap">
+        <label>Ticker (optional)</label>
+        <input type="text" id="re-ticker" placeholder="e.g. AAPL" list="re-ticker-list">
+        <datalist id="re-ticker-list"></datalist>
+      </div>
+    </div>
+    <!-- Journal-specific -->
+    <div class="research-modal-row" id="re-action-wrap">
+      <div class="research-modal-field">
+        <label>Action</label>
+        <select id="re-action">
+          <option value="note">Note</option>
+          <option value="buy">Buy</option>
+          <option value="sell">Sell</option>
+          <option value="add">Add</option>
+          <option value="trim">Trim</option>
+        </select>
+      </div>
+    </div>
+    <!-- News-specific -->
+    <div class="research-modal-row" id="re-news-wrap" style="display:none">
+      <div class="research-modal-field">
+        <label>Source</label>
+        <input type="text" id="re-source" placeholder="e.g. WSJ, Reuters, Bloomberg">
+      </div>
+      <div class="research-modal-field">
+        <label>Source URL</label>
+        <input type="text" id="re-source-url" placeholder="https://...">
+      </div>
+    </div>
+    <div id="re-excerpt-wrap" style="display:none">
+      <div class="research-modal-field">
+        <label>Key Excerpt</label>
+        <textarea id="re-excerpt" placeholder="The key quote or fact from the article..."></textarea>
+      </div>
+    </div>
+    <!-- Market-specific -->
+    <div class="research-modal-row" id="re-market-wrap" style="display:none">
+      <div class="research-modal-field">
+        <label>Title</label>
+        <input type="text" id="re-title" placeholder="e.g. Fed Rate Decision, Inflation Data">
+      </div>
+      <div class="research-modal-field">
+        <label>Tags (comma-separated)</label>
+        <input type="text" id="re-tags" placeholder="e.g. rates, inflation, fed">
+      </div>
+    </div>
+    <!-- Content (Markdown editor) -->
+    <div class="research-modal-field">
+      <label>Content</label>
+      <div class="md-wrap" id="re-md-wrap">
+        <div class="md-toolbar">
+          <button type="button" onclick="insertMd('re-content','bold')" title="Bold">B</button>
+          <button type="button" onclick="insertMd('re-content','italic')" title="Italic"><i>I</i></button>
+          <button type="button" onclick="insertMd('re-content','code')" title="Code">&lt;/&gt;</button>
+          <span class="md-sep"></span>
+          <button type="button" onclick="insertMd('re-content','link')" title="Link">🔗</button>
+          <button type="button" onclick="insertMd('re-content','heading')" title="Heading">H</button>
+          <button type="button" onclick="insertMd('re-content','list')" title="List">☰</button>
+          <span class="md-sep"></span>
+          <label style="cursor:pointer;padding:4px 6px;color:var(--text2);font-size:13px" title="Upload image">📷<input type="file" accept="image/*" style="display:none" onchange="handleImageUpload(event,'re-content')"></label>
+          <button type="button" class="md-toggle" id="re-preview-toggle" onclick="toggleMdPreview('re')">Preview</button>
+        </div>
+        <textarea class="md-editor" id="re-content" placeholder="Write your notes in Markdown..." onpaste="handleImagePaste(event,'re-content')"></textarea>
+        <div class="md-preview" id="re-preview"></div>
+      </div>
+    </div>
+    <!-- Image list -->
+    <div id="re-images-list" style="display:none">
+      <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px">Attached Images</label>
+      <div id="re-images-grid" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"></div>
+    </div>
+  </div>
+  <input type="hidden" id="re-edit-id">
+  <input type="hidden" id="re-edit-type">
+  <div class="research-modal-actions">
+    <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
+    <button class="btn btn-primary" onclick="saveResearchEntry()">Save</button>
+  </div>
+</div>
+</div>
 
 <script>
 // ====== E2E ENCRYPTION ======
@@ -1505,7 +1711,7 @@ function renderSavedStocks(){
 }
 function showExportModal(){
   const s=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');
-  document.getElementById('export-data').value=JSON.stringify({version:2,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s},null,2);
+  document.getElementById('export-data').value=JSON.stringify({version:3,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks},null,2);
   document.getElementById('export-modal').classList.add('active');
 }
 function showImportModal(){document.getElementById('import-data').value='';document.getElementById('import-modal').classList.add('active')}
@@ -1519,6 +1725,8 @@ function doImport(){
   try{const d=JSON.parse(document.getElementById('import-data').value);
     if(d.current)loadData(d.current);
     if(d.savedStocks){const ex=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');Object.assign(ex,d.savedStocks);localStorage.setItem('valuation_stocks',JSON.stringify(ex))}
+    if(d.researchNotes){mergeResearchNotes(d.researchNotes);saveResearchNotes()}
+    if(d.trackerStocks){Object.assign(tStocks,d.trackerStocks);saveTrackerStocks()}
     closeModals();showToast('Imported!','success');recalcAll()
   }catch(e){showToast('Invalid JSON data.','error')}
 }
@@ -1547,6 +1755,7 @@ function showSection(name){
     if(active&&active.id==='company-panel-tracker')renderTracker();
     if(active&&active.id==='company-panel-charts')initCharts();
   }
+  if(name==='research')renderResearch();
 }
 
 function switchCompanyTab(name){
@@ -1559,6 +1768,514 @@ function switchCompanyTab(name){
   });
   if(name==='tracker')renderTracker();
   if(name==='charts')initCharts();
+}
+
+// ====== RESEARCH & NOTES (Phase 3) ======
+let researchNotes={journal:[],news:[],market:[],_nextId:1};
+let _reImages=[];
+let _researchSearchTimer=null;
+
+function loadResearchNotes(){
+  try{const d=JSON.parse(localStorage.getItem('research_notes_v1'));if(d&&typeof d==='object'){researchNotes=d;if(!researchNotes._nextId)researchNotes._nextId=1;if(!researchNotes.journal)researchNotes.journal=[];if(!researchNotes.news)researchNotes.news=[];if(!researchNotes.market)researchNotes.market=[]}}catch(e){}
+}
+function saveResearchNotes(){try{localStorage.setItem('research_notes_v1',JSON.stringify(researchNotes))}catch(e){showToast('Storage full — export your data','error',8000)}}
+
+function mergeResearchNotes(incoming){
+  ['journal','news','market'].forEach(type=>{
+    const existing=researchNotes[type]||[];
+    const existingIds=new Set(existing.map(e=>e.id));
+    (incoming[type]||[]).forEach(e=>{
+      if(!existingIds.has(e.id)){existing.push(e);existingIds.add(e.id)}
+      else{
+        const idx=existing.findIndex(x=>x.id===e.id);
+        if(idx!==-1&&e.updatedAt&&existing[idx].updatedAt&&e.updatedAt>existing[idx].updatedAt)existing[idx]=e;
+      }
+    });
+    researchNotes[type]=existing;
+  });
+  recalcResearchNextId();
+}
+
+function recalcResearchNextId(){
+  const maxId=Math.max(0,...researchNotes.journal.map(e=>e.id||0),...researchNotes.news.map(e=>e.id||0),...researchNotes.market.map(e=>e.id||0));
+  researchNotes._nextId=maxId+1;
+}
+
+function switchResearchTab(name){
+  document.querySelectorAll('.research-tab').forEach(b=>b.classList.toggle('active',b.dataset.rtab===name));
+  document.querySelectorAll('.research-panel').forEach(p=>p.classList.remove('active'));
+  const p=document.getElementById('research-panel-'+name);
+  if(p)p.classList.add('active');
+  if(name!=='search')renderResearchFeed(name);
+}
+
+function renderResearch(){
+  const activeTab=document.querySelector('.research-tab.active');
+  const tab=activeTab?activeTab.dataset.rtab:'all';
+  renderResearchFeed(tab);
+}
+
+function getAllResearchEntries(type){
+  if(type==='all'){
+    const all=[];
+    researchNotes.journal.forEach(n=>all.push({...n,_type:'journal'}));
+    researchNotes.news.forEach(n=>all.push({...n,_type:'news'}));
+    researchNotes.market.forEach(n=>all.push({...n,_type:'market'}));
+    return all;
+  }
+  return (researchNotes[type]||[]).map(n=>({...n,_type:type}));
+}
+
+function renderResearchFeed(type){
+  const panel=document.getElementById('research-panel-'+type);
+  if(!panel)return;
+  let entries=getAllResearchEntries(type);
+  if(!entries.length){
+    panel.innerHTML=`<div class="research-empty"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg><p>No ${type==='all'?'':type+' '}entries yet</p><button class="btn btn-primary" onclick="openResearchEntry('${type==='all'?'journal':type}')">+ Create First Entry</button></div>`;
+    return;
+  }
+  const pinned=entries.filter(e=>e.pinned);
+  const unpinned=entries.filter(e=>!e.pinned);
+  pinned.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  unpinned.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const sorted=[...pinned,...unpinned];
+  panel.innerHTML=sorted.map(e=>renderResearchEntry(e)).join('');
+}
+
+function renderResearchEntry(e){
+  const t=e._type;
+  const dateStr=e.date?formatNoteDate(e.date):'';
+  const typeBadge=`<span class="research-entry-type research-entry-type--${t}">${t}</span>`;
+  let tickerBadge='';
+  if(e.ticker)tickerBadge=`<a class="research-entry-ticker" onclick="showSection('companies');showProfile('${escH(e.ticker)}')">${escH(e.ticker)}</a>`;
+  let actionBadge='';
+  if(t==='journal'&&e.action&&e.action!=='note')actionBadge=`<span class="research-entry-action research-entry-action--${e.action}">${e.action}</span>`;
+  const pinnedClass=e.pinned?'pinned-entry':'';
+  const pinIcon=e.pinned?'📌':'📍';
+  const pinTitle=e.pinned?'Unpin':'Pin';
+  let body='';
+  if(t==='news'&&e.excerpt)body+=`<div class="research-entry-excerpt">${escH(e.excerpt)}</div>`;
+  const content=t==='news'?(e.comment||''):(e.content||'');
+  if(content)body+=`<div class="research-entry-body">${renderMarkdown(content,e.images)}</div>`;
+  let meta='';
+  if(t==='news'){
+    const parts=[];
+    if(e.source)parts.push(escH(e.source));
+    if(e.sourceUrl&&/^https?:\/\//i.test(e.sourceUrl))parts.push(`<a href="${escH(e.sourceUrl)}" target="_blank" rel="noopener">Source ↗</a>`);
+    if(parts.length)meta=`<div class="research-entry-meta">${parts.join(' · ')}</div>`;
+  }
+  if(t==='market'&&e.title)body=`<div style="font-size:14px;font-weight:600;margin-bottom:6px">${escH(e.title)}</div>`+body;
+  let tags='';
+  if(t==='market'&&e.tags&&e.tags.length)tags=`<div class="research-entry-tags">${e.tags.map(tg=>`<span class="research-entry-tag">${escH(tg)}</span>`).join('')}</div>`;
+  return `<div class="research-entry ${pinnedClass}">
+    <div class="research-entry-header">
+      <span class="research-entry-date">${dateStr}</span>
+      ${typeBadge}${tickerBadge}${actionBadge}
+      <div class="research-entry-actions">
+        <button onclick="togglePinEntry('${t}',${e.id})" title="${pinTitle}">${pinIcon}</button>
+        <button onclick="openResearchEntry('${t}',${e.id})" title="Edit">✏️</button>
+        <button onclick="deleteResearchEntry('${t}',${e.id})" title="Delete">🗑️</button>
+      </div>
+    </div>
+    ${body}${meta}${tags}
+  </div>`;
+}
+
+function formatNoteDate(d){
+  if(!d)return'';
+  try{const dt=new Date(d+'T00:00:00');if(isNaN(dt))return d;return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}catch(e){return d}
+}
+
+// Markdown rendering
+function renderMarkdown(text,images){
+  if(!text)return'';
+  let processed=text;
+  if(images&&images.length){
+    processed=processed.replace(/!\[([^\]]*)\]\(img:(\d+)\)/g,(m,alt,idx)=>{
+      const i=parseInt(idx);
+      if(images[i]&&images[i].data)return`![${alt}](${images[i].data})`;
+      return m;
+    });
+  }
+  try{
+    if(typeof marked!=='undefined'){
+      let html=marked.parse(processed);
+      if(typeof DOMPurify!=='undefined')html=DOMPurify.sanitize(html,{ADD_ATTR:['target']});
+      return'<div class="md-preview active">'+html+'</div>';
+    }
+  }catch(e){}
+  return'<div class="md-preview active">'+escH(text).replace(/\n/g,'<br>')+'</div>';
+}
+
+// Markdown editor toolbar
+function insertMd(textareaId,type){
+  const ta=document.getElementById(textareaId);if(!ta)return;
+  const start=ta.selectionStart,end=ta.selectionEnd;
+  const sel=ta.value.substring(start,end);
+  let before='',after='',insert='';
+  switch(type){
+    case'bold':before='**';after='**';insert=sel||'bold text';break;
+    case'italic':before='*';after='*';insert=sel||'italic text';break;
+    case'code':if(sel.includes('\n')){before='```\n';after='\n```';insert=sel||'code'}else{before='`';after='`';insert=sel||'code'}break;
+    case'link':before='[';after='](url)';insert=sel||'link text';break;
+    case'heading':before='## ';after='';insert=sel||'Heading';break;
+    case'list':before='- ';after='';insert=sel||'Item';break;
+  }
+  ta.value=ta.value.substring(0,start)+before+insert+after+ta.value.substring(end);
+  ta.focus();
+  const newPos=start+before.length+insert.length;
+  ta.setSelectionRange(start+before.length,newPos);
+}
+
+function toggleMdPreview(prefix){
+  const editor=document.getElementById(prefix+'-content');
+  const preview=document.getElementById(prefix+'-preview');
+  const toggle=document.getElementById(prefix+'-preview-toggle');
+  if(!editor||!preview)return;
+  if(preview.style.display==='none'||!preview.classList.contains('active')){
+    preview.innerHTML=renderMarkdown(editor.value,_reImages);
+    const inner=preview.querySelector('.md-preview');
+    if(inner){preview.innerHTML=inner.innerHTML;preview.classList.add('active')}
+    else{preview.classList.add('active')}
+    editor.style.display='none';
+    if(toggle){toggle.textContent='Edit';toggle.classList.add('active')}
+  }else{
+    preview.classList.remove('active');
+    editor.style.display='';
+    if(toggle){toggle.textContent='Preview';toggle.classList.remove('active')}
+  }
+}
+
+// Image handling
+function handleImagePaste(event,textareaId){
+  const items=event.clipboardData&&event.clipboardData.items;
+  if(!items)return;
+  for(let i=0;i<items.length;i++){
+    if(items[i].type.indexOf('image')===0){
+      event.preventDefault();
+      const file=items[i].getAsFile();
+      processImageFile(file,textareaId);
+      return;
+    }
+  }
+}
+
+function handleImageUpload(event,textareaId){
+  const file=event.target.files&&event.target.files[0];
+  if(!file)return;
+  processImageFile(file,textareaId);
+  event.target.value='';
+}
+
+function processImageFile(file,textareaId){
+  if(file.size>2*1024*1024){showToast('Image too large (max 2MB)','error');return}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const img=new Image();
+    img.onload=function(){
+      let w=img.width,h=img.height;
+      const maxDim=800;
+      if(w>maxDim||h>maxDim){
+        if(w>h){h=Math.round(h*maxDim/w);w=maxDim}
+        else{w=Math.round(w*maxDim/h);h=maxDim}
+      }
+      const canvas=document.createElement('canvas');
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      const data=canvas.toDataURL('image/jpeg',0.7);
+      if(data.length>500*1024){showToast('Image still too large after compression','error');return}
+      const idx=_reImages.length;
+      _reImages.push({data,name:file.name||'image.jpg'});
+      const ta=document.getElementById(textareaId);
+      if(ta){
+        const pos=ta.selectionStart;
+        const mdImg=`![${file.name||'image'}](img:${idx})`;
+        ta.value=ta.value.substring(0,pos)+mdImg+ta.value.substring(ta.selectionEnd);
+        ta.focus();
+      }
+      updateImagesGrid();
+      showToast('Image attached','success');
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function updateImagesGrid(){
+  const wrap=document.getElementById('re-images-list');
+  const grid=document.getElementById('re-images-grid');
+  if(!wrap||!grid)return;
+  if(!_reImages.length){wrap.style.display='none';return}
+  wrap.style.display='';
+  grid.innerHTML=_reImages.map((img,i)=>`<div style="position:relative"><img src="${img.data}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"><button onclick="removeReImage(${i})" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1">×</button></div>`).join('');
+}
+
+function removeReImage(idx){
+  _reImages.splice(idx,1);
+  const ta=document.getElementById('re-content');
+  if(ta){
+    ta.value=ta.value.replace(new RegExp(`!\\[[^\\]]*\\]\\(img:${idx}\\)`,'g'),'');
+    for(let i=idx;i<_reImages.length;i++){
+      ta.value=ta.value.replace(new RegExp(`\\(img:${i+1}\\)`,'g'),`(img:${i})`);
+    }
+  }
+  updateImagesGrid();
+}
+
+// Research entry modal
+function openResearchEntry(type,id){
+  const modal=document.getElementById('research-entry-modal');
+  document.getElementById('re-edit-id').value='';
+  document.getElementById('re-edit-type').value='';
+  _reImages=[];
+  const tickerList=document.getElementById('re-ticker-list');
+  tickerList.innerHTML=Object.keys(tStocks).map(t=>`<option value="${escH(t)}">`).join('');
+  document.getElementById('re-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('re-ticker').value='';
+  document.getElementById('re-action').value='note';
+  document.getElementById('re-source').value='';
+  document.getElementById('re-source-url').value='';
+  document.getElementById('re-excerpt').value='';
+  document.getElementById('re-title').value='';
+  document.getElementById('re-tags').value='';
+  document.getElementById('re-content').value='';
+  document.getElementById('re-content').style.display='';
+  document.getElementById('re-preview').classList.remove('active');
+  document.getElementById('re-preview').innerHTML='';
+  const toggle=document.getElementById('re-preview-toggle');
+  if(toggle){toggle.textContent='Preview';toggle.classList.remove('active')}
+  updateImagesGrid();
+
+  if(id!=null){
+    const t=type||'journal';
+    const list=researchNotes[t]||[];
+    const entry=list.find(e=>e.id===id);
+    if(entry){
+      document.getElementById('re-edit-id').value=id;
+      document.getElementById('re-edit-type').value=t;
+      document.getElementById('re-type').value=t;
+      document.getElementById('re-date').value=entry.date||'';
+      document.getElementById('re-ticker').value=entry.ticker||'';
+      if(t==='journal')document.getElementById('re-action').value=entry.action||'note';
+      if(t==='news'){
+        document.getElementById('re-source').value=entry.source||'';
+        document.getElementById('re-source-url').value=entry.sourceUrl||'';
+        document.getElementById('re-excerpt').value=entry.excerpt||'';
+        document.getElementById('re-content').value=entry.comment||'';
+      }else if(t==='market'){
+        document.getElementById('re-title').value=entry.title||'';
+        document.getElementById('re-tags').value=(entry.tags||[]).join(', ');
+        document.getElementById('re-content').value=entry.content||'';
+      }else{
+        document.getElementById('re-content').value=entry.content||'';
+      }
+      _reImages=(entry.images||[]).map(img=>({...img}));
+      updateImagesGrid();
+      document.getElementById('research-modal-title').textContent='Edit '+t.charAt(0).toUpperCase()+t.slice(1)+' Entry';
+      document.getElementById('research-modal-type-wrap').style.display='none';
+    }
+  }else{
+    document.getElementById('research-modal-title').textContent='New Entry';
+    document.getElementById('research-modal-type-wrap').style.display='';
+    if(type&&type!=='all')document.getElementById('re-type').value=type;
+  }
+  updateResearchModalFields();
+  modal.classList.add('active');
+}
+
+function updateResearchModalFields(){
+  const type=document.getElementById('re-type').value;
+  document.getElementById('re-action-wrap').style.display=type==='journal'?'':'none';
+  document.getElementById('re-news-wrap').style.display=type==='news'?'':'none';
+  document.getElementById('re-excerpt-wrap').style.display=type==='news'?'':'none';
+  document.getElementById('re-market-wrap').style.display=type==='market'?'':'none';
+  document.getElementById('re-ticker-wrap').style.display=type==='market'?'none':'';
+}
+
+function saveResearchEntry(){
+  const editId=document.getElementById('re-edit-id').value;
+  const editType=document.getElementById('re-edit-type').value;
+  const type=editId?editType:document.getElementById('re-type').value;
+  const date=document.getElementById('re-date').value;
+  const content=document.getElementById('re-content').value.trim();
+
+  if(!date){showToast('Date is required','error');return}
+  if(!content&&type!=='news'){showToast('Content is required','error');return}
+  if(type==='news'&&!content&&!document.getElementById('re-excerpt').value.trim()){showToast('Excerpt or comment is required','error');return}
+
+  const now=new Date().toISOString();
+  if(editId){
+    const list=researchNotes[type]||[];
+    const idx=list.findIndex(e=>e.id===parseInt(editId));
+    if(idx===-1){showToast('Entry not found','error');return}
+    const entry=list[idx];
+    entry.date=date;
+    entry.updatedAt=now;
+    entry.images=_reImages.length?[..._reImages]:[];
+    if(type==='journal'){
+      entry.ticker=document.getElementById('re-ticker').value.trim().toUpperCase()||'';
+      entry.action=document.getElementById('re-action').value;
+      entry.content=content;
+    }else if(type==='news'){
+      entry.ticker=document.getElementById('re-ticker').value.trim().toUpperCase()||'';
+      entry.source=document.getElementById('re-source').value.trim();
+      entry.sourceUrl=document.getElementById('re-source-url').value.trim();
+      entry.excerpt=document.getElementById('re-excerpt').value.trim();
+      entry.comment=content;
+    }else if(type==='market'){
+      entry.title=document.getElementById('re-title').value.trim();
+      entry.tags=document.getElementById('re-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+      entry.content=content;
+    }
+  }else{
+    const id=researchNotes._nextId++;
+    const base={id,date,pinned:false,createdAt:now,updatedAt:now,images:_reImages.length?[..._reImages]:[]};
+    if(type==='journal'){
+      base.ticker=document.getElementById('re-ticker').value.trim().toUpperCase()||'';
+      base.action=document.getElementById('re-action').value;
+      base.content=content;
+      researchNotes.journal.push(base);
+    }else if(type==='news'){
+      base.ticker=document.getElementById('re-ticker').value.trim().toUpperCase()||'';
+      base.source=document.getElementById('re-source').value.trim();
+      base.sourceUrl=document.getElementById('re-source-url').value.trim();
+      base.excerpt=document.getElementById('re-excerpt').value.trim();
+      base.comment=content;
+      researchNotes.news.push(base);
+    }else if(type==='market'){
+      base.title=document.getElementById('re-title').value.trim();
+      base.tags=document.getElementById('re-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+      base.content=content;
+      researchNotes.market.push(base);
+    }
+  }
+  saveResearchNotes();
+  closeModals();
+  renderResearch();
+  showToast(editId?'Entry updated':'Entry created','success');
+}
+
+function deleteResearchEntry(type,id){
+  if(!confirm('Delete this entry?'))return;
+  const list=researchNotes[type];
+  if(!list)return;
+  const idx=list.findIndex(e=>e.id===id);
+  if(idx===-1)return;
+  list.splice(idx,1);
+  saveResearchNotes();
+  renderResearch();
+  showToast('Entry deleted','success');
+}
+
+function togglePinEntry(type,id){
+  const list=researchNotes[type];
+  if(!list)return;
+  const entry=list.find(e=>e.id===id);
+  if(!entry)return;
+  entry.pinned=!entry.pinned;
+  saveResearchNotes();
+  renderResearch();
+}
+
+// Search
+function debounceResearchSearch(){
+  clearTimeout(_researchSearchTimer);
+  _researchSearchTimer=setTimeout(()=>{
+    const q=document.getElementById('research-search').value.trim();
+    if(!q){
+      const activeTab=document.querySelector('.research-tab.active');
+      switchResearchTab(activeTab?activeTab.dataset.rtab:'all');
+      return;
+    }
+    searchNotes(q);
+  },300);
+}
+
+function searchNotes(query){
+  const q=query.toLowerCase();
+  const results=[];
+  ['journal','news','market'].forEach(type=>{
+    (researchNotes[type]||[]).forEach(note=>{
+      const fields=[note.content,note.title,note.ticker,note.source,note.excerpt,note.comment,...(note.tags||[])].filter(Boolean).join(' ').toLowerCase();
+      if(fields.includes(q))results.push({...note,_type:type});
+    });
+  });
+  Object.entries(tStocks).forEach(([ticker,s])=>{
+    if(!s.notes)return;
+    if((s.notes.thesis||'').toLowerCase().includes(q)){
+      results.push({_type:'thesis',id:'t_'+ticker,ticker,content:s.notes.thesis,date:'',_companyNote:true});
+    }
+    if((s.notes.research||'').toLowerCase().includes(q)){
+      results.push({_type:'research',id:'r_'+ticker,ticker,content:s.notes.research,date:'',_companyNote:true});
+    }
+  });
+  results.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  document.querySelectorAll('.research-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.research-panel').forEach(p=>p.classList.remove('active'));
+  const panel=document.getElementById('research-panel-search');
+  panel.classList.add('active');
+  if(!results.length){
+    panel.innerHTML=`<div class="research-empty"><p>No results for "${escH(query)}"</p></div>`;
+    return;
+  }
+  panel.innerHTML=`<div style="font-size:12px;color:var(--text2);margin-bottom:12px">${results.length} result${results.length===1?'':'s'} for "${escH(query)}"</div>`+results.map(e=>{
+    if(e._companyNote){
+      const label=e._type==='thesis'?'Investment Thesis':'Research Notes';
+      const preview=highlightSnippet(e.content,query,120);
+      return`<div class="research-entry" onclick="showSection('companies');showProfile('${escH(e.ticker)}');setTimeout(()=>switchProfileTab('notes'),100)" style="cursor:pointer"><div class="research-entry-header"><span class="research-entry-type research-entry-type--journal">${label}</span><a class="research-entry-ticker">${escH(e.ticker)}</a></div><div class="research-entry-body" style="font-size:12px">${preview}</div></div>`;
+    }
+    return renderResearchEntry(e);
+  }).join('');
+}
+
+function highlightSnippet(text,query,maxLen){
+  if(!text)return'';
+  const lower=text.toLowerCase();
+  const idx=lower.indexOf(query.toLowerCase());
+  let snippet=text;
+  if(text.length>maxLen){
+    const start=Math.max(0,idx-40);
+    snippet=(start>0?'...':'')+text.substring(start,start+maxLen)+(start+maxLen<text.length?'...':'');
+  }
+  const re=new RegExp('('+query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+  return escH(snippet).replace(re,'<span class="search-highlight">$1</span>');
+}
+
+// Company profile: related entries
+function renderRelatedEntries(ticker){
+  const journal=researchNotes.journal.filter(e=>e.ticker&&e.ticker.toUpperCase()===ticker.toUpperCase());
+  const news=researchNotes.news.filter(e=>e.ticker&&e.ticker.toUpperCase()===ticker.toUpperCase());
+  let h='';
+  if(journal.length||news.length){
+    if(journal.length){
+      h+='<div class="card"><div class="card-title">Related Journal Entries</div>';
+      journal.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      h+=journal.slice(0,5).map(e=>{
+        const preview=(e.content||'').substring(0,80)+(e.content&&e.content.length>80?'...':'');
+        const actionBadge=e.action&&e.action!=='note'?`<span class="research-entry-action research-entry-action--${e.action}" style="font-size:10px">${e.action}</span>`:'';
+        return`<div class="cp-related-entry" onclick="showSection('research');setTimeout(()=>{openResearchEntry('journal',${e.id})},100)"><span class="cp-related-date">${formatNoteDate(e.date)}</span>${actionBadge}<span class="cp-related-preview">${escH(preview)}</span></div>`;
+      }).join('');
+      if(journal.length>5)h+=`<div style="text-align:center;margin-top:8px"><button class="btn btn-secondary" onclick="showSection('research')" style="font-size:11px;padding:4px 12px">View all ${journal.length} entries</button></div>`;
+      h+='</div>';
+    }
+    if(news.length){
+      h+='<div class="card"><div class="card-title">Related News</div>';
+      news.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      h+=news.slice(0,5).map(e=>{
+        const preview=(e.excerpt||e.comment||'').substring(0,80)+((e.excerpt||e.comment||'').length>80?'...':'');
+        return`<div class="cp-related-entry" onclick="showSection('research');setTimeout(()=>{openResearchEntry('news',${e.id})},100)"><span class="cp-related-date">${formatNoteDate(e.date)}</span><span style="font-size:10px;color:var(--text2)">${escH(e.source||'')}</span><span class="cp-related-preview">${escH(preview)}</span></div>`;
+      }).join('');
+      h+='</div>';
+    }
+  }
+  h+=`<div class="card" style="text-align:center;padding:16px"><button class="btn btn-secondary" onclick="openResearchEntryForTicker('${escH(ticker)}')" style="padding:8px 16px;font-size:12px">+ New Journal Entry for ${escH(ticker)}</button></div>`;
+  return h;
+}
+
+function openResearchEntryForTicker(ticker){
+  openResearchEntry('journal');
+  setTimeout(()=>{document.getElementById('re-ticker').value=ticker},50);
 }
 
 function toggleMoreMenu(){
@@ -1967,14 +2684,16 @@ function renderNotes(ticker){
   if(typeof s.notes==='string'){s.notes={thesis:s.notes,research:'',earnings:{}}}
   let h='';
 
-  // Thesis
-  h+='<div class="card"><div class="card-title">Investment Thesis</div>';
-  h+=`<textarea class="cp-notes-area" id="cp-thesis-input" placeholder="Why is this a good investment? What is your edge?" oninput="saveNote('${escH(ticker)}','thesis',this.value)" style="min-height:120px">${escH(s.notes.thesis||'')}</textarea>`;
+  // Thesis (with Markdown preview)
+  h+='<div class="card"><div class="card-title" style="display:flex;align-items:center;justify-content:space-between">Investment Thesis<button class="btn btn-secondary" style="font-size:10px;padding:2px 8px" onclick="toggleCpPreview(\'thesis\')">Preview</button></div>';
+  h+=`<textarea class="cp-notes-area" id="cp-thesis-input" placeholder="Why is this a good investment? What is your edge? (Markdown supported)" oninput="saveNote('${escH(ticker)}','thesis',this.value)" style="min-height:120px">${escH(s.notes.thesis||'')}</textarea>`;
+  h+='<div class="md-preview" id="cp-thesis-preview"></div>';
   h+='<div class="cp-notes-saved" id="cp-thesis-saved"></div></div>';
 
-  // Research notes
-  h+='<div class="card"><div class="card-title">Research Notes</div>';
-  h+=`<textarea class="cp-notes-area" id="cp-research-input" placeholder="General research notes, observations, links, sources..." oninput="saveNote('${escH(ticker)}','research',this.value)" style="min-height:160px">${escH(s.notes.research||'')}</textarea>`;
+  // Research notes (with Markdown preview)
+  h+='<div class="card"><div class="card-title" style="display:flex;align-items:center;justify-content:space-between">Research Notes<button class="btn btn-secondary" style="font-size:10px;padding:2px 8px" onclick="toggleCpPreview(\'research\')">Preview</button></div>';
+  h+=`<textarea class="cp-notes-area" id="cp-research-input" placeholder="General research notes, observations, links, sources... (Markdown supported)" oninput="saveNote('${escH(ticker)}','research',this.value)" style="min-height:160px">${escH(s.notes.research||'')}</textarea>`;
+  h+='<div class="md-preview" id="cp-research-preview"></div>';
   h+='<div class="cp-notes-saved" id="cp-research-saved"></div></div>';
 
   // TODO list
@@ -2001,7 +2720,28 @@ function renderNotes(ticker){
   h+=`<div class="cp-earn-add"><input type="number" id="cp-filing-new-year" placeholder="Year" value="${new Date().getFullYear()}"><button onclick="addFilingsYear('${escH(ticker)}')">+ Add Year</button></div>`;
   h+='</div>';
 
+  // Related research entries
+  h+=renderRelatedEntries(ticker);
+
   document.getElementById('cp-notes-content').innerHTML=h;
+}
+
+function toggleCpPreview(field){
+  const ta=document.getElementById('cp-'+field+'-input');
+  const preview=document.getElementById('cp-'+field+'-preview');
+  if(!ta||!preview)return;
+  if(!preview.classList.contains('active')){
+    const rendered=renderMarkdown(ta.value);
+    const inner=document.createElement('div');inner.innerHTML=rendered;
+    const content=inner.querySelector('.md-preview');
+    preview.innerHTML=content?content.innerHTML:rendered;
+    preview.classList.add('active');
+    ta.style.display='none';
+  }else{
+    preview.classList.remove('active');
+    preview.innerHTML='';
+    ta.style.display='';
+  }
 }
 
 let noteTimers={};
@@ -3260,7 +4000,8 @@ async function cloudSave(){
     stocks:tStocks,
     settings:(()=>{const st=stSettings();return{g1:st.g1,g2:st.g2,g3:st.g3,dr:st.dr,tg:st.tg,em:st.em,fade:st.fade}})(),
     calculator:getAllData(),
-    savedStocks:JSON.parse(localStorage.getItem('valuation_stocks')||'{}')
+    savedStocks:JSON.parse(localStorage.getItem('valuation_stocks')||'{}'),
+    researchNotes:researchNotes
   };
   let body=payload;
   if(_encPass&&isEncryptionEnabled()){
@@ -3307,6 +4048,7 @@ async function cloudLoad(){
       }
       if(cloud.calculator)loadData(cloud.calculator);
       if(cloud.savedStocks)localStorage.setItem('valuation_stocks',JSON.stringify(cloud.savedStocks));
+      if(cloud.researchNotes){mergeResearchNotes(cloud.researchNotes);saveResearchNotes()}
       localStorage.setItem('sync_ts',String(cloud.ts));
       lastSyncTs=cloud.ts;
       console.log('Cloud sync loaded',new Date(cloud.ts).toLocaleTimeString());
@@ -3318,15 +4060,17 @@ async function cloudLoad(){
 
 // Auto save/load
 async function autoLoad(){
+  if(typeof marked!=='undefined')marked.setOptions({breaks:true,gfm:true});
   loadTrackerSettings();
   loadTrackerStocks();
+  loadResearchNotes();
   initTodoCounter();
   const l=localStorage.getItem('valuation_last_v2');
   if(l){try{loadData(JSON.parse(l))}catch(e){}}
   recalcAll();
   updateEncStatus();
   const loaded=await cloudLoad();
-  if(loaded){recalcAll();renderSavedStocks()}
+  if(loaded){recalcAll();renderSavedStocks();renderResearch()}
 }
 function autoSave(){
   localStorage.setItem('valuation_last_v2',JSON.stringify(getAllData()));
@@ -3337,11 +4081,13 @@ function autoSave(){
 // Hook tracker saves to cloud sync
 const _origSaveStocks=saveTrackerStocks;
 saveTrackerStocks=function(){_origSaveStocks();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
+const _origSaveNotes=saveResearchNotes;
+saveResearchNotes=function(){_origSaveNotes();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 const _origSaveSettings=saveTrackerSettings;
 saveTrackerSettings=function(){_origSaveSettings();scheduleCloudSave()};
 
 document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
-window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks()});
+window.addEventListener('beforeunload',()=>{autoSave();saveTrackerStocks();saveResearchNotes()});
 window.addEventListener('load',()=>{
   if(isEncryptionEnabled()){
     document.getElementById('lock-screen').style.display='flex';
