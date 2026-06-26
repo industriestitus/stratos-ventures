@@ -2453,12 +2453,12 @@ function calcReverseDCF(){
   const targetEV=mc-cash+debt;
   T('rdcf-fade-label',fade);T('rdcf-term-label',(tg*100).toFixed(1)+'%');
   T('rdcf-fade-label2',fade);T('rdcf-em-label',em);
-  const solvP=solveGrowth(fcf0,dr,fade,function(f,d){return(f*(1+tg))/(d-tg)});
-  const igP=solvP(targetEV);
+  const solvP=solveGrowth(fcf0,dr,fade,function(f,d){return d<=tg?Infinity:(f*(1+tg))/(d-tg)});
+  const igP=dr<=tg?NaN:solvP(targetEV);
   const fcfsP=[fcf0];for(let i=1;i<=Math.min(fade,10);i++)fcfsP.push(fcfsP[i-1]*(1+igP));
   T('rp-f0',fmt(fcfsP[0]));
   for(let i=1;i<=Math.min(fade,10);i++){T('rp-f'+i,fmt(fcfsP[i]));T('rp-p'+i,fmt(fcfsP[i]/Math.pow(1+dr,i)))}
-  const pPFCF=mc/fcf0,pYield=fcf0/mc;
+  const pPFCF=fcf0?mc/fcf0:NaN,pYield=mc?fcf0/mc:NaN;
   document.getElementById('rdcfp-results').innerHTML=`
     <div class="result-box"><div class="label">Implied Growth</div><div class="value ${igP>0.15?'negative':igP>0.08?'warn':'positive'}">${(igP*100).toFixed(2)}%</div></div>
     <div class="result-box"><div class="label">P/FCF-SBC</div><div class="value neutral">${pPFCF.toFixed(1)}x</div></div>
@@ -2662,7 +2662,7 @@ function showSection(name){
   }
   closeMoreMenu();
   if(name==='companies'){
-    if(profileTicker)return;
+    if(profileTicker){closeProfile();return}
     const active=document.querySelector('.company-panel.active');
     if(active&&active.id==='company-panel-tracker')renderTracker();
     if(active&&active.id==='company-panel-charts')initCharts();
@@ -2884,9 +2884,9 @@ function renderPositions(){
     <div class="pf-summary-item"><span class="pf-summary-label">P&L</span><span class="pf-summary-value ${pClass}">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} (${totalPnlPct>=0?'+':''}${totalPnlPct.toFixed(1)}%)</span></div>
   </div>`;
 
-  c.innerHTML=`<table class="pf-pos-table"><thead><tr>
+  c.innerHTML=`<div style="overflow-x:auto"><table class="pf-pos-table"><thead><tr>
     <th>Ticker</th><th>Account</th><th>Type</th><th class="num">Shares</th><th class="num">Avg Cost</th><th class="num">Price</th><th class="num">Value</th><th class="num">P&L</th><th class="num">P&L %</th><th></th>
-  </tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  </tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
 }
 
 function onPositionTickerInput(){
@@ -3065,9 +3065,9 @@ function renderTransactions(){
     </tr>`;
   });
 
-  c.innerHTML=`<table class="pf-tx-table"><thead><tr>
+  c.innerHTML=`<div style="overflow-x:auto"><table class="pf-tx-table"><thead><tr>
     <th>Date</th><th>Type</th><th>Ticker</th><th>Account</th><th class="num">Shares</th><th class="num">Price</th><th class="num">Total</th><th class="num">Fees</th><th>Notes</th><th></th>
-  </tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  </tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
 }
 
 function calcTxTotal(){
@@ -3286,6 +3286,7 @@ function calcXIRR(){
   if(totalValue>0)cfs.push({date:new Date(),amount:totalValue});
   if(cfs.length<2)return null;
   cfs.sort((a,b)=>a.date-b.date);
+  if(cfs[cfs.length-1].date.getTime()===cfs[0].date.getTime())return null;
   const d0=cfs[0].date;
   function npv(rate){
     let s=0;
@@ -5647,7 +5648,7 @@ function stSettings(){
   };
 }
 
-function saveTrackerSettings(){localStorage.setItem('tracker_settings',JSON.stringify(stSettings()))}
+function saveTrackerSettings(){try{localStorage.setItem('tracker_settings',JSON.stringify(stSettings()))}catch(e){showToast('Storage full — export your data','error',8000)}}
 
 function loadTrackerSettings(){
   let s={};
@@ -5985,7 +5986,7 @@ function renderDivBreakdownTable(breakdown){
   }
   body.innerHTML=sorted.map(b=>{
     const freqCls='div-freq-'+(b.frequency||'unknown').replace(/\s/g,'-');
-    return `<tr style="cursor:pointer" onclick="showProfile('${escH(b.ticker)}')">
+    return `<tr style="cursor:pointer" onclick="showSection('companies');showProfile('${escH(b.ticker)}')">
       <td><strong>${escH(b.ticker)}</strong></td>
       <td class="num">${b.shares.toLocaleString()}</td>
       <td class="num">${b.annualDPS.toFixed(4)}</td>
@@ -6263,6 +6264,12 @@ function removeTrackerStock(ticker){
   if(divHistory[ticker]){delete divHistory[ticker];saveDividendHistory()}
   rvData.entries=rvData.entries.filter(e=>e.companyTicker!==ticker);
   saveReviews();
+  pfPositions=pfPositions.filter(p=>p.ticker!==ticker);
+  savePortfolioPositions();
+  pfTransactions=pfTransactions.filter(t=>t.ticker!==ticker);
+  savePortfolioTransactions();
+  if(db52wHighs[ticker]){delete db52wHighs[ticker];saveDash52wHighs()}
+  compareSelected.delete(ticker);
   saveTrackerStocks();
   renderTracker();
   showToast(ticker+' removed','success');
@@ -6437,7 +6444,7 @@ function calcStockScore(s){
 
   // Health
   const fcfPos=(s.fcf!=null)?(s.fcf>0?4:0):null;
-  const fcfQual=(s.fcf!=null&&s.profit!=null)?(s.fcf>0&&s.fcf>s.profit?4:0):null;
+  const fcfQual=(s.fcf!=null&&s.profit!=null&&s.profit>0&&s.fcf>0)?(s.fcf>=s.profit?4:s.fcf>=s.profit*0.8?3:s.fcf>=s.profit*0.5?1:0):((s.fcf!=null&&s.profit!=null)?0:null);
   const sbcPct=(s.sbc!=null&&s.revenue&&s.revenue>0)?(s.sbc/s.revenue*100):null;
   const sbcScore=sbcPct!=null?scoreTierInv(sbcPct,T.health.sbcLow.tiers):null;
   const bbYield=r.buyback;
@@ -6445,7 +6452,7 @@ function calcStockScore(s){
     {k:'debtEquity',l:'Debt/Equity',v:s.debtEquity,score:(s.debtEquity!=null&&s.debtEquity>=0)?scoreTierInv(s.debtEquity,T.health.debtEquity.tiers):(s.debtEquity!=null?0:null),max:T.health.debtEquity.pts},
     {k:'currentRatio',l:'Current Ratio',v:s.currentRatio,score:scoreTier(s.currentRatio,T.health.currentRatio.tiers),max:T.health.currentRatio.pts},
     {k:'fcfPositive',l:'FCF Positive',v:s.fcf!=null?(s.fcf>0?'Yes':'No'):null,score:fcfPos,max:T.health.fcfPositive.pts},
-    {k:'fcfQuality',l:'FCF > Net Inc.',v:(s.fcf!=null&&s.profit!=null)?(s.fcf>s.profit?'Yes':'No'):null,score:fcfQual,max:T.health.fcfQuality.pts},
+    {k:'fcfQuality',l:'FCF/Net Inc.',v:(s.fcf!=null&&s.profit!=null&&s.profit>0)?((s.fcf/s.profit*100).toFixed(0)+'%'):(s.fcf!=null&&s.profit!=null?'N/A':null),score:fcfQual,max:T.health.fcfQuality.pts},
     {k:'sbcLow',l:'SBC/Rev',v:sbcPct,score:sbcScore,max:T.health.sbcLow.pts},
     {k:'buyback',l:'Buyback Yield',v:bbYield,score:scoreTier(bbYield,T.health.buyback.tiers),max:T.health.buyback.pts}
   ]);
@@ -6673,16 +6680,18 @@ function renderTracker(){
 
   const _scoreCache=new Map();
   function getScore(s){if(!_scoreCache.has(s.ticker))_scoreCache.set(s.ticker,calcStockScore(s));return _scoreCache.get(s.ticker)}
+  const _calcCache=new Map();
+  function getCalc(s){if(!_calcCache.has(s.ticker))_calcCache.set(s.ticker,calcStockCalcs(s));return _calcCache.get(s.ticker)}
+  const _ratioCache=new Map();
+  function getRatio(s){if(!_ratioCache.has(s.ticker))_ratioCache.set(s.ticker,calcStockRatios(s));return _ratioCache.get(s.ticker)}
 
   stocks.sort((a,b)=>{
     const col=stSort.col;
     let va,vb;
     if(['moneyBack','aria','dcf','reverseDcf'].includes(col)){
-      const ca=calcStockCalcs(a),cb=calcStockCalcs(b);
-      va=ca[col];vb=cb[col];
+      va=getCalc(a)[col];vb=getCalc(b)[col];
     }else if(['ps','pe','pfcf','pocf','evEbit','buyback'].includes(col)){
-      const ra=calcStockRatios(a),rb=calcStockRatios(b);
-      va=ra[col];vb=rb[col];
+      va=getRatio(a)[col];vb=getRatio(b)[col];
     }else if(col==='_score'||col.startsWith('_score')){
       const sa=getScore(a),sb=getScore(b);
       if(col==='_score'){va=sa.total;vb=sb.total}
@@ -6722,8 +6731,8 @@ function renderTracker(){
 
   let html='';
   stocks.forEach(s=>{
-    const calcs=calcStockCalcs(s);
-    const ratios=calcStockRatios(s);
+    const calcs=getCalc(s);
+    const ratios=getRatio(s);
     const scoreObj=getScore(s);
     html+='<tr>';
     stCols.forEach(c=>{
@@ -8505,7 +8514,7 @@ saveTrackerStocks=function(){_origSaveStocks();localStorage.setItem('sync_ts',St
 const _origSaveNotes=saveResearchNotes;
 saveResearchNotes=function(){_origSaveNotes();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 const _origSaveSettings=saveTrackerSettings;
-saveTrackerSettings=function(){_origSaveSettings();scheduleCloudSave()};
+saveTrackerSettings=function(){_origSaveSettings();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 const _origSavePfAccounts=savePortfolioAccounts;
 savePortfolioAccounts=function(){_origSavePfAccounts();localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()};
 const _origSavePfPositions=savePortfolioPositions;
