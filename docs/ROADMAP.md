@@ -131,9 +131,9 @@ Status: COMPLETE (2026-06-26)
 ## Phase 8: Stock Scores & Screening (1-2 sessions)
 > Auto-calculated scores and filtering.
 
-- [ ] Stock Scores: valuation, growth, profitability, health (calculated from FMP data)
-- [ ] Company comparison: side-by-side metrics
-- [ ] Basic screener with filters
+- [x] Stock Scores: valuation, growth, profitability, health (4-pillar, 0-100 composite, GARP-tuned thresholds)
+- [x] Company comparison: side-by-side metrics (unlimited companies, horizontally scrollable modal, ~30 metrics)
+- [x] Basic screener with filters (22 filter dimensions, min/max range, pipeline/type dropdowns)
 - [ ] Insider trading display (from Finnhub)
 
 ## Phase 9: Export, Polish & D1 Migration (2-3 sessions)
