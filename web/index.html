@@ -4879,27 +4879,34 @@ function renderScoreBreakdown(ticker){
   h+='<div class="card-title">Quality Score</div>';
 
   // Total score display
-  const totalCls=sc.total>=75?'positive':sc.total>=50?'warn':'negative';
-  const totalLabel=sc.total>=75?'High Quality':sc.total>=50?'Fair':sc.total<25?'Weak':'Below Average';
+  const availPillars=['valuation','growth','profitability','health'].filter(p=>sc[p]!=null).length;
+  const maxScore=availPillars*25;
+  const pct100=maxScore>0?Math.round((sc.total/maxScore)*100):0;
+  const totalCls=pct100>=75?'positive':pct100>=50?'warn':'negative';
+  const totalLabel=pct100>=75?'High Quality':pct100>=50?'Fair':pct100<25?'Weak':'Below Average';
   h+=`<div style="display:flex;align-items:center;gap:20px;margin-bottom:20px">`;
   h+=`<div style="width:80px;height:80px;border-radius:50%;border:4px solid var(--${totalCls==='positive'?'green':totalCls==='warn'?'orange':'red'});display:flex;align-items:center;justify-content:center;flex-shrink:0">`;
   h+=`<span style="font-size:28px;font-weight:700;color:var(--${totalCls==='positive'?'green':totalCls==='warn'?'orange':'red'})">${sc.total}</span>`;
   h+=`</div>`;
-  h+=`<div><div style="font-size:18px;font-weight:600">${totalLabel}</div><div style="color:var(--text2);font-size:13px">${sc.total}/100 points across 4 pillars</div></div>`;
+  h+=`<div><div style="font-size:18px;font-weight:600">${totalLabel}</div><div style="color:var(--text2);font-size:13px">${sc.total}/${maxScore} points across ${availPillars} pillar${availPillars!==1?'s':''}</div></div>`;
   h+=`</div>`;
 
   // Pillar bars
   h+='<div style="display:grid;gap:12px;margin-bottom:8px">';
   pillarMeta.forEach(p=>{
-    const v=sc[p.k]??0;
+    const raw=sc[p.k];
+    const hasData=raw!=null;
+    const v=raw??0;
     const pct=Math.round((v/25)*100);
     h+=`<div>`;
     h+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">`;
     h+=`<span style="font-size:13px;font-weight:600">${p.l}</span>`;
-    h+=`<span style="font-size:13px;font-weight:600;color:${v>=19?'var(--green)':v>=13?'var(--orange)':'var(--red)'}">${v}/25</span>`;
+    h+=hasData
+      ?`<span style="font-size:13px;font-weight:600;color:${v>=19?'var(--green)':v>=13?'var(--orange)':'var(--red)'}">${v}/25</span>`
+      :`<span style="font-size:13px;color:var(--text2)">N/A</span>`;
     h+=`</div>`;
     h+=`<div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">`;
-    h+=`<div style="height:100%;width:${pct}%;background:${v>=19?'var(--green)':v>=13?'var(--orange)':'var(--red)'};border-radius:4px;transition:width .3s"></div>`;
+    h+=`<div style="height:100%;width:${hasData?pct:0}%;background:${v>=19?'var(--green)':v>=13?'var(--orange)':'var(--red)'};border-radius:4px;transition:width .3s"></div>`;
     h+=`</div></div>`;
   });
   h+='</div></div>';
@@ -4975,7 +4982,8 @@ async function renderInsiderTrading(ticker){
   const totalBought=buys.reduce((s,t)=>s+t.change,0);
   const totalSold=sells.reduce((s,t)=>s+Math.abs(t.change),0);
   const netShares=totalBought-totalSold;
-  const last3m=txns.filter(t=>{const d=new Date(t.transactionDate);return d>=new Date(Date.now()-90*86400000)});
+  const cutoff=new Date(Date.now()-90*86400000);
+  const last3m=txns.filter(t=>{if(!t.transactionDate)return false;const d=new Date(t.transactionDate);return!isNaN(d.getTime())&&d>=cutoff});
   const last3mBuys=last3m.filter(t=>t.change>0).length;
   const last3mSells=last3m.filter(t=>t.change<0).length;
 
@@ -5018,7 +5026,7 @@ async function renderInsiderTrading(ticker){
     const typeColor=t.transactionCode==='P'?'var(--green)':t.transactionCode==='S'?'var(--red)':t.transactionCode==='A'?'#a29bfe':t.transactionCode==='M'?'#fd9644':'var(--text2)';
     const shareColor=t.transactionCode==='P'?'var(--green)':t.transactionCode==='S'?'var(--red)':'var(--text2)';
     const price=t.transactionPrice;
-    const value=(price&&t.change)?Math.abs(price*t.change):null;
+    const value=(price!=null&&t.change!=null&&typeof price==='number'&&typeof t.change==='number')?Math.abs(price*t.change):null;
     h+=`<tr${hide?' class="insider-hidden-row" style="display:none;border-bottom:1px solid var(--border)"':' style="border-bottom:1px solid var(--border)"'}><td style="padding:6px 8px;white-space:nowrap">${escH(t.transactionDate||'')}</td><td style="padding:6px 8px">${escH(t.name||'')}</td><td style="text-align:center;padding:6px 8px;color:${typeColor};font-weight:600">${typeLabel}</td><td style="text-align:right;padding:6px 8px;color:${shareColor}">${t.change>0?'+':''}${fmt(t.change)}</td><td style="text-align:right;padding:6px 8px">${price?'$'+price.toFixed(2):'-'}</td><td style="text-align:right;padding:6px 8px">${value?'$'+fmt(value):'-'}</td><td style="text-align:right;padding:6px 8px;color:var(--text2)">${t.share!=null?fmt(t.share):'-'}</td></tr>`;
   });
   if(sorted.length>txnLimit)h+=`<tr id="insider-show-all-row"><td colspan="7" style="text-align:center;padding:10px"><button onclick="document.querySelectorAll('.insider-hidden-row').forEach(r=>r.style.display='');document.getElementById('insider-show-all-row').remove()" style="background:var(--surface2);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:6px 16px;cursor:pointer;font-size:12px">Show all ${sorted.length} transactions</button></td></tr>`;
@@ -6389,8 +6397,7 @@ function calcStockScore(s){
     const d=[];
     items.forEach(it=>{
       const sc=it.score;
-      if(sc!==null){earned+=sc;possible+=it.max}
-      else{possible+=0}
+      if(sc!=null&&!isNaN(sc)){earned+=sc;possible+=it.max}
       d.push(it);
     });
     const scaled=possible>0?Math.round((earned/possible)*25):null;
@@ -6452,14 +6459,14 @@ function calcStockScore(s){
 function calcStockRatios(s){
   const r={};
   const mc=s.marketCap;
-  if(!mc)return r;
+  if(!mc||mc<=0)return r;
   if(s.revenue&&s.revenue>0)r.ps=mc/s.revenue;
   if(s.profit&&s.profit>0)r.pe=mc/s.profit;
   if(s.fcf&&s.fcf>0)r.pfcf=mc/s.fcf;
   if(s.ocf&&s.ocf>0)r.pocf=mc/s.ocf;
   if(s.ebit&&s.ebit>0){const ev=mc+(s.totalDebt||0)-(s.totalCash||0);r.evEbit=ev/s.ebit}
   if(r.pe&&s.epsGrowth&&s.epsGrowth>0)r.peg=r.pe/s.epsGrowth;
-  if(s.buybackRaw&&mc)r.buyback=(s.buybackRaw/mc)*100;
+  if(s.buybackRaw!=null&&mc>0)r.buyback=(s.buybackRaw/mc)*100;
   return r;
 }
 
@@ -6972,7 +6979,11 @@ let compareSelected=new Set();
 
 function toggleCompareMode(){
   compareMode=!compareMode;
-  if(!compareMode)compareSelected.clear();
+  if(!compareMode){
+    compareSelected.clear();
+    const modal=document.getElementById('compare-modal');
+    if(modal)modal.classList.remove('active');
+  }
   document.getElementById('compare-btn').classList.toggle('active',compareMode);
   document.getElementById('compare-bar').style.display=compareMode?'flex':'none';
   updateCompareCount();
