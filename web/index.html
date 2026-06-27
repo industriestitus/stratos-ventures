@@ -852,6 +852,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
 ::-webkit-scrollbar-thumb:hover{background:var(--border)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{body{background:#fff;color:#000}#sidebar,#bottom-nav,.toast-container,#lock-screen,.cp-back,.btn,.conn-btn{display:none!important}.card{border-color:#ccc;break-inside:avoid}#main-content{margin-left:0!important;padding-bottom:0!important}}
+body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;background:var(--orange,#e67e22);color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;z-index:10001;pointer-events:none}
 </style>
 </head>
 <body>
@@ -9599,7 +9600,8 @@ document.addEventListener('visibilitychange',()=>{
   }
 });
 window.addEventListener('online',()=>{
-  if(!d1Mode)return;
+  document.body.classList.remove('is-offline');
+  if(!d1Mode){showToast('Back online','success',2000);return}
   const pendingKeys=Object.keys(API._pendingFns);
   if(pendingKeys.length){
     showToast('Back online — syncing '+pendingKeys.length+' pending change(s)...','info',3000);
@@ -9607,6 +9609,10 @@ window.addEventListener('online',()=>{
   }else{
     showToast('Back online','success',2000);
   }
+});
+window.addEventListener('offline',()=>{
+  document.body.classList.add('is-offline');
+  showToast('You are offline — some features may be unavailable','warning',5000);
 });
 window.addEventListener('storage',e=>{
   if(!e.key||e.key.startsWith('enc_'))return;
@@ -9623,7 +9629,17 @@ window.addEventListener('storage',e=>{
   }
 })();
 window.addEventListener('load',()=>{
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const nw=reg.installing;
+        if(nw)nw.addEventListener('statechange',()=>{
+          if(nw.state==='activated'&&navigator.serviceWorker.controller)showToast('App updated — reload for latest version','info',8000);
+        });
+      });
+    }).catch(e=>console.warn('SW registration failed:',e));
+    if(!navigator.onLine)document.body.classList.add('is-offline');
+  }
   if(isEncryptionEnabled()){
     document.getElementById('lock-screen').style.display='flex';
     showLockView('unlock');

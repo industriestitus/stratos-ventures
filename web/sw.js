@@ -1,22 +1,26 @@
-const CACHE_NAME = 'stratos-v2';
-const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
+const CACHE_NAME = 'stratos-v3';
+const LOCAL_ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CDN_ASSETS = [
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js',
   'https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js',
   'https://cdn.jsdelivr.net/npm/marked@15.0.7/marked.min.js',
   'https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js'
 ];
+const MAX_CACHE_ENTRIES = 200;
 
-const LOCAL_ASSETS = ['./', './index.html', './manifest.json'];
-const CDN_ASSETS = STATIC_ASSETS.filter(u => u.startsWith('http'));
+const API_DOMAINS = ['financialmodelingprep', 'finnhub', 'exchangerate-api', 'yahoo'];
+function isApiCall(hostname) {
+  return API_DOMAINS.some(d => hostname.includes(d));
+}
 
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(LOCAL_ASSETS)
-        .then(() => Promise.allSettled(CDN_ASSETS.map(u => cache.add(u)))))
+        .then(() => Promise.allSettled(CDN_ASSETS.map(u => cache.add(u)))
+          .then(results => {
+            results.forEach((r, i) => { if (r.status === 'rejected') console.warn('CDN cache failed:', CDN_ASSETS[i], r.reason) });
+          })))
       .then(() => self.skipWaiting())
   );
 });
@@ -27,6 +31,14 @@ self.addEventListener('activate', e => {
       .then(keys => Promise.all(
         keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
       ))
+      .then(() => caches.open(CACHE_NAME).then(cache =>
+        cache.keys().then(keys => {
+          if (keys.length > MAX_CACHE_ENTRIES) {
+            const toDelete = keys.slice(0, keys.length - MAX_CACHE_ENTRIES);
+            return Promise.all(toDelete.map(k => cache.delete(k)));
+          }
+        })
+      ))
       .then(() => self.clients.claim())
   );
 });
@@ -34,31 +46,30 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Network-first for API calls — only cache Worker API (not FMP/Finnhub which have keys in URLs)
-  if (url.hostname.includes('financialmodelingprep') || url.hostname.includes('finnhub')) {
+  if (isApiCall(url.hostname)) {
     e.respondWith(fetch(e.request).catch(() => new Response('{"error":"offline"}', {status:503,headers:{'Content-Type':'application/json'}})));
     return;
   }
-  if (url.pathname.startsWith('/api/') || url.hostname.includes('workers.dev')) {
+
+  if (url.hostname.includes('workers.dev')) {
     e.respondWith(
       fetch(e.request).then(response => {
         if (response.ok && e.request.method === 'GET') {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone)).catch(err => console.warn('Cache put failed:', err));
         }
         return response;
-      }).catch(() => caches.match(e.request))
+      }).catch(() => caches.match(e.request).then(c => c || new Response('{"error":"offline"}', {status:503,headers:{'Content-Type':'application/json'}})))
     );
     return;
   }
 
-  // Cache-first for static assets
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fetchPromise = fetch(e.request).then(response => {
         if (response.ok) {
           const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone)).catch(err => console.warn('Cache put failed:', err));
         }
         return response;
       }).catch(() => cached);
