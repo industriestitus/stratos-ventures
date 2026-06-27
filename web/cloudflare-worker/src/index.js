@@ -24,17 +24,17 @@ function getAllowedOrigin(requestOrigin, env) {
 
 function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
-  if (a.length !== b.length) return false;
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  const len = Math.max(a.length, b.length);
+  let result = a.length ^ b.length;
+  for (let i = 0; i < len; i++) {
+    result |= (a.charCodeAt(i % a.length) || 0) ^ (b.charCodeAt(i % b.length) || 0);
   }
   return result === 0;
 }
 
 function cors(allowedOrigin) {
   return {
-    'Access-Control-Allow-Origin': allowedOrigin || 'null',
+    'Access-Control-Allow-Origin': allowedOrigin || '',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, X-Sync-Key',
     'Access-Control-Max-Age': '86400',
@@ -657,10 +657,10 @@ async function handleApi(path, method, url, request, env, origin) {
       if (body.items.length > 1000) return jsonResp({ error: 'Max 1000 items per batch' }, 400, origin);
       const cfg = TABLES[table];
       const pk = cfg.pk || 'id';
+      const stmts = [];
       const results = [];
       for (const item of body.items) {
         if (pk === 'key' && item.key) {
-          // Text PK (app_settings) — use INSERT OR REPLACE for upsert
           const cols = [];
           const vals = [];
           const ph = [];
@@ -668,11 +668,10 @@ async function handleApi(path, method, url, request, env, origin) {
             if (item[col] !== undefined) { cols.push(col); vals.push(item[col]); ph.push('?'); }
           }
           if (cols.length) {
-            await db.prepare(`INSERT OR REPLACE INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')})`).bind(...vals).run();
+            stmts.push(db.prepare(`INSERT OR REPLACE INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')})`).bind(...vals));
             results.push({ [pk]: item.key, action: 'upserted' });
           }
         } else if (item[pk]) {
-          // Numeric PK — update existing
           const sets = [];
           const vals = [];
           for (const col of cfg.cols) {
@@ -681,11 +680,10 @@ async function handleApi(path, method, url, request, env, origin) {
           if (sets.length && cfg.hasUpdatedAt) sets.push("updated_at = datetime('now')");
           if (sets.length) {
             vals.push(item[pk]);
-            await db.prepare(`UPDATE ${table} SET ${sets.join(',')} WHERE ${pk} = ?`).bind(...vals).run();
+            stmts.push(db.prepare(`UPDATE ${table} SET ${sets.join(',')} WHERE ${pk} = ?`).bind(...vals));
           }
           results.push({ [pk]: item[pk], action: 'updated' });
         } else {
-          // Insert new
           const cols = [];
           const vals = [];
           const ph = [];
@@ -694,11 +692,12 @@ async function handleApi(path, method, url, request, env, origin) {
           }
           if (cols.length) {
             const updates = cols.map(c => `${c} = excluded.${c}`).join(',');
-            const r = await db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')}) ON CONFLICT DO UPDATE SET ${updates}`).bind(...vals).run();
-            results.push({ [pk]: r.meta.last_row_id, action: 'upserted' });
+            stmts.push(db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')}) ON CONFLICT(${pk}) DO UPDATE SET ${updates}`).bind(...vals));
+            results.push({ action: 'upserted' });
           }
         }
       }
+      if (stmts.length) await db.batch(stmts);
       return jsonResp({ ok: true, results }, 200, origin);
     } catch (e) {
       console.error('Batch error:', e.message);
@@ -746,6 +745,8 @@ export default {
 
     // Single quote: GET /quote/AAPL
     if (path.startsWith('/quote/')) {
+      const key = request.headers.get('X-Sync-Key');
+      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
       const symbol = decodeURIComponent(path.slice(7));
       if (!symbol) return jsonResp({ error: 'Symbol required' }, 400, allowedOrigin);
       const modules = url.searchParams.get('modules') ||
@@ -760,6 +761,8 @@ export default {
 
     // Batch: GET /batch?symbols=AAPL,GOOGL,MSFT
     if (path === '/batch') {
+      const key = request.headers.get('X-Sync-Key');
+      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
       const syms = (url.searchParams.get('symbols') || '').split(',').map(s => s.trim()).filter(Boolean);
       if (!syms.length) return jsonResp({ error: 'symbols parameter required' }, 400, allowedOrigin);
       if (syms.length > 10) return jsonResp({ error: 'Max 10 symbols per batch' }, 400, allowedOrigin);
@@ -805,6 +808,8 @@ export default {
 
     // Chart: GET /chart/AAPL?range=1y&interval=1wk
     if (path.startsWith('/chart/')) {
+      const key = request.headers.get('X-Sync-Key');
+      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
       const symbol = decodeURIComponent(path.slice(7));
       if (!symbol) return jsonResp({ error: 'Symbol required' }, 400, allowedOrigin);
       const range = url.searchParams.get('range') || '1y';

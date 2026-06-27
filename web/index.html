@@ -3320,6 +3320,7 @@ function openAccountModal(editId){
 }
 
 function saveAccount(){
+  if(saveAccount._lock)return;saveAccount._lock=true;setTimeout(()=>saveAccount._lock=false,500);
   const name=document.getElementById('pf-acc-name').value.trim();
   const currency=document.getElementById('pf-acc-currency').value;
   const editId=parseInt(document.getElementById('pf-acc-edit-id').value)||0;
@@ -3338,16 +3339,18 @@ function saveAccount(){
   showToast(editId?'Account updated':'Account added','success');
 }
 
-function deleteAccount(id){
+async function deleteAccount(id){
   const a=pfAccounts.find(x=>x.id===id);
   if(!a)return;
   const posCount=pfPositions.filter(p=>p.accountId===id).length;
   const msg=posCount?`Delete "${a.name}"? This will also remove ${posCount} position(s).`:`Delete "${a.name}"?`;
   if(!confirm(msg))return;
   if(d1Mode){
-    pfPositions.filter(p=>p.accountId===id).forEach(p=>API.del('positions/'+p.id).catch(e=>console.error('D1 del position:',e)));
-    pfTransactions.filter(t=>t.accountId===id).forEach(t=>API.del('transactions/'+t.id).catch(e=>console.error('D1 del tx:',e)));
-    API.del('broker_accounts/'+id).catch(e=>console.error('D1 del account:',e));
+    try{
+      const delOps=[...pfPositions.filter(p=>p.accountId===id).map(p=>API.del('positions/'+p.id)),...pfTransactions.filter(t=>t.accountId===id).map(t=>API.del('transactions/'+t.id))];
+      await Promise.allSettled(delOps);
+      await API.del('broker_accounts/'+id);
+    }catch(e){console.error('D1 del account:',e);showToast('Cloud delete failed — local only','warning')}
   }
   pfPositions=pfPositions.filter(p=>p.accountId!==id);
   pfTransactions=pfTransactions.filter(t=>t.accountId!==id);
@@ -3508,6 +3511,7 @@ function openPositionModal(editId){
 }
 
 function savePosition(){
+  if(savePosition._lock)return;savePosition._lock=true;setTimeout(()=>savePosition._lock=false,500);
   const ticker=document.getElementById('pf-pos-ticker').value.trim().toUpperCase();
   const name=document.getElementById('pf-pos-name').value.trim();
   const accountId=parseInt(document.getElementById('pf-pos-account').value);
@@ -3542,11 +3546,11 @@ function savePosition(){
   showToast(editId?'Position updated':'Position added','success');
 }
 
-function deletePosition(id){
+async function deletePosition(id){
   const p=pfPositions.find(x=>x.id===id);
   if(!p)return;
   if(!confirm(`Delete position ${p.ticker}?`))return;
-  if(d1Mode)API.del('positions/'+id).catch(e=>console.error('D1 del position:',e));
+  if(d1Mode){try{await API.del('positions/'+id)}catch(e){console.error('D1 del position:',e);showToast('Cloud delete failed — local only','warning')}}
   pfPositions=pfPositions.filter(x=>x.id!==id);
   savePortfolioPositions();
   renderPositions();
@@ -3684,6 +3688,7 @@ function openTransactionModal(editId){
 }
 
 function saveTransaction(){
+  if(saveTransaction._lock)return;saveTransaction._lock=true;setTimeout(()=>saveTransaction._lock=false,500);
   const type=document.getElementById('pf-tx-type').value;
   const date=document.getElementById('pf-tx-date').value;
   const ticker=document.getElementById('pf-tx-ticker').value.trim().toUpperCase();
@@ -3718,11 +3723,11 @@ function saveTransaction(){
   showToast(editId?'Transaction updated':'Transaction logged','success');
 }
 
-function deleteTransaction(id){
+async function deleteTransaction(id){
   const t=pfTransactions.find(x=>x.id===id);
   if(!t)return;
   if(!confirm(`Delete ${t.type} transaction for ${t.ticker}?`))return;
-  if(d1Mode)API.del('transactions/'+id).catch(e=>console.error('D1 del tx:',e));
+  if(d1Mode){try{await API.del('transactions/'+id)}catch(e){console.error('D1 del tx:',e);showToast('Cloud delete failed — local only','warning')}}
   pfTransactions=pfTransactions.filter(x=>x.id!==id);
   savePortfolioTransactions();
   renderTransactions();
@@ -5183,6 +5188,7 @@ function updateResearchModalFields(){
 }
 
 function saveResearchEntry(){
+  if(saveResearchEntry._lock)return;saveResearchEntry._lock=true;setTimeout(()=>saveResearchEntry._lock=false,500);
   const editId=document.getElementById('re-edit-id').value;
   const editType=document.getElementById('re-edit-type').value;
   const type=editId?editType:document.getElementById('re-type').value;
@@ -7002,7 +7008,7 @@ async function fetchYahooData(ticker){
   if(!s.workerUrl)return null;
   try{
     const url=`${s.workerUrl}/quote/${encodeURIComponent(ticker)}?modules=price,financialData,defaultKeyStatistics,incomeStatementHistory`;
-    const r=await fetchWithTimeout(url);
+    const r=await fetchWithTimeout(url,{headers:{'X-Sync-Key':s.syncKey||''}});
     if(r.status===429){showToast('Yahoo proxy rate limited — wait a moment','warning');return null}
     if(!r.ok){console.warn('Yahoo HTTP',r.status,'for',ticker);return null}
     const d=await r.json();
@@ -7134,6 +7140,8 @@ async function fetchStockData(ticker){
     const preserve=['overriddenData','_d1Id','notes','earnings','filings','pipeline','companyType','todos','valuations','checklist'];
     Object.keys(data).forEach(k=>{if(!preserve.includes(k))stock[k]=data[k]});
   }
+  if(stock.price!=null&&(stock.price<0||!isFinite(stock.price))){console.warn('Invalid price for',ticker,stock.price);stock.price=null}
+  if(stock.marketCap!=null&&(stock.marketCap<0||!isFinite(stock.marketCap))){stock.marketCap=null}
   if(stock.overriddenData){Object.entries(stock.overriddenData).forEach(([k,v])=>{stock[k]=v})}
   tStocks[ticker]=stock;
   return stock;
@@ -7242,7 +7250,7 @@ function calcStockCalcs(s){
   for(let i=1;i<=15;i++)cum.push(cum[i-1]+fcfs[i]);
   let mby=null;
   for(let i=0;i<=15;i++){if(cum[i]>=mc&&mby===null)mby=i}
-  if(mby!==null&&mby>0&&cum[mby]!==cum[mby-1])res.moneyBack=parseFloat((mby-1+(mc-cum[mby-1])/(cum[mby]-cum[mby-1])).toFixed(1));
+  if(mby!==null&&mby>0&&cum[mby]!==cum[mby-1])res.moneyBack=Math.round((mby-1+(mc-cum[mby-1])/(cum[mby]-cum[mby-1]))*100)/100;
   else if(mby===0)res.moneyBack=0;
   else res.moneyBack='>15';
 
@@ -8081,7 +8089,7 @@ async function fetchChartData(ticker,range){
   if(!s.workerUrl)return null;
   const interval=range==='6mo'?'1d':'1wk';
   try{
-    const r=await fetchWithTimeout(`${s.workerUrl}/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}`);
+    const r=await fetchWithTimeout(`${s.workerUrl}/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}`,{headers:{'X-Sync-Key':s.syncKey||''}});
     if(r.status===429){console.warn('Chart rate limited for',ticker);return null}
     if(!r.ok){console.warn('Chart HTTP',r.status,'for',ticker);return null}
     const d=await r.json();
@@ -8453,6 +8461,7 @@ function getFwArr(type){
 }
 
 function saveFwEntry(){
+  if(saveFwEntry._lock)return;saveFwEntry._lock=true;setTimeout(()=>saveFwEntry._lock=false,500);
   const type=document.getElementById('fw-modal-type').value;
   const editId=parseInt(document.getElementById('fw-modal-edit-id').value)||0;
   const titleVal=document.getElementById('fw-modal-title-input').value.trim();
@@ -8492,7 +8501,7 @@ function deleteFwEntry(type,id){
   if(idx>=0)arr.splice(idx,1);
   if(type==='trait'||type==='avoid'){
     const checkKey=type==='trait'?'idealTraitChecks':'avoidChecks';
-    Object.values(tStocks).forEach(s=>{if(s.checklist)delete s.checklist[checkKey][id]});
+    Object.values(tStocks).forEach(s=>{if(s.checklist&&s.checklist[checkKey])delete s.checklist[checkKey][id]});
     saveTrackerStocks();
   }
   saveFramework();
@@ -9188,6 +9197,7 @@ function renderRvQuestions(existingAnswers){
 }
 
 function saveReview(){
+  if(saveReview._lock)return;saveReview._lock=true;setTimeout(()=>saveReview._lock=false,500);
   const type=document.getElementById('rv-modal-type').value;
   const date=document.getElementById('rv-modal-date').value;
   const ticker=document.getElementById('rv-modal-ticker').value.trim().toUpperCase();
@@ -9223,9 +9233,9 @@ function saveReview(){
   showToast(editId?'Review updated':'Review added','success');
 }
 
-function deleteReview(id){
+async function deleteReview(id){
   if(!confirm('Delete this review?'))return;
-  if(d1Mode)API.del('reviews/'+id).catch(e=>console.error('D1 del review:',e));
+  if(d1Mode){try{await API.del('reviews/'+id)}catch(e){console.error('D1 del review:',e);showToast('Cloud delete failed — local only','warning')}}
   rvData.entries=rvData.entries.filter(e=>e.id!==id);
   saveReviews();
   const activeTab=document.querySelector('.rv-tabs .tab.active');
@@ -9309,10 +9319,10 @@ async function startD1Migration(){
     localStorage.setItem('d1_migrated','1');
     d1Mode=true;
     const stats=result.stats||{};
-    const parts=Object.entries(stats).filter(([,v])=>v>0).map(([k,v])=>k+': '+v);
+    const parts=Object.entries(stats).filter(([,v])=>v>0).map(([k,v])=>escH(k)+': '+parseInt(v));
     status.innerHTML='<span style="color:var(--green);font-weight:600">Migration complete!</span><br>'+parts.join(', ');
     if(result.errors&&result.errors.length){
-      status.innerHTML+='<br><span style="color:var(--orange)">Warnings: '+result.errors.length+'</span>';
+      status.innerHTML+='<br><span style="color:var(--orange)">Warnings: '+parseInt(result.errors.length)+'</span>';
       console.warn('Migration warnings:',result.errors);
     }
     btn.textContent='Migrated ✓';
