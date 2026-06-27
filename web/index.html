@@ -3114,7 +3114,7 @@ function savePortfolioAccounts(){
   try{localStorage.setItem('portfolio_accounts_v1',JSON.stringify(pfAccounts))}catch(e){showToast('Storage full — could not save accounts','error')}
 }
 async function loadPortfolioPositions(){
-  if(d1Mode){try{const r=await API.get('positions');pfPositions=(r.data||[]).map(p=>({id:p.id,ticker:_d1CompanyMap[p.company_id]||p.symbol||'',accountId:p.account_id,shares:p.shares,avgCost:p.avg_cost,companyId:p.company_id}))}catch(e){console.error('D1 load positions:',e)};return}
+  if(d1Mode){try{const r=await API.get('positions');pfPositions=(r.data||[]).map(p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:p.shares,avgCost:p.avg_cost,currency:(s?s.currency:'')||'USD',companyId:p.company_id}})}catch(e){console.error('D1 load positions:',e)};return}
   try{const d=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(d))pfPositions=d}catch(e){}
 }
 function savePortfolioPositions(){
@@ -3614,7 +3614,7 @@ function savePortfolioSnapshots(){
     const sr=await API.get('portfolio_snapshots?limit=1000');
     const dateToId={};(sr.data||[]).forEach(s=>{dateToId[s.snapshot_date]=s.id});
     const posItems=[];
-    pfSnapshots.forEach(s=>{const sid=dateToId[s.date];if(!sid)return;(s.positions||[]).forEach(p=>{const cid=_tickerToD1Id(p.ticker);posItems.push({snapshot_id:sid,company_id:cid||null,account_id:p.accountId||null,shares:p.shares||0,price_per_share:p.pricePerShare||0,market_value:p.marketValue||0,currency:p.currency||'USD',intent:p.intent||''})})});
+    pfSnapshots.forEach(s=>{const sid=dateToId[s.date];if(!sid)return;(s.positions||[]).forEach(p=>{const cid=_tickerToD1Id(p.ticker);if(!cid)return;posItems.push({snapshot_id:sid,company_id:cid,account_id:p.accountId||null,shares:p.shares||0,price_per_share:p.pricePerShare||0,market_value:p.marketValue||0,currency:p.currency||'USD',intent:p.intent||'hold'})})});
     if(posItems.length)await API.post('snapshot_positions/batch',{items:posItems});
   });return}
   try{localStorage.setItem('portfolio_snapshots_v1',JSON.stringify(pfSnapshots))}catch(e){showToast('Storage full','error')}
@@ -4144,11 +4144,11 @@ let dbBenchmark={ticker:'SPY',prices:[],fetchedAt:null};
 let db52wHighs={};
 
 async function loadDashTodos(){
-  if(d1Mode){try{const r=await API.get('general_todos?limit=500');dbTodos=(r.data||[]).map(t=>({id:t.id,title:t.title,dueDate:t.due_date,isDone:!!t.is_done,sortOrder:t.sort_order}))}catch(e){console.error('D1 load todos:',e)};return}
+  if(d1Mode){try{const r=await API.get('general_todos?limit=500');dbTodos=(r.data||[]).map(t=>({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order}))}catch(e){console.error('D1 load todos:',e)};return}
   try{const d=JSON.parse(localStorage.getItem('dashboard_todos_v1'));if(Array.isArray(d))dbTodos=d}catch(e){}
 }
 function saveDashTodos(){
-  if(d1Mode){API.scheduleSave('dashTodos',async()=>{await API.post('general_todos/batch',{items:dbTodos.map(t=>({id:t.id,title:t.title,due_date:t.dueDate||null,is_done:t.isDone?1:0,sort_order:t.sortOrder||0}))})});return}
+  if(d1Mode){API.scheduleSave('dashTodos',async()=>{await API.post('general_todos/batch',{items:dbTodos.map(t=>({id:t.id,title:t.text||'',due_date:t.due||null,is_done:t.done?1:0,sort_order:t.sortOrder||0}))})});return}
   try{localStorage.setItem('dashboard_todos_v1',JSON.stringify(dbTodos))}catch(e){showToast('Storage full','error')}
 }
 async function loadDashFiSettings(){
@@ -4688,7 +4688,7 @@ async function loadResearchNotes(){
     researchNotes={journal:[],news:[],market:[],_nextId:1};
     for(const noteType of ['journal','news','market']){
       const r=await API.get('notes?filter=note_type&filter_value='+noteType+'&limit=5000');
-      researchNotes[noteType]=(r.data||[]).map(n=>({id:n.id,title:n.title,content:n.content,date:n.note_date,ticker:null,source:n.source_name,sourceName:n.source_name,sourceUrl:n.source_url,isPinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[]}));
+      researchNotes[noteType]=(r.data||[]).map(n=>({id:n.id,title:n.title,content:n.content,date:n.note_date,ticker:_d1CompanyMap[n.company_id]||null,source:n.source_name,sourceName:n.source_name,sourceUrl:n.source_url,pinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[]}));
       researchNotes[noteType].forEach(n=>{if(n.id>=researchNotes._nextId)researchNotes._nextId=n.id+1});
     }
   }catch(e){console.error('D1 load notes:',e)};return}
@@ -4697,7 +4697,7 @@ async function loadResearchNotes(){
 function saveResearchNotes(){
   if(d1Mode){API.scheduleSave('researchNotes',async()=>{
     for(const noteType of ['journal','news','market']){
-      const items=(researchNotes[noteType]||[]).map(n=>({id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:n.title||'',content:n.content||n.excerpt||n.comment||'',note_date:n.date||new Date().toISOString().slice(0,10),source_name:n.sourceName||n.source||'',source_url:n.sourceUrl||'',is_pinned:n.isPinned?1:0,quarter:n.quarter||null}));
+      const items=(researchNotes[noteType]||[]).map(n=>({id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:n.title||'',content:n.content||n.excerpt||n.comment||'',note_date:n.date||new Date().toISOString().slice(0,10),source_name:n.sourceName||n.source||'',source_url:n.sourceUrl||'',is_pinned:n.pinned?1:0,quarter:n.quarter||null}));
       if(items.length)await API.post('notes/batch',{items});
     }
   });return}
@@ -6173,13 +6173,16 @@ function saveTrackerStocks(){
     const todos=[],earnings=[],filings=[],overrides=[],notes=[],checklist=[];
     Object.entries(tStocks).forEach(([ticker,s])=>{
       const cid=s._d1Id;if(!cid)return;
-      (s.todos||[]).forEach(t=>todos.push({company_id:cid,title:t.title||'',due_date:t.dueDate||null,is_done:t.isDone?1:0,sort_order:t.sortOrder||0}));
+      (s.todos||[]).forEach(t=>todos.push({company_id:cid,title:t.text||'',due_date:t.due||null,is_done:t.done?1:0,sort_order:t.sortOrder||0}));
       Object.entries(s.earnings||{}).forEach(([k,v])=>{const m=k.match(/(\d{4})Q(\d)/);if(m)earnings.push({company_id:cid,year:+m[1],quarter:+m[2],is_reported:v.reported?1:0,is_reviewed:v.reviewed?1:0,report_date:v.reportDate||null})});
       Object.entries(s.filings||{}).forEach(([k,v])=>{const p=k.split('_');filings.push({company_id:cid,filing_type:p[0]||'',fiscal_year:+(p[1])||0,fiscal_quarter:p[2]?+p[2]:null,is_read:v.read?1:0,filed_date:v.filedDate||null,notes:v.notes||''})});
       Object.entries(s.overriddenData||{}).forEach(([mk,mv])=>overrides.push({company_id:cid,metric_key:mk,original_value:String((s._origData||{})[mk]||''),override_value:String(mv),reason:''}));
-      (s.notes||[]).forEach(n=>notes.push({company_id:cid,note_type:'company',title:n.title||'',content:n.content||'',note_date:n.date||null,quarter:n.quarter||null}));
+      if(s.notes&&typeof s.notes==='object'){
+        if(s.notes.research)notes.push({company_id:cid,note_type:'earnings',title:'research',content:s.notes.research,note_date:null,quarter:null});
+        Object.entries(s.notes.earnings||{}).forEach(([yr,qs])=>{Object.entries(qs).forEach(([q,v])=>{notes.push({company_id:cid,note_type:'earnings',title:'',content:v.note||'',note_date:null,quarter:yr+q})})});
+      }
       const secs=(s.checklist&&s.checklist.sections)||{};
-      Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(sv.answers||{}),progress:sv.progress||0,status:sv.status||''}));
+      Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(sv.answers||{}),progress:sv.progress||0,status:sv.status||'not_started'}));
     });
     const batch=[];
     if(todos.length)batch.push(API.post('company_todos/batch',{items:todos}));
@@ -6202,13 +6205,17 @@ function _d1CompanyToTStock(c){
   const s={ticker:c.symbol,name:c.name||c.symbol,sector:c.sector||'',currency:c.currency||'USD',
     exchange:c.exchange||'',companyType:c.company_type||'',pipeline:c.pipeline_status||'watchlist',
     pipelineStatus:c.pipeline_status||'watchlist',thesis:c.thesis||'',sortOrder:c.sort_order||0,
-    _d1Id:c.id,todos:[],earnings:{},filings:{},overriddenData:{},_origData:{},notes:[],checklist:{sections:{}}};
-  if(c.todos)c.todos.forEach(t=>{s.todos.push({id:t.id,title:t.title,dueDate:t.due_date,isDone:!!t.is_done,sortOrder:t.sort_order})});
+    _d1Id:c.id,todos:[],earnings:{},filings:{},overriddenData:{},_origData:{},notes:{thesis:c.thesis||'',research:'',earnings:{}},checklist:{sections:{}}};
+  if(c.todos)c.todos.forEach(t=>{s.todos.push({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order})});
   if(c.earnings)c.earnings.forEach(e=>{s.earnings[e.year+'Q'+e.quarter]={reported:!!e.is_reported,reviewed:!!e.is_reviewed,reportDate:e.report_date}});
   if(c.filings)c.filings.forEach(f=>{const key=f.filing_type+'_'+f.fiscal_year+(f.fiscal_quarter?'_'+f.fiscal_quarter:'');s.filings[key]={read:!!f.is_read,filedDate:f.filed_date,notes:f.notes}});
   if(c.overrides)c.overrides.forEach(o=>{s.overriddenData[o.metric_key]=o.override_value;s._origData[o.metric_key]=o.original_value});
-  if(c.notes)c.notes.forEach(n=>{s.notes.push({id:n.id,title:n.title||n.quarter||'',content:n.content,date:n.note_date,quarter:n.quarter})});
-  if(c.checklist)c.checklist.forEach(cl=>{s.checklist.sections[cl.section_key]={answers:JSON.parse(cl.answer_json||'{}'),progress:cl.progress,status:cl.status}});
+  if(c.notes)c.notes.forEach(n=>{if(n.quarter){
+    const yr=n.quarter.slice(0,4),q=n.quarter.slice(4);
+    if(!s.notes.earnings[yr])s.notes.earnings[yr]={};
+    s.notes.earnings[yr][q]={done:true,note:n.content||''};
+  }else if(n.title==='research'){s.notes.research=n.content||''}});
+  if(c.checklist)c.checklist.forEach(cl=>{s.checklist.sections[cl.section_key]={answers:JSON.parse(cl.answer_json||'{}'),progress:cl.progress,status:cl.status||'not_started'}});
   return s;
 }
 
@@ -6242,10 +6249,14 @@ async function loadDividendHistory(){
   if(d1Mode){try{
     const r=await API.get('dividend_history?limit=10000');
     divHistory={};
+    const byTicker={};
     (r.data||[]).forEach(d=>{
-      const ticker=_d1CompanyMap[d.company_id]||d.symbol||d.ticker||'UNKNOWN';
-      if(!divHistory[ticker])divHistory[ticker]=[];
-      divHistory[ticker].push({id:d.id,date:d.ex_date,exDate:d.ex_date,payDate:d.pay_date,amount:d.amount,currency:d.currency,frequency:d.frequency,companyId:d.company_id});
+      const ticker=_d1CompanyMap[d.company_id]||'UNKNOWN';
+      if(!byTicker[ticker])byTicker[ticker]=[];
+      byTicker[ticker].push({date:d.ex_date,exDate:d.ex_date,payDate:d.pay_date,paymentDate:d.pay_date,amount:d.amount,adjDividend:d.amount,dividend:d.amount,currency:d.currency,frequency:d.frequency,companyId:d.company_id});
+    });
+    Object.entries(byTicker).forEach(([ticker,hist])=>{
+      divHistory[ticker]={history:hist,lastFetched:new Date().toISOString()};
     });
   }catch(e){console.error('D1 load dividends:',e)};return}
   try{const d=JSON.parse(localStorage.getItem('dividend_history_v1'));if(d&&typeof d==='object')divHistory=d}catch(e){}
@@ -6253,8 +6264,9 @@ async function loadDividendHistory(){
 function saveDividendHistory(){
   if(d1Mode){API.scheduleSave('divHistory',async()=>{
     const items=[];
-    for(const[ticker,divs]of Object.entries(divHistory)){
-      for(const d of divs){const cid=d.companyId||_tickerToD1Id(ticker);if(!cid)continue;items.push({id:d.id||undefined,company_id:cid,ex_date:d.exDate||d.date||'',pay_date:d.payDate||null,amount:d.amount||0,currency:d.currency||'USD',frequency:d.frequency||null})}
+    for(const[ticker,divData]of Object.entries(divHistory)){
+      const arr=Array.isArray(divData)?divData:(divData.history||[]);
+      for(const d of arr){const cid=d.companyId||_tickerToD1Id(ticker);if(!cid)continue;items.push({company_id:cid,ex_date:d.exDate||d.date||'',pay_date:d.payDate||d.paymentDate||null,amount:d.amount||d.adjDividend||d.dividend||0,currency:d.currency||'USD',frequency:d.frequency||null})}
     }
     if(items.length)await API.post('dividend_history/batch',{items});
   });return}
@@ -7936,7 +7948,7 @@ async function loadFramework(){
     const r=await API.get('framework_entries?limit=500');
     fwData={principles:[],portfolioRules:[],idealTraits:[],avoidList:[],scoringWeights:{cagr:1,conviction:1,risk:1},_nextId:1};
     const catMap={principle:'principles',portfolio_rule:'portfolioRules',ideal_trait:'idealTraits',avoid:'avoidList'};
-    (r.data||[]).forEach(e=>{const arr=catMap[e.category];if(arr&&fwData[arr]){fwData[arr].push({id:e.id,title:e.title,content:e.content,sortOrder:e.sort_order});if(e.id>=fwData._nextId)fwData._nextId=e.id+1}});
+    (r.data||[]).forEach(e=>{const arr=catMap[e.category];if(arr&&fwData[arr]){const isList=(arr==='idealTraits'||arr==='avoidList');fwData[arr].push({id:e.id,title:e.title,label:isList?e.title:'',content:e.content,category:isList?e.content:'',sortOrder:e.sort_order});if(e.id>=fwData._nextId)fwData._nextId=e.id+1}});
     const sw=await API.get('app_settings/scoring_weights').catch(()=>null);
     if(sw)fwData.scoringWeights=JSON.parse(sw.value||'{}');
   }catch(e){console.error('D1 load framework:',e)};return}
@@ -7946,7 +7958,7 @@ function saveFramework(){
   if(d1Mode){API.scheduleSave('framework',async()=>{
     const catMap={principles:'principle',portfolioRules:'portfolio_rule',idealTraits:'ideal_trait',avoidList:'avoid'};
     const items=[];
-    for(const[arrKey,category]of Object.entries(catMap)){(fwData[arrKey]||[]).forEach((e,i)=>{items.push({id:e.id||undefined,category,title:e.title||'',content:e.content||'',sort_order:i})})}
+    for(const[arrKey,category]of Object.entries(catMap)){const isList=(arrKey==='idealTraits'||arrKey==='avoidList');(fwData[arrKey]||[]).forEach((e,i)=>{items.push({id:e.id||undefined,category,title:isList?(e.label||''):(e.title||''),content:isList?(e.category||''):(e.content||''),sort_order:i})})}
     if(items.length)await API.post('framework_entries/batch',{items});
     await API.put('app_settings/scoring_weights',{key:'scoring_weights',value:JSON.stringify(fwData.scoringWeights||{})});
   });return}
@@ -8746,13 +8758,13 @@ async function loadReviews(){
   if(d1Mode){try{
     const r=await API.get('reviews?limit=1000');
     rvData={entries:[],_nextId:1};
-    (r.data||[]).forEach(rv=>{rvData.entries.push({id:rv.id,type:rv.review_type,date:rv.review_date,companyTicker:rv.company_symbol||null,companyId:rv.company_id,answers:JSON.parse(rv.answers_json||'{}'),summary:rv.summary||''});if(rv.id>=rvData._nextId)rvData._nextId=rv.id+1});
+    (r.data||[]).forEach(rv=>{rvData.entries.push({id:rv.id,type:rv.review_type,date:rv.review_date,companyTicker:_d1CompanyMap[rv.company_id]||null,companyId:rv.company_id,answers:JSON.parse(rv.answers_json||'{}'),summary:rv.summary||''});if(rv.id>=rvData._nextId)rvData._nextId=rv.id+1});
   }catch(e){console.error('D1 load reviews:',e)};return}
   try{const d=JSON.parse(localStorage.getItem('reviews_v1'));if(d&&typeof d==='object'){rvData=d;if(!rvData.entries)rvData.entries=[];if(!rvData._nextId)rvData._nextId=1}}catch(e){}
 }
 function saveReviews(){
   if(d1Mode){API.scheduleSave('reviews',async()=>{
-    const items=rvData.entries.map(e=>({id:e.id||undefined,review_type:e.type||'weekly',review_date:e.date||'',company_id:e.companyId||null,answers_json:JSON.stringify(e.answers||{}),summary:e.summary||''}));
+    const items=rvData.entries.map(e=>({id:e.id||undefined,review_type:e.type||'weekly',review_date:e.date||'',company_id:e.companyId||(e.companyTicker?_tickerToD1Id(e.companyTicker):null),answers_json:JSON.stringify(e.answers||{}),summary:e.summary||''}));
     if(items.length)await API.post('reviews/batch',{items});
   });return}
   try{localStorage.setItem('reviews_v1',JSON.stringify(rvData))}catch(e){showToast('Storage full — export your data','error',8000)}
@@ -9234,6 +9246,9 @@ document.addEventListener('input',e=>{if(e.target.matches('#section-calculators 
 window.addEventListener('beforeunload',()=>{
   autoSave();
   if(d1Mode){API.flushAll()}
+});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'&&d1Mode)API.flushAll();
 });
 window.addEventListener('load',()=>{
   if(isEncryptionEnabled()){

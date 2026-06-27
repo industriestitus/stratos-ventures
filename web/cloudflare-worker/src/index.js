@@ -665,8 +665,9 @@ async function handleApi(path, method, url, request, env, origin) {
             if (item[col] !== undefined) { cols.push(col); vals.push(item[col]); ph.push('?'); }
           }
           if (cols.length) {
-            const r = await db.prepare(`INSERT OR REPLACE INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')})`).bind(...vals).run();
-            results.push({ [pk]: r.meta.last_row_id, action: 'inserted' });
+            const updates = cols.map(c => `${c} = excluded.${c}`).join(',');
+            const r = await db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')}) ON CONFLICT DO UPDATE SET ${updates}`).bind(...vals).run();
+            results.push({ [pk]: r.meta.last_row_id, action: 'upserted' });
           }
         }
       }
