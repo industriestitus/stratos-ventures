@@ -2543,11 +2543,11 @@ function calcReverseDCF(){
   for(let i=1;i<=Math.min(fade,10);i++){T('rp-f'+i,fmt(fcfsP[i]));T('rp-p'+i,fmt(fcfsP[i]/Math.pow(1+dr,i)))}
   const pPFCF=fcf0?mc/fcf0:NaN,pYield=mc?fcf0/mc:NaN;
   document.getElementById('rdcfp-results').innerHTML=`
-    <div class="result-box"><div class="label">Implied Growth</div><div class="value ${igP>0.15?'negative':igP>0.08?'warn':'positive'}">${(igP*100).toFixed(2)}%</div></div>
-    <div class="result-box"><div class="label">P/FCF-SBC</div><div class="value neutral">${pPFCF.toFixed(1)}x</div></div>
-    <div class="result-box"><div class="label">FCF-SBC Yield</div><div class="value neutral">${(pYield*100).toFixed(2)}%</div></div>`;
-  document.getElementById('sum-rdcfp-val').textContent=(igP*100).toFixed(1)+'%';
-  document.getElementById('sum-rdcfp-val').className='sc-value '+(igP>0.15?'negative':igP>0.08?'warn':'positive');
+    <div class="result-box"><div class="label">Implied Growth</div><div class="value ${!isFinite(igP)?'neutral':igP>0.15?'negative':igP>0.08?'warn':'positive'}">${isFinite(igP)?(igP*100).toFixed(2)+'%':'—'}</div></div>
+    <div class="result-box"><div class="label">P/FCF-SBC</div><div class="value neutral">${isFinite(pPFCF)?pPFCF.toFixed(1)+'x':'—'}</div></div>
+    <div class="result-box"><div class="label">FCF-SBC Yield</div><div class="value neutral">${isFinite(pYield)?(pYield*100).toFixed(2)+'%':'—'}</div></div>`;
+  document.getElementById('sum-rdcfp-val').textContent=isFinite(igP)?(igP*100).toFixed(1)+'%':'—';
+  document.getElementById('sum-rdcfp-val').className='sc-value '+(isFinite(igP)?(igP>0.15?'negative':igP>0.08?'warn':'positive'):'neutral');
   document.getElementById('sum-rdcfp-sub').textContent='implied growth (perp.)';
   const solvE=solveGrowth(fcf0,dr,fade,function(f){return f*em});
   const igE=solvE(targetEV);
@@ -2563,7 +2563,7 @@ function calcReverseDCF(){
     for(let d=6;d<=14;d++){labels.push(d+'%');const drt=d/100;const sv=solveGrowth(fcf0,drt,fade,termFn);sensData.push(sv(targetEV)*100)}
     renderChart(chartId,chartKey,labels,[{label:'Implied Growth (%)',data:sensData,borderColor:cv('--red'),backgroundColor:cv('--red')+'1a',fill:true,tension:0.3}],{yLabel:'Implied Growth (%)'});
   }
-  buildSens(function(f,d){return(f*(1+tg))/(d-tg)},'rdcfp-chart','rdcfp');
+  buildSens(function(f,d){return d<=tg?Infinity:(f*(1+tg))/(d-tg)},'rdcfp-chart','rdcfp');
   buildSens(function(f){return f*em},'rdcfe-chart','rdcfe');
 }
 
@@ -2599,8 +2599,8 @@ function calcAria(){
   }
   buildTable('aria-table-5',5);buildTable('aria-table-10',10);
   const lbls=ariaMultiples.map(m=>m+'x');
-  const c5=ariaMultiples.map(m=>{const c=ariaCagr(fcfs[5]*m,5);return isNaN(c)?0:c*100});
-  const c10=ariaMultiples.map(m=>{const c=ariaCagr(fcfs[10]*m,10);return isNaN(c)?0:c*100});
+  const c5=ariaMultiples.map(m=>{const c=ariaCagr(fcfs[5]*m,5);return isNaN(c)?null:c*100});
+  const c10=ariaMultiples.map(m=>{const c=ariaCagr(fcfs[10]*m,10);return isNaN(c)?null:c*100});
   renderChart('aria-chart','aria',lbls,
     [{label:'Year 5 CAGR (%)',data:c5,borderColor:cv('--accent'),backgroundColor:cv('--accent')+'4d',type:'bar'},
      {label:'Year 10 CAGR (%)',data:c10,borderColor:cv('--green'),backgroundColor:cv('--green')+'4d',type:'bar'}],
@@ -3394,6 +3394,7 @@ function renderPositions(){
   }
 
   let totalCost=0,totalValue=0;
+  const base=getBaseCurrency();
   const rows=list.map(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
@@ -3402,7 +3403,10 @@ function renderPositions(){
     const mktVal=price!=null?shares*price:null;
     const pnl=mktVal!=null?mktVal-cost:null;
     const pnlPct=cost>0&&pnl!=null?(pnl/cost*100):null;
-    if(mktVal!=null&&!isNaN(mktVal)){totalValue+=mktVal;if(!isNaN(cost))totalCost+=cost}
+    if(mktVal!=null&&!isNaN(mktVal)){
+      totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+      if(!isNaN(cost))totalCost+=convertCurrency(cost,pos.currency||'USD',base)||cost;
+    }
     const pnlClass=pnl!=null?(pnl>=0?'pf-positive':'pf-negative'):'';
     const tickerLink=tStocks[pos.ticker]?`onclick="showProfile('${escH(pos.ticker)}')" class="pf-pos-ticker"`:'class="pf-pos-ticker"';
     return`<tr>
@@ -4049,8 +4053,10 @@ function renderReturnsGrid(){
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
-    totalCost+=convertCurrency(shares*avg,pos.currency||'USD',base)||(shares*avg);
-    totalValue+=convertCurrency(price!=null?shares*price:0,pos.currency||'USD',base)||(price!=null?shares*price:0);
+    if(price!=null){
+      totalCost+=convertCurrency(shares*avg,pos.currency||'USD',base)||(shares*avg);
+      totalValue+=convertCurrency(shares*price,pos.currency||'USD',base)||(shares*price);
+    }
   });
   const simpleReturn=totalCost>0?((totalValue-totalCost)/totalCost*100):0;
 
@@ -4060,7 +4066,7 @@ function renderReturnsGrid(){
   if(twrData){
     items.push({label:'TWR (Total)',value:(twrData.twr>=0?'+':'')+(twrData.twr*100).toFixed(1)+'%',cls:twrData.twr>=0?'pf-positive':'pf-negative'});
     items.push({label:'TWR (Annualized)',value:(twrData.annualized>=0?'+':'')+(twrData.annualized*100).toFixed(1)+'%',cls:twrData.annualized>=0?'pf-positive':'pf-negative'});
-    items.push({label:'Tracking Period',value:twrData.days+' days',cls:''});
+    items.push({label:'Tracking Period',value:Math.round(twrData.days)+' days',cls:''});
   }
   if(xirr!=null){
     items.push({label:'XIRR',value:(xirr>=0?'+':'')+(xirr*100).toFixed(1)+'%',cls:xirr>=0?'pf-positive':'pf-negative'});
@@ -4139,7 +4145,9 @@ function formatMoney(amount,currency){
   if(amount==null||!isFinite(amount))return'—';
   const sym=currencySymbol(currency||getBaseCurrency());
   if(currency==='HUF')return Math.round(amount).toLocaleString('hu-HU')+' '+sym;
-  return sym+amount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const abs=Math.abs(amount);
+  const formatted=abs.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  return(amount<0?'-':'')+sym+formatted;
 }
 
 // ---- CSV Import ----
@@ -4681,8 +4689,8 @@ function renderDbFiTracker(){
   });
 
   const fi=dbFiSettings;
-  const target=fi.targetAmount||1;
-  const progress=Math.min((currentValue/target)*100,100);
+  const target=fi.targetAmount||0;
+  const progress=target>0?Math.min((currentValue/target)*100,100):0;
   const fiBy4pct=fi.monthlyExpenses*12*25;
   const monthlyRate=(fi.assumedReturnRate||8)/100/12;
   let yearsToFi=null;
@@ -5527,16 +5535,15 @@ function renderScoreBreakdown(ticker){
   h+='<div class="card-title">Quality Score</div>';
 
   // Total score display
-  const availPillars=['valuation','growth','profitability','health'].filter(p=>sc[p]!=null).length;
-  const maxScore=availPillars*25;
-  const pct100=maxScore>0?Math.round((sc.total/maxScore)*100):0;
+  const nPillars=sc.availablePillars||['valuation','growth','profitability','health'].filter(p=>sc[p]!=null).length;
+  const pct100=sc.total??0;
   const totalCls=pct100>=75?'positive':pct100>=50?'warn':'negative';
   const totalLabel=pct100>=75?'High Quality':pct100>=50?'Fair':pct100<25?'Weak':'Below Average';
   h+=`<div style="display:flex;align-items:center;gap:20px;margin-bottom:20px">`;
   h+=`<div style="width:80px;height:80px;border-radius:50%;border:4px solid var(--${totalCls==='positive'?'green':totalCls==='warn'?'orange':'red'});display:flex;align-items:center;justify-content:center;flex-shrink:0">`;
-  h+=`<span style="font-size:28px;font-weight:700;color:var(--${totalCls==='positive'?'green':totalCls==='warn'?'orange':'red'})">${sc.total}</span>`;
+  h+=`<span style="font-size:28px;font-weight:700;color:var(--${totalCls==='positive'?'green':totalCls==='warn'?'orange':'red'})">${pct100}</span>`;
   h+=`</div>`;
-  h+=`<div><div style="font-size:18px;font-weight:600">${totalLabel}</div><div style="color:var(--text2);font-size:13px">${sc.total}/${maxScore} points across ${availPillars} pillar${availPillars!==1?'s':''}</div></div>`;
+  h+=`<div><div style="font-size:18px;font-weight:600">${totalLabel}</div><div style="color:var(--text2);font-size:13px">${pct100}/100 across ${nPillars} pillar${nPillars!==1?'s':''}</div></div>`;
   h+=`</div>`;
 
   // Pillar bars
@@ -5627,20 +5634,20 @@ async function renderInsiderTrading(ticker){
     return;
   }
 
-  const buys=txns.filter(t=>t.change>0);
+  const openMarketBuys=txns.filter(t=>t.change>0&&(t.transactionCode==='P'||t.transactionCode==='Buy'));
   const sells=txns.filter(t=>t.change<0);
-  const totalBought=buys.reduce((s,t)=>s+t.change,0);
+  const totalBought=openMarketBuys.reduce((s,t)=>s+t.change,0);
   const totalSold=sells.reduce((s,t)=>s+Math.abs(t.change),0);
   const netShares=totalBought-totalSold;
   const cutoff=new Date(Date.now()-90*86400000);
   const last3m=txns.filter(t=>{if(!t.transactionDate)return false;const d=new Date(t.transactionDate);return!isNaN(d.getTime())&&d>=cutoff});
-  const last3mBuys=last3m.filter(t=>t.change>0).length;
+  const last3mBuys=last3m.filter(t=>t.change>0&&(t.transactionCode==='P'||t.transactionCode==='Buy')).length;
   const last3mSells=last3m.filter(t=>t.change<0).length;
 
   let h='<div class="card"><div class="card-title">Insider Trading Summary</div>';
   h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">';
   h+=`<div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">Total Transactions</div><div style="font-size:20px;font-weight:700;color:var(--text);margin-top:4px">${txns.length}</div></div>`;
-  h+=`<div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">Buys / Sells</div><div style="font-size:20px;font-weight:700;margin-top:4px"><span style="color:var(--green)">${buys.length}</span> / <span style="color:var(--red)">${sells.length}</span></div></div>`;
+  h+=`<div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">Buys / Sells</div><div style="font-size:20px;font-weight:700;margin-top:4px"><span style="color:var(--green)">${openMarketBuys.length}</span> / <span style="color:var(--red)">${sells.length}</span></div></div>`;
   h+=`<div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">Net Shares</div><div style="font-size:20px;font-weight:700;color:${netShares>=0?'var(--green)':'var(--red)'};margin-top:4px">${netShares>=0?'+':''}${fmt(netShares)}</div></div>`;
   h+=`<div style="background:var(--surface2);padding:12px;border-radius:8px;text-align:center"><div style="font-size:11px;color:var(--text2)">Last 90 Days</div><div style="font-size:20px;font-weight:700;margin-top:4px"><span style="color:var(--green)">${last3mBuys}B</span> / <span style="color:var(--red)">${last3mSells}S</span></div></div>`;
   h+='</div>';
@@ -6582,7 +6589,7 @@ function calcPortfolioDividendIncome(){
     const shares=parseFloat(pos.shares)||0;
     const avgCost=parseFloat(pos.avgCost)||0;
     const annualDPS=dh?.annualDPS||0;
-    if(!annualDPS||!shares)return;
+    if(!annualDPS||annualDPS<=0||!shares)return;
     const grossIncome=shares*annualDPS;
     const taxRate=divSettings.customTaxRates[pos.ticker]??divSettings.taxRate;
     const netIncome=grossIncome*(1-taxRate/100);
@@ -7171,7 +7178,7 @@ function calcStockCalcs(s){
   const ov=s.overrides||{};
   const g1=(ov.g1??st.g1)/100,g2=(ov.g2??st.g2)/100,g3=(ov.g3??st.g3)/100;
   const dr=(ov.dr??st.dr)/100,tg=(ov.tg??st.tg)/100,em=ov.em??st.em,fade=ov.fade??st.fade;
-  const cash=ov.cash||0,debt=ov.debt||0;
+  const cash=ov.cash??(s.totalCash||0),debt=ov.debt??(s.totalDebt||0);
   const growths=[];
   for(let i=0;i<5;i++)growths.push(g1);
   for(let i=0;i<5;i++)growths.push(g2);
@@ -7310,7 +7317,7 @@ function calcStockScore(s){
   const sbcScore=sbcPct!=null?scoreTierInv(sbcPct,T.health.sbcLow.tiers):null;
   const bbYield=r.buyback;
   pillar('health',[
-    {k:'debtEquity',l:'Debt/Equity',v:s.debtEquity,score:(s.debtEquity!=null&&s.debtEquity>=0)?scoreTierInv(s.debtEquity,T.health.debtEquity.tiers):(s.debtEquity!=null?0:null),max:T.health.debtEquity.pts},
+    {k:'debtEquity',l:'Debt/Equity',v:s.debtEquity,score:(s.debtEquity!=null)?(s.debtEquity<0?T.health.debtEquity.pts:scoreTierInv(s.debtEquity,T.health.debtEquity.tiers)):null,max:T.health.debtEquity.pts},
     {k:'currentRatio',l:'Current Ratio',v:s.currentRatio,score:scoreTier(s.currentRatio,T.health.currentRatio.tiers),max:T.health.currentRatio.pts},
     {k:'fcfPositive',l:'FCF Positive',v:s.fcf!=null?(s.fcf>0?'Yes':'No'):null,score:fcfPos,max:T.health.fcfPositive.pts},
     {k:'fcfQuality',l:'FCF/Net Inc.',v:(s.fcf!=null&&s.profit!=null&&s.profit>0)?((s.fcf/s.profit*100).toFixed(0)+'%'):(s.fcf!=null&&s.profit!=null?'N/A':null),score:fcfQual,max:T.health.fcfQuality.pts},
@@ -7318,10 +7325,12 @@ function calcStockScore(s){
     {k:'buyback',l:'Buyback Yield',v:bbYield,score:scoreTier(bbYield,T.health.buyback.tiers),max:T.health.buyback.pts}
   ]);
 
-  const total=(pillars.valuation??0)+(pillars.growth??0)+(pillars.profitability??0)+(pillars.health??0);
-  const hasPillars=Object.values(pillars).some(v=>v!==null);
+  const availPillars=Object.values(pillars).filter(v=>v!==null);
+  const rawTotal=availPillars.reduce((a,b)=>a+b,0);
+  const maxPossible=availPillars.length*25;
+  const total=maxPossible>0?Math.round(rawTotal/maxPossible*100):null;
 
-  return{total:hasPillars?total:null,valuation:pillars.valuation,growth:pillars.growth,profitability:pillars.profitability,health:pillars.health,details};
+  return{total:availPillars.length?total:null,valuation:pillars.valuation,growth:pillars.growth,profitability:pillars.profitability,health:pillars.health,details,availablePillars:availPillars.length};
 }
 
 function calcStockRatios(s){
