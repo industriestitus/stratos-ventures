@@ -1664,6 +1664,13 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 <!-- ====== SECTION: SETTINGS ====== -->
 <div class="content" id="section-settings" style="display:none">
 
+<div class="card" id="pwa-install-btn" style="display:none;margin-bottom:16px;cursor:pointer;border:1px dashed var(--accent)" onclick="installPwa()">
+  <div style="display:flex;align-items:center;gap:12px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="width:24px;height:24px;flex-shrink:0"><path d="M12 5v10M7 12l5 5 5-5"/><path d="M5 19h14"/></svg>
+    <div><div style="font-weight:600;color:var(--accent)">Install Stratos Ventures</div><div style="font-size:12px;color:var(--text2)">Add to home screen for offline access and a native app experience</div></div>
+  </div>
+</div>
+
 <div class="card">
   <div class="card-title">Connections</div>
   <p style="color:var(--text2);font-size:12px;margin-bottom:18px">API keys and sync credentials are stored only in your browser (localStorage) — never in the public source code.</p>
@@ -7741,7 +7748,16 @@ function renderTracker(){
   if(!showAll&&totalCount>RENDER_LIMIT){
     html+=`<tr><td colspan="${stCols.length}" style="text-align:center;padding:12px"><button class="btn btn-secondary" onclick="window._stShowAll=true;renderTracker()" style="font-size:12px">Show all ${totalCount} stocks (${totalCount-RENDER_LIMIT} more)</button></td></tr>`;
   }
+  const scrollContainer=tbody.closest('.table-wrap')||tbody.parentElement;
+  const savedScroll=scrollContainer?scrollContainer.scrollTop:0;
+  const focused=document.activeElement;
+  const focusSel=focused&&tbody.contains(focused)?{ticker:focused.dataset?.ticker,field:focused.dataset?.field,selStart:focused.selectionStart,selEnd:focused.selectionEnd}:null;
   tbody.innerHTML=html;
+  if(scrollContainer)scrollContainer.scrollTop=savedScroll;
+  if(focusSel){
+    const restore=tbody.querySelector(`[data-ticker="${focusSel.ticker}"][data-field="${focusSel.field}"]`);
+    if(restore){restore.focus();try{restore.setSelectionRange(focusSel.selStart,focusSel.selEnd)}catch(e){}}
+  }
   renderScatterChart();
 }
 
@@ -9642,6 +9658,29 @@ window.addEventListener('storage',e=>{
     setTimeout(()=>showToast('Private/Incognito mode detected — your data will not persist after closing this window. Use Export to save your work.','warning',10000),2000);
   }
 })();
+let _deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _deferredInstallPrompt=e;
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn)btn.style.display='';
+});
+window.addEventListener('appinstalled',()=>{
+  _deferredInstallPrompt=null;
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn)btn.style.display='none';
+  showToast('App installed successfully!','success');
+});
+function installPwa(){
+  if(!_deferredInstallPrompt)return;
+  _deferredInstallPrompt.prompt();
+  _deferredInstallPrompt.userChoice.then(r=>{
+    if(r.outcome==='accepted')showToast('Installing...','info');
+    _deferredInstallPrompt=null;
+    const btn=document.getElementById('pwa-install-btn');
+    if(btn)btn.style.display='none';
+  });
+}
 window.addEventListener('load',()=>{
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('./sw.js').then(reg=>{
