@@ -1678,7 +1678,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   <div class="conn-row">
     <div class="input-group">
       <label for="st-apikey">FMP API Key</label>
-      <input type="text" id="st-apikey" placeholder="Enter FMP API key" oninput="saveTrackerSettings()">
+      <input type="password" id="st-apikey" placeholder="Enter FMP API key" oninput="saveTrackerSettings()" autocomplete="off">
     </div>
     <button class="conn-btn conn-btn--fmp" onclick="testFmp()">Test</button>
     <div class="conn-status" id="fmp-status"></div>
@@ -1687,7 +1687,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
   <div class="conn-row">
     <div class="input-group">
       <label for="st-finnhub">Finnhub API Key</label>
-      <input type="text" id="st-finnhub" placeholder="Enter Finnhub API key (free at finnhub.io)" oninput="saveTrackerSettings()">
+      <input type="password" id="st-finnhub" placeholder="Enter Finnhub API key (free at finnhub.io)" oninput="saveTrackerSettings()" autocomplete="off">
     </div>
     <button class="conn-btn conn-btn--finnhub" onclick="testFinnhub()">Test</button>
     <div class="conn-status" id="finnhub-status"></div>
@@ -3052,7 +3052,8 @@ const API={
     if((opts2&&opts2.keepalive)||this._keepalive)opts.keepalive=true;
     let resp;
     try{resp=await fetch(this._base+'/api/'+path,opts)}catch(e){
-      try{resp=await fetch(this._base+'/api/'+path,opts)}catch(e2){this._setStatus(false);throw e2}
+      if(method==='GET'){try{await new Promise(r=>setTimeout(r,1000));resp=await fetch(this._base+'/api/'+path,opts)}catch(e2){this._setStatus(false);throw e2}}
+      else{this._setStatus(false);throw e}
     }
     if(!resp.ok){this._setStatus(false);const err=await resp.json().catch(()=>({}));throw new Error(err.error||'HTTP '+resp.status)}
     this._setStatus(true);
@@ -3105,8 +3106,7 @@ const API={
   },
   beacon(path,body){
     if(!this._base||!this._key)return;
-    const blob=new Blob([JSON.stringify(body)],{type:'application/json'});
-    navigator.sendBeacon(this._base+'/api/'+path+'?key='+encodeURIComponent(this._key),blob);
+    try{fetch(this._base+'/api/'+path,{method:'POST',headers:{'Content-Type':'application/json','X-Sync-Key':this._key},body:JSON.stringify(body),keepalive:true}).catch(()=>{})}catch(e){}
   }
 };
 let d1Mode=false;
@@ -4101,7 +4101,8 @@ function saveExchangeRates(){
 
 async function fetchExchangeRates(){
   try{
-    const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const r=await fetchWithTimeout('https://api.exchangerate-api.com/v4/latest/USD');
+    if(r.status===429){showToast('Exchange rate API rate limited — try later','warning');return}
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
     if(d.rates){
@@ -4546,18 +4547,23 @@ function renderDbAlerts(){
 }
 
 // ---- 5C: Benchmark ----
+let _fetchingBenchmark=false;
 async function fetchBenchmarkData(){
+  if(_fetchingBenchmark){showToast('Benchmark fetch already in progress','warning');return}
   if(!pfSnapshots.length){showToast('Take portfolio snapshots first to compare with benchmark','warning');return}
-  const sorted=[...pfSnapshots].sort((a,b)=>a.date.localeCompare(b.date));
-  const from=sorted[0].date;
-  const to=sorted[sorted.length-1].date;
-  showToast('Fetching S&P 500 data...','success');
-  const data=await fmpFetch('historical-price-full/SPY',{from,to});
-  if(!data||!data.historical||!data.historical.length){showToast('Could not fetch benchmark data','error');return}
-  dbBenchmark={ticker:'SPY',prices:data.historical.map(d=>({date:d.date,close:d.close})).reverse(),fetchedAt:new Date().toISOString()};
-  saveDashBenchmark();
-  renderDbBenchmark();
-  showToast('Benchmark data updated','success');
+  _fetchingBenchmark=true;
+  try{
+    const sorted=[...pfSnapshots].sort((a,b)=>a.date.localeCompare(b.date));
+    const from=sorted[0].date;
+    const to=sorted[sorted.length-1].date;
+    showToast('Fetching S&P 500 data...','success');
+    const data=await fmpFetch('historical-price-full/SPY',{from,to});
+    if(!data||!data.historical||!data.historical.length){showToast('Could not fetch benchmark data','error');return}
+    dbBenchmark={ticker:'SPY',prices:data.historical.map(d=>({date:d.date,close:d.close})).reverse(),fetchedAt:new Date().toISOString()};
+    saveDashBenchmark();
+    renderDbBenchmark();
+    showToast('Benchmark data updated','success');
+  }finally{_fetchingBenchmark=false}
 }
 
 function renderDbBenchmark(){
@@ -5605,11 +5611,13 @@ async function fetchInsiderTrading(ticker){
   if(memCached&&Date.now()-memCached.ts<3600000)return memCached.data;
   const data=await cachedFetch(ticker,'insider_transactions',async()=>{
     try{
-      const r=await fetch('https://finnhub.io/api/v1/stock/insider-transactions?symbol='+encodeURIComponent(ticker)+'&token='+encodeURIComponent(key));
-      if(!r.ok)return r.status===429?{rateLimited:true}:null;
+      const r=await fetchWithTimeout('https://finnhub.io/api/v1/stock/insider-transactions?symbol='+encodeURIComponent(ticker)+'&token='+encodeURIComponent(key));
+      if(r.status===429)return{rateLimited:true};
+      if(r.status===401||r.status===403){showToast('Finnhub API key invalid','error');return null}
+      if(!r.ok){console.warn('Finnhub HTTP',r.status,'for',ticker);return null}
       const d=await r.json();
       return d.data||[];
-    }catch(e){return null}
+    }catch(e){console.warn('Finnhub fetch failed for',ticker,e.message);return null}
   });
   if(data&&!data.rateLimited)_insiderCache[ticker]={data,ts:Date.now()};
   return data;
@@ -5634,15 +5642,15 @@ async function renderInsiderTrading(ticker){
     return;
   }
 
-  const openMarketBuys=txns.filter(t=>t.change>0&&(t.transactionCode==='P'||t.transactionCode==='Buy'));
-  const sells=txns.filter(t=>t.change<0);
+  const openMarketBuys=txns.filter(t=>t.change>0&&t.transactionCode==='P');
+  const sells=txns.filter(t=>t.transactionCode==='S');
   const totalBought=openMarketBuys.reduce((s,t)=>s+t.change,0);
   const totalSold=sells.reduce((s,t)=>s+Math.abs(t.change),0);
   const netShares=totalBought-totalSold;
   const cutoff=new Date(Date.now()-90*86400000);
   const last3m=txns.filter(t=>{if(!t.transactionDate)return false;const d=new Date(t.transactionDate);return!isNaN(d.getTime())&&d>=cutoff});
-  const last3mBuys=last3m.filter(t=>t.change>0&&(t.transactionCode==='P'||t.transactionCode==='Buy')).length;
-  const last3mSells=last3m.filter(t=>t.change<0).length;
+  const last3mBuys=last3m.filter(t=>t.transactionCode==='P').length;
+  const last3mSells=last3m.filter(t=>t.transactionCode==='S').length;
 
   let h='<div class="card"><div class="card-title">Insider Trading Summary</div>';
   h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px">';
@@ -5655,8 +5663,8 @@ async function renderInsiderTrading(ticker){
   const uniqueNames=[...new Set(txns.map(t=>t.name))];
   const nameStats=uniqueNames.map(name=>{
     const nt=txns.filter(t=>t.name===name);
-    const nb=nt.filter(t=>t.change>0);
-    const ns=nt.filter(t=>t.change<0);
+    const nb=nt.filter(t=>t.transactionCode==='P');
+    const ns=nt.filter(t=>t.transactionCode==='S');
     const net=nt.reduce((s,t)=>s+t.change,0);
     const lastDate=nt.reduce((m,t)=>t.transactionDate>m?t.transactionDate:m,'');
     return{name,count:nt.length,buys:nb.length,sells:ns.length,net,lastDate};
@@ -5684,7 +5692,7 @@ async function renderInsiderTrading(ticker){
     const shareColor=t.transactionCode==='P'?'var(--green)':t.transactionCode==='S'?'var(--red)':'var(--text2)';
     const price=t.transactionPrice;
     const value=(price!=null&&t.change!=null&&typeof price==='number'&&typeof t.change==='number')?Math.abs(price*t.change):null;
-    h+=`<tr${hide?' class="insider-hidden-row" style="display:none;border-bottom:1px solid var(--border)"':' style="border-bottom:1px solid var(--border)"'}><td style="padding:6px 8px;white-space:nowrap">${escH(t.transactionDate||'')}</td><td style="padding:6px 8px">${escH(t.name||'')}</td><td style="text-align:center;padding:6px 8px;color:${typeColor};font-weight:600">${typeLabel}</td><td style="text-align:right;padding:6px 8px;color:${shareColor}">${t.change>0?'+':''}${fmt(t.change)}</td><td style="text-align:right;padding:6px 8px">${price?'$'+price.toFixed(2):'-'}</td><td style="text-align:right;padding:6px 8px">${value?'$'+fmt(value):'-'}</td><td style="text-align:right;padding:6px 8px;color:var(--text2)">${t.share!=null?fmt(t.share):'-'}</td></tr>`;
+    h+=`<tr${hide?' class="insider-hidden-row" style="display:none;border-bottom:1px solid var(--border)"':' style="border-bottom:1px solid var(--border)"'}><td style="padding:6px 8px;white-space:nowrap">${escH(t.transactionDate||'')}</td><td style="padding:6px 8px">${escH(t.name||'')}</td><td style="text-align:center;padding:6px 8px;color:${typeColor};font-weight:600">${typeLabel}</td><td style="text-align:right;padding:6px 8px;color:${shareColor}">${t.change>0?'+':''}${fmt(t.change)}</td><td style="text-align:right;padding:6px 8px">${price!=null&&typeof price==='number'?'$'+price.toFixed(2):'-'}</td><td style="text-align:right;padding:6px 8px">${value?'$'+fmt(value):'-'}</td><td style="text-align:right;padding:6px 8px;color:var(--text2)">${t.share!=null?fmt(t.share):'-'}</td></tr>`;
   });
   if(sorted.length>txnLimit)h+=`<tr id="insider-show-all-row"><td colspan="7" style="text-align:center;padding:10px"><button onclick="document.querySelectorAll('.insider-hidden-row').forEach(r=>r.style.display='');document.getElementById('insider-show-all-row').remove()" style="background:var(--surface2);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:6px 16px;cursor:pointer;font-size:12px">Show all ${sorted.length} transactions</button></td></tr>`;
   h+='</table></div></div>';
@@ -6289,6 +6297,11 @@ function startOverride(ticker,field,el){
 }
 
 // ====== STOCK TRACKER ======
+function fetchWithTimeout(url,opts={},ms=15000){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),ms);
+  return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(timer));
+}
 const FMP='https://financialmodelingprep.com/stable';
 const TNAMES={AAPL:'Apple',AMZN:'Amazon',GOOGL:'Google',MSFT:'Microsoft',META:'Meta',ASML:'ASML',BKNG:'Booking',BN:'Brookfield',NFLX:'Netflix',V:'Visa',MA:'Mastercard',SPGI:'S&P Global',MCO:"Moody's",EFX:'Equifax',FICO:'FICO',UBER:'Uber','EVO.ST':'Evolution',KSPI:'Kaspi',DUOL:'Duolingo',MELI:'MercadoLibre',IBKR:'IBKR',LMND:'Lemonade',LYFT:'Lyft',TMDX:'TransMedics',ZETA:'Zeta',RACE:'Ferrari','MC.PA':'LVMH',CRM:'Salesforce',NOW:'ServiceNow',ADBE:'Adobe',ETH:'Ethereum'};
 const DEFAULT_TICKERS=Object.keys(TNAMES);
@@ -6554,7 +6567,10 @@ async function fetchDividendHistory(ticker){
   return null;
 }
 
+let _fetchingDivData=false;
 async function fetchAllDividendData(){
+  if(_fetchingDivData){showToast('Dividend fetch already in progress','warning');return}
+  _fetchingDivData=true;
   const btn=document.getElementById('div-fetch-btn');
   if(btn)btn.disabled=true;
   const tickers=[...new Set(pfPositions.map(p=>p.ticker).filter(Boolean))];
@@ -6565,6 +6581,7 @@ async function fetchAllDividendData(){
   if(!stale.length){
     showToast('Dividend data is up to date','success');
     if(btn)btn.disabled=false;
+    _fetchingDivData=false;
     return;
   }
   showToast(`Fetching dividends for ${stale.length} ticker(s)...`,'info');
@@ -6576,6 +6593,7 @@ async function fetchAllDividendData(){
     if(fetched<stale.length)await new Promise(r=>setTimeout(r,350));
   }
   if(btn){btn.textContent='Fetch Data';btn.disabled=false}
+  _fetchingDivData=false;
   showToast(`Dividend data loaded for ${fetched} ticker(s)`,'success');
   renderDividendsTab();
 }
@@ -6890,13 +6908,21 @@ async function fmpFetch(endpoint,params){
   const s=stSettings();
   if(!s.apiKey){showToast('FMP API key not set — go to Settings','warning');return null}
   const url=`${FMP}/${endpoint}?${new URLSearchParams({...params,apikey:s.apiKey})}`;
-  try{
-    const r=await fetch(url);
-    if(r.status===429){showToast('FMP rate limit — wait a moment','warning');return null}
-    if(r.status===401||r.status===403){showToast('FMP API key invalid','error');return null}
-    if(!r.ok)return null;
-    const d=await r.json();if(d?.['Error Message'])return null;return d;
-  }catch(e){return null}
+  for(let attempt=0;attempt<2;attempt++){
+    try{
+      const r=await fetchWithTimeout(url);
+      if(r.status===429){showToast('FMP rate limit — wait a moment','warning');return null}
+      if(r.status===401||r.status===403){showToast('FMP API key invalid','error');return null}
+      if(!r.ok){console.warn('FMP HTTP',r.status,'for',endpoint);return null}
+      let d;try{d=await r.json()}catch(je){console.warn('FMP invalid JSON for',endpoint);return null}
+      if(d?.['Error Message']){console.warn('FMP error:',d['Error Message']);return null}
+      return d;
+    }catch(e){
+      if(attempt===0){await new Promise(r=>setTimeout(r,1500));continue}
+      console.warn('FMP fetch failed for',endpoint,e.message);return null;
+    }
+  }
+  return null;
 }
 
 const CACHE_TTLS={stock_data:1,historical_charts:24,dividend_history:24,insider_transactions:12};
@@ -6912,7 +6938,7 @@ async function cachedFetch(ticker,dataSource,fetchFn){
     try{
       const cached=await API.get('cache-check/'+companyId+'/'+dataSource);
       if(cached&&cached.cached){
-        const age=(Date.now()-new Date(cached.fetched_at+'Z').getTime())/3600000;
+        const fa=cached.fetched_at;const age=(Date.now()-new Date(fa.endsWith('Z')?fa:fa+'Z').getTime())/3600000;
         if(age<ttl){
           if(dataSource==='stock_data')_lastCacheAge={source:dataSource,fetched_at:cached.fetched_at,ageHours:age};
           return cached.data;
@@ -6945,8 +6971,11 @@ function updateCacheAgeUI(){
   btn.style.display='';
 }
 
+let _refreshingProfile=false;
 async function refreshProfileData(){
   if(!profileTicker)return;
+  if(_refreshingProfile){showToast('Refresh already in progress','warning');return}
+  _refreshingProfile=true;
   const btn=document.getElementById('cp-refresh-btn');
   if(btn){btn.disabled=true;btn.textContent='⏳...'}
   _forceRefresh=true;
@@ -6958,7 +6987,7 @@ async function refreshProfileData(){
     saveTrackerStocks();
     showProfile(profileTicker);
     showToast('Data refreshed from API','success',2000);
-  }catch(e){showToast('Refresh failed','error')}finally{_forceRefresh=false}
+  }catch(e){showToast('Refresh failed','error')}finally{_forceRefresh=false;_refreshingProfile=false}
   if(btn){btn.disabled=false;btn.textContent='↻ Refresh'}
 }
 
@@ -6968,8 +6997,9 @@ async function fetchYahooData(ticker){
   if(!s.workerUrl)return null;
   try{
     const url=`${s.workerUrl}/quote/${encodeURIComponent(ticker)}?modules=price,financialData,defaultKeyStatistics,incomeStatementHistory`;
-    const r=await fetch(url);
-    if(!r.ok)return null;
+    const r=await fetchWithTimeout(url);
+    if(r.status===429){showToast('Yahoo proxy rate limited — wait a moment','warning');return null}
+    if(!r.ok){console.warn('Yahoo HTTP',r.status,'for',ticker);return null}
     const d=await r.json();
     const result=d?.quoteSummary?.result?.[0];
     if(!result)return null;
@@ -8046,8 +8076,9 @@ async function fetchChartData(ticker,range){
   if(!s.workerUrl)return null;
   const interval=range==='6mo'?'1d':'1wk';
   try{
-    const r=await fetch(`${s.workerUrl}/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}`);
-    if(!r.ok)return null;
+    const r=await fetchWithTimeout(`${s.workerUrl}/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}`);
+    if(r.status===429){console.warn('Chart rate limited for',ticker);return null}
+    if(!r.ok){console.warn('Chart HTTP',r.status,'for',ticker);return null}
     const d=await r.json();
     const result=d?.chart?.result?.[0];
     if(!result)return null;
@@ -8055,7 +8086,7 @@ async function fetchChartData(ticker,range){
     const closes=result.indicators?.quote?.[0]?.close||[];
     const currency=result.meta?.currency||'USD';
     return{timestamps:ts,closes,currency};
-  }catch(e){return null}
+  }catch(e){console.warn('Chart fetch failed for',ticker,e.message);return null}
 }
 
 async function renderAllCharts(){
@@ -9205,7 +9236,7 @@ let lastSyncTs=0;
 function getSyncUrl(){
   const s=stSettings();
   const url=s.workerUrl||'';
-  if(url&&url.startsWith('http://')){showToast('Sync URL uses HTTP — data sent unencrypted. Use HTTPS.','warning');return ''}
+  if(url&&url.startsWith('http://')&&!url.startsWith('http://localhost')&&!url.startsWith('http://127.0.0.1')){showToast('Sync URL uses HTTP — data sent unencrypted. Use HTTPS.','warning');return ''}
   return url;
 }
 
@@ -9309,7 +9340,7 @@ async function testFinnhub(){
   const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
   setStatus('finnhub-status','Testing...','');
   try{
-    const r=await fetch('https://finnhub.io/api/v1/stock/insider-transactions?symbol=AAPL&token='+encodeURIComponent(key));
+    const r=await fetchWithTimeout('https://finnhub.io/api/v1/stock/insider-transactions?symbol=AAPL&token='+encodeURIComponent(key));
     if(r.ok){const d=await r.json();setStatus('finnhub-status',d.data?.length?'Connected ✓':'No data (check key)',d.data?.length?true:false)}
     else if(r.status===401||r.status===403)setStatus('finnhub-status','Invalid key',false);
     else setStatus('finnhub-status','Error ('+r.status+')',false);
@@ -9323,7 +9354,7 @@ async function testFmp(){
   const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
   setStatus('fmp-status','Testing...','');
   try{
-    const r=await fetch('https://financialmodelingprep.com/stable/profile?symbol=AAPL&apikey='+encodeURIComponent(key));
+    const r=await fetchWithTimeout('https://financialmodelingprep.com/stable/profile?symbol=AAPL&apikey='+encodeURIComponent(key));
     if(r.ok){const d=await r.json();setStatus('fmp-status',d.length?'Connected ✓':'Invalid key',d.length?true:false)}
     else if(r.status===401||r.status===403)setStatus('fmp-status','Invalid key',false);
     else setStatus('fmp-status','Error ('+r.status+')',false);
