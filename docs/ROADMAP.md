@@ -182,13 +182,21 @@ Status: COMPLETE (2026-06-27)
 - [x] All Chart.js instances update on theme switch (6 registries: calculators, portfolio, dashboard, company, dividend, comparison)
 - [x] QA: fixed hardcoded colors in `.st-data` (border, focus color)
 
+## Completed: Phase 10b — PWA Support
+Status: COMPLETE (2026-06-27)
+- [x] Web App Manifest (manifest.json — name, icons, standalone display, theme color)
+- [x] Service Worker (sw.js — cache-first static assets, network-first API calls, auto-update)
+- [x] PWA meta tags (apple-touch-icon, apple-mobile-web-app-capable, theme-color)
+- [x] PNG icons (192x192, 512x512) with SV branding
+- [x] Dynamic theme-color update on dark/light toggle
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 
-- [ ] Brokerage sync (SnapTrade or similar)
-- [ ] PWA support (installable on phone)
 - [ ] Notifications (earnings coming up, price alerts)
 - [ ] Google Drive migration tool (import existing Docs)
+### Maybe Later (Integrations)
+- [ ] Brokerage sync (SnapTrade or similar) — automatikus pozíció import brókerből. SnapTrade $100-500/hó (nincs free tier), Plaid/Finicity szintén fizetős és US-focused. CSV import (már kész) gyakorlatilag elég, kézi futtatás havonta egyszer.
 ### Maybe Later (AI & Analysis)
 - [ ] AI analysis via Claude API (company summaries, Q&A) — Haiku 4.5 ($1/$5 per 1M token) elég összefoglalókhoz, Sonnet mélyebb elemzéshez. Havi ~$5-15 költség 10-20 query/nap mellett. CF Worker proxy-n keresztül, API key env variable-ként.
 ### Maybe Later (Security & Infrastructure)

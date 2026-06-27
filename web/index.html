@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stratos Ventures</title>
 <link rel="icon" href="data:,">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-192.png">
 <script>
 (function(){
   var c=document.createElement('canvas');c.width=32;c.height=32;
@@ -6207,6 +6212,7 @@ function toggleTheme(){
 }
 function applyTheme(t){
   if(t==='light'){document.documentElement.setAttribute('data-theme','light')}else{document.documentElement.removeAttribute('data-theme')}
+  const tc=document.querySelector('meta[name="theme-color"]');if(tc)tc.content=t==='light'?'#f5f6fa':'#0f1117';
   const dl=document.getElementById('theme-icon-dark'),ll=document.getElementById('theme-icon-light'),lb=document.getElementById('theme-label');
   if(dl)dl.style.display=t==='light'?'none':'';
   if(ll)ll.style.display=t==='light'?'':'none';
@@ -9337,6 +9343,7 @@ document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'&&d1Mode)API.flushAll();
 });
 window.addEventListener('load',()=>{
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
   if(isEncryptionEnabled()){
     document.getElementById('lock-screen').style.display='flex';
     showLockView('unlock');
