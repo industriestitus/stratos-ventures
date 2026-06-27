@@ -217,6 +217,22 @@ Status: COMPLETE (2026-06-27)
 - [ ] Cloud sync conflict resolution (merge strategy instead of last-write-wins)
 - [ ] Multi-tab localStorage sync (StorageEvent listener to prevent stale reads)
 
+### Maybe Later (Market & Timing Tools — Forecaster.biz inspiráció)
+- [ ] Seasonality elemzés — 30 évre visszamenő szezonális minták, win rate, átlagos hozam hónapokra bontva. Forecaster fő USP-je. Value investinghez is hasznos (mikor érdemes pozíciót nyitni).
+- [ ] Pattern matching (mintafelismerés) — historikus ármozgás-minták alapján bullish/bearish forgatókönyvek becslése, valószínűségekkel. AI/ML alapú, komoly fejlesztés.
+- [ ] Quantum Screener — szezonalitás + pattern matching kombinált screener, globális instrumentumokra. Szezonalitás kell hozzá előbb.
+- [ ] Sector Map (szektorrotáció) — gazdasági ciklus fázisok szektoronként, Consumer Cyclical vs Defensive, divergencia-jelzések. Terry Smith dashboard mellé illene.
+- [ ] Market Mood Indicator — befektetői sentiment (FOMO → pánik skála), piaci csúcs/mélypont jelzések. Fear & Greed Index-hez hasonló.
+- [ ] COT Report (Commitment of Traders) — futures pozíciók, piaci sentiment, szintetikus forex COT reportok. Főleg forex/commodity tradereknek.
+- [ ] US Government Tracker — amerikai politikusok részvénytranzakcióinak követése. Csak US piacra releváns.
+- [ ] Breakeven screener — 5+ veszteséges negyedév után nyereségessé váló részvények (turnaround jelzés).
+- [ ] Overbought/Oversold indikátor — ciklikus technikai indikátor belépési/kilépési pontokkal. Dip Finder-nél komplexebb.
+
+### Maybe Later (Meglévő feature-ök bővítése — Forecaster.biz inspiráció)
+- [ ] Earnings calendar bővítés: analyst EPS/revenue estimates, beat history, Polymarket prediction market integráció
+- [ ] Rankings bővítés: index komponensek rangsorolása, momentum szűrés (price change 1d/1m/6m/1y/3y/5y)
+- [ ] Screener bővítés: globális instrumentumok (150K+) a saját DB helyett
+
 ### Maybe Later (UX & Performance)
 - [ ] Lazy-load charts (defer Chart.js rendering until canvas is visible)
 - [ ] Import merge strategy: Object.assign vs full replace — make consistent with cloud sync behavior
