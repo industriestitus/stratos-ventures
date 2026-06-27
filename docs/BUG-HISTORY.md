@@ -21,7 +21,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 9 | Post-completion QA | `93a0420` | 2026-06-27 | 10 | 0 |
 | 10 | Mobile Responsive Overflow | `b21f930` | 2026-06-27 | 6 | 1 |
 | 11 | Dashboard Widget Overflow | `b5fdc36` | 2026-06-27 | 3 | 0 |
-| 14 | Dashboard Grid Bottom Clipping | `pending` | 2026-06-28 | 1 | 0 |
+| 14 | Dashboard Grid Bottom Clipping | `e74446c` | 2026-06-28 | 1 | 0 |
 
 **Total: 154 fixed, 21 potential (unfixed)**
 
@@ -232,7 +232,7 @@ None.
 
 ---
 
-## Category 14 — Dashboard Grid Bottom Clipping (`pending`)
+## Category 14 — Dashboard Grid Bottom Clipping (`e74446c`)
 
 ### Fixed (1)
 
