@@ -21,8 +21,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 9 | Post-completion QA | `93a0420` | 2026-06-27 | 10 | 0 |
 | 10 | Mobile Responsive Overflow | `b21f930` | 2026-06-27 | 6 | 1 |
 | 11 | Dashboard Widget Overflow | `b5fdc36` | 2026-06-27 | 3 | 0 |
+| 14 | Dashboard Grid Bottom Clipping | `pending` | 2026-06-28 | 1 | 0 |
 
-**Total: 153 fixed, 21 potential (unfixed)**
+**Total: 154 fixed, 21 potential (unfixed)**
 
 ---
 
@@ -224,6 +225,20 @@ These were found by the deep audit agent but not prioritized for fixing:
 | 1 | HIGH | FI form number inputs (168px browser minimum) overflow widget by 34px at 3-column layout, visually covering and blocking clicks on adjacent TODO Summary column | Added `min-width:0` to `.db-fi-form .input-group` so inputs shrink to grid cell width | `index.html:581` |
 | 2 | MED | `.db-widget` only had `overflow:hidden` at 768px breakpoint — at desktop widths, internal content could overflow widget boundary and overlap neighboring grid cells | Moved `overflow:hidden` to base `.db-widget` rule (all viewports) | `index.html:542` |
 | 3 | MED | TODO date input (`min-width:auto`) prevented flex row from shrinking, causing "Add" button to clip outside widget at 3-column widths | Added `min-width:0` to `.db-todo-input input[type=date]` | `index.html:585` |
+
+### Unfixed (0)
+
+None.
+
+---
+
+## Category 14 — Dashboard Grid Bottom Clipping (`pending`)
+
+### Fixed (1)
+
+| # | Severity | Description | Fix | Location |
+|---|----------|-------------|-----|----------|
+| 1 | MED | `.db-grid` had no bottom padding, causing the last widget (General TODO) to be clipped at the viewport bottom when scrolled to max — task items near the bottom were cut off by the page boundary | Added `padding-bottom:24px` to `.db-grid` to ensure the last widget has breathing room below the viewport fold | `index.html:533` |
 
 ### Unfixed (0)
 
