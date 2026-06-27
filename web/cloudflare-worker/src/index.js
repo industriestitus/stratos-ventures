@@ -613,6 +613,20 @@ async function handleApi(path, method, url, request, env, origin) {
     const q = url.searchParams.get('q') || '';
     return handleNotesSearch(q, db, origin);
   }
+  // Cache check: GET /api/cache-check/:company_id/:data_source
+  if (table === 'cache-check' && idOrAction && subAction && method === 'GET') {
+    const row = await db.prepare('SELECT data_json, fetched_at FROM api_cache WHERE company_id = ? AND data_source = ?').bind(Number(idOrAction), subAction).first();
+    if (!row) return jsonResp({ cached: false }, 200, origin);
+    return jsonResp({ cached: true, data: JSON.parse(row.data_json), fetched_at: row.fetched_at }, 200, origin);
+  }
+  // Cache upsert: PUT /api/cache-upsert
+  if (table === 'cache-upsert' && method === 'PUT') {
+    const body = await request.json();
+    const { company_id, data_source, data_json } = body;
+    if (!company_id || !data_source || !data_json) return jsonResp({ error: 'Missing company_id, data_source, or data_json' }, 400, origin);
+    await db.prepare("INSERT INTO api_cache (company_id, data_source, data_json, fetched_at) VALUES (?, ?, ?, datetime('now')) ON CONFLICT(company_id, data_source) DO UPDATE SET data_json = excluded.data_json, fetched_at = excluded.fetched_at").bind(company_id, data_source, JSON.stringify(data_json)).run();
+    return jsonResp({ ok: true }, 200, origin);
+  }
   if (table === 'migrate' && method === 'POST') {
     try {
       const body = await request.json();

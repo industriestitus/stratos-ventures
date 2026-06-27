@@ -190,6 +190,18 @@ Status: COMPLETE (2026-06-27)
 - [x] PNG icons (192x192, 512x512) with SV branding
 - [x] Dynamic theme-color update on dark/light toggle
 
+## Completed: Phase 10c — D1 API Cache
+Status: COMPLETE (2026-06-27)
+- [x] D1 `api_cache` table: server-side caching of FMP/Finnhub/Yahoo API responses
+- [x] Worker endpoints: `GET /api/cache-check/:company_id/:data_source`, `PUT /api/cache-upsert`
+- [x] `cachedFetch()` client wrapper with TTL-based expiry (1h stock data, 24h historical/dividends, 12h insider)
+- [x] Wired into fetchStockData, fetchHistoricalCharts, fetchDividendHistory, fetchInsiderTrading
+- [x] Cache age indicator on company profile ("Data: X hr ago" with color coding)
+- [x] Refresh button: force-refreshes all data from APIs (bypasses cache)
+- [x] Service worker: caches successful GET API responses for offline fallback
+- [x] Online event: auto re-syncs all data to D1 when connection returns
+- [x] QA: 6 bugs fixed (clean cache data, Yahoo→stock flow, force-refresh finally block, refresh all data types, simplified online handler, cache age scoped to stock_data)
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 

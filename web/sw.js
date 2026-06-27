@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stratos-v1';
+const CACHE_NAME = 'stratos-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -34,11 +34,17 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Network-first for API calls and D1
+  // Network-first for API calls — cache successful GET responses for offline fallback
   if (url.pathname.startsWith('/api/') || url.hostname.includes('workers.dev') ||
       url.hostname.includes('financialmodelingprep') || url.hostname.includes('finnhub')) {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
+      fetch(e.request).then(response => {
+        if (response.ok && e.request.method === 'GET') {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(e.request))
     );
     return;
   }

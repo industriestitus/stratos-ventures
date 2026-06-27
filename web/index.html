@@ -1395,6 +1395,8 @@ button:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px sol
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:10px">
         <div class="cp-pipeline" id="cp-pipeline"></div>
         <div class="cp-type-wrap" id="cp-type-wrap"></div>
+        <div id="cp-cache-age" style="display:none;font-size:11px;padding:3px 8px;border-radius:4px;background:var(--surface2);color:var(--text2);white-space:nowrap"></div>
+        <button id="cp-refresh-btn" class="btn btn-secondary" onclick="refreshProfileData()" style="padding:3px 10px;font-size:11px;display:none" title="Force refresh from API">↻ Refresh</button>
       </div>
     </div>
     <div class="cp-tabs">
@@ -5284,6 +5286,7 @@ function showProfile(ticker){
   document.getElementById('cp-price').textContent=s.price?'$'+s.price.toFixed(2):'-';
   document.getElementById('cp-mcap').textContent='MCap: '+fmt(s.marketCap);
   document.getElementById('cp-date').textContent=s.date||'';
+  updateCacheAgeUI();
 
   // Overview content
   let h='';
@@ -5489,16 +5492,18 @@ let _insiderCache={};
 async function fetchInsiderTrading(ticker){
   const key=stSettings().finnhubKey;
   if(!key)return null;
-  const cached=_insiderCache[ticker];
-  if(cached&&Date.now()-cached.ts<3600000)return cached.data;
-  try{
-    const r=await fetch('https://finnhub.io/api/v1/stock/insider-transactions?symbol='+encodeURIComponent(ticker)+'&token='+encodeURIComponent(key));
-    if(!r.ok)return r.status===429?{rateLimited:true}:null;
-    const d=await r.json();
-    const data=d.data||[];
-    _insiderCache[ticker]={data,ts:Date.now()};
-    return data;
-  }catch(e){return null}
+  const memCached=_insiderCache[ticker];
+  if(memCached&&Date.now()-memCached.ts<3600000)return memCached.data;
+  const data=await cachedFetch(ticker,'insider_transactions',async()=>{
+    try{
+      const r=await fetch('https://finnhub.io/api/v1/stock/insider-transactions?symbol='+encodeURIComponent(ticker)+'&token='+encodeURIComponent(key));
+      if(!r.ok)return r.status===429?{rateLimited:true}:null;
+      const d=await r.json();
+      return d.data||[];
+    }catch(e){return null}
+  });
+  if(data&&!data.rateLimited)_insiderCache[ticker]={data,ts:Date.now()};
+  return data;
 }
 
 async function renderInsiderTrading(ticker){
@@ -5713,10 +5718,15 @@ let cpHistCharts={};
 async function fetchHistoricalCharts(ticker){
   const startTicker=profileTicker;
   try{
-    const [incData,cfData]=await Promise.all([
-      fmpFetch('income-statement',{symbol:ticker,limit:10}),
-      fmpFetch('cash-flow-statement',{symbol:ticker,limit:10})
-    ]);
+    const histRaw=await cachedFetch(ticker,'historical_charts',async()=>{
+      const [inc,cf]=await Promise.all([
+        fmpFetch('income-statement',{symbol:ticker,limit:10}),
+        fmpFetch('cash-flow-statement',{symbol:ticker,limit:10})
+      ]);
+      return {incData:inc,cfData:cf};
+    });
+    const incData=histRaw?.incData;
+    const cfData=histRaw?.cfData;
     if(profileTicker!==startTicker)return;
     const loading=document.getElementById('cp-hist-loading');
     const container=document.getElementById('cp-hist-charts');
@@ -6418,7 +6428,7 @@ function calcDivMetrics(history,ticker){
 }
 
 async function fetchDividendHistory(ticker){
-  const data=await fmpFetch('historical-price-full/stock_dividend/'+encodeURIComponent(ticker),{});
+  const data=await cachedFetch(ticker,'dividend_history',()=>fmpFetch('historical-price-full/stock_dividend/'+encodeURIComponent(ticker),{}));
   if(data?.historical?.length){
     const hist=data.historical.map(d=>({
       date:d.date,paymentDate:d.paymentDate||d.date,recordDate:d.recordDate||'',
@@ -6777,6 +6787,69 @@ async function fmpFetch(endpoint,params){
   }catch(e){return null}
 }
 
+const CACHE_TTLS={stock_data:1,historical_charts:24,dividend_history:24,insider_transactions:12};
+let _lastCacheAge=null;
+let _forceRefresh=false;
+
+async function cachedFetch(ticker,dataSource,fetchFn){
+  if(!d1Mode){return fetchFn()}
+  const companyId=_tickerToD1Id(ticker);
+  if(!companyId){return fetchFn()}
+  const ttl=CACHE_TTLS[dataSource]||1;
+  if(!_forceRefresh){
+    try{
+      const cached=await API.get('cache-check/'+companyId+'/'+dataSource);
+      if(cached&&cached.cached){
+        const age=(Date.now()-new Date(cached.fetched_at+'Z').getTime())/3600000;
+        if(age<ttl){
+          if(dataSource==='stock_data')_lastCacheAge={source:dataSource,fetched_at:cached.fetched_at,ageHours:age};
+          return cached.data;
+        }
+      }
+    }catch(e){console.warn('Cache check failed for '+dataSource+':',e)}
+  }
+  const fresh=await fetchFn();
+  if(fresh!=null){
+    if(dataSource==='stock_data')_lastCacheAge={source:dataSource,fetched_at:new Date().toISOString(),ageHours:0};
+    try{await API.put('cache-upsert',{company_id:companyId,data_source:dataSource,data_json:fresh})}catch(e){console.error('Cache upsert failed:',e)}
+  }
+  return fresh;
+}
+
+function updateCacheAgeUI(){
+  const el=document.getElementById('cp-cache-age');
+  const btn=document.getElementById('cp-refresh-btn');
+  if(!el||!btn)return;
+  if(!_lastCacheAge||!d1Mode){el.style.display='none';btn.style.display='none';return}
+  const h=_lastCacheAge.ageHours;
+  let text,color;
+  if(h<0.1){text='Just updated';color='var(--green)'}
+  else if(h<1){text=Math.round(h*60)+' min ago';color='var(--green)'}
+  else if(h<24){text=Math.round(h)+' hr ago';color='var(--text2)'}
+  else{text=Math.round(h/24)+' day(s) ago';color='var(--orange)'}
+  el.textContent='Data: '+text;
+  el.style.color=color;
+  el.style.display='';
+  btn.style.display='';
+}
+
+async function refreshProfileData(){
+  if(!profileTicker)return;
+  const btn=document.getElementById('cp-refresh-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳...'}
+  _forceRefresh=true;
+  try{
+    await fetchStockData(profileTicker);
+    await fetchHistoricalCharts(profileTicker);
+    if(divHistory[profileTicker])await fetchDividendHistory(profileTicker);
+    await fetchInsiderTrading(profileTicker);
+    saveTrackerStocks();
+    showProfile(profileTicker);
+    showToast('Data refreshed from API','success',2000);
+  }catch(e){showToast('Refresh failed','error')}finally{_forceRefresh=false}
+  if(btn){btn.disabled=false;btn.textContent='↻ Refresh'}
+}
+
 // Yahoo Finance via Cloudflare Worker
 async function fetchYahooData(ticker){
   const s=stSettings();
@@ -6853,15 +6926,11 @@ async function fetchYahooData(ticker){
   }catch(e){console.warn('Yahoo fetch failed for',ticker,e);showToast('Yahoo fetch failed for '+ticker,'warning');return null}
 }
 
-async function fetchStockData(ticker){
-  const stock=tStocks[ticker]||{ticker,name:TNAMES[ticker]||ticker};
-  if(ticker==='ETH'){stock.date=new Date().toISOString().slice(0,10).replace(/-/g,'.');tStocks[ticker]=stock;return stock}
-
-  // Try Yahoo Finance first (via Worker) for main data
+async function _fetchStockDataRaw(ticker){
   const yahoo=await fetchYahooData(ticker);
 
   if(!yahoo||!yahoo.marketCap){
-    // Full FMP fallback if Yahoo failed completely
+    const stock={ticker,name:TNAMES[ticker]||ticker};
     const [profile,income,cashflow,growth]=await Promise.all([
       fmpFetch('profile',{symbol:ticker}),
       fmpFetch('income-statement',{symbol:ticker,limit:1}),
@@ -6877,12 +6946,10 @@ async function fetchStockData(ticker){
     const km2=await fmpFetch('key-metrics-ttm',{symbol:ticker,limit:1});
     if(km2?.[0]){const k=km2[0];if(k.roicTTM!=null)stock.roic=asPct(k.roicTTM);if(k.roeTTM!=null)stock.roe=asPct(k.roeTTM);if(k.debtToEquityTTM!=null)stock.debtEquity=k.debtToEquityTTM;if(k.currentRatioTTM!=null)stock.currentRatio=k.currentRatioTTM}
     stock._source='fmp';
-    if(stock.overriddenData){Object.entries(stock.overriddenData).forEach(([k,v])=>{stock[k]=v})}
-    tStocks[ticker]=stock;
     return stock;
   }
 
-  // Yahoo succeeded — supplement SBC, buyback, ROIC from FMP (if missing)
+  const stock={...yahoo};
   const needSbc=stock.sbc==null||stock.buybackRaw==null;
   const needRoic=stock.roic==null;
   if(needSbc||needRoic){
@@ -6908,7 +6975,18 @@ async function fetchStockData(ticker){
     }
   }
 
-  // Re-apply overrides so API refresh doesn't wipe user values
+  return stock;
+}
+
+async function fetchStockData(ticker){
+  const stock=tStocks[ticker]||{ticker,name:TNAMES[ticker]||ticker};
+  if(ticker==='ETH'){stock.date=new Date().toISOString().slice(0,10).replace(/-/g,'.');tStocks[ticker]=stock;return stock}
+
+  const data=await cachedFetch(ticker,'stock_data',()=>_fetchStockDataRaw(ticker));
+  if(data){
+    const preserve=['overriddenData','_d1Id','notes','earnings','filings','pipeline','companyType','todos','valuations','checklist'];
+    Object.keys(data).forEach(k=>{if(!preserve.includes(k))stock[k]=data[k]});
+  }
   if(stock.overriddenData){Object.entries(stock.overriddenData).forEach(([k,v])=>{stock[k]=v})}
   tStocks[ticker]=stock;
   return stock;
@@ -9341,6 +9419,12 @@ window.addEventListener('beforeunload',()=>{
 });
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'&&d1Mode)API.flushAll();
+});
+window.addEventListener('online',()=>{
+  if(!d1Mode)return;
+  showToast('Back online — syncing data...','info',3000);
+  const fns=[saveTrackerStocks,savePortfolioAccounts,savePortfolioPositions,savePortfolioTransactions,savePortfolioSnapshots,saveDashTodos,saveExchangeRates,saveDividendHistory,saveReviews];
+  fns.forEach(fn=>{try{fn()}catch(e){}});
 });
 window.addEventListener('load',()=>{
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
