@@ -173,19 +173,31 @@ Status: COMPLETE (2026-06-26)
 - [x] P&L excludes priceless positions from totalCost
 - [x] Null guards on snapshot, dividend history, currency conversion
 
+## Completed: Phase 10a — Dark/Light Theme Toggle
+Status: COMPLETE (2026-06-27)
+- [x] Light theme CSS variables (`[data-theme="light"]` override on `:root`)
+- [x] Toggle icon in sidebar header (moon/sun), accessible on every page
+- [x] Mobile: toggle in More menu (bottom nav) with label
+- [x] Theme persists in localStorage, no flash on reload (early inline script)
+- [x] All Chart.js instances update on theme switch (6 registries: calculators, portfolio, dashboard, company, dividend, comparison)
+- [x] QA: fixed hardcoded colors in `.st-data` (border, focus color)
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 
-- [ ] AI analysis via Claude API (company summaries, Q&A)
 - [ ] Brokerage sync (SnapTrade or similar)
 - [ ] PWA support (installable on phone)
 - [ ] Notifications (earnings coming up, price alerts)
 - [ ] Google Drive migration tool (import existing Docs)
-- [ ] Dark/light theme toggle
-- [ ] Set up Cloudflare Access (Zero Trust) — needs custom domain (~$10/yr), then protect pages.dev
+### Maybe Later (AI & Analysis)
+- [ ] AI analysis via Claude API (company summaries, Q&A) — Haiku 4.5 ($1/$5 per 1M token) elég összefoglalókhoz, Sonnet mélyebb elemzéshez. Havi ~$5-15 költség 10-20 query/nap mellett. CF Worker proxy-n keresztül, API key env variable-ként.
+### Maybe Later (Security & Infrastructure)
+- [ ] Cloudflare Zero Trust — login screen a teljes site elé (email + one-time PIN auth már konfigurálva a stratosventures team-ben, de custom domain kell az élesítéshez, ~$10/yr). Előnyök: site-szintű hozzáférés-védelem, Worker API extra réteg, session kezelés, audit log. Ingyenes.
 - [ ] localStorage encryption at rest (AES-256 for local data, not just cloud sync)
 - [ ] Cloud sync conflict resolution (merge strategy instead of last-write-wins)
 - [ ] Multi-tab localStorage sync (StorageEvent listener to prevent stale reads)
+
+### Maybe Later (UX & Performance)
 - [ ] Lazy-load charts (defer Chart.js rendering until canvas is visible)
 - [ ] Import merge strategy: Object.assign vs full replace — make consistent with cloud sync behavior
 - [ ] CSV import locale detection (European vs US number formats in same file)
