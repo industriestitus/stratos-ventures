@@ -9714,7 +9714,7 @@ function installPwa(){
 }
 window.addEventListener('load',()=>{
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('./sw.js').then(reg=>{
+    navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{
       reg.addEventListener('updatefound',()=>{
         const nw=reg.installing;
         if(nw)nw.addEventListener('statechange',()=>{
