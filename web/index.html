@@ -2628,7 +2628,7 @@ function loadData(d){
 }
 let _savedStocksCache=null;
 function _getSavedStocks(){if(_savedStocksCache!==null)return _savedStocksCache;_savedStocksCache=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');return _savedStocksCache}
-function _putSavedStocks(s){_savedStocksCache=s;localStorage.setItem('valuation_stocks',JSON.stringify(s));if(d1Mode){API.scheduleSave('savedStocks',async()=>{const items=Object.entries(s).map(([name,v])=>{const cid=_tickerToD1Id(v.name||name)||_tickerToD1Id(name);if(!cid)return null;return{company_id:cid,label:name,method:'combined',currency:v.currency||'USD',scale:v.scale||'M',inputs_json:JSON.stringify(v),results_json:'{}'}}).filter(Boolean);if(items.length)await API.post('valuations/batch',{items})})}}
+function _putSavedStocks(s){_savedStocksCache=s;localStorage.setItem('valuation_stocks',JSON.stringify(s));if(d1Mode){API.scheduleSave('savedStocks',async()=>{const items=Object.entries(s).map(([name,v])=>{const cid=_tickerToD1Id(v.name||name)||_tickerToD1Id(name);if(!cid)return null;return{id:v._d1ValId||undefined,company_id:cid,label:name,method:'combined',currency:v.currency||'USD',scale:v.scale||'M',inputs_json:JSON.stringify(v),results_json:'{}'}}).filter(Boolean);if(items.length){const r=await API.post('valuations/batch',{items});if(r&&r.results)r.results.forEach((res,i)=>{if(res.id&&items[i]){const key=Object.keys(s).find(k=>{const v=s[k];return(_tickerToD1Id(v.name||k)||_tickerToD1Id(k))===items[i].company_id&&k===items[i].label});if(key)s[key]._d1ValId=res.id}})}})}}
 
 function saveCurrentStock(){
   const name=document.getElementById('stockName').value.trim();
@@ -2972,7 +2972,7 @@ const API={
     if(!this._base||!this._key)throw new Error('API not configured');
     const opts={method,headers:{'Content-Type':'application/json','X-Sync-Key':this._key}};
     if(body!==undefined)opts.body=JSON.stringify(body);
-    if(opts2&&opts2.keepalive)opts.keepalive=true;
+    if((opts2&&opts2.keepalive)||this._keepalive)opts.keepalive=true;
     let resp;
     try{resp=await fetch(this._base+'/api/'+path,opts)}catch(e){
       try{resp=await fetch(this._base+'/api/'+path,opts)}catch(e2){this._setStatus(false);throw e2}
@@ -2990,13 +2990,22 @@ const API={
   scheduleSave(key,fn,delay=1500){
     if(this._timers[key])clearTimeout(this._timers[key]);
     this._pendingFns[key]=fn;
-    this._timers[key]=setTimeout(()=>{this._timers[key]=null;delete this._pendingFns[key];fn().catch(e=>console.error('D1 save error ('+key+'):',e))},delay);
+    this._timers[key]=setTimeout(()=>{this._timers[key]=null;delete this._pendingFns[key];fn().catch(e=>{console.error('D1 save error ('+key+'):',e);showToast('Cloud save failed ('+key+') — data kept locally','error',5000);this._localFallback(key)})},delay);
   },
   flushAll(){
+    this._keepalive=true;
     Object.keys(this._timers).forEach(k=>{
       if(this._timers[k]){clearTimeout(this._timers[k]);this._timers[k]=null}
       if(this._pendingFns[k]){const fn=this._pendingFns[k];delete this._pendingFns[k];try{fn().catch(e=>console.error('flushAll('+k+'):',e))}catch(e){console.error('flushAll sync('+k+'):',e)}}
     });
+    this._keepalive=false;
+  },
+  _localFallback(key){
+    try{
+      const map={trackerStocks:['tracker_stocks_v1',()=>tStocks],pfAccounts:['portfolio_accounts_v1',()=>pfAccounts],pfPositions:['portfolio_positions_v1',()=>pfPositions],pfTransactions:['portfolio_transactions_v1',()=>pfTransactions],pfSnapshots:['portfolio_snapshots_v1',()=>pfSnapshots],dashTodos:['dashboard_todos_v1',()=>dbTodos],exRates:['portfolio_exchange_rates_v1',()=>pfExchangeRates],divHistory:['dividend_history_v1',()=>divHistory],reviews:['reviews_v1',()=>rvData],savedStocks:['valuation_stocks',()=>_getSavedStocks()]};
+      const entry=map[key];
+      if(entry)localStorage.setItem(entry[0],JSON.stringify(entry[1]()));
+    }catch(e){console.error('localStorage fallback failed:',e)}
   },
   beacon(path,body){
     if(!this._base||!this._key)return;
@@ -3217,6 +3226,11 @@ function deleteAccount(id){
   const posCount=pfPositions.filter(p=>p.accountId===id).length;
   const msg=posCount?`Delete "${a.name}"? This will also remove ${posCount} position(s).`:`Delete "${a.name}"?`;
   if(!confirm(msg))return;
+  if(d1Mode){
+    pfPositions.filter(p=>p.accountId===id).forEach(p=>API.del('positions/'+p.id).catch(e=>console.error('D1 del position:',e)));
+    pfTransactions.filter(t=>t.accountId===id).forEach(t=>API.del('transactions/'+t.id).catch(e=>console.error('D1 del tx:',e)));
+    API.del('broker_accounts/'+id).catch(e=>console.error('D1 del account:',e));
+  }
   pfPositions=pfPositions.filter(p=>p.accountId!==id);
   pfTransactions=pfTransactions.filter(t=>t.accountId!==id);
   pfAccounts=pfAccounts.filter(x=>x.id!==id);
@@ -3273,8 +3287,7 @@ function renderPositions(){
     const mktVal=price!=null?shares*price:null;
     const pnl=mktVal!=null?mktVal-cost:null;
     const pnlPct=cost>0&&pnl!=null?(pnl/cost*100):null;
-    if(!isNaN(cost))totalCost+=cost;
-    if(mktVal!=null&&!isNaN(mktVal))totalValue+=mktVal;
+    if(mktVal!=null&&!isNaN(mktVal)){totalValue+=mktVal;if(!isNaN(cost))totalCost+=cost}
     const pnlClass=pnl!=null?(pnl>=0?'pf-positive':'pf-negative'):'';
     const tickerLink=tStocks[pos.ticker]?`onclick="showProfile('${escH(pos.ticker)}')" class="pf-pos-ticker"`:'class="pf-pos-ticker"';
     return`<tr>
@@ -3411,6 +3424,7 @@ function deletePosition(id){
   const p=pfPositions.find(x=>x.id===id);
   if(!p)return;
   if(!confirm(`Delete position ${p.ticker}?`))return;
+  if(d1Mode)API.del('positions/'+id).catch(e=>console.error('D1 del position:',e));
   pfPositions=pfPositions.filter(x=>x.id!==id);
   savePortfolioPositions();
   renderPositions();
@@ -3586,6 +3600,7 @@ function deleteTransaction(id){
   const t=pfTransactions.find(x=>x.id===id);
   if(!t)return;
   if(!confirm(`Delete ${t.type} transaction for ${t.ticker}?`))return;
+  if(d1Mode)API.del('transactions/'+id).catch(e=>console.error('D1 del tx:',e));
   pfTransactions=pfTransactions.filter(x=>x.id!==id);
   savePortfolioTransactions();
   renderTransactions();
@@ -3633,7 +3648,8 @@ function takeSnapshot(){
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
-    const valueInBase=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+    const converted=convertCurrency(mktVal,pos.currency||'USD',base);
+    const valueInBase=converted!=null?converted:mktVal;
     totalValue+=valueInBase;
     return{ticker:pos.ticker,accountId:pos.accountId,shares,pricePerShare:price||0,marketValue:mktVal,currency:pos.currency||'USD',valueInBase};
   });
@@ -3646,6 +3662,7 @@ function takeSnapshot(){
 
 function deleteSnapshot(id){
   if(!confirm('Delete this snapshot?'))return;
+  if(d1Mode)API.del('portfolio_snapshots/'+id).catch(e=>console.error('D1 del snapshot:',e));
   pfSnapshots=pfSnapshots.filter(s=>s.id!==id);
   savePortfolioSnapshots();
   renderPortfolioOverview();
@@ -3967,7 +3984,13 @@ async function fetchExchangeRates(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
     if(d.rates){
-      pfExchangeRates.rates=d.rates;
+      if(d1Mode){
+        const pairs={};
+        Object.entries(d.rates).forEach(([cur,rate])=>{pairs[cur+'/USD']=1/rate;pairs['USD/'+cur]=rate});
+        pfExchangeRates.rates=pairs;
+      }else{
+        pfExchangeRates.rates=d.rates;
+      }
       pfExchangeRates.lastFetched=new Date().toISOString();
       saveExchangeRates();
       showToast('Exchange rates updated','success');
@@ -3982,10 +4005,12 @@ function convertCurrency(amount,from,to){
   if(!amount)return amount;
   const rates=pfExchangeRates.rates;
   if(!rates||!Object.keys(rates).length)return null;
-  let fromRate=from==='USD'?1:rates[from];
-  let toRate=to==='USD'?1:rates[to];
-  if(!fromRate||!toRate)return null;
-  return amount/fromRate*toRate;
+  const direct=rates[from+'/'+to];
+  if(direct)return amount*direct;
+  const fromUsd=from==='USD'?1:(rates[from+'/USD']||(rates[from]?1/rates[from]:null));
+  const toUsd=to==='USD'?1:(rates['USD/'+to]||rates[to]||null);
+  if(!fromUsd||!toUsd)return null;
+  return amount*fromUsd*toUsd;
 }
 
 function getBaseCurrency(){return pfExchangeRates.baseCurrency||'HUF'}
@@ -4603,6 +4628,7 @@ function toggleDashTodo(id){
 }
 
 function deleteDashTodo(id){
+  if(d1Mode)API.del('general_todos/'+id).catch(e=>console.error('D1 del todo:',e));
   dbTodos=dbTodos.filter(x=>x.id!==id);
   saveDashTodos();renderDbTodoList();renderDbTodoSummary();showToast('Deleted','success');
 }
@@ -5907,6 +5933,10 @@ function toggleEarning(ticker,year,quarter,checked){
   if(!s.notes.earnings[year])return;
   if(!s.notes.earnings[year][quarter])s.notes.earnings[year][quarter]={done:false,note:''};
   s.notes.earnings[year][quarter].done=checked;
+  const tlKey=year+quarter;
+  if(!s.earnings)s.earnings={};
+  if(!s.earnings[tlKey])s.earnings[tlKey]={reported:false,reviewed:false,reportDate:null};
+  s.earnings[tlKey].reviewed=checked;
   saveTrackerStocks();
 }
 function saveEarningNote(ticker,year,quarter,value){
@@ -5976,6 +6006,7 @@ function toggleTodo(ticker,id,checked){
 }
 function deleteTodo(ticker,id){
   const s=tStocks[ticker];if(!s||!s.todos)return;
+  if(d1Mode)API.del('company_todos/'+id).catch(e=>console.error('D1 del company todo:',e));
   s.todos=s.todos.filter(x=>x.id!==id);
   saveTrackerStocks();
   const list=document.getElementById('cp-todo-list');
@@ -6173,9 +6204,15 @@ function saveTrackerStocks(){
     const todos=[],earnings=[],filings=[],overrides=[],notes=[],checklist=[];
     Object.entries(tStocks).forEach(([ticker,s])=>{
       const cid=s._d1Id;if(!cid)return;
-      (s.todos||[]).forEach(t=>todos.push({company_id:cid,title:t.text||'',due_date:t.due||null,is_done:t.done?1:0,sort_order:t.sortOrder||0}));
+      (s.todos||[]).forEach(t=>todos.push({id:t.id||undefined,company_id:cid,title:t.text||'',due_date:t.due||null,is_done:t.done?1:0,sort_order:t.sortOrder||0}));
       Object.entries(s.earnings||{}).forEach(([k,v])=>{const m=k.match(/(\d{4})Q(\d)/);if(m)earnings.push({company_id:cid,year:+m[1],quarter:+m[2],is_reported:v.reported?1:0,is_reviewed:v.reviewed?1:0,report_date:v.reportDate||null})});
-      Object.entries(s.filings||{}).forEach(([k,v])=>{const p=k.split('_');filings.push({company_id:cid,filing_type:p[0]||'',fiscal_year:+(p[1])||0,fiscal_quarter:p[2]?+p[2]:null,is_read:v.read?1:0,filed_date:v.filedDate||null,notes:v.notes||''})});
+      Object.entries(s.filings||{}).forEach(([yr,types])=>{
+        if(typeof types!=='object'||types.done!==undefined)return;
+        Object.entries(types).forEach(([ftype,v])=>{
+          const isQ=/^Q(\d)$/.test(ftype);
+          filings.push({company_id:cid,filing_type:isQ?'10Q':ftype,fiscal_year:+yr||0,fiscal_quarter:isQ?+ftype.slice(1):null,is_read:v.done?1:0,filed_date:v.filedDate||null,notes:v.note||v.notes||''});
+        });
+      });
       Object.entries(s.overriddenData||{}).forEach(([mk,mv])=>overrides.push({company_id:cid,metric_key:mk,original_value:String((s._origData||{})[mk]||''),override_value:String(mv),reason:''}));
       if(s.notes&&typeof s.notes==='object'){
         if(s.notes.research)notes.push({company_id:cid,note_type:'earnings',title:'research',content:s.notes.research,note_date:null,quarter:null});
@@ -6207,13 +6244,26 @@ function _d1CompanyToTStock(c){
     pipelineStatus:c.pipeline_status||'watchlist',thesis:c.thesis||'',sortOrder:c.sort_order||0,
     _d1Id:c.id,todos:[],earnings:{},filings:{},overriddenData:{},_origData:{},notes:{thesis:c.thesis||'',research:'',earnings:{}},checklist:{sections:{}}};
   if(c.todos)c.todos.forEach(t=>{s.todos.push({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order})});
-  if(c.earnings)c.earnings.forEach(e=>{s.earnings[e.year+'Q'+e.quarter]={reported:!!e.is_reported,reviewed:!!e.is_reviewed,reportDate:e.report_date}});
-  if(c.filings)c.filings.forEach(f=>{const key=f.filing_type+'_'+f.fiscal_year+(f.fiscal_quarter?'_'+f.fiscal_quarter:'');s.filings[key]={read:!!f.is_read,filedDate:f.filed_date,notes:f.notes}});
+  if(c.earnings)c.earnings.forEach(e=>{
+    s.earnings[e.year+'Q'+e.quarter]={reported:!!e.is_reported,reviewed:!!e.is_reviewed,reportDate:e.report_date};
+    const yr=String(e.year),q='Q'+e.quarter;
+    if(!s.notes.earnings[yr])s.notes.earnings[yr]={};
+    if(!s.notes.earnings[yr][q])s.notes.earnings[yr][q]={done:!!e.is_reviewed,note:''};
+    else s.notes.earnings[yr][q].done=!!e.is_reviewed;
+  });
+  if(c.filings)c.filings.forEach(f=>{
+    const yr=String(f.fiscal_year);
+    if(!s.filings[yr])s.filings[yr]={};
+    const key=f.filing_type==='10Q'&&f.fiscal_quarter?'Q'+f.fiscal_quarter:f.filing_type;
+    s.filings[yr][key]={done:!!f.is_read,filedDate:f.filed_date,note:f.notes||''};
+  });
   if(c.overrides)c.overrides.forEach(o=>{s.overriddenData[o.metric_key]=o.override_value;s._origData[o.metric_key]=o.original_value});
   if(c.notes)c.notes.forEach(n=>{if(n.quarter){
     const yr=n.quarter.slice(0,4),q=n.quarter.slice(4);
     if(!s.notes.earnings[yr])s.notes.earnings[yr]={};
-    s.notes.earnings[yr][q]={done:true,note:n.content||''};
+    const existing=s.notes.earnings[yr][q]||{done:false,note:''};
+    existing.note=n.content||'';
+    s.notes.earnings[yr][q]=existing;
   }else if(n.title==='research'){s.notes.research=n.content||''}});
   if(c.checklist)c.checklist.forEach(cl=>{s.checklist.sections[cl.section_key]={answers:JSON.parse(cl.answer_json||'{}'),progress:cl.progress,status:cl.status||'not_started'}});
   return s;
@@ -6253,7 +6303,7 @@ async function loadDividendHistory(){
     (r.data||[]).forEach(d=>{
       const ticker=_d1CompanyMap[d.company_id]||'UNKNOWN';
       if(!byTicker[ticker])byTicker[ticker]=[];
-      byTicker[ticker].push({date:d.ex_date,exDate:d.ex_date,payDate:d.pay_date,paymentDate:d.pay_date,amount:d.amount,adjDividend:d.amount,dividend:d.amount,currency:d.currency,frequency:d.frequency,companyId:d.company_id});
+      byTicker[ticker].push({date:d.ex_date||'',exDate:d.ex_date||'',payDate:d.pay_date||'',paymentDate:d.pay_date||'',amount:d.amount||0,adjDividend:d.amount||0,dividend:d.amount||0,currency:d.currency||'USD',frequency:d.frequency||'',companyId:d.company_id});
     });
     Object.entries(byTicker).forEach(([ticker,hist])=>{
       divHistory[ticker]={history:hist,lastFetched:new Date().toISOString()};
@@ -6850,6 +6900,8 @@ async function addTrackerStock(){
 
 function removeTrackerStock(ticker){
   if(!confirm('Remove '+escH(ticker)+'?'))return;
+  const d1Id=tStocks[ticker]&&tStocks[ticker]._d1Id;
+  if(d1Mode&&d1Id)API.del('companies/'+d1Id).catch(e=>console.error('D1 del company:',e));
   delete tStocks[ticker];
   if(divHistory[ticker]){delete divHistory[ticker];saveDividendHistory()}
   rvData.entries=rvData.entries.filter(e=>e.companyTicker!==ticker);
@@ -8902,6 +8954,7 @@ function saveReview(){
 
 function deleteReview(id){
   if(!confirm('Delete this review?'))return;
+  if(d1Mode)API.del('reviews/'+id).catch(e=>console.error('D1 del review:',e));
   rvData.entries=rvData.entries.filter(e=>e.id!==id);
   saveReviews();
   const activeTab=document.querySelector('.rv-tabs .tab.active');
@@ -8974,6 +9027,8 @@ async function startD1Migration(){
       savedStocks:_getSavedStocks()
     };
     const result=await API.post('migrate',payload);
+    const verify=await API.get('companies?limit=1');
+    if(!verify||!verify.data)throw new Error('Migration verification failed — D1 data not readable. Please retry.');
     localStorage.setItem('d1_migrated','1');
     d1Mode=true;
     const stats=result.stats||{};
