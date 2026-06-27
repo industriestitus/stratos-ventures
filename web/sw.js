@@ -34,9 +34,12 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Network-first for API calls — cache successful GET responses for offline fallback
-  if (url.pathname.startsWith('/api/') || url.hostname.includes('workers.dev') ||
-      url.hostname.includes('financialmodelingprep') || url.hostname.includes('finnhub')) {
+  // Network-first for API calls — only cache Worker API (not FMP/Finnhub which have keys in URLs)
+  if (url.hostname.includes('financialmodelingprep') || url.hostname.includes('finnhub')) {
+    e.respondWith(fetch(e.request).catch(() => new Response('{"error":"offline"}', {status:503,headers:{'Content-Type':'application/json'}})));
+    return;
+  }
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('workers.dev')) {
     e.respondWith(
       fetch(e.request).then(response => {
         if (response.ok && e.request.method === 'GET') {

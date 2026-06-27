@@ -22,6 +22,16 @@ function getAllowedOrigin(requestOrigin, env) {
   return null;
 }
 
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
 function cors(allowedOrigin) {
   return {
     'Access-Control-Allow-Origin': allowedOrigin || 'null',
@@ -198,7 +208,7 @@ async function handleCrud(table, method, id, body, url, db, origin) {
       return jsonResp(row, 201, origin);
     } catch (e) {
       if (e.message.includes('UNIQUE') || e.message.includes('FOREIGN')) {
-        return jsonResp({ error: 'Constraint violation', detail: e.message }, 409, origin);
+        return jsonResp({ error: 'Constraint violation' }, 409, origin);
       }
       throw e;
     }
@@ -226,7 +236,7 @@ async function handleCrud(table, method, id, body, url, db, origin) {
       return jsonResp(row, 200, origin);
     } catch (e) {
       if (e.message.includes('UNIQUE') || e.message.includes('FOREIGN') || e.message.includes('CHECK')) {
-        return jsonResp({ error: 'Constraint violation', detail: e.message }, 409, origin);
+        return jsonResp({ error: 'Constraint violation' }, 409, origin);
       }
       throw e;
     }
@@ -289,6 +299,7 @@ async function handleCompanyFull(symbolOrId, db, origin) {
 
 async function handleNotesSearch(query, db, origin) {
   if (!query || query.length < 2) return jsonResp({ error: 'Query must be at least 2 characters' }, 400, origin);
+  if (query.length > 200) return jsonResp({ error: 'Query too long (max 200 chars)' }, 400, origin);
   const ftsQuery = query.replace(/['"]/g, '').split(/\s+/).filter(Boolean).map(w => w + '*').join(' ');
   try {
     const rows = await db.prepare(`
@@ -617,7 +628,8 @@ async function handleApi(path, method, url, request, env, origin) {
   if (table === 'cache-check' && idOrAction && subAction && method === 'GET') {
     const row = await db.prepare('SELECT data_json, fetched_at FROM api_cache WHERE company_id = ? AND data_source = ?').bind(Number(idOrAction), subAction).first();
     if (!row) return jsonResp({ cached: false }, 200, origin);
-    return jsonResp({ cached: true, data: JSON.parse(row.data_json), fetched_at: row.fetched_at }, 200, origin);
+    try { return jsonResp({ cached: true, data: JSON.parse(row.data_json), fetched_at: row.fetched_at }, 200, origin); }
+    catch (e) { return jsonResp({ cached: false, error: 'Corrupted cache entry' }, 200, origin); }
   }
   // Cache upsert: PUT /api/cache-upsert
   if (table === 'cache-upsert' && method === 'PUT') {
@@ -632,7 +644,8 @@ async function handleApi(path, method, url, request, env, origin) {
       const body = await request.json();
       return handleMigrate(body, db, origin);
     } catch (e) {
-      return jsonResp({ error: 'Migration failed: ' + e.message }, 500, origin);
+      console.error('Migration error:', e.message);
+      return jsonResp({ error: 'Migration failed' }, 500, origin);
     }
   }
 
@@ -641,6 +654,7 @@ async function handleApi(path, method, url, request, env, origin) {
     try {
       const body = await request.json();
       if (!Array.isArray(body.items)) return jsonResp({ error: 'Expected { items: [...] }' }, 400, origin);
+      if (body.items.length > 1000) return jsonResp({ error: 'Max 1000 items per batch' }, 400, origin);
       const cfg = TABLES[table];
       const pk = cfg.pk || 'id';
       const results = [];
@@ -687,7 +701,8 @@ async function handleApi(path, method, url, request, env, origin) {
       }
       return jsonResp({ ok: true, results }, 200, origin);
     } catch (e) {
-      return jsonResp({ error: 'Batch failed: ' + e.message }, 500, origin);
+      console.error('Batch error:', e.message);
+      return jsonResp({ error: 'Batch operation failed' }, 500, origin);
     }
   }
 
@@ -706,7 +721,8 @@ async function handleApi(path, method, url, request, env, origin) {
   try {
     return await handleCrud(table, method, id, body, url, db, origin);
   } catch (e) {
-    return jsonResp({ error: e.message }, 500, origin);
+    console.error('CRUD error:', table, method, e.message);
+    return jsonResp({ error: 'Internal server error' }, 500, origin);
   }
 }
 
@@ -737,7 +753,8 @@ export default {
       try {
         return await fetchQuote(symbol, modules, allowedOrigin);
       } catch (e) {
-        return jsonResp({ error: e.message }, 500, allowedOrigin);
+        console.error('Quote error:', symbol, e.message);
+        return jsonResp({ error: 'Quote fetch failed' }, 500, allowedOrigin);
       }
     }
 
@@ -751,14 +768,15 @@ export default {
       try {
         return await fetchBatch(syms, modules, allowedOrigin);
       } catch (e) {
-        return jsonResp({ error: e.message }, 500, allowedOrigin);
+        console.error('Batch quote error:', e.message);
+        return jsonResp({ error: 'Batch quote fetch failed' }, 500, allowedOrigin);
       }
     }
 
     // Sync: GET /sync/load or POST /sync/save
     if (path.startsWith('/sync/')) {
-      const key = request.headers.get('X-Sync-Key') || url.searchParams.get('key');
-      if (key !== env.SYNC_SECRET) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+      const key = request.headers.get('X-Sync-Key');
+      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
 
       const action = path.slice(6); // 'load' or 'save'
       if (action === 'load' && request.method === 'GET') {
@@ -766,7 +784,8 @@ export default {
           const data = await env.SYNC_DATA.get('user_data', 'json');
           return jsonResp({ ok: true, data: data || null }, 200, allowedOrigin);
         } catch (e) {
-          return jsonResp({ error: e.message }, 500, allowedOrigin);
+          console.error('Sync load error:', e.message);
+          return jsonResp({ error: 'Failed to load sync data' }, 500, allowedOrigin);
         }
       }
       if (action === 'save' && request.method === 'POST') {
@@ -777,7 +796,8 @@ export default {
           await env.SYNC_DATA.put('user_data', JSON.stringify(body));
           return jsonResp({ ok: true, savedAt: new Date().toISOString() }, 200, allowedOrigin);
         } catch (e) {
-          return jsonResp({ error: e.message }, 500, allowedOrigin);
+          console.error('Sync save error:', e.message);
+          return jsonResp({ error: 'Failed to save sync data' }, 500, allowedOrigin);
         }
       }
       return jsonResp({ error: 'Use GET /sync/load or POST /sync/save' }, 400, allowedOrigin);
@@ -794,14 +814,15 @@ export default {
         const resp = await fetch(chartUrl, { headers: { 'User-Agent': UA } });
         return jsonResp(await resp.json(), resp.status, allowedOrigin);
       } catch (e) {
-        return jsonResp({ error: e.message }, 500, allowedOrigin);
+        console.error('Chart error:', symbol, e.message);
+        return jsonResp({ error: 'Chart fetch failed' }, 500, allowedOrigin);
       }
     }
 
     // D1 CRUD API: /api/*
     if (path.startsWith('/api/')) {
-      const key = request.headers.get('X-Sync-Key') || url.searchParams.get('key');
-      if (key !== env.SYNC_SECRET) {
+      const key = request.headers.get('X-Sync-Key');
+      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) {
         return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
       }
       const apiPath = path.slice(5); // strip '/api/'
