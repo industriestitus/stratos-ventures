@@ -161,6 +161,18 @@ Status: COMPLETE (2026-06-26)
 - [x] beforeunload flushAll with sendBeacon fallback for reliable page-close saves
 - [x] QA: 2 rounds, 20+ bugs fixed (data loss on unload, FK violations, snapshot positions, checklist template mapping, re-migration data clearing, duplicate exchange rates, null company_id filtering)
 
+### QA Sweep — COMPLETE (2026-06-27)
+- [x] D1 deletions propagate (API.del in 8 delete functions)
+- [x] Valuations/todos no longer duplicate on batch save (id tracking)
+- [x] Exchange rates pair format unified for D1 round-trip
+- [x] Save failures show user toast + localStorage fallback
+- [x] Earnings grid ↔ earnings timeline data sync fixed
+- [x] Filings nested format + 10Q mapping on D1 round-trip
+- [x] flushAll uses keepalive for reliable page-close saves
+- [x] Migration verifies D1 data before enabling d1Mode
+- [x] P&L excludes priceless positions from totalCost
+- [x] Null guards on snapshot, dividend history, currency conversion
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 
