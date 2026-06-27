@@ -2687,26 +2687,36 @@ function downloadExport(){
   a.href=URL.createObjectURL(b);a.download=(document.getElementById('stockName').value.trim()||'valuation')+'_export.json';a.click();URL.revokeObjectURL(a.href);
 }
 function loadImportFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{document.getElementById('import-data').value=ev.target.result};r.readAsText(f)}
+function _mergeArrayById(existing,incoming){
+  const map=new Map(existing.map(x=>[x.id,x]));
+  incoming.forEach(x=>{map.set(x.id,x)});
+  return Array.from(map.values());
+}
 function doImport(){
   try{const d=JSON.parse(document.getElementById('import-data').value);
-    if(d.current)loadData(d.current);
-    if(d.savedStocks){const ex=_getSavedStocks();Object.assign(ex,d.savedStocks);_putSavedStocks(ex)}
-    if(d.researchNotes){mergeResearchNotes(d.researchNotes);saveResearchNotes()}
-    if(d.trackerStocks){Object.assign(tStocks,d.trackerStocks);saveTrackerStocks()}
-    if(d.portfolioAccounts&&Array.isArray(d.portfolioAccounts)){pfAccounts=d.portfolioAccounts;savePortfolioAccounts()}
-    if(d.portfolioPositions&&Array.isArray(d.portfolioPositions)){pfPositions=d.portfolioPositions;savePortfolioPositions()}
-    if(d.portfolioTransactions&&Array.isArray(d.portfolioTransactions)){pfTransactions=d.portfolioTransactions;savePortfolioTransactions()}
-    if(d.portfolioSnapshots&&Array.isArray(d.portfolioSnapshots)){pfSnapshots=d.portfolioSnapshots;savePortfolioSnapshots()}
-    if(d.portfolioExchangeRates){pfExchangeRates=d.portfolioExchangeRates;saveExchangeRates()}
-    if(d.dashboardTodos&&Array.isArray(d.dashboardTodos)){dbTodos=d.dashboardTodos;saveDashTodos()}
-    if(d.dashboardFiSettings&&typeof d.dashboardFiSettings==='object'){Object.assign(dbFiSettings,d.dashboardFiSettings);saveDashFiSettings()}
-    if(d.dashboardBenchmark&&typeof d.dashboardBenchmark==='object'){dbBenchmark=d.dashboardBenchmark;saveDashBenchmark()}
-    if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs()}
-    if(d.dividendHistory&&typeof d.dividendHistory==='object'){divHistory=d.dividendHistory;saveDividendHistory()}
-    if(d.dividendSettings&&typeof d.dividendSettings==='object'){Object.assign(divSettings,d.dividendSettings);saveDivSettings()}
-    if(d.frameworkData&&typeof d.frameworkData==='object'){fwData=d.frameworkData;fwData._nextId=Math.max(fwData._nextId||0,...(fwData.principles||[]).map(x=>x.id||0),...(fwData.portfolioRules||[]).map(x=>x.id||0),...(fwData.idealTraits||[]).map(x=>x.id||0),...(fwData.avoidList||[]).map(x=>x.id||0),0)+1;saveFramework()}
-    if(d.reviewsData&&typeof d.reviewsData==='object'){rvData=d.reviewsData;rvData._nextId=Math.max(rvData._nextId||0,...(rvData.entries||[]).map(x=>x.id||0),0)+1;saveReviews()}
-    closeModals();showToast('Imported!','success');recalcAll();
+    if(!d||typeof d!=='object'){showToast('Invalid JSON data.','error');return}
+    const hasData=d.current||d.savedStocks||d.researchNotes||d.trackerStocks||d.portfolioAccounts||d.portfolioPositions||d.portfolioTransactions||d.frameworkData||d.reviewsData||d.dividendHistory;
+    if(!hasData){showToast('No importable data found in file.','error');return}
+    if(d.version&&d.version>SCHEMA_VERSION){showToast('This backup was created by a newer app version (v'+d.version+'). Please update the app first.','error');return}
+    let count=0;
+    if(d.current){loadData(d.current);count++}
+    if(d.savedStocks){const ex=_getSavedStocks();Object.assign(ex,d.savedStocks);_putSavedStocks(ex);count++}
+    if(d.researchNotes){mergeResearchNotes(d.researchNotes);saveResearchNotes();count++}
+    if(d.trackerStocks){Object.assign(tStocks,d.trackerStocks);saveTrackerStocks();count++}
+    if(d.portfolioAccounts&&Array.isArray(d.portfolioAccounts)){pfAccounts=_mergeArrayById(pfAccounts,d.portfolioAccounts);savePortfolioAccounts();count++}
+    if(d.portfolioPositions&&Array.isArray(d.portfolioPositions)){pfPositions=_mergeArrayById(pfPositions,d.portfolioPositions);savePortfolioPositions();count++}
+    if(d.portfolioTransactions&&Array.isArray(d.portfolioTransactions)){pfTransactions=_mergeArrayById(pfTransactions,d.portfolioTransactions);savePortfolioTransactions();count++}
+    if(d.portfolioSnapshots&&Array.isArray(d.portfolioSnapshots)){pfSnapshots=_mergeArrayById(pfSnapshots,d.portfolioSnapshots);savePortfolioSnapshots();count++}
+    if(d.portfolioExchangeRates){pfExchangeRates=d.portfolioExchangeRates;saveExchangeRates();count++}
+    if(d.dashboardTodos&&Array.isArray(d.dashboardTodos)){dbTodos=_mergeArrayById(dbTodos,d.dashboardTodos);saveDashTodos();count++}
+    if(d.dashboardFiSettings&&typeof d.dashboardFiSettings==='object'){Object.assign(dbFiSettings,d.dashboardFiSettings);saveDashFiSettings();count++}
+    if(d.dashboardBenchmark&&typeof d.dashboardBenchmark==='object'){dbBenchmark=d.dashboardBenchmark;saveDashBenchmark();count++}
+    if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs();count++}
+    if(d.dividendHistory&&typeof d.dividendHistory==='object'){divHistory=d.dividendHistory;saveDividendHistory();count++}
+    if(d.dividendSettings&&typeof d.dividendSettings==='object'){Object.assign(divSettings,d.dividendSettings);saveDivSettings();count++}
+    if(d.frameworkData&&typeof d.frameworkData==='object'){fwData=d.frameworkData;fwData._nextId=Math.max(fwData._nextId||0,...(fwData.principles||[]).map(x=>x.id||0),...(fwData.portfolioRules||[]).map(x=>x.id||0),...(fwData.idealTraits||[]).map(x=>x.id||0),...(fwData.avoidList||[]).map(x=>x.id||0),0)+1;saveFramework();count++}
+    if(d.reviewsData&&typeof d.reviewsData==='object'){rvData=d.reviewsData;rvData._nextId=Math.max(rvData._nextId||0,...(rvData.entries||[]).map(x=>x.id||0),0)+1;saveReviews();count++}
+    closeModals();showToast('Imported '+count+' data section(s)','success');recalcAll();
     renderSavedStocks();renderTracker();renderResearch();
     const vis=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
     if(vis==='portfolio')renderPortfolioOverview();
@@ -2749,6 +2759,7 @@ function doRestore(){
       try{
         const d=JSON.parse(ev.target.result);
         if(!d.version){showToast('Invalid backup file — no version field','error');return}
+        if(d.version>SCHEMA_VERSION){showToast('This backup was created by a newer app version (v'+d.version+'). Please update the app first.','error');return}
         if(!confirm('This will REPLACE ALL your data with the backup file.\n\nCurrent data will be lost. Continue?'))return;
         const keepKeys=['enc_salt','enc_verify','enc_recovery','enc_skipped','schema_version','tracker_settings'];
         const snapshot={};
@@ -3012,18 +3023,37 @@ const API={
   },
   flushAll(){
     this._keepalive=true;
-    Object.keys(this._timers).forEach(k=>{
+    const keys=Object.keys(this._timers);
+    keys.forEach(k=>{
       if(this._timers[k]){clearTimeout(this._timers[k]);this._timers[k]=null}
-      if(this._pendingFns[k]){const fn=this._pendingFns[k];delete this._pendingFns[k];try{fn().catch(e=>console.error('flushAll('+k+'):',e))}catch(e){console.error('flushAll sync('+k+'):',e)}}
+      if(this._pendingFns[k]){
+        const fn=this._pendingFns[k];delete this._pendingFns[k];
+        this._localFallback(k);
+        try{fn().catch(e=>console.error('flushAll('+k+'):',e))}catch(e){console.error('flushAll sync('+k+'):',e)}
+      }
     });
     this._keepalive=false;
   },
   _localFallback(key){
     try{
-      const map={trackerStocks:['tracker_stocks_v1',()=>tStocks],pfAccounts:['portfolio_accounts_v1',()=>pfAccounts],pfPositions:['portfolio_positions_v1',()=>pfPositions],pfTransactions:['portfolio_transactions_v1',()=>pfTransactions],pfSnapshots:['portfolio_snapshots_v1',()=>pfSnapshots],dashTodos:['dashboard_todos_v1',()=>dbTodos],exRates:['portfolio_exchange_rates_v1',()=>pfExchangeRates],divHistory:['dividend_history_v1',()=>divHistory],reviews:['reviews_v1',()=>rvData],savedStocks:['valuation_stocks',()=>_getSavedStocks()]};
+      const map={trackerStocks:['tracker_stocks_v1',()=>tStocks],pfAccounts:['portfolio_accounts_v1',()=>pfAccounts],pfPositions:['portfolio_positions_v1',()=>pfPositions],pfTransactions:['portfolio_transactions_v1',()=>pfTransactions],pfSnapshots:['portfolio_snapshots_v1',()=>pfSnapshots],dashTodos:['dashboard_todos_v1',()=>dbTodos],exRates:['portfolio_exchange_rates_v1',()=>pfExchangeRates],divHistory:['dividend_history_v1',()=>divHistory],reviews:['reviews_v1',()=>rvData],savedStocks:['valuation_stocks',()=>_getSavedStocks()],researchNotes:['research_notes_v1',()=>researchNotes],framework:['framework_v1',()=>fwData],divSettings:['dividend_settings_v1',()=>divSettings],dashFi:['dashboard_fi_settings_v1',()=>dbFiSettings],dashBench:['dashboard_benchmark_v1',()=>dbBenchmark],dash52w:['dashboard_52w_highs_v1',()=>db52wHighs]};
       const entry=map[key];
-      if(entry)localStorage.setItem(entry[0],JSON.stringify(entry[1]()));
+      if(entry){
+        try{localStorage.setItem(entry[0],JSON.stringify(entry[1]()))}
+        catch(quotaErr){console.error('localStorage quota exceeded for '+key);showToast('Storage full — export your data to avoid data loss','error',5000)}
+      }
     }catch(e){console.error('localStorage fallback failed:',e)}
+  },
+  async postBatch(path,items,chunkSize=100){
+    if(!items.length)return{results:[]};
+    if(items.length<=chunkSize)return this.post(path,{items});
+    const allResults=[];
+    for(let i=0;i<items.length;i+=chunkSize){
+      const chunk=items.slice(i,i+chunkSize);
+      const r=await this.post(path,{items:chunk});
+      if(r&&r.results)allResults.push(...r.results);
+    }
+    return{results:allResults};
   },
   beacon(path,body){
     if(!this._base||!this._key)return;
@@ -3042,6 +3072,7 @@ MIGRATIONS[7]=function(){};
 
 function runMigrations(){
   let v=parseInt(localStorage.getItem('schema_version')||'7');
+  if(v>SCHEMA_VERSION){console.warn('Data schema v'+v+' is newer than app v'+SCHEMA_VERSION+' — update the app');showToast('Your data was saved by a newer app version. Please update to avoid issues.','warning',8000);return}
   if(v>=SCHEMA_VERSION)return;
   for(;v<SCHEMA_VERSION;v++){
     if(MIGRATIONS[v]){
@@ -4158,7 +4189,9 @@ function importCsvTransactions(){
     else if(type.includes('split'))type='split';
     else type='buy';
 
-    const date=get('date')||now.split('T')[0];
+    let date=get('date')||now.split('T')[0];
+    if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4}$/.test(date)){const p=date.split(/[\/\-\.]/);date=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
+    else if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2}$/.test(date)){const p=date.split(/[\/\-\.]/);date='20'+p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
     const parseNum=(s)=>{if(!s)return NaN;s=s.replace(/\s/g,'');if(/^\d{1,3}(\.\d{3})+,\d+$/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(',')&&!s.includes('.'))s=s.replace(',','.');return parseFloat(s)};
     const shares=parseNum(get('shares'))||null;
     const price=parseNum(get('price'))||null;
@@ -6242,7 +6275,7 @@ function saveTrackerStocks(){
       exchange:s.exchange||'',company_type:s.companyType||'',
       pipeline_status:s.pipeline||s.pipelineStatus||'watchlist',thesis:s.thesis||'',sort_order:s.sortOrder||0
     }));
-    await API.post('companies/batch',{items:companies});
+    await API.postBatch('companies/batch',companies);
     // Refresh company IDs for any new companies
     const cr=await API.get('companies?limit=500');
     (cr.data||[]).forEach(c=>{_d1CompanyMap[c.id]=c.symbol;const st=tStocks[c.symbol];if(st)st._d1Id=c.id});
@@ -6268,16 +6301,16 @@ function saveTrackerStocks(){
       Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(sv.answers||{}),progress:sv.progress||0,status:sv.status||'not_started'}));
     });
     const batch=[];
-    if(todos.length)batch.push(API.post('company_todos/batch',{items:todos}));
-    if(earnings.length)batch.push(API.post('earnings_timeline/batch',{items:earnings}));
-    if(filings.length)batch.push(API.post('filing_tracking/batch',{items:filings}));
-    if(overrides.length)batch.push(API.post('company_data_overrides/batch',{items:overrides}));
-    if(notes.length)batch.push(API.post('notes/batch',{items:notes}));
+    if(todos.length)batch.push(API.postBatch('company_todos/batch',todos));
+    if(earnings.length)batch.push(API.postBatch('earnings_timeline/batch',earnings));
+    if(filings.length)batch.push(API.postBatch('filing_tracking/batch',filings));
+    if(overrides.length)batch.push(API.postBatch('company_data_overrides/batch',overrides));
+    if(notes.length)batch.push(API.postBatch('notes/batch',notes));
     if(checklist.length){
       const tmplR=await API.get('checklist_templates?limit=100');
       const tmplMap={};(tmplR.data||[]).forEach(t=>{tmplMap[t.section_key]=t.id});
       const clItems=checklist.map(c=>{const tid=tmplMap[c._sectionKey];if(!tid)return null;return{company_id:c.company_id,template_id:tid,answer_json:c.answer_json,progress:c.progress,status:c.status}}).filter(Boolean);
-      if(clItems.length)batch.push(API.post('checklist_answers/batch',{items:clItems}));
+      if(clItems.length)batch.push(API.postBatch('checklist_answers/batch',clItems));
     }
     if(batch.length)await Promise.all(batch);
   });return}
@@ -7485,8 +7518,12 @@ function renderTracker(){
     return;
   }
 
+  const RENDER_LIMIT=100;
+  const totalCount=stocks.length;
+  const showAll=totalCount<=RENDER_LIMIT||!!window._stShowAll;
+  const renderStocks=showAll?stocks:stocks.slice(0,RENDER_LIMIT);
   let html='';
-  stocks.forEach(s=>{
+  renderStocks.forEach(s=>{
     const calcs=getCalc(s);
     const ratios=getRatio(s);
     const scoreObj=getScore(s);
@@ -7577,6 +7614,9 @@ function renderTracker(){
       html+=`</div></div></td></tr>`;
     }
   });
+  if(!showAll&&totalCount>RENDER_LIMIT){
+    html+=`<tr><td colspan="${stCols.length}" style="text-align:center;padding:12px"><button class="btn btn-secondary" onclick="window._stShowAll=true;renderTracker()" style="font-size:12px">Show all ${totalCount} stocks (${totalCount-RENDER_LIMIT} more)</button></td></tr>`;
+  }
   tbody.innerHTML=html;
   renderScatterChart();
 }
@@ -9113,7 +9153,11 @@ function updateD1UI(){
 }
 
 async function startD1Migration(){
-  if(!confirm('This will upload all your local data to the D1 cloud database.\n\nYour localStorage data will be kept as a backup.\n\nContinue?'))return;
+  if(localStorage.getItem('d1_migrating')==='1'){
+    if(!confirm('A previous migration may not have completed.\n\nRetry? (existing cloud data will be overwritten with local data)'))return;
+  }else{
+    if(!confirm('This will upload all your local data to the D1 cloud database.\n\nYour localStorage data will be kept as a backup.\n\nContinue?'))return;
+  }
   const btn=document.getElementById('d1-migrate-btn');
   const status=document.getElementById('d1-migrate-status');
   btn.disabled=true;btn.textContent='Migrating...';
@@ -9121,6 +9165,7 @@ async function startD1Migration(){
   try{
     API.init();
     if(!API.ready())throw new Error('Worker URL or Sync Key missing');
+    localStorage.setItem('d1_migrating','1');
     status.textContent='Uploading to D1...';
     const payload={
       trackerStocks:tStocks,
@@ -9143,6 +9188,7 @@ async function startD1Migration(){
     const result=await API.post('migrate',payload);
     const verify=await API.get('companies?limit=1');
     if(!verify||!verify.data)throw new Error('Migration verification failed — D1 data not readable. Please retry.');
+    localStorage.removeItem('d1_migrating');
     localStorage.setItem('d1_migrated','1');
     d1Mode=true;
     const stats=result.stats||{};
@@ -9157,6 +9203,7 @@ async function startD1Migration(){
     showToast('Migration complete! Reloading...','success');
     setTimeout(()=>location.reload(),2000);
   }catch(e){
+    localStorage.removeItem('d1_migrating');
     status.innerHTML='<span style="color:var(--red)">Migration failed: '+escH(e.message)+'</span>';
     btn.disabled=false;btn.textContent='Retry Migration';
   }
@@ -9422,10 +9469,28 @@ document.addEventListener('visibilitychange',()=>{
 });
 window.addEventListener('online',()=>{
   if(!d1Mode)return;
-  showToast('Back online — syncing data...','info',3000);
-  const fns=[saveTrackerStocks,savePortfolioAccounts,savePortfolioPositions,savePortfolioTransactions,savePortfolioSnapshots,saveDashTodos,saveExchangeRates,saveDividendHistory,saveReviews];
-  fns.forEach(fn=>{try{fn()}catch(e){}});
+  const pendingKeys=Object.keys(API._pendingFns);
+  if(pendingKeys.length){
+    showToast('Back online — syncing '+pendingKeys.length+' pending change(s)...','info',3000);
+    API.flushAll();
+  }else{
+    showToast('Back online','success',2000);
+  }
 });
+window.addEventListener('storage',e=>{
+  if(!e.key||e.key.startsWith('enc_'))return;
+  if(document.hidden)return;
+  showToast('Data changed in another tab — reload recommended','warning',6000);
+});
+(function checkStoragePersistence(){
+  try{
+    const testKey='__persist_test__';
+    localStorage.setItem(testKey,'1');
+    localStorage.removeItem(testKey);
+  }catch(e){
+    setTimeout(()=>showToast('Private/Incognito mode detected — your data will not persist after closing this window. Use Export to save your work.','warning',10000),2000);
+  }
+})();
 window.addEventListener('load',()=>{
   if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
   if(isEncryptionEnabled()){
