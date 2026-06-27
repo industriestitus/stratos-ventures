@@ -231,6 +231,24 @@ None.
 
 ---
 
+## Category 12 — Chart Container Mobile Overflow (`39fbfca`)
+
+### Fixed (1)
+
+| # | Severity | Description | Fix | Location |
+|---|----------|-------------|-----|----------|
+| 1 | HIGH | Chart.js canvas rendered with hardcoded pixel width (e.g. 321px) exceeding `.chart-container` on mobile (266px at 320px viewport), pushing `.two-col`, `.panel`, `#section-calculators`, and `#company-panel-calculator` 40px wider than viewport — content clipped by `.content overflow-x:hidden` | Added `overflow:hidden` to `.chart-container` and `max-width:100%` to `.chart-container canvas` | `index.html:125-126` |
+
+### Unfixed (0)
+
+None.
+
+### Audit Details
+
+Tested all 7 sections at 8 viewport widths (320, 375, 768, 769, 976, 1331, 1332, 1440px). Verified `scrollWidth <= offsetWidth` for every visible element. Confirmed no `overflow:visible` layout breaks remain on any page. Dashboard grid 2→3 column breakpoint confirmed at exactly 1332px viewport width (`.db-grid minmax(340px,1fr)` × 3 + gap 32px + content padding 40px + sidebar 240px).
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth) and any future Worker changes:
