@@ -20,7 +20,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | X | INFO improvements | `34a249b` | 2026-06-27 | 2 | 0 |
 | 9 | Post-completion QA | `93a0420` | 2026-06-27 | 10 | 0 |
 | 10 | Mobile Responsive Overflow | `b21f930` | 2026-06-27 | 6 | 1 |
-| 11 | Dashboard Widget Overflow | `pending` | 2026-06-27 | 3 | 0 |
+| 11 | Dashboard Widget Overflow | `b5fdc36` | 2026-06-27 | 3 | 0 |
 
 **Total: 153 fixed, 21 potential (unfixed)**
 
@@ -215,7 +215,7 @@ These were found by the deep audit agent but not prioritized for fixing:
 
 ---
 
-## Category 11 — Dashboard Widget Overflow (`pending`)
+## Category 11 — Dashboard Widget Overflow (`b5fdc36`)
 
 ### Fixed (3)
 
