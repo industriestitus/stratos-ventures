@@ -231,6 +231,20 @@ None.
 
 ---
 
+## Category 13 — TODO Widget Vertical Clipping (`c3b355f`)
+
+### Fixed (1)
+
+| # | Severity | Description | Fix | Location |
+|---|----------|-------------|-----|----------|
+| 1 | MED | `overflow:hidden` on `.db-widget` (added in Category 11) vertically clipped TODO list items when the list grew beyond the grid row height — "task 3" and beyond were cut off at the widget border | Removed `overflow:hidden` from `.db-widget`; `min-width:0` alone prevents horizontal grid overflow without vertical clipping | `index.html:543` |
+
+### Unfixed (0)
+
+None.
+
+---
+
 ## Category 12 — Chart Container Mobile Overflow (`39fbfca`)
 
 ### Fixed (1)
