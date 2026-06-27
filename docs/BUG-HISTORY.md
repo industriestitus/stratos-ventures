@@ -19,8 +19,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | X | Cross-category BUGs | `9a06c86` | 2026-06-27 | 11 | 0 |
 | X | INFO improvements | `34a249b` | 2026-06-27 | 2 | 0 |
 | 9 | Post-completion QA | `93a0420` | 2026-06-27 | 10 | 0 |
+| 10 | Mobile Responsive Overflow | `b21f930` | 2026-06-27 | 6 | 1 |
 
-**Total: 144 fixed, 20 potential (unfixed)**
+**Total: 150 fixed, 21 potential (unfixed)**
 
 ---
 
@@ -189,6 +190,27 @@ These were found by the deep audit agent but not prioritized for fixing:
 | 8 | LOW | `testWorker/testFinnhub/testFmp` used implicit `event` global — unreliable strict mode | Explicit `ev` parameter + onclick `event` passthrough | `index.html:9358,9371,9385` |
 | 9 | LOW | Timezone double-suffix — `'Z'` appended to dates already having `+00:00` offset | Regex check for existing timezone suffix | `index.html:6959` |
 | 10 | INFO | `toggleCpPreview` missing images param to `renderMarkdown` | Not fixed — company profile notes have no image upload, so `img:N` syntax is unused there | `index.html:6041` |
+
+---
+
+## Category 10 — Mobile Responsive Overflow (`b21f930`)
+
+### Fixed (6)
+
+| # | Severity | Description | Fix | Location |
+|---|----------|-------------|-----|----------|
+| 1 | HIGH | 40+ elements overflow viewport at 375px mobile — grids, tables, flex items extend past screen edge | Added `overflow-x:hidden` to body and `.content`, `min-width:0` to `.card`/`.db-hero`/`.db-widget` | `index.html:48,86,533,542,87` |
+| 2 | HIGH | Dashboard widgets 404px wide at mobile (grid track expands from min-content) | Added `min-width:0` to grid items, `overflow-x:hidden` to `.db-widget` | `index.html:596-604` |
+| 3 | MED | 480px breakpoint incomplete — only covered 5 of 20+ grid/flex containers | Expanded to cover all grids: `cp-fin-grid`, `cp-val-details`, `cp-earn-grid`, `div-summary-grid`, `st-exp-grid`, `db-grid`, etc. | `index.html:713-740` |
+| 4 | MED | `.two-col`/`.three-col` still 2-3 columns at 480px | Added `grid-template-columns:1fr` at 480px breakpoint | `index.html:730` |
+| 5 | MED | Modal fields and tooltip overflow at narrow widths | Added `min-width:0` to `.pf-modal-field`/`.research-modal-field`, constrained tooltip `max-width:calc(100vw-40px)` | `index.html:731-733` |
+| 6 | LOW | Dashboard todo "Add" button clipped at 320px | Added `flex-wrap:wrap` to `.db-todo-input` and `min-width:0` on input | `index.html:603-604` |
+
+### Unfixed (1 WARN)
+
+| # | Severity | Description | Reason | Location |
+|---|----------|-------------|--------|----------|
+| 1 | WARN | Calendar grid (7 columns) tight at 320px (~40px per cell) | Acceptable — only shows day numbers + dots, font already 11px at mobile | `index.html:499` |
 
 ---
 
