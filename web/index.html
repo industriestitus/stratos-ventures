@@ -539,7 +539,7 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .db-hero-metric{text-align:center;min-width:90px}
 .db-hero-metric .hm-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px}
 .db-hero-metric .hm-value{font-size:18px;font-weight:700;margin-top:2px}
-.db-widget{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;min-width:0}
+.db-widget{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;min-width:0;overflow:hidden}
 .db-widget-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
 .db-alloc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .db-alloc-item{text-align:center}
@@ -578,11 +578,11 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .db-fi-row span:first-child{color:var(--text2)}
 .db-fi-row span:last-child{font-weight:600}
 .db-fi-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-.db-fi-form .input-group{margin-bottom:0}
+.db-fi-form .input-group{margin-bottom:0;min-width:0}
 .db-todo-input{display:flex;gap:8px;margin-bottom:10px;align-items:center}
 .db-todo-input input[type=text]{flex:1;padding:7px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;font-family:inherit}
 .db-todo-input input[type=text]:focus{border-color:var(--accent)}
-.db-todo-input input[type=date]{padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;font-family:inherit}
+.db-todo-input input[type=date]{padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;outline:none;font-family:inherit;min-width:0}
 .db-todo-input button{padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap}
 .db-todo-input button:hover{border-color:var(--accent);color:var(--text)}
 .db-todo-summary{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
@@ -603,7 +603,6 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
   .db-fi-form{grid-template-columns:1fr}
   .db-benchmark{flex-direction:column}
   .db-bench-card{min-width:0}
-  .db-widget{overflow-x:hidden}
   .db-todo-input{flex-wrap:wrap}
   .db-todo-input input[type=text]{min-width:0}
 }

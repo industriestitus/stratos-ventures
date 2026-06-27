@@ -20,8 +20,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | X | INFO improvements | `34a249b` | 2026-06-27 | 2 | 0 |
 | 9 | Post-completion QA | `93a0420` | 2026-06-27 | 10 | 0 |
 | 10 | Mobile Responsive Overflow | `b21f930` | 2026-06-27 | 6 | 1 |
+| 11 | Dashboard Widget Overflow | `pending` | 2026-06-27 | 3 | 0 |
 
-**Total: 150 fixed, 21 potential (unfixed)**
+**Total: 153 fixed, 21 potential (unfixed)**
 
 ---
 
@@ -211,6 +212,22 @@ These were found by the deep audit agent but not prioritized for fixing:
 | # | Severity | Description | Reason | Location |
 |---|----------|-------------|--------|----------|
 | 1 | WARN | Calendar grid (7 columns) tight at 320px (~40px per cell) | Acceptable — only shows day numbers + dots, font already 11px at mobile | `index.html:499` |
+
+---
+
+## Category 11 — Dashboard Widget Overflow (`pending`)
+
+### Fixed (3)
+
+| # | Severity | Description | Fix | Location |
+|---|----------|-------------|-----|----------|
+| 1 | HIGH | FI form number inputs (168px browser minimum) overflow widget by 34px at 3-column layout, visually covering and blocking clicks on adjacent TODO Summary column | Added `min-width:0` to `.db-fi-form .input-group` so inputs shrink to grid cell width | `index.html:581` |
+| 2 | MED | `.db-widget` only had `overflow:hidden` at 768px breakpoint — at desktop widths, internal content could overflow widget boundary and overlap neighboring grid cells | Moved `overflow:hidden` to base `.db-widget` rule (all viewports) | `index.html:542` |
+| 3 | MED | TODO date input (`min-width:auto`) prevented flex row from shrinking, causing "Add" button to clip outside widget at 3-column widths | Added `min-width:0` to `.db-todo-input input[type=date]` | `index.html:585` |
+
+### Unfixed (0)
+
+None.
 
 ---
 
