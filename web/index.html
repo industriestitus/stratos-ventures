@@ -2666,7 +2666,7 @@ function loadData(d){
   recalcAll();
 }
 let _savedStocksCache=null;
-function _getSavedStocks(){if(_savedStocksCache!==null)return _savedStocksCache;_savedStocksCache=JSON.parse(localStorage.getItem('valuation_stocks')||'{}');return _savedStocksCache}
+function _getSavedStocks(){if(_savedStocksCache!==null)return _savedStocksCache;try{_savedStocksCache=JSON.parse(localStorage.getItem('valuation_stocks')||'{}')}catch(e){console.warn('Corrupted valuation_stocks in localStorage');_savedStocksCache={}}return _savedStocksCache}
 function _putSavedStocks(s){_savedStocksCache=s;localStorage.setItem('valuation_stocks',JSON.stringify(s));if(d1Mode){API.scheduleSave('savedStocks',async()=>{const items=Object.entries(s).map(([name,v])=>{const cid=_tickerToD1Id(v.name||name)||_tickerToD1Id(name);if(!cid)return null;return{id:v._d1ValId||undefined,company_id:cid,label:name,method:'combined',currency:v.currency||'USD',scale:v.scale||'M',inputs_json:JSON.stringify(v),results_json:'{}'}}).filter(Boolean);if(items.length){const r=await API.post('valuations/batch',{items});if(r&&r.results)r.results.forEach((res,i)=>{if(res.id&&items[i]){const key=Object.keys(s).find(k=>{const v=s[k];return(_tickerToD1Id(v.name||k)||_tickerToD1Id(k))===items[i].company_id&&k===items[i].label});if(key)s[key]._d1ValId=res.id}})}})}}
 
 function saveCurrentStock(){
@@ -3075,15 +3075,16 @@ const API={
   flushAll(){
     this._keepalive=true;
     const keys=Object.keys(this._timers);
+    const promises=[];
     keys.forEach(k=>{
       if(this._timers[k]){clearTimeout(this._timers[k]);this._timers[k]=null}
       if(this._pendingFns[k]){
         const fn=this._pendingFns[k];delete this._pendingFns[k];
         this._localFallback(k);
-        try{fn().catch(e=>console.error('flushAll('+k+'):',e))}catch(e){console.error('flushAll sync('+k+'):',e)}
+        try{const p=fn().catch(e=>console.error('flushAll('+k+'):',e));promises.push(p)}catch(e){console.error('flushAll sync('+k+'):',e)}
       }
     });
-    this._keepalive=false;
+    Promise.allSettled(promises).then(()=>{this._keepalive=false});
   },
   _localFallback(key){
     try{
@@ -3182,7 +3183,7 @@ function handleRoute(){
   const hash=window.location.hash.slice(1)||'companies';
   _routingInProgress=true;
   if(hash.startsWith('company/')){
-    const ticker=decodeURIComponent(hash.slice(8)).trim();
+    let ticker;try{ticker=decodeURIComponent(hash.slice(8)).trim()}catch(e){ticker=hash.slice(8).trim()}
     if(!ticker){
       showToast('No ticker specified','warning');
       showSection('companies');
@@ -3521,8 +3522,8 @@ function savePosition(){
 
   if(!ticker){showToast('Ticker / identifier is required','error');return}
   if(!accountId||!pfAccounts.find(a=>a.id===accountId)){showToast('Select a valid account','error');return}
-  if(isNaN(shares)||shares<0){showToast('Enter a valid number of shares','error');return}
-  if(isNaN(avgCost)||avgCost<0){showToast('Enter a valid average cost','error');return}
+  if(!isFinite(shares)||shares<0){showToast('Enter a valid number of shares','error');return}
+  if(!isFinite(avgCost)||avgCost<0){showToast('Enter a valid average cost','error');return}
   if(shares===0&&avgCost===0){showToast('Enter shares or average cost','error');return}
 
   const dup=pfPositions.find(p=>p.ticker===ticker&&p.accountId===accountId&&p.id!==editId);
@@ -3698,8 +3699,8 @@ function saveTransaction(){
   if(date>new Date().toISOString().slice(0,10)){showToast('Date cannot be in the future','error');return}
   if(!ticker){showToast('Ticker is required','error');return}
   if(!accountId){showToast('Select an account','error');return}
-  if(isNaN(totalAmount)||totalAmount<=0){showToast('Enter a valid total amount','error');return}
-  if(type!=='dividend'&&(isNaN(shares)||shares<=0)){showToast('Enter a valid number of shares','error');return}
+  if(!isFinite(totalAmount)||totalAmount<=0){showToast('Enter a valid total amount','error');return}
+  if(type!=='dividend'&&(!isFinite(shares)||shares<=0)){showToast('Enter a valid number of shares','error');return}
 
   const now=new Date().toISOString();
   const acc=pfAccounts.find(a=>a.id===accountId);
@@ -4700,23 +4701,25 @@ function renderDbFiTracker(){
   const target=fi.targetAmount||0;
   const progress=target>0?Math.min((currentValue/target)*100,100):0;
   const fiBy4pct=fi.monthlyExpenses*12*25;
-  const monthlyRate=(fi.assumedReturnRate||8)/100/12;
+  const monthlyRate=(fi.assumedReturnRate??8)/100/12;
   let yearsToFi=null;
-  if(monthlyRate>0&&fi.monthlySavings>0){
+  if(monthlyRate>0&&fi.monthlySavings>=0){
     const fv=target;
     const pv=currentValue;
-    const pmt=fi.monthlySavings;
+    const pmt=fi.monthlySavings||0;
     if(fv>pv){
-      const num=fv*monthlyRate+pmt;
-      const den=pv*monthlyRate+pmt;
-      if(num>0&&den>0){
-        const n=Math.log(num/den)/Math.log(1+monthlyRate);
-        yearsToFi=isFinite(n)?n/12:null;
+      if(pmt>0||monthlyRate>0){
+        const num=fv*monthlyRate+pmt;
+        const den=pv*monthlyRate+pmt;
+        if(num>0&&den>0){
+          const n=Math.log(num/den)/Math.log(1+monthlyRate);
+          yearsToFi=isFinite(n)?n/12:null;
+        }
       }
     }else{yearsToFi=0}
   }
 
-  const coastFi=target/Math.pow(1+(fi.assumedReturnRate||8)/100,25);
+  const coastFi=target/Math.pow(1+(fi.assumedReturnRate??8)/100,25);
 
   const circumference=2*Math.PI*50;
   const offset=circumference*(1-progress/100);
@@ -7190,7 +7193,7 @@ async function refreshAllStocks(){
   for(let i=0;i<tickers.length;i++){
     if(wrap){const ov=wrap.querySelector('.loading-overlay span');if(ov)ov.textContent=`Refreshing ${i+1}/${tickers.length}: ${tickers[i]}...`}
     try{await fetchStockData(tickers[i])}catch(e){failed.push(tickers[i])}
-    renderTracker();
+    if(i%5===4||i===tickers.length-1)renderTracker();
     if(i<tickers.length-1)await new Promise(r=>setTimeout(r,200));
   }
   if(wrap)hideSpinner(wrap);
