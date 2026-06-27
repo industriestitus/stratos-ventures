@@ -1680,7 +1680,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
       <label for="st-worker">Yahoo Worker URL</label>
       <input type="text" id="st-worker" placeholder="https://yahoo-finance-proxy.YOURNAME.workers.dev" oninput="saveTrackerSettings()">
     </div>
-    <button class="conn-btn conn-btn--worker" onclick="testWorker()">Test</button>
+    <button class="conn-btn conn-btn--worker" onclick="testWorker(event)">Test</button>
     <div class="conn-status" id="worker-status"></div>
   </div>
 
@@ -1689,7 +1689,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
       <label for="st-apikey">FMP API Key</label>
       <input type="password" id="st-apikey" placeholder="Enter FMP API key" oninput="saveTrackerSettings()" autocomplete="off">
     </div>
-    <button class="conn-btn conn-btn--fmp" onclick="testFmp()">Test</button>
+    <button class="conn-btn conn-btn--fmp" onclick="testFmp(event)">Test</button>
     <div class="conn-status" id="fmp-status"></div>
   </div>
 
@@ -1698,7 +1698,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
       <label for="st-finnhub">Finnhub API Key</label>
       <input type="password" id="st-finnhub" placeholder="Enter Finnhub API key (free at finnhub.io)" oninput="saveTrackerSettings()" autocomplete="off">
     </div>
-    <button class="conn-btn conn-btn--finnhub" onclick="testFinnhub()">Test</button>
+    <button class="conn-btn conn-btn--finnhub" onclick="testFinnhub(event)">Test</button>
     <div class="conn-status" id="finnhub-status"></div>
   </div>
 
@@ -2260,7 +2260,7 @@ async function encryptVerify(pass,salt){
 
 async function verifyPassword(pass){
   const salt=localStorage.getItem('enc_salt');
-  const verify=JSON.parse(localStorage.getItem('enc_verify')||'null');
+  let verify;try{verify=JSON.parse(localStorage.getItem('enc_verify')||'null')}catch(e){return false}
   if(!salt||!verify)return false;
   try{
     const key=await deriveKey(pass,new Uint8Array(unb64(salt)));
@@ -2463,10 +2463,13 @@ function getFCFs(){const f0=V('s-fcf0'),g=getGrowths(),f=[f0];for(let i=0;i<15;i
 
 const tabNames=['dcf-perpetuity','dcf-exit','reverse-dcf','aria','moneyback','saved'];
 function switchTab(name){
-  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const container=document.getElementById('company-panel-calculator')||document;
+  container.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
+  container.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   const idx=tabNames.indexOf(name);
-  document.querySelectorAll('.tabs .tab')[idx].classList.add('active');
+  if(idx<0)return;
+  const tabs=container.querySelectorAll('.tabs .tab');
+  if(tabs[idx])tabs[idx].classList.add('active');
   document.getElementById('panel-'+name).classList.add('active');
   document.querySelectorAll('.summary-card').forEach(c=>c.classList.remove('active-summary'));
   const sIdx={['dcf-perpetuity']:0,['dcf-exit']:1,['reverse-dcf']:2,['aria']:-1,['moneyback']:4,['saved']:-1}[name];
@@ -2561,11 +2564,11 @@ function calcReverseDCF(){
   const solvE=solveGrowth(fcf0,dr,fade,function(f){return f*em});
   const igE=solvE(targetEV);
   document.getElementById('rdcfe-results').innerHTML=`
-    <div class="result-box"><div class="label">Implied Growth</div><div class="value ${igE>0.15?'negative':igE>0.08?'warn':'positive'}">${(igE*100).toFixed(2)}%</div></div>
+    <div class="result-box"><div class="label">Implied Growth</div><div class="value ${!isFinite(igE)?'neutral':igE>0.15?'negative':igE>0.08?'warn':'positive'}">${isFinite(igE)?(igE*100).toFixed(2)+'%':'—'}</div></div>
     <div class="result-box"><div class="label">Exit Multiple</div><div class="value neutral">${em}x</div></div>
-    <div class="result-box"><div class="label">FCF-SBC Yield</div><div class="value neutral">${(pYield*100).toFixed(2)}%</div></div>`;
-  document.getElementById('sum-rdcfe-val').textContent=(igE*100).toFixed(1)+'%';
-  document.getElementById('sum-rdcfe-val').className='sc-value '+(igE>0.15?'negative':igE>0.08?'warn':'positive');
+    <div class="result-box"><div class="label">FCF-SBC Yield</div><div class="value neutral">${isFinite(pYield)?(pYield*100).toFixed(2)+'%':'—'}</div></div>`;
+  document.getElementById('sum-rdcfe-val').textContent=isFinite(igE)?(igE*100).toFixed(1)+'%':'—';
+  document.getElementById('sum-rdcfe-val').className='sc-value '+(isFinite(igE)?(igE>0.15?'negative':igE>0.08?'warn':'positive'):'neutral');
   document.getElementById('sum-rdcfe-sub').textContent='implied growth (exit '+em+'x)';
   function buildSens(termFn,chartId,chartKey){
     const sensData=[],labels=[];
@@ -5381,8 +5384,8 @@ function openResearchEntryForTicker(ticker){
 }
 
 function toggleMoreMenu(){
-  document.querySelector('.more-menu').classList.toggle('open');
-  document.querySelector('.more-backdrop').classList.toggle('open');
+  document.querySelector('.more-menu')?.classList.toggle('open');
+  document.querySelector('.more-backdrop')?.classList.toggle('open');
 }
 function closeMoreMenu(){
   document.querySelector('.more-menu')?.classList.remove('open');
@@ -6956,7 +6959,7 @@ async function cachedFetch(ticker,dataSource,fetchFn){
     try{
       const cached=await API.get('cache-check/'+companyId+'/'+dataSource);
       if(cached&&cached.cached){
-        const fa=cached.fetched_at;const age=(Date.now()-new Date(fa.endsWith('Z')?fa:fa+'Z').getTime())/3600000;
+        const fa=cached.fetched_at;const age=(Date.now()-new Date(/[Z+\-]\d{0,2}:?\d{0,2}$/.test(fa)?fa:fa+'Z').getTime())/3600000;
         if(age<ttl){
           if(dataSource==='stock_data')_lastCacheAge={source:dataSource,fetched_at:cached.fetched_at,ageHours:age};
           return cached.data;
@@ -7593,7 +7596,7 @@ function renderScatterChart(){
 function renderTracker(){
   const filter=(document.getElementById('st-filter')?.value||'').toLowerCase();
   let stocks=Object.values(tStocks);
-  if(filter)stocks=stocks.filter(s=>(s.ticker+' '+s.name+' '+(s.thesis||'')+' '+(s.moat||'')).toLowerCase().includes(filter));
+  if(filter)stocks=stocks.filter(s=>(s.ticker+' '+(s.name||'')+' '+(s.thesis||'')+' '+(s.moat||'')).toLowerCase().includes(filter));
   stocks=applyScreenerFilters(stocks);
   const scCountEl=document.getElementById('screener-count');
   if(scCountEl){const fk=Object.keys(screenerFilters).length;scCountEl.textContent=fk?stocks.length+' match'+(stocks.length!==1?'es':''):''}
@@ -8259,6 +8262,7 @@ function renderMiniCharts(){
     const labels=d.timestamps.map(ts=>new Date(ts*1000));
     const first=d.closes.find(v=>v!=null);
     const last=d.closes.filter(v=>v!=null).pop();
+    if(first==null||last==null)return;
     const up=last>=first;
 
     chMiniCharts[t]=new Chart(canvas.getContext('2d'),{
@@ -9352,10 +9356,10 @@ async function startD1Migration(){
   }
 }
 
-async function testWorker(){
+async function testWorker(ev){
   const url=getSyncUrl();
   if(!url){setStatus('worker-status','Enter URL first',false);return}
-  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
+  const btn=ev?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
   setStatus('worker-status','Testing...','');
   try{
     const r=await fetch(url+'/health');
@@ -9365,10 +9369,10 @@ async function testWorker(){
   if(btn){btn.disabled=false;btn.textContent='Test'}
 }
 
-async function testFinnhub(){
+async function testFinnhub(ev){
   const key=stSettings().finnhubKey;
   if(!key){setStatus('finnhub-status','Enter key first',false);return}
-  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
+  const btn=ev?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
   setStatus('finnhub-status','Testing...','');
   try{
     const r=await fetchWithTimeout('https://finnhub.io/api/v1/stock/insider-transactions?symbol=AAPL&token='+encodeURIComponent(key));
@@ -9379,10 +9383,10 @@ async function testFinnhub(){
   if(btn){btn.disabled=false;btn.textContent='Test'}
 }
 
-async function testFmp(){
+async function testFmp(ev){
   const key=stSettings().apiKey;
   if(!key){setStatus('fmp-status','Enter key first',false);return}
-  const btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
+  const btn=ev?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
   setStatus('fmp-status','Testing...','');
   try{
     const r=await fetchWithTimeout('https://financialmodelingprep.com/stable/profile?symbol=AAPL&apikey='+encodeURIComponent(key));
@@ -9673,13 +9677,13 @@ window.addEventListener('appinstalled',()=>{
 });
 function installPwa(){
   if(!_deferredInstallPrompt)return;
-  _deferredInstallPrompt.prompt();
-  _deferredInstallPrompt.userChoice.then(r=>{
-    if(r.outcome==='accepted')showToast('Installing...','info');
-    _deferredInstallPrompt=null;
+  const p=_deferredInstallPrompt;
+  _deferredInstallPrompt=null;
+  p.prompt().then(r=>{
+    if(r&&r.outcome==='accepted')showToast('Installing...','info');
     const btn=document.getElementById('pwa-install-btn');
     if(btn)btn.style.display='none';
-  });
+  }).catch(()=>{});
 }
 window.addEventListener('load',()=>{
   if('serviceWorker' in navigator){
