@@ -22,8 +22,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 10 | Mobile Responsive Overflow | `b21f930` | 2026-06-27 | 6 | 1 |
 | 11 | Dashboard Widget Overflow | `b5fdc36` | 2026-06-27 | 3 | 0 |
 | 14 | Dashboard Grid Bottom Clipping | `e74446c` | 2026-06-28 | 1 | 0 |
+| 15 | D1 Data Persistence | `f053cb7`+`cf9c284` | 2026-06-30 | 2 | 0 |
 
-**Total: 154 fixed, 21 potential (unfixed)**
+**Total: 156 fixed, 21 potential (unfixed)**
 
 ---
 
@@ -275,6 +276,32 @@ None.
 ### Audit Details
 
 Tested all 7 sections at 8 viewport widths (320, 375, 768, 769, 976, 1331, 1332, 1440px). Verified `scrollWidth <= offsetWidth` for every visible element. Confirmed no `overflow:visible` layout breaks remain on any page. Dashboard grid 2→3 column breakpoint confirmed at exactly 1332px viewport width (`.db-grid minmax(340px,1fr)` × 3 + gap 32px + content padding 40px + sidebar 240px).
+
+---
+
+## Category 15 — D1 Data Persistence (`f053cb7` + `cf9c284`)
+
+**Date:** 2026-06-30 | **Fixed: 2** | **Unfixed: 0**
+
+User-reported: TODOs added on dashboard disappeared after page refresh.
+
+### Bug 15.1 — CRITICAL: All save/load functions skipped localStorage in D1 mode
+
+**Commit:** `f053cb7` | **File:** `web/index.html`
+
+**Problem:** 14 save functions had `if(d1Mode){...scheduleSave...;return}` — the `return` skipped localStorage entirely. 15 load functions had `catch(e){...};return}` — the `return` was outside the try/catch, so D1 errors meant no localStorage fallback.
+
+**Fix:** Removed `return` from all save D1 blocks (write-through: always save to both D1 and localStorage). Moved `return` inside try block in all load functions (read-fallback: D1 error falls through to localStorage).
+
+**Affected functions (15 pairs):** savePortfolioAccounts/load, savePortfolioPositions/load, savePortfolioTransactions/load, savePortfolioSnapshots/load, saveExchangeRates/load, saveDashTodos/load, saveDashFiSettings/load, saveDashBenchmark/load, saveDash52wHighs/load, saveResearchNotes/load, saveTrackerStocks/load, saveDividendHistory/load, saveDivSettings/load, saveFramework/load, saveReviews/load.
+
+### Bug 15.2 — CRITICAL: Worker batch handler silently dropped new items
+
+**Commit:** `cf9c284` | **Files:** `web/cloudflare-worker/src/index.js`, `web/index.html`
+
+**Problem:** Worker batch endpoint used `UPDATE ... WHERE id = ?` for items with IDs. New items have locally-generated IDs that don't exist in D1 — UPDATE matched 0 rows, silently dropping data. Additionally, race condition on quick refresh: D1 load could succeed before scheduleSave (1500ms debounce) had synced new items.
+
+**Fix (server):** Changed batch handler from `UPDATE WHERE id` to `INSERT ... ON CONFLICT(id) DO UPDATE SET ...` (upsert) — works for both new and existing items across ALL tables. **Fix (client):** After successful D1 load in `loadDashTodos()`, merge any localStorage todos whose IDs aren't in D1 result (race condition safety net).
 
 ---
 
