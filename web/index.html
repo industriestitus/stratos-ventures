@@ -5918,6 +5918,46 @@ function renderFinancials(ticker){
   });
   h+='</div></div>';
 
+  // Balance Sheet Deep Dive
+  h+='<div class="card"><div class="card-title">Balance Sheet Deep Dive</div><div class="cp-fin-grid">';
+  const bs0d=s._bsData?.[0];const bs2d=s._bsData?.[2]||s._bsData?.[1];
+  const bookVal=bs0d?bs0d.totalStockholdersEquity:null;
+  const bvps=bookVal!=null&&shares0?bookVal/shares0:null;
+  const nav=bs0d?(bs0d.totalAssets||0)-(bs0d.totalLiabilities||0):null;
+  const netDebt=bs0d?((bs0d.totalDebt||0)-(bs0d.cashAndCashEquivalents||0)):null;
+  const gwPct=bs0d&&bs0d.totalAssets&&bs0d.goodwill!=null?(bs0d.goodwill/bs0d.totalAssets*100):null;
+  const intPct=bs0d&&bs0d.totalAssets&&bs0d.goodwillAndIntangibleAssets!=null?(bs0d.goodwillAndIntangibleAssets/bs0d.totalAssets*100):null;
+  const re0=bs0d?bs0d.retainedEarnings:null;
+  const re2=bs2d?bs2d.retainedEarnings:null;
+  const treasury=bs0d?bs0d.treasuryStock:null;
+  const payables=bs0d?bs0d.accountPayables:null;
+  const receivables=bs0d?bs0d.netReceivables:null;
+  const inventory=bs0d?bs0d.inventory:null;
+  const wcMgmt=(payables!=null&&receivables!=null&&s.revenue)?((payables-(receivables||0)-(inventory||0))/s.revenue*100):null;
+  const hasPref=bs0d&&(bs0d.preferredStock||0)>0;
+  const bsItems=[
+    {l:'Book Value',k:'bookValue',v:bookVal!=null?fmt(bookVal):'-'},
+    {l:'Book Value / Share',k:'bvps',v:bvps!=null?'$'+bvps.toFixed(2):'-',sub:bvps!=null&&s.price?'P/B: '+(s.price/bvps).toFixed(1)+'×':null},
+    {l:'Net Asset Value',k:'nav',v:nav!=null?fmt(nav):'-'},
+    {l:'Net Debt',k:'netDebt',v:netDebt!=null?fmt(netDebt):'-',cls:netDebt!=null?(netDebt<=0?'positive':netDebt<(s.fcf||1)*5?'warn':'negative'):'',sub:netDebt!=null&&netDebt<=0?'Net cash position':null},
+    {l:'Goodwill % of Assets',k:'gwPct',v:gwPct!=null?gwPct.toFixed(1)+'%':'-',cls:gwPct!=null?(gwPct<20?'positive':gwPct<40?'warn':'negative'):''},
+    {l:'Intangibles % of Assets',k:'intPct',v:intPct!=null?intPct.toFixed(1)+'%':'-',cls:intPct!=null?(intPct<30?'positive':intPct<50?'warn':'negative'):''},
+    {l:'Retained Earnings',k:'retainedEarnings',v:re0!=null?fmt(re0):'-',cls:re0!=null?(re0>0?'positive':'negative'):'',sub:re0!=null&&re2!=null?(re0>re2?'Growing':'Declining'):null},
+    {l:'RE Trend (3yr)',k:'reTrend',v:re0!=null&&re2!=null?fmt(re0-re2):'-',cls:re0!=null&&re2!=null?(re0>=re2?'positive':'negative'):''},
+    {l:'Treasury Stock',k:'treasuryStock',v:treasury!=null&&treasury!==0?fmt(treasury):treasury===0?'None':'-'},
+    {l:'WC Management',k:'wcMgmt',v:wcMgmt!=null?wcMgmt.toFixed(1)+'%':'-',cls:wcMgmt!=null?(wcMgmt>0?'positive':'warn'):'',sub:wcMgmt!=null?(wcMgmt>0?'Supplier financing':'Cash tied up'):null},
+    {l:'Preferred Stock',k:'prefStock',v:hasPref?fmt(bs0d.preferredStock):'None',cls:hasPref?'negative':'positive'}
+  ];
+  if(!bs0d){
+    h+='<div class="cp-fin-item" style="grid-column:1/-1;color:var(--text2)">No balance sheet data yet — visit Overview and use Refresh to fetch.</div>';
+  }else{
+    bsItems.forEach(m=>{
+      const inner=`<div class="cp-fin-label">${m.l}</div><div class="cp-fin-value ${m.cls||''}">${m.v}</div>${m.sub?`<div class="cp-fin-sub">${m.sub}</div>`:''}`;
+      h+=`<div class="cp-fin-item">${m.k?tipWrap(m.k,inner):inner}</div>`;
+    });
+  }
+  h+='</div></div>';
+
   h+='<div class="card"><div class="card-title">Historical Trends (10 Year)</div>';
   h+='<div id="cp-hist-loading" class="cp-hist-loading">Loading historical data...</div>';
   h+='<div class="cp-hist-charts" id="cp-hist-charts" style="display:none">';
@@ -6351,7 +6391,18 @@ const METRIC_TIPS={
   divCoverage:{name:'Dividend Coverage',formula:'Free Cash Flow / Dividends Paid',bench:'> 2× safe, 1.2-2× adequate, < 1.2× at risk',desc:'How many times FCF covers dividend payments. Below 1× means dividends exceed cash flow — unsustainable.'},
   dilutionRate:{name:'Dilution Rate (3yr)',formula:'(Shares Now - Shares 3Y Ago) / Shares 3Y Ago × 100',bench:'Negative = buyback, 0-3% mild, > 3% significant dilution',desc:'Share count change over 3 years. Negative means buybacks (good). Positive means dilution from SBC or offerings.'},
   workingCapital:{name:'Working Capital',formula:'Current Assets - Current Liabilities',bench:'Positive = buffer, Negative = uses supplier cash',desc:'Short-term financial cushion. Negative WC can be a strength (like Amazon) if the business model supports it.'},
-  wcChange:{name:'Working Capital Change',formula:'WC This Year - WC Last Year',bench:'Negative change = cash efficient, Positive = needs more cash',desc:'Year-over-year change in working capital. Decreasing WC frees up cash; increasing WC ties up cash.'}
+  wcChange:{name:'Working Capital Change',formula:'WC This Year - WC Last Year',bench:'Negative change = cash efficient, Positive = needs more cash',desc:'Year-over-year change in working capital. Decreasing WC frees up cash; increasing WC ties up cash.'},
+  bookValue:{name:'Book Value',formula:'Total Stockholders Equity',bench:'Positive = solvent, Negative = danger',desc:'Net worth of the company from the balance sheet. Equity available to common shareholders.'},
+  bvps:{name:'Book Value per Share',formula:'Stockholders Equity / Shares Outstanding',bench:'P/B < 1 = below book, 1-3 fair, > 3 premium',desc:'Net asset value per share. A low P/B may indicate undervaluation or poor returns on equity.'},
+  nav:{name:'Net Asset Value',formula:'Total Assets - Total Liabilities',bench:'Positive = solvent',desc:'What remains if all assets were sold and all debts paid. Different from book value by excluding minority interests.'},
+  netDebt:{name:'Net Debt',formula:'Total Debt - Cash & Equivalents',bench:'Negative = net cash (good), < 5× FCF moderate, > 5× FCF heavy',desc:'True debt burden after subtracting cash. Negative means the company has more cash than debt.'},
+  gwPct:{name:'Goodwill % of Assets',formula:'Goodwill / Total Assets × 100',bench:'< 20% low, 20-40% moderate, > 40% acquisition-heavy',desc:'Proportion of assets that are goodwill from acquisitions. High = risk of future write-downs.'},
+  intPct:{name:'Intangibles % of Assets',formula:'(Goodwill + Intangibles) / Total Assets × 100',bench:'< 30% low, 30-50% moderate, > 50% asset-light or acquisition-heavy',desc:'How much of the balance sheet is non-physical assets. High values in asset-light businesses may be normal.'},
+  retainedEarnings:{name:'Retained Earnings',formula:'Cumulative Net Income - Cumulative Dividends',bench:'Positive and growing = healthy',desc:'Profits reinvested in the business over its lifetime. Negative means cumulative losses exceed cumulative profits.'},
+  reTrend:{name:'Retained Earnings Trend',formula:'RE Now - RE 3 Years Ago',bench:'Positive = accumulating profits, Negative = erosion',desc:'Three-year change in retained earnings. Growing = company profitably retaining capital.'},
+  treasuryStock:{name:'Treasury Stock',formula:'Shares repurchased × cost basis',bench:'Present = active buybacks',desc:'Value of shares the company has repurchased and holds. Indicates shareholder return via buybacks.'},
+  wcMgmt:{name:'Working Capital Management',formula:'(Payables - Receivables - Inventory) / Revenue × 100',bench:'Positive = supplier financing (like Amazon), Negative = cash tied up',desc:'Whether the company finances operations with supplier credit (positive) or ties up its own cash (negative).'},
+  prefStock:{name:'Preferred Stock',formula:'Preferred stock on balance sheet',bench:'None = simpler capital structure',desc:'Preferred shares have priority over common stock for dividends and liquidation. Their presence complicates equity analysis.'}
 };
 function tipWrap(key,innerHtml){
   const t=METRIC_TIPS[key];
@@ -8958,7 +9009,7 @@ const CL_THRESHOLDS=[
   {k:'roicAbove15Ok',label:'ROIC > 15%',
     auto:(s)=>s.roic!=null?s.roic>15:null,
     val:(s)=>s.roic!=null?s.roic.toFixed(1)+'%':null},
-  {k:'roic5yrOk',label:'ROIC > 9%',
+  {k:'roic5yrOk',label:'ROIC > 9% (compounder threshold)',
     auto:(s)=>s.roic!=null?s.roic>9:null,
     val:(s)=>s.roic!=null?s.roic.toFixed(1)+'%':null},
   {k:'_g_growth',type:'group',label:'Growth'},

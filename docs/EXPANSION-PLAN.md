@@ -320,11 +320,11 @@ Display: green checkmark if passes, red X if fails, gray dash if data unavailabl
 
 All with METRIC_TIPS tooltips.
 
-### 12.4 Balance Sheet deep dive panel
+### 12.4 Balance Sheet deep dive panel ✅ DONE (2026-06-30)
 - **Difficulty:** EASY (1.5 hours)
 - **Cost:** Free
-- **What:** Companion to cash flow panel
-- **Implementation:** Similar to 12.3
+- **What:** New card in Financials tab with 11 balance sheet metrics + tooltips
+- **Implementation:** Inline in `renderFinancials`, uses `_bsData`. Metrics: Book Value, BVPS, NAV, Net Debt, Goodwill %, Intangibles %, Retained Earnings + trend, Treasury Stock, WC Management, Preferred Stock.
 
 **Calculated metrics:**
 - Book Value = `totalStockholdersEquity`
