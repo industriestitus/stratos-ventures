@@ -234,6 +234,11 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .cp-type-tag{padding:4px 10px;font-size:11px;font-weight:600;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .2s}
 .cp-type-tag:hover{border-color:var(--accent);color:var(--text)}
 .cp-type-tag.type-active{border-color:var(--accent);background:rgba(108,92,231,.2);color:var(--accent2)}
+/* Conviction badge */
+.cp-conviction-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap}
+.cp-conviction-badge.conv-high{background:rgba(0,184,148,.15);color:var(--green)}
+.cp-conviction-badge.conv-mid{background:rgba(253,203,110,.15);color:var(--orange)}
+.cp-conviction-badge.conv-low{background:rgba(255,118,117,.15);color:var(--red)}
 /* Financials tab */
 .cp-fin-section{margin-bottom:20px}
 .cp-fin-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
@@ -1465,6 +1470,7 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:10px">
         <div class="cp-pipeline" id="cp-pipeline"></div>
         <div class="cp-type-wrap" id="cp-type-wrap"></div>
+        <div id="cp-conviction-badge"></div>
         <div id="cp-cache-age" style="display:none;font-size:11px;padding:3px 8px;border-radius:4px;background:var(--surface2);color:var(--text2);white-space:nowrap"></div>
         <button id="cp-refresh-btn" class="btn btn-secondary" onclick="refreshProfileData()" style="padding:3px 10px;font-size:11px;display:none" title="Force refresh from API">↻ Refresh</button>
       </div>
@@ -5839,11 +5845,16 @@ function showProfile(ticker){
   ${s.price!=null?`<div style="font-size:11px;color:var(--text2);margin-top:6px">Current: $${s.price.toFixed(2)}${pa.alertAbove&&s.price>=parseFloat(pa.alertAbove)?' <span style="color:var(--green);font-weight:600">▲ ABOVE TARGET</span>':''}${pa.alertBelow&&s.price<=parseFloat(pa.alertBelow)?' <span style="color:var(--red);font-weight:600">▼ BELOW TARGET</span>':''}</div>`:''}
   </div>`;
 
+  // Card 5: Conviction Tracker
+  h+=`<div class="card"><div class="card-title">Conviction Tracker</div><div id="cp-conviction-chart" style="min-height:100px"></div></div>`;
+
   document.getElementById('cp-overview-content').innerHTML=h;
 
-  // Render pipeline & company type
+  // Render pipeline, company type & conviction
   renderPipeline(ticker);
   renderCompanyType(ticker);
+  renderConvictionBadge(ticker);
+  renderConvictionChart(ticker);
 
   // Render all tab content
   renderFinancials(ticker);
@@ -6049,6 +6060,7 @@ async function renderInsiderTrading(ticker){
 function closeProfile(){
   Object.values(cpHistCharts).forEach(c=>{if(c)c.destroy()});
   cpHistCharts={};
+  if(window._convictionChart){window._convictionChart.destroy();window._convictionChart=null;}
   profileTicker=null;
   document.getElementById('company-profile').style.display='none';
   document.querySelector('.company-tabs').style.display='';
@@ -6086,6 +6098,121 @@ function setCompanyType(ticker,type){
   s.companyType=s.companyType===type?'':type;
   saveTrackerStocks();
   renderCompanyType(ticker);
+}
+
+// Conviction tracker
+function getConvictionHistory(ticker){
+  const s=tStocks[ticker];if(!s)return[];
+  const points=[];
+  const cl=s.checklist||{};
+  const psych=cl.psychology||{};
+  if(psych.convictionLevel){
+    const lvl0=parseInt(psych.convictionLevel);
+    if(lvl0>=1&&lvl0<=10){
+      const ts=cl._changeLog?.find(c=>c.section==='psychology'&&c.field==='convictionLevel');
+      points.push({date:ts?.date||s.dateAdded||'',level:lvl0,source:'checklist',notes:'Psychology checklist'});
+    }
+  }
+  const qfu=cl.quarterly_followup||{};
+  const entries=qfu.entries||[];
+  entries.forEach(e=>{
+    if(e.convictionLevel){
+      const lvl1=parseInt(e.convictionLevel);
+      if(lvl1>=1&&lvl1<=10){
+        points.push({date:e.date||'',level:lvl1,source:'quarterly',notes:e.quarter||''});
+      }
+    }
+  });
+  const rvEntries=(rvData.entries||[]).filter(r=>r.type==='quarterly'&&r.companyTicker===ticker);
+  rvEntries.forEach(r=>{
+    const ans=r.answers||{};
+    if(ans.q8){
+      const lvl=parseInt(ans.q8);
+      if(lvl>=1&&lvl<=10){
+        points.push({date:r.date||'',level:lvl,source:'review',notes:'Quarterly review'});
+      }
+    }
+  });
+  points.sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  const seen=new Set();
+  return points.filter(p=>{
+    const k=p.date+'_'+p.level+'_'+p.source;
+    if(seen.has(k))return false;
+    seen.add(k);return true;
+  });
+}
+function getCurrentConviction(ticker){
+  const hist=getConvictionHistory(ticker);
+  if(!hist.length)return null;
+  return hist[hist.length-1].level;
+}
+function renderConvictionBadge(ticker){
+  const el=document.getElementById('cp-conviction-badge');
+  if(!el)return;
+  const level=getCurrentConviction(ticker);
+  if(!level){el.innerHTML='';return;}
+  const cls=level>=7?'conv-high':level>=4?'conv-mid':'conv-low';
+  el.innerHTML=`<span class="cp-conviction-badge ${cls}">Conviction: ${level}/10</span>`;
+}
+function renderConvictionChart(ticker){
+  const container=document.getElementById('cp-conviction-chart');
+  if(!container)return;
+  const hist=getConvictionHistory(ticker);
+  if(!hist.length){
+    container.innerHTML='<div style="color:var(--text2);font-size:13px;padding:20px;text-align:center">No conviction data yet. Set conviction level in the Psychology checklist or Quarterly Follow-up.</div>';
+    return;
+  }
+  container.innerHTML='<canvas id="conviction-chart-canvas" height="200"></canvas>';
+  const ctx=document.getElementById('conviction-chart-canvas').getContext('2d');
+  const labels=hist.map(p=>p.date||'?');
+  const data=hist.map(p=>p.level);
+  const bgColors=data.map(v=>v>=7?'rgba(0,184,148,0.7)':v>=4?'rgba(253,203,110,0.7)':'rgba(255,118,117,0.7)');
+  const isDark=document.documentElement.getAttribute('data-theme')!=='light';
+  const gridColor=isDark?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.08)';
+  const textColor=isDark?'#a0a4b8':'#555';
+  if(window._convictionChart)window._convictionChart.destroy();
+  window._convictionChart=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'Conviction',
+        data,
+        borderColor:'#6c5ce7',
+        backgroundColor:'rgba(108,92,231,0.1)',
+        borderWidth:2,
+        pointRadius:6,
+        pointBackgroundColor:bgColors,
+        pointBorderColor:bgColors,
+        pointHoverRadius:8,
+        fill:true,
+        tension:0.3
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        y:{
+          min:0,max:10,
+          ticks:{stepSize:1,color:textColor,callback:v=>{if(v===1)return'1 Low';if(v===5)return'5 Mid';if(v===10)return'10 High';return v}},
+          grid:{color:gridColor}
+        },
+        x:{ticks:{color:textColor,maxRotation:45},grid:{display:false}}
+      },
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:ctx2=>{
+              const p=hist[ctx2.dataIndex];
+              return `Conviction: ${p.level}/10 (${p.notes})`;
+            }
+          }
+        },
+      }
+    }
+  });
 }
 
 // Financials tab
@@ -7090,7 +7217,7 @@ function applyTheme(t){
   if(dm)dm.style.display=t==='light'?'none':'';
   if(lm)lm.style.display=t==='light'?'':'none';
   if(lbm)lbm.textContent=t==='light'?'Light Mode':'Dark Mode';
-  const _themeCharts=[...Object.values(charts),_pfValueChart,_pfAllocChart,...Object.values(_dbCharts),...Object.values(cpHistCharts),divForecastChart,divProfileChart,...Object.values(chMiniCharts)];
+  const _themeCharts=[...Object.values(charts),_pfValueChart,_pfAllocChart,...Object.values(_dbCharts),...Object.values(cpHistCharts),divForecastChart,divProfileChart,...Object.values(chMiniCharts),window._convictionChart];
   const t2c=cv('--text2'),grdc=cv('--border')+'66';
   _themeCharts.forEach(c=>{if(!c)return;try{if(c.options.plugins?.legend?.labels)c.options.plugins.legend.labels.color=t2c;const sc=c.options.scales||{};Object.keys(sc).forEach(ax=>{if(sc[ax].ticks)sc[ax].ticks.color=t2c;if(sc[ax].grid)sc[ax].grid.color=grdc;if(sc[ax].title)sc[ax].title.color=t2c});c.update('none')}catch(e){}});
 }
