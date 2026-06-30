@@ -4827,6 +4827,14 @@ function renderDbAlerts(){
     });
   });
 
+  // Price alerts
+  Object.entries(tStocks).forEach(([ticker,s])=>{
+    if(!s.priceAlerts||s.price==null)return;
+    const pa=s.priceAlerts;
+    if(pa.alertAbove&&s.price>=pa.alertAbove)alerts.push({ticker,msg:'Price above target',value:'$'+s.price.toFixed(2)+' ≥ $'+pa.alertAbove.toFixed(2),sev:'info'});
+    if(pa.alertBelow&&s.price<=pa.alertBelow)alerts.push({ticker,msg:'Price below target',value:'$'+s.price.toFixed(2)+' ≤ $'+pa.alertBelow.toFixed(2),sev:'info'});
+  });
+
   countEl.textContent=alerts.length?`(${alerts.length})`:'';
   if(!alerts.length){el.innerHTML='<div class="db-no-alerts">&#10003; No red flags detected</div>';return}
 
@@ -5789,6 +5797,16 @@ function showProfile(ticker){
     h+=`<div class="cp-assess-item cp-thesis"><div class="cp-assess-label">Thesis</div><div class="cp-assess-value">${escH(s.thesis)}</div></div>`;
   }
   h+='</div></div>';
+
+  // Card 4: Price Alerts
+  const pa=s.priceAlerts||{};
+  h+=`<div class="card"><div class="card-title">Price Alerts</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div class="cl-field"><label>Alert Above</label><input type="number" step="any" min="0.01" placeholder="Target price..." value="${pa.alertAbove||''}" onchange="savePriceAlert('${escH(ticker)}','alertAbove',this.value)"></div>
+    <div class="cl-field"><label>Alert Below</label><input type="number" step="any" min="0.01" placeholder="Buy zone price..." value="${pa.alertBelow||''}" onchange="savePriceAlert('${escH(ticker)}','alertBelow',this.value)"></div>
+  </div>
+  ${s.price!=null?`<div style="font-size:11px;color:var(--text2);margin-top:6px">Current: $${s.price.toFixed(2)}${pa.alertAbove&&s.price>=parseFloat(pa.alertAbove)?' <span style="color:var(--green);font-weight:600">▲ ABOVE TARGET</span>':''}${pa.alertBelow&&s.price<=parseFloat(pa.alertBelow)?' <span style="color:var(--red);font-weight:600">▼ BELOW TARGET</span>':''}</div>`:''}
+  </div>`;
 
   document.getElementById('cp-overview-content').innerHTML=h;
 
@@ -7046,6 +7064,28 @@ function applyTheme(t){
   _themeCharts.forEach(c=>{if(!c)return;try{if(c.options.plugins?.legend?.labels)c.options.plugins.legend.labels.color=t2c;const sc=c.options.scales||{};Object.keys(sc).forEach(ax=>{if(sc[ax].ticks)sc[ax].ticks.color=t2c;if(sc[ax].grid)sc[ax].grid.color=grdc;if(sc[ax].title)sc[ax].title.color=t2c});c.update('none')}catch(e){}});
 }
 
+function savePriceAlert(ticker,field,value){
+  const s=tStocks[ticker];if(!s)return;
+  if(!s.priceAlerts)s.priceAlerts={};
+  const num=parseFloat(value);
+  if(value===''||isNaN(num)||num<=0){delete s.priceAlerts[field]}else{s.priceAlerts[field]=num}
+  saveTrackerStocks();
+}
+function checkPriceAlerts(){
+  const triggered=[];
+  Object.entries(tStocks).forEach(([ticker,s])=>{
+    if(!s.priceAlerts||s.price==null)return;
+    const pa=s.priceAlerts;
+    if(pa.alertAbove&&s.price>=pa.alertAbove)triggered.push({ticker,name:s.name||ticker,price:s.price,target:pa.alertAbove,dir:'above'});
+    if(pa.alertBelow&&s.price<=pa.alertBelow)triggered.push({ticker,name:s.name||ticker,price:s.price,target:pa.alertBelow,dir:'below'});
+  });
+  triggered.forEach(a=>{
+    const icon=a.dir==='above'?'▲':'▼';
+    const type=a.dir==='above'?'success':'warning';
+    showToast(`${icon} ${a.ticker} ($${a.price.toFixed(2)}) hit ${a.dir} target $${a.target.toFixed(2)}`,type,10000);
+  });
+  return triggered;
+}
 function saveTrackerStocks(){
   if(d1Mode){API.scheduleSave('trackerStocks',async()=>{
     const companies=Object.entries(tStocks).map(([ticker,s])=>({
@@ -7135,6 +7175,9 @@ async function loadTrackerStocks(){
     tStocks={};
     const fullLoads=companies.map(c=>API.get('companies/'+c.symbol+'/full').then(full=>{tStocks[c.symbol]=_d1CompanyToTStock(full)}).catch(e=>{tStocks[c.symbol]={ticker:c.symbol,name:c.name||c.symbol};console.error('D1 load company '+c.symbol+':',e)}));
     await Promise.all(fullLoads);
+    // Merge client-only fields from localStorage (priceAlerts not in D1 schema)
+    try{const ls=JSON.parse(localStorage.getItem('tracker_stocks_v1')||'{}');
+      Object.entries(ls).forEach(([t,s])=>{if(tStocks[t]&&s.priceAlerts)tStocks[t].priceAlerts=s.priceAlerts})}catch(e){}
     return;
   }catch(e){console.error('D1 load trackerStocks, falling back to localStorage:',e)}}
   const d=localStorage.getItem('tracker_stocks_v1');
@@ -7889,6 +7932,7 @@ async function refreshAllStocks(){
   _refreshing=false;
   if(failed.length)showToast(`${tickers.length-failed.length}/${tickers.length} refreshed. Failed: ${failed.join(', ')}`,'warning');
   else showToast(`All ${tickers.length} stocks refreshed`,'success',2000);
+  checkPriceAlerts();
 }
 
 // Per-stock calculator
@@ -10779,6 +10823,7 @@ async function autoLoad(){
   if(rateStatus&&pfExchangeRates.lastFetched)rateStatus.textContent='Last: '+new Date(pfExchangeRates.lastFetched).toLocaleDateString();
   document.querySelectorAll('input[type="number"]').forEach(el=>el.setAttribute('inputmode','decimal'));
   handleRoute();
+  checkPriceAlerts();
 }
 function autoSave(){
   localStorage.setItem('valuation_last_v2',JSON.stringify(getAllData()));
