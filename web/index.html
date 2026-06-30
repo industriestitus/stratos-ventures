@@ -6452,7 +6452,7 @@ function saveTrackerStocks(){
         Object.entries(s.notes.earnings||{}).forEach(([yr,qs])=>{Object.entries(qs).forEach(([q,v])=>{notes.push({company_id:cid,note_type:'earnings',title:'',content:v.note||'',note_date:null,quarter:yr+q})})});
       }
       const secs=(s.checklist&&s.checklist.sections)||{};
-      Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(sv.answers||{}),progress:sv.progress||0,status:sv.status||'not_started'}));
+      Object.entries(secs).forEach(([sk,sv])=>{const data={};Object.keys(sv).forEach(k=>{if(k!=='progress'&&k!=='status')data[k]=sv[k]});checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(data),progress:sv.progress||0,status:sv.status||'not_started'})});
     });
     const batch=[];
     if(todos.length)batch.push(API.postBatch('company_todos/batch',todos));
@@ -6463,6 +6463,9 @@ function saveTrackerStocks(){
     if(checklist.length){
       const tmplR=await API.get('checklist_templates?limit=100');
       const tmplMap={};(tmplR.data||[]).forEach(t=>{tmplMap[t.section_key]=t.id});
+      const neededKeys=new Set(checklist.map(c=>c._sectionKey));
+      const missingKeys=[...neededKeys].filter(k=>!tmplMap[k]);
+      if(missingKeys.length){const secTitles={};CL_SECTIONS.forEach((s,i)=>{secTitles[s.key]={title:s.title,sort:i}});for(const mk of missingKeys){const info=secTitles[mk]||{title:mk,sort:99};try{const r=await API.post('checklist_templates',{section_key:mk,title:info.title,description:'',fields_json:'[]',sort_order:info.sort});if(r&&r.id)tmplMap[mk]=r.id}catch(e){console.error('Create template '+mk+':',e)}}}
       const clItems=checklist.map(c=>{const tid=tmplMap[c._sectionKey];if(!tid)return null;return{company_id:c.company_id,template_id:tid,answer_json:c.answer_json,progress:c.progress,status:c.status}}).filter(Boolean);
       if(clItems.length)batch.push(API.postBatch('checklist_answers/batch',clItems));
     }
@@ -6498,7 +6501,7 @@ function _d1CompanyToTStock(c){
     existing.note=n.content||'';
     s.notes.earnings[yr][q]=existing;
   }else if(n.title==='research'){s.notes.research=n.content||''}});
-  if(c.checklist)c.checklist.forEach(cl=>{s.checklist.sections[cl.section_key]={answers:JSON.parse(cl.answer_json||'{}'),progress:cl.progress,status:cl.status||'not_started'}});
+  if(c.checklist)c.checklist.forEach(cl=>{const data=JSON.parse(cl.answer_json||'{}');data.progress=cl.progress;data.status=cl.status||'not_started';s.checklist.sections[cl.section_key]=data});
   return s;
 }
 
