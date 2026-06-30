@@ -24,8 +24,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 14 | Dashboard Grid Bottom Clipping | `e74446c` | 2026-06-28 | 1 | 0 |
 | 15 | D1 Data Persistence | `f053cb7`+`cf9c284` | 2026-06-30 | 2 | 0 |
 | 16 | Phase 15 Feature QA | `bc15b16`+`872b96b` | 2026-06-30 | 4 | 0 |
+| 17 | Phase 14 Asset Types QA | `5cd3a24` | 2026-07-01 | 6 | 0 |
 
-**Total: 160 fixed, 21 potential (unfixed)**
+**Total: 166 fixed, 21 potential (unfixed)**
 
 ---
 
@@ -341,6 +342,36 @@ User-reported: TODOs added on dashboard disappeared after page refresh.
 **Fix:** Wrapped the select in `<div class="cl-field">`.
 
 **Phase 15.3 (Follow Sources & Quick Links):** QA clean — 0 issues found (commit `7156d8f`).
+
+---
+
+### Category 17 — Phase 14 Asset Types QA (commit `5cd3a24`, 2026-07-01)
+
+6 bugs found and fixed during Phase 14.1-14.3 (Real Estate, Bond, Cash asset types) QA:
+
+**17.1 [CRITICAL] `const` to `let` — `savePosition()` crash on real_estate/cash (index.html:3682-3685)**
+`shares`, `avgCost`, `currentPrice` declared as `const` but reassigned inside `if(assetType==='real_estate')` and `if(assetType==='cash')` branches. TypeError on save.
+**Fix:** Changed `const` → `let` for all three variables.
+
+**17.2 [CRITICAL] D1 `loadPortfolioPositions` strips `assetType` and all custom fields (index.html:3340)**
+D1 load only mapped `{id, ticker, name, accountId, shares, avgCost, currency, companyId}`. After D1 load, all real_estate/bond/cash positions displayed as "other" with broken calculations.
+**Fix:** D1 load now merges localStorage extras back into D1-loaded positions, recovering `assetType`, `reLocation`, `bondType`, `cashAmount`, etc.
+
+**17.3 [WARN] Pie chart labels showed raw `real_estate` key with underscore (index.html:4195, 4628)**
+Dashboard pie chart grouped by type used raw `pos.assetType` string as label. `"real_estate"` displayed with underscore.
+**Fix:** Added capitalization logic: `real_estate` → `"Real Estate"`, others get `charAt(0).toUpperCase()`.
+
+**17.4 [WARN] Cash badge color identical to crypto badge (CSS line 424)**
+Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in the table.
+**Fix:** Changed cash badge to teal `rgba(129,236,236,.15)` with `#81ecec`.
+
+**17.5 [WARN] CSV export missing `assetType`, `Name`, `currentPrice` columns (index.html:2998)**
+`exportCsvPositions()` only exported `['Ticker','Account','Shares','Avg Cost','Currency','Created']`. Real estate positions exported as shares=1, avgCost=purchasePrice — misleading without type context.
+**Fix:** Expanded to `['Ticker','Name','Account','Type','Shares','Avg Cost','Current Price','Currency','Notes','Created']`.
+
+**17.6 [WARN] Snapshot positions missing `assetType` field (index.html:3968)**
+`takeSnapshot()` stored positions without `assetType`, losing type info for historical asset class breakdown.
+**Fix:** Added `assetType:pos.assetType||'stock'` to snapshot position objects.
 
 ---
 
