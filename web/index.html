@@ -9227,9 +9227,10 @@ function calcClProgress(ticker){
       const entries=data.entries||[];
       if(!entries.length){data.progress=0}else{
         entries.forEach(e=>{
-          if(e.numbersOk)filled++;total++;
-          if(e.thesisIntact)filled++;total++;
-          if(e.action)filled++;total++;
+          total+=3;
+          if(e.numbersOk)filled++;
+          if(e.thesisIntact)filled++;
+          if(e.action)filled++;
         });
         data.progress=total?Math.round(filled/total*100):0;
       }

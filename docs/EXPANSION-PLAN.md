@@ -22,9 +22,9 @@ All features are **ingyenes** (no paid services required). The only optional pai
 
 ---
 
-## Phase 11: Checklist Deepening — Company Details & Moat (~3 sessions)
+## Phase 11: Checklist Deepening — Company Details & Moat ✅ COMPLETE (2026-06-30)
 
-### 11.1 Company Details section expansion
+### 11.1 Company Details section expansion ✅
 - **Difficulty:** MEDIUM (2-3 hours)
 - **Cost:** Free
 - **What:** Add ~30 missing questions to CL_SECTIONS[0] (company_details)
@@ -78,7 +78,7 @@ All features are **ingyenes** (no paid services required). The only optional pai
 **KPIs (Finchat):**
 - `kpiTrend` (textarea) — "Finchat KPIs going in the right direction? Which ones?"
 
-### 11.2 Moat Analysis section expansion
+### 11.2 Moat Analysis section expansion ✅
 - **Difficulty:** MEDIUM (2-3 hours)
 - **Cost:** Free
 - **What:** Expand moat types from 6 to 12+, add Fake Moat check, Legacy vs Reinvestment moat
@@ -111,7 +111,7 @@ All features are **ingyenes** (no paid services required). The only optional pai
 - `productionAdvantage` (textarea) — "Production advantage: process complexity, patents, resource uniqueness, rate of cost change, indivisibility, distribution, purchasing, R&D, advertising scale"
 - `consumerAdvantage` (textarea) — "Consumer advantage: habit, experience goods, switching costs, network effects"
 
-### 11.3 SWOT + SPLEEN Analysis (new section 13)
+### 11.3 SWOT + SPLEEN Analysis (new section 12) ✅
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** New CL_SECTIONS entry with 10 textarea fields
@@ -129,7 +129,7 @@ All features are **ingyenes** (no paid services required). The only optional pai
 - `environmental` (textarea) — "Environmental factors"
 - `niche` (textarea) — "Niche/industry-specific factors"
 
-### 11.4 "Investment Case" fields in Buy/Sell Decision
+### 11.4 "Investment Case" fields in Buy/Sell Decision ✅
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Expand CL_SECTIONS[7] (buy_sell) with structured investment case
@@ -146,7 +146,7 @@ All features are **ingyenes** (no paid services required). The only optional pai
 - `shortSellerView` (textarea) — "What would a short seller say?"
 - `valueTrapRisk` (textarea) — "What would make this a value trap?"
 
-### 11.5 Management section expansion
+### 11.5 Management section expansion ✅
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Add ~10 fields to CL_SECTIONS[2] (management)
@@ -165,7 +165,7 @@ All features are **ingyenes** (no paid services required). The only optional pai
 - `hidesIssues` (textarea) — "Does management hide bad news? Candid with shareholders?"
 - `longTermOriented` (select: Yes / No / Unclear) — "Long-term orientation?"
 
-### 11.6 Industry section expansion
+### 11.6 Industry section expansion ✅
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Add ~10 fields to CL_SECTIONS[3] (industry)
@@ -187,7 +187,7 @@ All features are **ingyenes** (no paid services required). The only optional pai
 - `innovationEffect` (textarea) — "Does innovation improve product or just get passed to customer?"
 - `competitorProfitability` (textarea) — "Profitability of each key competitor?"
 
-### 11.7 "Edge Analysis" in Buy/Sell Decision
+### 11.7 "Edge Analysis" in Buy/Sell Decision ✅
 - **Difficulty:** EASY (30 min)
 - **Cost:** Free
 - **What:** Add 4 fields to buy_sell section
@@ -199,7 +199,7 @@ All features are **ingyenes** (no paid services required). The only optional pai
 - `kpiMisread` (textarea) — "Mi az a KPI, ami félre van értelmezve?"
 - `timeHorizonMismatch` (textarea) — "Időhorizont mismatch? (short-term vs long-term)"
 
-### 11.8 "Anti-Investment Thesis" — Sell Events tracking
+### 11.8 "Anti-Investment Thesis" — Sell Events tracking ✅ (simplified: static fields instead of dynamic list)
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Add dynamic sell events to buy_sell section (similar to dynamic_risks)
@@ -214,7 +214,7 @@ All features are **ingyenes** (no paid services required). The only optional pai
 
 Render similar to Risks section with status badges. Dashboard widget aggregates all ACTIVE sell events across owned companies.
 
-### 11.9 10K Analysis guide in Research Sources
+### 11.9 10K Analysis guide in Research Sources ✅
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Expand research_sources section with 10K sub-checklist
@@ -594,7 +594,7 @@ All with METRIC_TIPS tooltips.
 
 ## Phase 16: Review & Psychology Expansion (~1 session)
 
-### 16.1 Psychology section expansion
+### 16.1 Psychology section expansion ✅ (done early in Phase 11 session, 2026-06-30)
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Add ~8 fields to CL_SECTIONS[9] (psychology)
@@ -769,11 +769,12 @@ The CL_SECTIONS array is the single source of truth. Each section's `fields` arr
 - `type: 'rating10'` — 1-10 slider
 - `type: 'checkbox'` — boolean
 
-**Sub-grouping:** For sections with 20+ fields, add a `group` property to fields:
+**Sub-grouping:** Implemented as a `group` field type (not a property):
 ```js
-{k:'founded', label:'Founded', type:'text', group:'Basic Info'}
+{k:'_g_basicinfo', type:'group', label:'Basic Info'},
+{k:'founded', label:'Founded', type:'text', ph:'Year founded'},
 ```
-Then render with collapsible group headers. This prevents overwhelming UI.
+Group type renders as a styled divider/header. Skipped in progress calculation.
 
 ### Data migration
 - New fields auto-initialize as empty/null via `ensureChecklist()` — no migration needed
