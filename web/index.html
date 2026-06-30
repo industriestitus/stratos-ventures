@@ -1028,6 +1028,12 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       <div id="db-alerts-content"></div>
     </div>
 
+    <!-- Sell Triggers -->
+    <div class="db-widget" id="db-sell-triggers-widget">
+      <div class="db-widget-title">Sell Triggers <span id="db-sell-triggers-count" style="font-size:11px;color:var(--text2);font-weight:400"></span></div>
+      <div id="db-sell-triggers-content"></div>
+    </div>
+
     <!-- Benchmark -->
     <div class="db-widget" id="db-benchmark-widget">
       <div class="db-widget-title">Benchmark (S&P 500) <button onclick="fetchBenchmarkData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit">Refresh</button></div>
@@ -4554,6 +4560,7 @@ function renderDashboard(){
   renderDbNetWorth();
   renderDbSmithMetrics();
   renderDbAlerts();
+  renderDbSellTriggers();
   renderDbBenchmark();
   renderDbDipFinder();
   renderDbFiTracker();
@@ -4844,6 +4851,30 @@ function renderDbAlerts(){
     <span class="db-alert-ticker" onclick="showProfile('${escH(a.ticker)}')">${escH(a.ticker)}</span>
     <span class="db-alert-msg">${escH(a.msg)}</span>
     <span class="db-alert-val">${escH(String(a.value))}</span>
+  </div>`).join('');
+}
+
+// ---- 5B2: Sell Triggers ----
+function renderDbSellTriggers(){
+  const el=document.getElementById('db-sell-triggers-content');
+  const countEl=document.getElementById('db-sell-triggers-count');
+  const ownedTickers=new Set(pfPositions.map(p=>p.ticker));
+  const triggers=[];
+  ownedTickers.forEach(ticker=>{
+    const s=tStocks[ticker];if(!s)return;
+    const bs=(s.checklist&&s.checklist.sections&&s.checklist.sections.buy_sell)||{};
+    const answers=bs.answers||bs;
+    ['sellTrigger1','sellTrigger2','sellTrigger3'].forEach(k=>{
+      const text=answers[k];
+      if(text&&text.trim())triggers.push({ticker,name:s.name||ticker,text:text.trim()});
+    });
+  });
+  countEl.textContent=triggers.length?`(${triggers.length} across ${new Set(triggers.map(t=>t.ticker)).size} companies)`:'';
+  if(!ownedTickers.size){el.innerHTML='<div class="db-empty">Add positions to see sell triggers.</div>';return}
+  if(!triggers.length){el.innerHTML='<div style="color:var(--text2);font-size:12px;padding:8px 0">No sell triggers set. Add them in each company\'s Checklist → Buy/Sell Decision.</div>';return}
+  el.innerHTML=triggers.map(t=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+    <span style="color:var(--accent);font-weight:600;font-size:12px;min-width:50px;cursor:pointer" onclick="showProfile('${escH(t.ticker)}')">${escH(t.ticker)}</span>
+    <span style="font-size:12px;color:var(--text);line-height:1.4">${escH(t.text)}</span>
   </div>`).join('');
 }
 
