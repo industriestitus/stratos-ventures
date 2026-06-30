@@ -885,7 +885,11 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 </style>
 </head>
 <body>
-<script>if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttribute('data-theme','light')</script>
+<script>
+if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttribute('data-theme','light');
+(function(){var enc=localStorage.getItem('enc_salt'),skip=localStorage.getItem('enc_skipped');if(enc||!skip)document.documentElement.classList.add('app-locked')})();
+</script>
+<style>html.app-locked #sidebar,html.app-locked #main-content,html.app-locked #bottom-nav{visibility:hidden}</style>
 
 <div id="lock-screen" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg);align-items:center;justify-content:center">
   <div style="width:100%;max-width:340px;padding:0 16px;text-align:center">
@@ -2313,6 +2317,7 @@ async function unlockApp(){
   if(!ok){err.textContent='Wrong password';err.style.display='block';return}
   _encPass=pass;
   document.getElementById('lock-screen').style.display='none';
+  document.documentElement.classList.remove('app-locked');
   autoLoad();
 }
 
@@ -2341,11 +2346,13 @@ async function setupEncryption(){
 function skipEncryption(){
   localStorage.setItem('enc_skipped','1');
   document.getElementById('lock-screen').style.display='none';
+  document.documentElement.classList.remove('app-locked');
   autoLoad();
 }
 
 function finishSetup(){
   document.getElementById('lock-screen').style.display='none';
+  document.documentElement.classList.remove('app-locked');
   autoLoad();
   updateEncStatus();
   cloudSave().catch(()=>{});
@@ -9742,6 +9749,7 @@ window.addEventListener('load',()=>{
     document.getElementById('lock-screen').style.display='flex';
     showLockView('setup');
   }else{
+    document.documentElement.classList.remove('app-locked');
     autoLoad();
   }
 });
