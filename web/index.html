@@ -3271,27 +3271,27 @@ let pfPositions=[];
 let pfTransactions=[];
 
 async function loadPortfolioAccounts(){
-  if(d1Mode){try{const r=await API.get('broker_accounts');pfAccounts=(r.data||[]).map(a=>({id:a.id,name:a.name,currency:a.currency,isActive:!!a.is_active}))}catch(e){console.error('D1 load accounts:',e)};return}
+  if(d1Mode){try{const r=await API.get('broker_accounts');pfAccounts=(r.data||[]).map(a=>({id:a.id,name:a.name,currency:a.currency,isActive:!!a.is_active}));return}catch(e){console.error('D1 load accounts, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_accounts_v1'));if(Array.isArray(d))pfAccounts=d}catch(e){}
 }
 function savePortfolioAccounts(){
-  if(d1Mode){API.scheduleSave('pfAccounts',async()=>{await API.post('broker_accounts/batch',{items:pfAccounts.map(a=>({id:a.id,name:a.name,currency:a.currency,is_active:a.isActive!==false?1:0}))})});return}
+  if(d1Mode){API.scheduleSave('pfAccounts',async()=>{await API.post('broker_accounts/batch',{items:pfAccounts.map(a=>({id:a.id,name:a.name,currency:a.currency,is_active:a.isActive!==false?1:0}))})})}
   try{localStorage.setItem('portfolio_accounts_v1',JSON.stringify(pfAccounts))}catch(e){showToast('Storage full — could not save accounts','error')}
 }
 async function loadPortfolioPositions(){
-  if(d1Mode){try{const r=await API.get('positions');pfPositions=(r.data||[]).map(p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:p.shares,avgCost:p.avg_cost,currency:(s?s.currency:'')||'USD',companyId:p.company_id}})}catch(e){console.error('D1 load positions:',e)};return}
+  if(d1Mode){try{const r=await API.get('positions');pfPositions=(r.data||[]).map(p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:p.shares,avgCost:p.avg_cost,currency:(s?s.currency:'')||'USD',companyId:p.company_id}});return}catch(e){console.error('D1 load positions, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(d))pfPositions=d}catch(e){}
 }
 function savePortfolioPositions(){
-  if(d1Mode){API.scheduleSave('pfPositions',async()=>{await API.post('positions/batch',{items:pfPositions.map(p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:p.shares,avg_cost:p.avgCost}))})});return}
+  if(d1Mode){API.scheduleSave('pfPositions',async()=>{await API.post('positions/batch',{items:pfPositions.map(p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:p.shares,avg_cost:p.avgCost}))})})}
   try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){showToast('Storage full — could not save positions','error')}
 }
 async function loadPortfolioTransactions(){
-  if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=(r.data||[]).map(t=>({id:t.id,ticker:_d1CompanyMap[t.company_id]||t.symbol||'',accountId:t.account_id,type:t.transaction_type,date:t.transaction_date,shares:t.shares,pricePerShare:t.price_per_share,totalAmount:t.total_amount,fees:t.fees,currency:t.currency,notes:t.notes,companyId:t.company_id}))}catch(e){console.error('D1 load transactions:',e)};return}
+  if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=(r.data||[]).map(t=>({id:t.id,ticker:_d1CompanyMap[t.company_id]||t.symbol||'',accountId:t.account_id,type:t.transaction_type,date:t.transaction_date,shares:t.shares,pricePerShare:t.price_per_share,totalAmount:t.total_amount,fees:t.fees,currency:t.currency,notes:t.notes,companyId:t.company_id}));return}catch(e){console.error('D1 load transactions, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_transactions_v1'));if(Array.isArray(d))pfTransactions=d}catch(e){}
 }
 function savePortfolioTransactions(){
-  if(d1Mode){API.scheduleSave('pfTransactions',async()=>{await API.post('transactions/batch',{items:pfTransactions.map(t=>({id:t.id,company_id:t.companyId||_tickerToD1Id(t.ticker),account_id:t.accountId,transaction_type:t.type,transaction_date:t.date,shares:t.shares,price_per_share:t.pricePerShare,total_amount:t.totalAmount,fees:t.fees||0,currency:t.currency||'USD',notes:t.notes||''}))})});return}
+  if(d1Mode){API.scheduleSave('pfTransactions',async()=>{await API.post('transactions/batch',{items:pfTransactions.map(t=>({id:t.id,company_id:t.companyId||_tickerToD1Id(t.ticker),account_id:t.accountId,transaction_type:t.type,transaction_date:t.date,shares:t.shares,price_per_share:t.pricePerShare,total_amount:t.totalAmount,fees:t.fees||0,currency:t.currency||'USD',notes:t.notes||''}))})})}
   try{localStorage.setItem('portfolio_transactions_v1',JSON.stringify(pfTransactions))}catch(e){showToast('Storage full — could not save transactions','error')}
 }
 
@@ -3783,7 +3783,8 @@ async function loadPortfolioSnapshots(){
       const sp=await API.get('snapshot_positions?limit=5000');
       (sp.data||[]).forEach(p=>{const snap=pfSnapshots.find(s=>s.id===p.snapshot_id);if(snap)snap.positions.push({ticker:_d1CompanyMap[p.company_id]||'?',accountId:p.account_id,shares:p.shares,pricePerShare:p.price_per_share,marketValue:p.market_value,currency:p.currency,intent:p.intent})});
     }
-  }catch(e){console.error('D1 load snapshots:',e)};return}
+    return;
+  }catch(e){console.error('D1 load snapshots, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_snapshots_v1'));if(Array.isArray(d))pfSnapshots=d}catch(e){}
 }
 function savePortfolioSnapshots(){
@@ -3796,7 +3797,7 @@ function savePortfolioSnapshots(){
     const posItems=[];
     pfSnapshots.forEach(s=>{const sid=dateToId[s.date];if(!sid)return;(s.positions||[]).forEach(p=>{const cid=_tickerToD1Id(p.ticker);if(!cid)return;posItems.push({snapshot_id:sid,company_id:cid,account_id:p.accountId||null,shares:p.shares||0,price_per_share:p.pricePerShare||0,market_value:p.marketValue||0,currency:p.currency||'USD',intent:p.intent||'hold'})})});
     if(posItems.length)await API.post('snapshot_positions/batch',{items:posItems});
-  });return}
+  })}
   try{localStorage.setItem('portfolio_snapshots_v1',JSON.stringify(pfSnapshots))}catch(e){showToast('Storage full','error')}
 }
 
@@ -4133,7 +4134,8 @@ async function loadExchangeRates(){
     if(cfg){const v=JSON.parse(cfg.value||'{}');pfExchangeRates.baseCurrency=v.baseCurrency||'HUF';pfExchangeRates.lastFetched=v.lastFetched||null}
     const r=await API.get('exchange_rates?limit=500');
     pfExchangeRates.rates={};(r.data||[]).forEach(er=>{const pair=er.from_currency+'/'+er.to_currency;pfExchangeRates.rates[pair]=er.rate});
-  }catch(e){console.error('D1 load exchange rates:',e)};return}
+    return;
+  }catch(e){console.error('D1 load exchange rates, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_exchange_rates_v1'));if(d&&typeof d==='object'){pfExchangeRates=d;if(!pfExchangeRates.rates)pfExchangeRates.rates={};if(!pfExchangeRates.baseCurrency)pfExchangeRates.baseCurrency='HUF'}}catch(e){}
 }
 function saveExchangeRates(){
@@ -4141,7 +4143,7 @@ function saveExchangeRates(){
     await API.put('app_settings/exchange_rates_config',{key:'exchange_rates_config',value:JSON.stringify({baseCurrency:pfExchangeRates.baseCurrency,lastFetched:pfExchangeRates.lastFetched})});
     const items=Object.entries(pfExchangeRates.rates||{}).map(([pair,rate])=>{const [from,to]=pair.includes('/')?pair.split('/'):[pair.slice(0,3),pair.slice(3)];return{rate_date:pfExchangeRates.lastFetched||new Date().toISOString(),from_currency:from,to_currency:to,rate}});
     if(items.length)await API.post('exchange_rates/batch',{items});
-  });return}
+  })}
   try{localStorage.setItem('portfolio_exchange_rates_v1',JSON.stringify(pfExchangeRates))}catch(e){}
 }
 
@@ -4344,35 +4346,35 @@ let dbBenchmark={ticker:'SPY',prices:[],fetchedAt:null};
 let db52wHighs={};
 
 async function loadDashTodos(){
-  if(d1Mode){try{const r=await API.get('general_todos?limit=500');dbTodos=(r.data||[]).map(t=>({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order}))}catch(e){console.error('D1 load todos:',e)};return}
+  if(d1Mode){try{const r=await API.get('general_todos?limit=500');dbTodos=(r.data||[]).map(t=>({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order}));return}catch(e){console.error('D1 load todos, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_todos_v1'));if(Array.isArray(d))dbTodos=d}catch(e){}
 }
 function saveDashTodos(){
-  if(d1Mode){API.scheduleSave('dashTodos',async()=>{await API.post('general_todos/batch',{items:dbTodos.map(t=>({id:t.id,title:t.text||'',due_date:t.due||null,is_done:t.done?1:0,sort_order:t.sortOrder||0}))})});return}
+  if(d1Mode){API.scheduleSave('dashTodos',async()=>{await API.post('general_todos/batch',{items:dbTodos.map(t=>({id:t.id,title:t.text||'',due_date:t.due||null,is_done:t.done?1:0,sort_order:t.sortOrder||0}))})})}
   try{localStorage.setItem('dashboard_todos_v1',JSON.stringify(dbTodos))}catch(e){showToast('Storage full','error')}
 }
 async function loadDashFiSettings(){
-  if(d1Mode){try{const r=await API.get('app_settings/fi_settings');if(r){const v=JSON.parse(r.value||'{}');Object.assign(dbFiSettings,v)}}catch(e){console.error('D1 load FI:',e)};return}
+  if(d1Mode){try{const r=await API.get('app_settings/fi_settings');if(r){const v=JSON.parse(r.value||'{}');Object.assign(dbFiSettings,v)};return}catch(e){console.error('D1 load FI, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_fi_settings_v1'));if(d&&typeof d==='object')Object.assign(dbFiSettings,d)}catch(e){}
 }
 function saveDashFiSettings(){
-  if(d1Mode){API.scheduleSave('dashFi',async()=>{await API.put('app_settings/fi_settings',{key:'fi_settings',value:JSON.stringify(dbFiSettings)})});return}
+  if(d1Mode){API.scheduleSave('dashFi',async()=>{await API.put('app_settings/fi_settings',{key:'fi_settings',value:JSON.stringify(dbFiSettings)})})}
   try{localStorage.setItem('dashboard_fi_settings_v1',JSON.stringify(dbFiSettings))}catch(e){}
 }
 async function loadDashBenchmark(){
-  if(d1Mode){try{const r=await API.get('app_settings/benchmark');if(r){dbBenchmark=JSON.parse(r.value||'{}')}}catch(e){console.error('D1 load benchmark:',e)};return}
+  if(d1Mode){try{const r=await API.get('app_settings/benchmark');if(r){dbBenchmark=JSON.parse(r.value||'{}')};return}catch(e){console.error('D1 load benchmark, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_benchmark_v1'));if(d&&typeof d==='object')dbBenchmark=d}catch(e){}
 }
 function saveDashBenchmark(){
-  if(d1Mode){API.scheduleSave('dashBench',async()=>{await API.put('app_settings/benchmark',{key:'benchmark',value:JSON.stringify(dbBenchmark)})});return}
+  if(d1Mode){API.scheduleSave('dashBench',async()=>{await API.put('app_settings/benchmark',{key:'benchmark',value:JSON.stringify(dbBenchmark)})})}
   try{localStorage.setItem('dashboard_benchmark_v1',JSON.stringify(dbBenchmark))}catch(e){}
 }
 async function loadDash52wHighs(){
-  if(d1Mode){try{const r=await API.get('app_settings/52w_highs');if(r){db52wHighs=JSON.parse(r.value||'{}')}}catch(e){console.error('D1 load 52w:',e)};return}
+  if(d1Mode){try{const r=await API.get('app_settings/52w_highs');if(r){db52wHighs=JSON.parse(r.value||'{}')};return}catch(e){console.error('D1 load 52w, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_52w_highs_v1'));if(d&&typeof d==='object')db52wHighs=d}catch(e){}
 }
 function saveDash52wHighs(){
-  if(d1Mode){API.scheduleSave('dash52w',async()=>{await API.put('app_settings/52w_highs',{key:'52w_highs',value:JSON.stringify(db52wHighs)})});return}
+  if(d1Mode){API.scheduleSave('dash52w',async()=>{await API.put('app_settings/52w_highs',{key:'52w_highs',value:JSON.stringify(db52wHighs)})})}
   try{localStorage.setItem('dashboard_52w_highs_v1',JSON.stringify(db52wHighs))}catch(e){}
 }
 
@@ -4899,7 +4901,8 @@ async function loadResearchNotes(){
       researchNotes[noteType]=(r.data||[]).map(n=>({id:n.id,title:n.title,content:n.content,date:n.note_date,ticker:_d1CompanyMap[n.company_id]||null,source:n.source_name,sourceName:n.source_name,sourceUrl:n.source_url,pinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[]}));
       researchNotes[noteType].forEach(n=>{if(n.id>=researchNotes._nextId)researchNotes._nextId=n.id+1});
     }
-  }catch(e){console.error('D1 load notes:',e)};return}
+    return;
+  }catch(e){console.error('D1 load notes, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('research_notes_v1'));if(d&&typeof d==='object'){researchNotes=d;if(!researchNotes._nextId)researchNotes._nextId=1;if(!researchNotes.journal)researchNotes.journal=[];if(!researchNotes.news)researchNotes.news=[];if(!researchNotes.market)researchNotes.market=[]}}catch(e){}
 }
 function saveResearchNotes(){
@@ -4908,7 +4911,7 @@ function saveResearchNotes(){
       const items=(researchNotes[noteType]||[]).map(n=>({id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:n.title||'',content:n.content||n.excerpt||n.comment||'',note_date:n.date||new Date().toISOString().slice(0,10),source_name:n.sourceName||n.source||'',source_url:n.sourceUrl||'',is_pinned:n.pinned?1:0,quarter:n.quarter||null}));
       if(items.length)await API.post('notes/batch',{items});
     }
-  });return}
+  })}
   try{localStorage.setItem('research_notes_v1',JSON.stringify(researchNotes))}catch(e){showToast('Storage full — export your data','error',8000)}
 }
 
@@ -6454,7 +6457,7 @@ function saveTrackerStocks(){
       if(clItems.length)batch.push(API.postBatch('checklist_answers/batch',clItems));
     }
     if(batch.length)await Promise.all(batch);
-  });return}
+  })}
   try{localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}catch(e){showToast('Storage full — export your data to avoid data loss','error',8000)}
 }
 
@@ -6496,7 +6499,8 @@ async function loadTrackerStocks(){
     tStocks={};
     const fullLoads=companies.map(c=>API.get('companies/'+c.symbol+'/full').then(full=>{tStocks[c.symbol]=_d1CompanyToTStock(full)}).catch(e=>{tStocks[c.symbol]={ticker:c.symbol,name:c.name||c.symbol};console.error('D1 load company '+c.symbol+':',e)}));
     await Promise.all(fullLoads);
-  }catch(e){console.error('D1 load trackerStocks:',e)};return}
+    return;
+  }catch(e){console.error('D1 load trackerStocks, falling back to localStorage:',e)}}
   const d=localStorage.getItem('tracker_stocks_v1');
   if(d){try{tStocks=JSON.parse(d)}catch(e){tStocks={}}}
   if(!Object.keys(tStocks).length){
@@ -6528,7 +6532,8 @@ async function loadDividendHistory(){
     Object.entries(byTicker).forEach(([ticker,hist])=>{
       divHistory[ticker]={history:hist,lastFetched:new Date().toISOString()};
     });
-  }catch(e){console.error('D1 load dividends:',e)};return}
+    return;
+  }catch(e){console.error('D1 load dividends, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dividend_history_v1'));if(d&&typeof d==='object')divHistory=d}catch(e){}
 }
 function saveDividendHistory(){
@@ -6539,15 +6544,15 @@ function saveDividendHistory(){
       for(const d of arr){const cid=d.companyId||_tickerToD1Id(ticker);if(!cid)continue;items.push({company_id:cid,ex_date:d.exDate||d.date||'',pay_date:d.payDate||d.paymentDate||null,amount:d.amount||d.adjDividend||d.dividend||0,currency:d.currency||'USD',frequency:d.frequency||null})}
     }
     if(items.length)await API.post('dividend_history/batch',{items});
-  });return}
+  })}
   try{localStorage.setItem('dividend_history_v1',JSON.stringify(divHistory))}catch(e){showToast('Storage full — could not save dividend data','error')}
 }
 async function loadDivSettings(){
-  if(d1Mode){try{const r=await API.get('app_settings/dividend_settings');if(r){Object.assign(divSettings,JSON.parse(r.value||'{}'))}}catch(e){console.error('D1 load div settings:',e)};return}
+  if(d1Mode){try{const r=await API.get('app_settings/dividend_settings');if(r){Object.assign(divSettings,JSON.parse(r.value||'{}'))};return}catch(e){console.error('D1 load div settings, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dividend_settings_v1'));if(d&&typeof d==='object')Object.assign(divSettings,d)}catch(e){}
 }
 function saveDivSettings(){
-  if(d1Mode){API.scheduleSave('divSettings',async()=>{await API.put('app_settings/dividend_settings',{key:'dividend_settings',value:JSON.stringify(divSettings)})});return}
+  if(d1Mode){API.scheduleSave('divSettings',async()=>{await API.put('app_settings/dividend_settings',{key:'dividend_settings',value:JSON.stringify(divSettings)})})}
   try{localStorage.setItem('dividend_settings_v1',JSON.stringify(divSettings))}catch(e){}
 }
 
@@ -8330,7 +8335,8 @@ async function loadFramework(){
     (r.data||[]).forEach(e=>{const arr=catMap[e.category];if(arr&&fwData[arr]){const isList=(arr==='idealTraits'||arr==='avoidList');fwData[arr].push({id:e.id,title:e.title,label:isList?e.title:'',content:e.content,category:isList?e.content:'',sortOrder:e.sort_order});if(e.id>=fwData._nextId)fwData._nextId=e.id+1}});
     const sw=await API.get('app_settings/scoring_weights').catch(()=>null);
     if(sw)fwData.scoringWeights=JSON.parse(sw.value||'{}');
-  }catch(e){console.error('D1 load framework:',e)};return}
+    return;
+  }catch(e){console.error('D1 load framework, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('framework_v1'));if(d&&typeof d==='object'){fwData=d;if(!fwData.principles)fwData.principles=[];if(!fwData.portfolioRules)fwData.portfolioRules=[];if(!fwData.idealTraits)fwData.idealTraits=[];if(!fwData.avoidList)fwData.avoidList=[];if(!fwData.scoringWeights)fwData.scoringWeights={cagr:1,conviction:1,risk:1};if(!fwData._nextId)fwData._nextId=1}}catch(e){}
 }
 function saveFramework(){
@@ -8340,7 +8346,7 @@ function saveFramework(){
     for(const[arrKey,category]of Object.entries(catMap)){const isList=(arrKey==='idealTraits'||arrKey==='avoidList');(fwData[arrKey]||[]).forEach((e,i)=>{items.push({id:e.id||undefined,category,title:isList?(e.label||''):(e.title||''),content:isList?(e.category||''):(e.content||''),sort_order:i})})}
     if(items.length)await API.post('framework_entries/batch',{items});
     await API.put('app_settings/scoring_weights',{key:'scoring_weights',value:JSON.stringify(fwData.scoringWeights||{})});
-  });return}
+  })}
   try{localStorage.setItem('framework_v1',JSON.stringify(fwData))}catch(e){showToast('Storage full — export your data','error',8000)}
 }
 
@@ -9139,14 +9145,15 @@ async function loadReviews(){
     const r=await API.get('reviews?limit=1000');
     rvData={entries:[],_nextId:1};
     (r.data||[]).forEach(rv=>{rvData.entries.push({id:rv.id,type:rv.review_type,date:rv.review_date,companyTicker:_d1CompanyMap[rv.company_id]||null,companyId:rv.company_id,answers:JSON.parse(rv.answers_json||'{}'),summary:rv.summary||''});if(rv.id>=rvData._nextId)rvData._nextId=rv.id+1});
-  }catch(e){console.error('D1 load reviews:',e)};return}
+    return;
+  }catch(e){console.error('D1 load reviews, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('reviews_v1'));if(d&&typeof d==='object'){rvData=d;if(!rvData.entries)rvData.entries=[];if(!rvData._nextId)rvData._nextId=1}}catch(e){}
 }
 function saveReviews(){
   if(d1Mode){API.scheduleSave('reviews',async()=>{
     const items=rvData.entries.map(e=>({id:e.id||undefined,review_type:e.type||'weekly',review_date:e.date||'',company_id:e.companyId||(e.companyTicker?_tickerToD1Id(e.companyTicker):null),answers_json:JSON.stringify(e.answers||{}),summary:e.summary||''}));
     if(items.length)await API.post('reviews/batch',{items});
-  });return}
+  })}
   try{localStorage.setItem('reviews_v1',JSON.stringify(rvData))}catch(e){showToast('Storage full — export your data','error',8000)}
 }
 
