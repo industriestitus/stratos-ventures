@@ -5912,6 +5912,7 @@ async function fetchHistoricalCharts(ticker){
     const cfData=histRaw?.cfData;
     if(histRaw?.bsData?.length&&tStocks[ticker])tStocks[ticker]._bsData=histRaw.bsData;
     if(histRaw?.incData?.length&&tStocks[ticker])tStocks[ticker]._isData=histRaw.incData.slice(0,3);
+    if(histRaw?.cfData?.length&&tStocks[ticker])tStocks[ticker]._cfData=histRaw.cfData.slice(0,3);
     if(profileTicker!==startTicker)return;
     const loading=document.getElementById('cp-hist-loading');
     const container=document.getElementById('cp-hist-charts');
@@ -6471,7 +6472,7 @@ function saveTrackerStocks(){
     }
     if(batch.length)await Promise.all(batch);
   })}
-  try{const _transient=['_bsData','_isData','_source','_origData'];
+  try{const _transient=['_bsData','_isData','_cfData','_source','_origData'];
     const cleaned={};Object.entries(tStocks).forEach(([k,v])=>{const c={...v};_transient.forEach(t=>delete c[t]);cleaned[k]=c});
     localStorage.setItem('tracker_stocks_v1',JSON.stringify(cleaned))}catch(e){showToast('Storage full — export your data to avoid data loss','error',8000)}
 }
@@ -8897,12 +8898,104 @@ const YELLOW_FLAGS=[
 ];
 
 const CL_THRESHOLDS=[
-  {k:'revenueGrowthOk',label:'Revenue growing (3yr CAGR > 0)'},
-  {k:'marginTrendOk',label:'Margins stable or expanding'},
-  {k:'debtLevelOk',label:'Debt manageable (D/E < 2)'},
-  {k:'fcfPositiveOk',label:'Free Cash Flow positive'},
-  {k:'roicAbove15Ok',label:'ROIC > 15%'},
-  {k:'sbcReasonableOk',label:'SBC reasonable (SBC/Rev < 10%)'}
+  {k:'_g_profitability',type:'group',label:'Profitability'},
+  {k:'grossMarginOk',label:'Gross margin > 40%',
+    auto:(s)=>s.grossMargin!=null?s.grossMargin>40:null,
+    val:(s)=>s.grossMargin!=null?s.grossMargin.toFixed(1)+'%':null},
+  {k:'netMarginOk',label:'Net margin > 10%',
+    auto:(s)=>s.netMargin!=null?s.netMargin>10:null,
+    val:(s)=>s.netMargin!=null?s.netMargin.toFixed(1)+'%':null},
+  {k:'marginTrendOk',label:'Margins stable or expanding (3yr)',
+    auto:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[2]||!is[0].revenue||!is[2].revenue)return null;
+      const m0=is[0].netIncome/is[0].revenue;const m2=is[2].netIncome/is[2].revenue;return m0>=m2*0.9},
+    val:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[2]||!is[0].revenue||!is[2].revenue)return null;
+      const m0=(is[0].netIncome/is[0].revenue*100).toFixed(1);const m2=(is[2].netIncome/is[2].revenue*100).toFixed(1);return m2+'% → '+m0+'%'}},
+  {k:'roicAbove15Ok',label:'ROIC > 15%',
+    auto:(s)=>s.roic!=null?s.roic>15:null,
+    val:(s)=>s.roic!=null?s.roic.toFixed(1)+'%':null},
+  {k:'roic5yrOk',label:'ROIC > 9%',
+    auto:(s)=>s.roic!=null?s.roic>9:null,
+    val:(s)=>s.roic!=null?s.roic.toFixed(1)+'%':null},
+  {k:'_g_growth',type:'group',label:'Growth'},
+  {k:'revenueGrowthOk',label:'Revenue growing (3yr CAGR > 0)',
+    auto:(s)=>s.revCAGR3!=null?s.revCAGR3>0:null,
+    val:(s)=>s.revCAGR3!=null?s.revCAGR3.toFixed(1)+'%':null},
+  {k:'sharesDecreasingOk',label:'Shares outstanding decreasing (3yr)',
+    auto:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[2])return null;
+      const sh0=is[0].weightedAverageShsOutDil||is[0].weightedAverageShsOut;
+      const sh2=is[2].weightedAverageShsOutDil||is[2].weightedAverageShsOut;
+      if(!sh0||!sh2)return null;return sh0<=sh2},
+    val:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[2])return null;
+      const sh0=is[0].weightedAverageShsOutDil||is[0].weightedAverageShsOut;
+      const sh2=is[2].weightedAverageShsOutDil||is[2].weightedAverageShsOut;
+      if(!sh0||!sh2)return null;return((sh0/sh2-1)*100).toFixed(1)+'%'}},
+  {k:'_g_cashflow',type:'group',label:'Cash Flow'},
+  {k:'fcfPositiveOk',label:'Free Cash Flow positive',
+    auto:(s)=>s.fcf!=null?s.fcf>0:null,
+    val:(s)=>s.fcf!=null?fmt(s.fcf):null},
+  {k:'fcfRevenueOk',label:'FCF / Revenue > 15%',
+    auto:(s)=>s.fcf!=null&&s.revenue?s.fcf/s.revenue>0.15:null,
+    val:(s)=>s.fcf!=null&&s.revenue?(s.fcf/s.revenue*100).toFixed(1)+'%':null},
+  {k:'fcfConversionOk',label:'FCF / Net Income > 90% (FCF conversion)',
+    auto:(s)=>s.fcf!=null&&s.profit&&s.profit>0?s.fcf/s.profit>0.9:null,
+    val:(s)=>s.fcf!=null&&s.profit&&s.profit>0?(s.fcf/s.profit*100).toFixed(0)+'%':null},
+  {k:'capexOcfOk',label:'CAPEX / Operating CF < 15%',
+    auto:(s)=>{const cf=s._cfData?.[0];const ocf=s.ocf;if(!cf||!ocf||ocf<=0)return null;
+      const capex=Math.abs(cf.capitalExpenditure||0);if(!capex)return null;return capex/ocf<0.15},
+    val:(s)=>{const cf=s._cfData?.[0];const ocf=s.ocf;if(!cf||!ocf||ocf<=0)return null;
+      const capex=Math.abs(cf.capitalExpenditure||0);if(!capex)return null;return(capex/ocf*100).toFixed(1)+'%'}},
+  {k:'capexSalesOk',label:'CAPEX / Sales < 5%',
+    auto:(s)=>{const cf=s._cfData?.[0];if(!cf||!s.revenue)return null;
+      const capex=Math.abs(cf.capitalExpenditure||0);if(!capex)return null;return capex/s.revenue<0.05},
+    val:(s)=>{const cf=s._cfData?.[0];if(!cf||!s.revenue)return null;
+      const capex=Math.abs(cf.capitalExpenditure||0);if(!capex)return null;return(capex/s.revenue*100).toFixed(1)+'%'}},
+  {k:'_g_expenses',type:'group',label:'Expense Structure'},
+  {k:'deprGrossOk',label:'Depreciation / Gross Profit < 10%',
+    auto:(s)=>{const is=s._isData?.[0];if(!is||!is.grossProfit)return null;
+      const depr=is.depreciationAndAmortization||0;if(!depr)return null;return depr/is.grossProfit<0.10},
+    val:(s)=>{const is=s._isData?.[0];if(!is||!is.grossProfit)return null;
+      const depr=is.depreciationAndAmortization||0;if(!depr)return null;return(depr/is.grossProfit*100).toFixed(1)+'%'}},
+  {k:'interestOk',label:'Interest / Operating Income < 15%',
+    auto:(s)=>{const is=s._isData?.[0];if(!is||!is.operatingIncome||is.operatingIncome<=0)return null;
+      const ie=is.interestExpense||0;if(!ie)return null;return Math.abs(ie)/is.operatingIncome<0.15},
+    val:(s)=>{const is=s._isData?.[0];if(!is||!is.operatingIncome||is.operatingIncome<=0)return null;
+      const ie=is.interestExpense||0;if(!ie)return null;return(Math.abs(ie)/is.operatingIncome*100).toFixed(1)+'%'}},
+  {k:'rdOk',label:'R&D < 30% of revenue',
+    auto:(s)=>{const is=s._isData?.[0];if(!is||!s.revenue)return null;
+      const rd=is.researchAndDevelopmentExpenses||0;if(!rd)return null;return rd/s.revenue<0.30},
+    val:(s)=>{const is=s._isData?.[0];if(!is||!s.revenue)return null;
+      const rd=is.researchAndDevelopmentExpenses||0;if(!rd)return null;return(rd/s.revenue*100).toFixed(1)+'%'}},
+  {k:'sgaOk',label:'SG&A < 30% of revenue',
+    auto:(s)=>{const is=s._isData?.[0];if(!is||!s.revenue)return null;
+      const sga=is.sellingGeneralAndAdministrativeExpenses||0;if(!sga)return null;return sga/s.revenue<0.30},
+    val:(s)=>{const is=s._isData?.[0];if(!is||!s.revenue)return null;
+      const sga=is.sellingGeneralAndAdministrativeExpenses||0;if(!sga)return null;return(sga/s.revenue*100).toFixed(1)+'%'}},
+  {k:'sbcReasonableOk',label:'SBC reasonable (SBC/Rev < 10%)',
+    auto:(s)=>s.sbc!=null&&s.revenue?(s.sbc/s.revenue*100)<10:null,
+    val:(s)=>s.sbc!=null&&s.revenue?(s.sbc/s.revenue*100).toFixed(1)+'%':null},
+  {k:'_g_balance',type:'group',label:'Balance Sheet'},
+  {k:'debtLevelOk',label:'Debt manageable (D/E < 1.0)',
+    auto:(s)=>s.debtEquity!=null?s.debtEquity>=0&&s.debtEquity<1.0:null,
+    val:(s)=>s.debtEquity!=null?s.debtEquity.toFixed(2):null},
+  {k:'currentRatioOk',label:'Current ratio > 1.5',
+    auto:(s)=>s.currentRatio!=null?s.currentRatio>1.5:null,
+    val:(s)=>s.currentRatio!=null?s.currentRatio.toFixed(2):null},
+  {k:'netDebtFcfOk',label:'Net debt / FCF < 5',
+    auto:(s)=>{const nd=(s.totalDebt||0)-(s.totalCash||0);if(s.fcf==null||s.fcf<=0)return null;
+      if(nd<=0)return true;return nd/s.fcf<5},
+    val:(s)=>{const nd=(s.totalDebt||0)-(s.totalCash||0);if(s.fcf==null||s.fcf<=0)return null;
+      if(nd<=0)return'Net cash';return(nd/s.fcf).toFixed(1)+'x'}},
+  {k:'interestCoverageOk',label:'EBIT / Interest > 10× (interest coverage)',
+    auto:(s)=>{const is=s._isData?.[0];if(!is||!is.operatingIncome||is.operatingIncome<=0)return null;
+      const ie=Math.abs(is.interestExpense||0);if(!ie)return true;return is.operatingIncome/ie>10},
+    val:(s)=>{const is=s._isData?.[0];if(!is||!is.operatingIncome||is.operatingIncome<=0)return null;
+      const ie=Math.abs(is.interestExpense||0);if(!ie)return'No debt';return(is.operatingIncome/ie).toFixed(1)+'x'}},
+  {k:'_g_valuation',type:'group',label:'Valuation'},
+  {k:'peOk',label:'P/E < 22.5',
+    auto:(s)=>{if(!s.price||!s.profit||s.profit<=0||!s.marketCap)return null;
+      const pe=s.marketCap/s.profit;return pe<22.5},
+    val:(s)=>{if(!s.price||!s.profit||s.profit<=0||!s.marketCap)return null;
+      return(s.marketCap/s.profit).toFixed(1)}}
 ];
 
 let clExpanded={};
@@ -9145,19 +9238,19 @@ function renderClFinancials(ticker,data){
 
   h+=`<div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Financial Thresholds</div>`;
   CL_THRESHOLDS.forEach(t=>{
-    let autoVal=null;
-    if(t.k==='revenueGrowthOk'&&s.revCAGR3!=null)autoVal=s.revCAGR3>0;
-    if(t.k==='marginTrendOk'&&s.netMargin!=null)autoVal=s.netMargin>0;
-    if(t.k==='debtLevelOk'&&s.debtEquity!=null)autoVal=s.debtEquity<2;
-    if(t.k==='fcfPositiveOk'&&s.fcf!=null)autoVal=s.fcf>0;
-    if(t.k==='roicAbove15Ok'&&s.roic!=null)autoVal=s.roic>15;
-    if(t.k==='sbcReasonableOk'&&s.sbc!=null&&s.revenue)autoVal=(s.sbc/s.revenue*100)<10;
+    if(t.type==='group'){
+      h+=`<div style="font-size:11px;font-weight:600;color:var(--accent);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.5px">${escH(t.label)}</div>`;
+      return;
+    }
+    const autoVal=t.auto?t.auto(s):null;
     const val=data[t.k]!=null?data[t.k]:autoVal;
     const icon=val===true?'✅':val===false?'❌':'⬜';
+    const dispVal=t.val?t.val(s):null;
     h+=`<div class="cl-threshold">
       <span class="cl-threshold-icon">${icon}</span>
-      <span class="cl-threshold-label">${t.label}</span>
-      <select style="width:80px;font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:4px;color:var(--text)" onchange="saveClField('${escH(ticker)}','financials','${t.k}',this.value==='true'?true:this.value==='false'?false:null)">
+      <span class="cl-threshold-label">${escH(t.label)}</span>
+      ${dispVal!=null?`<span style="font-size:11px;color:var(--text2);margin-left:auto;white-space:nowrap;margin-right:8px">${escH(String(dispVal))}</span>`:''}
+      <select style="width:80px;font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:4px;color:var(--text);flex-shrink:0" onchange="saveClField('${escH(ticker)}','financials','${t.k}',this.value==='true'?true:this.value==='false'?false:null)">
         <option value=""${val==null?' selected':''}>Auto</option>
         <option value="true"${val===true?' selected':''}>Pass</option>
         <option value="false"${val===false?' selected':''}>Fail</option>
@@ -9360,15 +9453,10 @@ function calcClProgress(ticker){
     if(sec.fields==='auto_thresholds'){
       const s=tStocks[ticker]||{};
       CL_THRESHOLDS.forEach(t=>{
+        if(t.type==='group')return;
         total++;
         if(data[t.k]!=null){filled++;return}
-        let av=null;
-        if(t.k==='revenueGrowthOk'&&s.revCAGR3!=null)av=s.revCAGR3>0;
-        if(t.k==='marginTrendOk'&&s.netMargin!=null)av=s.netMargin>0;
-        if(t.k==='debtLevelOk'&&s.debtEquity!=null)av=s.debtEquity<2;
-        if(t.k==='fcfPositiveOk'&&s.fcf!=null)av=s.fcf>0;
-        if(t.k==='roicAbove15Ok'&&s.roic!=null)av=s.roic>15;
-        if(t.k==='sbcReasonableOk'&&s.sbc!=null&&s.revenue)av=(s.sbc/s.revenue*100)<10;
+        const av=t.auto?t.auto(s):null;
         if(av!=null)filled++;
       });
       if(data.notes&&data.notes.trim())filled++;total++;

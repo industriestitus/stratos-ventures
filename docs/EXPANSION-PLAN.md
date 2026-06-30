@@ -268,11 +268,11 @@ Render similar to Risks section with status badges. Dashboard widget aggregates 
 - `check()` function receives the stock data object and returns true if flag is triggered
 - FMP balance sheet data already fetched — fields: `goodwill`, `goodwillAndIntangibleAssets`, `totalAssets`, `netReceivables`, `inventory`, `totalDebt`, `cashAndCashEquivalents`, `retainedEarnings`, `preferredStock`
 
-### 12.2 Detailed financial thresholds
+### 12.2 Detailed financial thresholds ✅ DONE (2026-06-30)
 - **Difficulty:** MEDIUM (2 hours)
 - **Cost:** Free
-- **What:** Expand CL_THRESHOLDS from 6 to ~25 items
-- **Implementation:** Add entries to CL_THRESHOLDS array, auto-evaluate from API data
+- **What:** Expand CL_THRESHOLDS from 6 to 22 items with 6 group headers
+- **Implementation:** Refactored to data-driven `auto(s)`/`val(s)` functions per threshold (like YELLOW_FLAGS). Added `_cfData` storage. 3 QA bugs fixed.
 
 **New thresholds to add:**
 ```
