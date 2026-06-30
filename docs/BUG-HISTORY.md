@@ -426,6 +426,18 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 **Fix:** Added `>=1 && <=10` validation to both checklist and quarterly_followup conviction sources.
 
+## Audit 20 — Phase 17.2: Position Sizing (2026-07-01)
+
+**1 bug found, 1 fixed**
+
+### Bug 20.1 — Position bar marker disappears when currentPct > barMax
+
+**File:** `web/index.html` (renderPositionSizing)
+
+**Problem:** When current portfolio position exceeded 14% (barMax), the visual marker disappeared entirely instead of clamping to the bar edge. Lost visual feedback for concentrated positions.
+
+**Fix:** Removed `<=barMax` guard and clamped position with `Math.min(currentPct, barMax)` so the marker always appears.
+
 ---
 
 ## Deployment Notes

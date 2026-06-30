@@ -683,7 +683,7 @@ Expected CAGR ≈ Revenue Growth + Margin Expansion + Multiple Change + Sharehol
 - Comparison line: "Minimum acceptable = 15%"
 - Color: green if > 15%, yellow if 10-15%, red if < 10%
 
-### 17.2 Position sizing recommendation
+### 17.2 Position sizing recommendation ✅
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Formula-based position size suggestion based on scoring

@@ -204,7 +204,7 @@ Status: COMPLETE (2026-06-27)
 
 ## Phases 11-18: Expansion Plan
 > Deep feature expansion — see [EXPANSION-PLAN.md](EXPANSION-PLAN.md) for full details.
-> Status: Phase 16 COMPLETE (2026-07-01)
+> Status: Phase 17 COMPLETE (2026-07-01)
 > 8 phases, 34 tasks, ~12-14 sessions
 
 - Phase 11: Checklist deepening (Company Details, Moat, SWOT, Management, Industry, Edge, Anti-Thesis, 10K guide)
@@ -213,7 +213,7 @@ Status: COMPLETE (2026-06-27)
 - Phase 14: Portfolio asset types — ALL COMPLETE ✅ (Real Estate, Bonds enhanced, Cash, Net Worth widget)
 - Phase 15: Follow-up & Monitoring — ALL COMPLETE ✅ (Quarterly expansion, Learning Log, Follow Sources, Price Alerts, Sell Trigger dashboard)
 - Phase 16: Review & Psychology — ALL COMPLETE ✅ (Psychology questions done in Ph11, Review templates +8 questions, Conviction Tracker timeline chart + badge)
-- Phase 17: Expected Return calculator (Return breakdown, Position sizing recommendation)
+- Phase 17: Expected Return calculator — ALL COMPLETE ✅ (Return breakdown with stacked bar, Position sizing with score/multipliers/Kelly/bar)
 - Phase 18: External Links & Earnings Calendar (Quick links, Basic earnings tracking)
 
 ## Phase 10: Optional / Future

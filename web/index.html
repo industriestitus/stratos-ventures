@@ -5848,7 +5848,10 @@ function showProfile(ticker){
   // Card 5: Expected Return Breakdown
   h+=`<div class="card"><div class="card-title">Expected Return Breakdown</div><div id="cp-expected-return"></div></div>`;
 
-  // Card 6: Conviction Tracker
+  // Card 6: Position Sizing Recommendation
+  h+=`<div class="card"><div class="card-title">Position Sizing</div><div id="cp-position-sizing"></div></div>`;
+
+  // Card 7: Conviction Tracker
   h+=`<div class="card"><div class="card-title">Conviction Tracker</div><div id="cp-conviction-chart" style="min-height:100px"></div></div>`;
 
   document.getElementById('cp-overview-content').innerHTML=h;
@@ -5857,6 +5860,7 @@ function showProfile(ticker){
   renderPipeline(ticker);
   renderCompanyType(ticker);
   renderExpectedReturn(ticker);
+  renderPositionSizing(ticker);
   renderConvictionBadge(ticker);
   renderConvictionChart(ticker);
 
@@ -6198,6 +6202,134 @@ function saveExpectedReturnField(ticker,field,value){
   }
   saveTrackerStocks();
   renderExpectedReturn(ticker);
+}
+
+// Position Sizing Recommendation
+function calcPositionSizing(ticker){
+  const s=tStocks[ticker];if(!s)return null;
+  const cl=s.checklist||{};
+  const bs=cl.sections?.buy_sell||{};
+  const psych=cl.psychology||cl.sections?.psychology||{};
+  const cagr=parseFloat(bs.expectedCagr);
+  if(isNaN(cagr)||cagr<=0)return null;
+  const convRaw=parseInt(psych.convictionLevel);
+  const conv=convRaw>=1&&convRaw<=10?convRaw:null;
+  const risk=bs.riskLevel||'';
+  let cagrMult=0.8;
+  if(cagr>=20)cagrMult=2;
+  else if(cagr>=15)cagrMult=1.5;
+  else if(cagr>=12)cagrMult=1.2;
+  else if(cagr>=10)cagrMult=1;
+  let convMult=1;
+  if(conv!==null){
+    if(conv>=9)convMult=2;
+    else if(conv>=7)convMult=1.5;
+    else if(conv>=4)convMult=1;
+    else convMult=0.5;
+  }
+  let riskMult=1;
+  if(risk==='Very safe')riskMult=1.3;
+  else if(risk==='Fragile')riskMult=0.7;
+  else if(risk==='High risk')riskMult=0.5;
+  const score=cagrMult*convMult*riskMult;
+  let minPct,maxPct,sizeLabel;
+  if(score>=4){minPct=8;maxPct=12;sizeLabel='High conviction';}
+  else if(score>=3){minPct=6;maxPct=8;sizeLabel='Large';}
+  else if(score>=2){minPct=4;maxPct=6;sizeLabel='Medium';}
+  else if(score>=1){minPct=2;maxPct=4;sizeLabel='Small';}
+  else{minPct=1;maxPct=2;sizeLabel='Minimal';}
+  let kelly=null;
+  if(cagr>0&&conv!==null){
+    const p=Math.min(0.95,Math.max(0.3,0.4+conv*0.05));
+    const q=1-p;
+    const b=Math.pow(1+cagr/100,5)-1;
+    if(b>0){
+      const fStar=(b*p-q)/b;
+      kelly=Math.max(0,fStar/2)*100;
+    }
+  }
+  let currentPct=null;
+  const pos=pfPositions.filter(p=>p.ticker===ticker);
+  if(pos.length>0){
+    const base=pfAccounts.length>0?(pfAccounts[0].currency||'USD'):'USD';
+    let totalVal=0;
+    pfPositions.forEach(p=>{
+      const at=p.assetType||'stock';
+      let mv=0;
+      if(at==='cash')mv=parseFloat(p.cashAmount)||0;
+      else if(at==='real_estate')mv=parseFloat(p.reCurrentValue)||0;
+      else mv=(p.shares||0)*(p.currentPrice||p.avgCost||0);
+      totalVal+=convertCurrency(mv,p.currency||'USD',base)||mv;
+    });
+    if(totalVal>0){
+      let tickerVal=0;
+      pos.forEach(p=>{
+        const at=p.assetType||'stock';
+        let mv=0;
+        if(at==='cash')mv=parseFloat(p.cashAmount)||0;
+        else if(at==='real_estate')mv=parseFloat(p.reCurrentValue)||0;
+        else mv=(p.shares||0)*(p.currentPrice||p.avgCost||0);
+        tickerVal+=convertCurrency(mv,p.currency||'USD',base)||mv;
+      });
+      currentPct=tickerVal/totalVal*100;
+    }
+  }
+  return{score,minPct,maxPct,sizeLabel,cagrMult,convMult,riskMult,cagr,conv,risk,kelly,currentPct};
+}
+
+function renderPositionSizing(ticker){
+  const container=document.getElementById('cp-position-sizing');
+  if(!container)return;
+  const result=calcPositionSizing(ticker);
+  if(!result){
+    container.innerHTML='<div style="color:var(--text2);font-size:13px;text-align:center;padding:10px">Set Expected CAGR in the checklist (Buy/Sell Decision) to see position sizing.</div>';
+    return;
+  }
+  const{score,minPct,maxPct,sizeLabel,cagrMult,convMult,riskMult,cagr,conv,risk,kelly,currentPct}=result;
+  const scoreCls=score>=3?'positive':score>=1.5?'warn':'negative';
+  let h=`<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;flex-wrap:wrap">`;
+  h+=`<div style="text-align:center"><div style="font-size:28px;font-weight:700" class="${scoreCls}">${score.toFixed(2)}</div><div style="font-size:10px;color:var(--text2);text-transform:uppercase">Score</div></div>`;
+  h+=`<div style="flex:1;min-width:120px">`;
+  h+=`<div style="font-size:16px;font-weight:700;color:var(--text)">${minPct}–${maxPct}%</div>`;
+  h+=`<div style="font-size:11px;color:var(--text2)">${sizeLabel} position</div>`;
+  h+=`</div>`;
+  if(currentPct!==null){
+    const diff=currentPct-((minPct+maxPct)/2);
+    const diffCls=currentPct>maxPct?'negative':currentPct<minPct?'warn':'positive';
+    h+=`<div style="text-align:center"><div style="font-size:16px;font-weight:700" class="${diffCls}">${currentPct.toFixed(1)}%</div><div style="font-size:10px;color:var(--text2)">Current</div></div>`;
+  }
+  h+=`</div>`;
+  // Visual bar
+  const barMax=14;
+  h+=`<div style="position:relative;height:24px;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:6px">`;
+  h+=`<div style="position:absolute;left:${minPct/barMax*100}%;width:${(maxPct-minPct)/barMax*100}%;height:100%;background:rgba(108,92,231,.25);border-left:2px solid var(--accent);border-right:2px solid var(--accent)"></div>`;
+  if(currentPct!==null){
+    const barPct=Math.min(currentPct,barMax);
+    h+=`<div style="position:absolute;left:${barPct/barMax*100}%;top:0;bottom:0;width:3px;background:var(--text);border-radius:2px;transform:translateX(-1px)" title="Current: ${currentPct.toFixed(1)}%"></div>`;
+  }
+  h+=`</div>`;
+  h+=`<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text2);margin-bottom:12px"><span>0%</span><span>${barMax}%</span></div>`;
+  // Multiplier breakdown
+  h+=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">`;
+  h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px;text-align:center">
+    <div style="font-size:10px;color:var(--text2);margin-bottom:2px">CAGR ${cagr}%</div>
+    <div style="font-size:15px;font-weight:700;color:var(--text)">${cagrMult}×</div></div>`;
+  h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px;text-align:center">
+    <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Conv. ${conv!==null?conv+'/10':'—'}</div>
+    <div style="font-size:15px;font-weight:700;color:var(--text)">${convMult}×</div></div>`;
+  h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px;text-align:center">
+    <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Risk: ${risk||'Normal'}</div>
+    <div style="font-size:15px;font-weight:700;color:var(--text)">${riskMult}×</div></div>`;
+  h+=`</div>`;
+  // Kelly criterion
+  if(kelly!==null){
+    h+=`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-size:12px">`;
+    h+=`<span style="color:var(--text2)">Half-Kelly:</span>`;
+    h+=`<span style="font-weight:700;color:var(--text)">${kelly.toFixed(1)}%</span>`;
+    h+=`<span style="font-size:10px;color:var(--text2);margin-left:auto">f* = (b×p − q) / b ÷ 2</span>`;
+    h+=`</div>`;
+  }
+  container.innerHTML=h;
 }
 
 // Conviction tracker
@@ -9676,6 +9808,7 @@ const CL_SECTIONS=[
     {k:'timeHorizonMismatch',label:'Time Horizon Mismatch',type:'textarea',ph:'Időhorizont mismatch? Short-term pain vs long-term value?'},
     {k:'whyOpportunityExists',label:'Why Does Opportunity Exist?',type:'textarea',ph:'Why is the market offering this? Most of the time the market is efficient.'},
     {k:'_g_sizing',type:'group',label:'Position Sizing & Timing'},
+    {k:'riskLevel',label:'Risk Level',type:'select',opts:['','Very safe','Normal','Fragile','High risk']},
     {k:'whenToOwn',label:'When to Own / Target Price',type:'textarea',ph:'At what price level? Set a price alert!'},
     {k:'buyPrice',label:'Target Buy Price',type:'number',ph:'Price I want to buy at'},
     {k:'sellPrice',label:'Target Sell Price',type:'number',ph:'Price I would sell at'},
