@@ -346,7 +346,7 @@ All with METRIC_TIPS tooltips.
 
 ---
 
-## Phase 13: Valuation Calculators Expansion (~2 sessions)
+## Phase 13: Valuation Calculators Expansion ✅ COMPLETE (~2 sessions)
 
 ### 13.1 Base / Bull / Bear scenario builder ✅ COMPLETE
 - **Difficulty:** MEDIUM (3 hours)
@@ -418,22 +418,21 @@ All with METRIC_TIPS tooltips.
 
 **QA:** 1 CRITICAL fixed (single growth rate → 3-phase g1/g2), 1 WARN fixed (dead variable removed)
 
-### 13.5 Valuation history tracking
+### 13.5 Valuation history tracking ✅ COMPLETE
 - **Difficulty:** MEDIUM (2 hours)
 - **Cost:** Free
 - **What:** Save & compare valuation calculations over time
 - **Implementation:** New `valuation_history` array per company
 
-**On every calculator run:**
-- Auto-save: `{date, method (DCF/ARIA/MoneyBack/10cap/EVA), inputs, result (fair_value), marketPrice_atTime}`
-- Store in `tStocks[ticker].valuationHistory[]`
+**Delivered:**
+- `saveValSnapshot(ticker)` captures DCF, ARIA, Money Back, 10cap MOS, EVA, Weighted FV, Price
+- Same-day dedup (overwrites last snapshot if same date)
+- `deleteValSnapshot(ticker, idx)` with correct reverse-index mapping
+- History table with color-coded badges (DCF, ARIA, EVA)
+- Comparison section: first vs latest snapshot with price delta %
+- "Save Snapshot" button in Valuation History card
 
-**New "Valuation History" panel in company profile:**
-- Table: Date | Method | Fair Value | Market Price | Upside/Downside
-- Line chart: Fair Value estimates vs Market Price over time (Chart.js)
-- Highlight: "Last year I calculated X, price was Y, now price is Z → was I right?"
-
-**D1 storage:** New table `valuation_snapshots` (company_id, date, method, inputs JSON, result, market_price)
+**QA:** 2 WARNs fixed (weighted FV mismatch without saved scenarios — now mirrors renderValuation defaults; ARIA badge threshold at 10% — aligned with badge() function), 1 INFO fixed (removed unused calcStockRatios call). D1 persistence gap noted for future.
 
 ---
 
