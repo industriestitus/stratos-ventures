@@ -239,6 +239,9 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .cp-conviction-badge.conv-high{background:rgba(0,184,148,.15);color:var(--green)}
 .cp-conviction-badge.conv-mid{background:rgba(253,203,110,.15);color:var(--orange)}
 .cp-conviction-badge.conv-low{background:rgba(255,118,117,.15);color:var(--red)}
+.cp-ext-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.cp-ext-links a{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:500;color:var(--text2);background:var(--surface);border:1px solid var(--border);text-decoration:none;white-space:nowrap;transition:all .15s}
+.cp-ext-links a:hover{color:var(--text);border-color:var(--accent);background:var(--surface2)}
 /* Financials tab */
 .cp-fin-section{margin-bottom:20px}
 .cp-fin-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
@@ -1474,6 +1477,7 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
         <div id="cp-cache-age" style="display:none;font-size:11px;padding:3px 8px;border-radius:4px;background:var(--surface2);color:var(--text2);white-space:nowrap"></div>
         <button id="cp-refresh-btn" class="btn btn-secondary" onclick="refreshProfileData()" style="padding:3px 10px;font-size:11px;display:none" title="Force refresh from API">↻ Refresh</button>
       </div>
+      <div id="cp-external-links" class="cp-ext-links"></div>
     </div>
     <div class="cp-tabs">
       <button class="tab active" onclick="switchProfileTab('overview')">Overview</button>
@@ -5745,6 +5749,7 @@ function showProfile(ticker){
   document.getElementById('cp-mcap').textContent='MCap: '+fmt(s.marketCap);
   document.getElementById('cp-date').textContent=s.date||'';
   updateCacheAgeUI();
+  renderExternalLinks(ticker);
 
   // Overview content
   let h='';
@@ -6378,6 +6383,22 @@ function getCurrentConviction(ticker){
   if(!hist.length)return null;
   return hist[hist.length-1].level;
 }
+function renderExternalLinks(ticker){
+  const el=document.getElementById('cp-external-links');
+  if(!el)return;
+  const t=encodeURIComponent(ticker);
+  const links=[
+    {label:'Yahoo Finance',url:`https://finance.yahoo.com/quote/${t}`},
+    {label:'Finviz',url:`https://finviz.com/quote.ashx?t=${t}`},
+    {label:'Macrotrends',url:`https://www.macrotrends.net/stocks/charts/${t}`},
+    {label:'SeekingAlpha',url:`https://seekingalpha.com/symbol/${t}`},
+    {label:'SEC EDGAR',url:`https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${t}&type=10-K`},
+    {label:'TickerTrends',url:`https://tickertrends.io/social-arbitrage`},
+    {label:'Glassdoor',url:`https://www.glassdoor.com/Search/results.htm?keyword=${encodeURIComponent(tStocks[ticker]?.name||ticker)}`}
+  ];
+  el.innerHTML=links.map(l=>`<a href="${escH(l.url)}" target="_blank" rel="noopener noreferrer">${escH(l.label)} ↗</a>`).join('');
+}
+
 function renderConvictionBadge(ticker){
   const el=document.getElementById('cp-conviction-badge');
   if(!el)return;

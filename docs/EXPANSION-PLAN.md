@@ -716,7 +716,7 @@ Risk: Very safe → 1.3x, Normal → 1x, Fragile → 0.7x, High risk → 0.5x
 
 ## Phase 18: External Links & Earnings Calendar (~1 session)
 
-### 18.1 External research links
+### 18.1 External research links ✅
 - **Difficulty:** EASY (30 min)
 - **Cost:** Free
 - **What:** Quick-link buttons on company profile to external research sites
