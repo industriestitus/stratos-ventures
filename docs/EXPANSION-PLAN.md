@@ -368,21 +368,23 @@ All with METRIC_TIPS tooltips.
 
 **QA:** 0 CRITICAL, 3 WARN fixed (default value mismatch, mobile responsive, toFixed guard)
 
-### 13.2 10cap calculator
+### 13.2 10cap calculator ✅ COMPLETE
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Phil Town's Rule #1 method
-- **Implementation:** New calculator sub-tab
+- **Implementation:** 10cap card in company profile Valuation tab
 
 **Formula:**
 - Owner Earnings = Net Income + Depreciation - Maintenance CAPEX
-- 10cap Price = Owner Earnings × 10
+- 10cap Price = Owner Earnings × 10 / shares
 - Margin of Safety Price = 10cap / 2
 
-**Inputs (3, auto-prefillable from API):**
+**Inputs (3, auto-prefilled from API):**
 - Net Income (from income statement)
-- Depreciation (from cash flow statement)
-- Maintenance CAPEX (user estimate, default = 50% of total CAPEX)
+- Depreciation & Amortization (from income statement, fallback to cash flow)
+- Maintenance CAPEX (default = 50% of total CAPEX, shows total for reference)
+
+**QA:** 0 CRITICAL, 1 WARN fixed (|| → ?? for D&A fallback)
 
 ### 13.3 EVA (Economic Value Added) calculator
 - **Difficulty:** EASY (1 hour)

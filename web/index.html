@@ -6098,6 +6098,34 @@ function renderValuation(ticker){
   h+=`<div class="cp-val-assumptions"><strong>How many years</strong> of cumulative FCF-SBC to pay back the entire market cap?</div>`;
   h+='</div>';
 
+  const shares=s.marketCap&&s.price?s.marketCap/s.price:null;
+
+  // 10cap (Phil Town Rule #1)
+  const cf0_v=s._cfData?.[0];const is0_v=s._isData?.[0];
+  const tenNI=s.profit;
+  const tenDepr=is0_v?.depreciationAndAmortization??cf0_v?.depreciationAndAmortization??null;
+  const tenCapexRaw=cf0_v?.capitalExpenditure!=null?Math.abs(cf0_v.capitalExpenditure):null;
+  const tenMaintCapex=s.tenCapMaint!=null?s.tenCapMaint:(tenCapexRaw!=null?tenCapexRaw*0.5:null);
+  const tenOE=tenNI!=null&&tenDepr!=null&&tenMaintCapex!=null?tenNI+tenDepr-tenMaintCapex:null;
+  const tenPrice=tenOE!=null&&tenOE>0&&shares?tenOE*10/shares:null;
+  const tenMOS=tenPrice!=null?tenPrice/2:null;
+  const tenUpside=tenMOS!=null&&s.price?((tenMOS/s.price-1)*100):null;
+
+  h+='<div class="card cp-val-model"><div class="cp-val-header"><div class="cp-val-model-title">10cap (Rule #1)</div>'+badge(tenUpside,0,30,'%')+'</div>';
+  h+='<div class="cp-val-details">';
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Net Income</div><div class="cp-val-item-value">${fmt(tenNI)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Depreciation & Amort.</div><div class="cp-val-item-value">${fmt(tenDepr)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Maint. CAPEX (50%)</div><div class="cp-val-item-value">${fmt(tenMaintCapex)}${tenCapexRaw!=null?` <span style="font-size:10px;color:var(--text2)">(total: ${fmt(tenCapexRaw)})</span>`:''}</div></div>`;
+  h+='</div>';
+  h+='<div class="cp-val-details" style="margin-top:4px">';
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Owner Earnings</div><div class="cp-val-item-value ${tenOE!=null?(tenOE>0?'positive':'negative'):''}">${fmt(tenOE)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">10cap Price</div><div class="cp-val-item-value">${tenPrice!=null?'$'+tenPrice.toFixed(2):'-'}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">MOS Price (50%)</div><div class="cp-val-item-value ${tenUpside!=null?(tenUpside>=30?'positive':tenUpside>=0?'warn':'negative'):''}">${tenMOS!=null?'$'+tenMOS.toFixed(2):'-'}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Upside / Downside</div><div class="cp-val-item-value ${tenUpside!=null?(tenUpside>=30?'positive':tenUpside>=0?'warn':'negative'):''}">${tenUpside!=null?tenUpside.toFixed(1)+'%':'-'}</div></div>`;
+  h+='</div>';
+  h+=`<div class="cp-val-assumptions"><strong>Phil Town Rule #1:</strong> Owner Earnings = NI + D&A − Maint.CAPEX · 10cap = OE × 10 · Buy at 50% MOS</div>`;
+  h+='</div>';
+
   // Scenario Builder (Bear / Base / Bull)
   const sc=s.scenarios||{bear:{revGrowth:-5,termMargin:10,exitMult:10,prob:20},base:{revGrowth:g1,termMargin:s.netMargin||15,exitMult:em||15,prob:60},bull:{revGrowth:g1*1.5,termMargin:(s.netMargin||15)*1.2,exitMult:(em||15)*1.3,prob:20}};
   function scenarioFV(scen){
@@ -6109,7 +6137,6 @@ function renderValuation(ticker){
   const fvBear=scenarioFV(sc.bear),fvBase=scenarioFV(sc.base),fvBull=scenarioFV(sc.bull);
   const probSum=(sc.bear.prob||0)+(sc.base.prob||0)+(sc.bull.prob||0);
   const weightedFV=probSum>0&&fvBear!=null&&fvBase!=null&&fvBull!=null?(fvBear*(sc.bear.prob||0)+fvBase*(sc.base.prob||0)+fvBull*(sc.bull.prob||0))/probSum:null;
-  const shares=s.marketCap&&s.price?s.marketCap/s.price:null;
   const wfvPerShare=weightedFV!=null&&shares?weightedFV/shares:null;
   const upside=wfvPerShare!=null&&s.price?((wfvPerShare/s.price-1)*100):null;
 
