@@ -502,7 +502,7 @@ All with METRIC_TIPS tooltips.
 
 ---
 
-## Phase 15: Follow-up & Monitoring (~2 sessions)
+## Phase 15: Follow-up & Monitoring ✅ COMPLETE (2026-07-01)
 
 ### 15.1 Quarterly Follow-up expansion ✅ DONE
 - **Difficulty:** MEDIUM (2 hours)
@@ -585,7 +585,7 @@ All with METRIC_TIPS tooltips.
 - Check prices via FMP API → if alert triggered → Web Push API notification
 - Requires service worker push subscription (PWA already has service worker)
 
-### 15.5 Sell Trigger monitoring dashboard
+### 15.5 Sell Trigger monitoring dashboard ✅ DONE
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Aggregated view of all sell triggers across owned companies
