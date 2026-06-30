@@ -438,7 +438,7 @@ All with METRIC_TIPS tooltips.
 
 ## Phase 14: Portfolio Asset Type Expansion (~1 session)
 
-### 14.1 Real Estate asset type
+### 14.1 Real Estate asset type ✅ COMPLETE
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Dedicated "real_estate" option in position modal with custom fields
@@ -455,7 +455,7 @@ All with METRIC_TIPS tooltips.
 **P&L calculation:** `currentValue - purchasePrice + (monthlyRental × months_held) - (annualCosts × years_held)`
 **Yield:** `(monthlyRentalIncome × 12 - annualCosts) / currentEstimatedValue × 100`
 
-### 14.2 Government Bonds enhanced handling
+### 14.2 Government Bonds enhanced handling ✅ COMPLETE
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Extra fields for bond positions (coupon, maturity, payment frequency)
@@ -473,7 +473,7 @@ All with METRIC_TIPS tooltips.
 - Time to maturity = maturityDate - today
 - Yield to maturity (simplified) = if bought at different price than face value
 
-### 14.3 Cash / Currency positions
+### 14.3 Cash / Currency positions ✅ COMPLETE
 - **Difficulty:** EASY (30 min)
 - **Cost:** Free
 - **What:** Simplified position modal for cash holdings

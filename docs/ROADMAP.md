@@ -209,8 +209,8 @@ Status: COMPLETE (2026-06-27)
 
 - Phase 11: Checklist deepening (Company Details, Moat, SWOT, Management, Industry, Edge, Anti-Thesis, 10K guide)
 - Phase 12: Financial Analysis deepening — ALL COMPLETE ✅ (12.1 Yellow Flags, 12.2 Thresholds 6→22, 12.3 CF Deep Dive 10 metrics, 12.4 BS Deep Dive 11 metrics, 12.5 Tooltips 21 new)
-- Phase 13: Valuation calculators (Scenario Builder, 10cap, EVA, FCFF toggle, Valuation History)
-- Phase 14: Portfolio asset types (Real Estate, Bonds enhanced, Cash, Net Worth widget)
+- Phase 13: Valuation calculators — ALL COMPLETE ✅ (Scenario Builder, 10cap, EVA, FCFF toggle, Valuation History)
+- Phase 14: Portfolio asset types — 14.1-14.3 COMPLETE ✅ (Real Estate, Bonds enhanced, Cash) — 14.4 Net Worth widget remaining
 - Phase 15: Follow-up & Monitoring (Quarterly expansion, Learning Log, Follow Sources, Price Alerts, Sell Trigger dashboard)
 - Phase 16: Review & Psychology expansion (Psychology questions, Review templates, Conviction Tracker)
 - Phase 17: Expected Return calculator (Return breakdown, Position sizing recommendation)

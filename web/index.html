@@ -420,6 +420,8 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .pf-badge-crypto{background:rgba(253,203,110,.15);color:var(--orange)}
 .pf-badge-bond{background:rgba(0,184,148,.15);color:var(--green)}
 .pf-badge-savings{background:rgba(0,184,148,.2);color:var(--green)}
+.pf-badge-real_estate{background:rgba(162,155,254,.15);color:#a29bfe}
+.pf-badge-cash{background:rgba(129,236,236,.15);color:#81ecec}
 .pf-badge-other{background:rgba(139,144,165,.15);color:var(--text2)}
 .pf-account-actions{display:flex;gap:6px}
 .pf-account-actions button{background:none;border:none;color:var(--text2);cursor:pointer;padding:4px 8px;border-radius:4px;font-size:13px;transition:all .15s}
@@ -1558,7 +1560,9 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
           <option value="etf">ETFs</option>
           <option value="crypto">Crypto</option>
           <option value="bond">Bonds</option>
+          <option value="real_estate">Real Estate</option>
           <option value="savings">Savings</option>
+          <option value="cash">Cash</option>
           <option value="other">Other</option>
         </select>
         <button class="btn btn-primary" onclick="openPositionModal()" style="padding:8px 16px;font-size:13px">+ Add Position</button>
@@ -2121,7 +2125,9 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
           <option value="etf">ETF</option>
           <option value="crypto">Crypto</option>
           <option value="bond">Bond</option>
+          <option value="real_estate">Real Estate</option>
           <option value="savings">Savings</option>
+          <option value="cash">Cash</option>
           <option value="other">Other</option>
         </select>
       </div>
@@ -2159,6 +2165,51 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       <div class="pf-modal-field">
         <label>Currency</label>
         <input type="text" id="pf-pos-currency" readonly style="opacity:.7">
+      </div>
+    </div>
+    <!-- Real Estate custom fields -->
+    <div id="pf-pos-re-fields" style="display:none">
+      <div class="pf-modal-row">
+        <div class="pf-modal-field"><label>Location</label><input type="text" id="pf-pos-re-location" placeholder="e.g. Budapest, District V"></div>
+        <div class="pf-modal-field"><label>Purchase Date</label><input type="date" id="pf-pos-re-date"></div>
+      </div>
+      <div class="pf-modal-row">
+        <div class="pf-modal-field"><label>Purchase Price</label><input type="number" id="pf-pos-re-purchase" step="any" min="0" placeholder="0"></div>
+        <div class="pf-modal-field"><label>Current Estimated Value</label><input type="number" id="pf-pos-re-value" step="any" min="0" placeholder="0"></div>
+      </div>
+      <div class="pf-modal-row">
+        <div class="pf-modal-field"><label>Monthly Rental Income</label><input type="number" id="pf-pos-re-rental" step="any" min="0" placeholder="0 if not rented"></div>
+        <div class="pf-modal-field"><label>Annual Costs (tax/maint/ins)</label><input type="number" id="pf-pos-re-costs" step="any" min="0" placeholder="0"></div>
+      </div>
+    </div>
+    <!-- Bond custom fields -->
+    <div id="pf-pos-bond-fields" style="display:none">
+      <div class="pf-modal-row">
+        <div class="pf-modal-field"><label>Bond Type</label><input type="text" id="pf-pos-bond-type" placeholder="e.g. MÁP+, PMÁP, US Treasury"></div>
+        <div class="pf-modal-field"><label>Face / Par Value</label><input type="number" id="pf-pos-bond-face" step="any" min="0" placeholder="0"></div>
+      </div>
+      <div class="pf-modal-row">
+        <div class="pf-modal-field"><label>Coupon Rate (%)</label><input type="number" id="pf-pos-bond-coupon" step="any" min="0" placeholder="e.g. 5.5"></div>
+        <div class="pf-modal-field"><label>Maturity Date</label><input type="date" id="pf-pos-bond-maturity"></div>
+      </div>
+      <div class="pf-modal-row">
+        <div class="pf-modal-field">
+          <label>Payment Frequency</label>
+          <select id="pf-pos-bond-freq">
+            <option value="annual">Annual</option>
+            <option value="semi-annual">Semi-annual</option>
+            <option value="quarterly">Quarterly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+        <div class="pf-modal-field"></div>
+      </div>
+    </div>
+    <!-- Cash custom fields -->
+    <div id="pf-pos-cash-fields" style="display:none">
+      <div class="pf-modal-row">
+        <div class="pf-modal-field"><label>Amount</label><input type="number" id="pf-pos-cash-amount" step="any" min="0" placeholder="e.g. 10000"></div>
+        <div class="pf-modal-field"></div>
       </div>
     </div>
     <div class="pf-modal-field">
@@ -2944,10 +2995,11 @@ function _downloadCsv(filename,headers,rows){
 }
 
 function exportCsvPositions(){
-  const headers=['Ticker','Account','Shares','Avg Cost','Currency','Created'];
+  const headers=['Ticker','Name','Account','Type','Shares','Avg Cost','Current Price','Currency','Notes','Created'];
   const rows=pfPositions.map(p=>{
     const acc=pfAccounts.find(a=>a.id===p.accountId);
-    return[p.ticker,acc?acc.name:'',p.shares,p.avgCost,acc?acc.currency:'',p.createdAt||''];
+    const price=getPositionPrice(p);
+    return[p.ticker,p.name||'',acc?acc.name:'',p.assetType||'stock',p.shares,p.avgCost,price!=null?price:'',acc?acc.currency:'',p.notes||'',p.createdAt||''];
   });
   _downloadCsv('stratos-positions.csv',headers,rows);
 }
@@ -3286,7 +3338,10 @@ function savePortfolioAccounts(){
   try{localStorage.setItem('portfolio_accounts_v1',JSON.stringify(pfAccounts))}catch(e){showToast('Storage full — could not save accounts','error')}
 }
 async function loadPortfolioPositions(){
-  if(d1Mode){try{const r=await API.get('positions');pfPositions=(r.data||[]).map(p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:p.shares,avgCost:p.avg_cost,currency:(s?s.currency:'')||'USD',companyId:p.company_id}});return}catch(e){console.error('D1 load positions, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('positions');const d1Pos=(r.data||[]).map(p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:p.shares,avgCost:p.avg_cost,currency:(s?s.currency:'')||'USD',companyId:p.company_id}});
+    let lsExtra={};try{const ls=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(ls))ls.forEach(p=>{if(p.id)lsExtra[p.id]=p})}catch(e){}
+    pfPositions=d1Pos.map(p=>{const ex=lsExtra[p.id];if(ex)return{...ex,...p,assetType:ex.assetType||'stock',currentPrice:ex.currentPrice,notes:ex.notes,reLocation:ex.reLocation,rePurchaseDate:ex.rePurchaseDate,rePurchasePrice:ex.rePurchasePrice,reCurrentValue:ex.reCurrentValue,reMonthlyRental:ex.reMonthlyRental,reAnnualCosts:ex.reAnnualCosts,bondType:ex.bondType,bondFaceValue:ex.bondFaceValue,bondCouponRate:ex.bondCouponRate,bondMaturityDate:ex.bondMaturityDate,bondPaymentFreq:ex.bondPaymentFreq,cashAmount:ex.cashAmount};return p});
+    try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){}return}catch(e){console.error('D1 load positions, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(d))pfPositions=d}catch(e){}
 }
 function savePortfolioPositions(){
@@ -3409,6 +3464,8 @@ async function deleteAccount(id){
 
 // ---- Positions ----
 function getPositionPrice(pos){
+  if(pos.assetType==='real_estate')return pos.reCurrentValue??pos.rePurchasePrice??null;
+  if(pos.assetType==='cash')return 1;
   if(pos.currentPrice!=null&&pos.currentPrice!=='')return parseFloat(pos.currentPrice);
   if(pos.ticker&&tStocks[pos.ticker]&&tStocks[pos.ticker].price!=null)return parseFloat(tStocks[pos.ticker].price);
   return null;
@@ -3460,13 +3517,23 @@ function renderPositions(){
     }
     const pnlClass=pnl!=null?(pnl>=0?'pf-positive':'pf-negative'):'';
     const tickerLink=tStocks[pos.ticker]?`onclick="showProfile('${escH(pos.ticker)}')" class="pf-pos-ticker"`:'class="pf-pos-ticker"';
+    const at=pos.assetType||'other';
+    let badgeLabel=at==='real_estate'?'real estate':at;
+    let subInfo='';
+    if(at==='real_estate'&&pos.reLocation)subInfo=`<div class="pf-pos-name" style="font-size:10px;opacity:.7">${escH(pos.reLocation)}</div>`;
+    else if(at==='bond'&&pos.bondType)subInfo=`<div class="pf-pos-name" style="font-size:10px;opacity:.7">${escH(pos.bondType)}${pos.bondCouponRate?' · '+pos.bondCouponRate+'%':''}</div>`;
+    else if(at==='cash')subInfo=`<div class="pf-pos-name" style="font-size:10px;opacity:.7">${pos.currency||'USD'} cash</div>`;
+    let sharesCol,avgCol,priceCol;
+    if(at==='real_estate'){sharesCol='1';avgCol=fmt(pos.rePurchasePrice||0,0);priceCol=fmt(pos.reCurrentValue||0,0)}
+    else if(at==='cash'){sharesCol='—';avgCol='—';priceCol=fmt(pos.cashAmount||0,2)}
+    else{sharesCol=fmt(shares,shares%1?4:0);avgCol=fmt(avg,2);priceCol=price!=null?fmt(price,2):'—'}
     return`<tr>
-      <td><span ${tickerLink}>${escH(pos.ticker||'—')}</span><div class="pf-pos-name">${escH(pos.name||'')}</div></td>
+      <td><span ${tickerLink}>${escH(pos.ticker||'—')}</span><div class="pf-pos-name">${escH(pos.name||'')}</div>${subInfo}</td>
       <td>${escH(getAccountName(pos.accountId))}</td>
-      <td><span class="pf-badge pf-badge-${escH(pos.assetType||'other')}">${escH(pos.assetType||'other')}</span></td>
-      <td class="num">${fmt(shares,shares%1?4:0)}</td>
-      <td class="num">${fmt(avg,2)}</td>
-      <td class="num">${price!=null?fmt(price,2):'—'}</td>
+      <td><span class="pf-badge pf-badge-${escH(at)}">${escH(badgeLabel)}</span></td>
+      <td class="num">${sharesCol}</td>
+      <td class="num">${avgCol}</td>
+      <td class="num">${priceCol}</td>
       <td class="num">${mktVal!=null?fmt(mktVal,2):'—'}</td>
       <td class="num ${pnlClass}">${pnl!=null?(pnl>=0?'+':'')+fmt(pnl,2):'—'}</td>
       <td class="num ${pnlClass}">${pnlPct!=null?(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%':'—'}</td>
@@ -3503,13 +3570,40 @@ function onPositionTickerInput(){
 function updatePositionModalFields(){
   const type=document.getElementById('pf-pos-type').value;
   const priceRow=document.getElementById('pf-pos-manual-price-row');
+  const tickerRow=document.getElementById('pf-pos-ticker').closest('.pf-modal-row');
+  const sharesRow=document.getElementById('pf-pos-shares').closest('.pf-modal-row');
   const tickerList=document.getElementById('pf-pos-ticker-list');
   tickerList.innerHTML=Object.keys(tStocks).map(t=>`<option value="${escH(t)}">`).join('');
-  if(['stock','etf'].includes(type)){
-    priceRow.querySelector('label').textContent='Current Price (leave empty for auto)';
+
+  document.getElementById('pf-pos-re-fields').style.display=type==='real_estate'?'':'none';
+  document.getElementById('pf-pos-bond-fields').style.display=type==='bond'?'':'none';
+  document.getElementById('pf-pos-cash-fields').style.display=type==='cash'?'':'none';
+
+  if(type==='real_estate'){
+    tickerRow.style.display='';
+    sharesRow.style.display='none';
+    priceRow.style.display='none';
+    document.getElementById('pf-pos-ticker').placeholder='e.g. APT-BP5, HOUSE-01';
+    document.getElementById('pf-pos-name').placeholder='e.g. Budapest Apartment';
+  }else if(type==='cash'){
+    tickerRow.style.display='';
+    sharesRow.style.display='none';
+    priceRow.style.display='none';
+    document.getElementById('pf-pos-ticker').placeholder='e.g. CASH-EUR, CASH-USD';
+    document.getElementById('pf-pos-name').placeholder='e.g. Emergency Fund';
   }else{
-    priceRow.querySelector('label').textContent='Current Price';
+    tickerRow.style.display='';
+    sharesRow.style.display='';
+    priceRow.style.display='';
+    document.getElementById('pf-pos-ticker').placeholder='e.g. AAPL, BTC, PMÁP';
+    document.getElementById('pf-pos-name').placeholder='e.g. Apple Inc.';
+    if(['stock','etf'].includes(type)){
+      priceRow.querySelector('label').textContent='Current Price (leave empty for auto)';
+    }else{
+      priceRow.querySelector('label').textContent='Current Price';
+    }
   }
+
   const accSel=document.getElementById('pf-pos-account');
   accSel.innerHTML=pfAccounts.map(a=>`<option value="${a.id}">${escH(a.name)} (${escH(a.currency)})</option>`).join('');
   const selAcc=pfAccounts.find(a=>a.id===parseInt(accSel.value));
@@ -3538,6 +3632,22 @@ function openPositionModal(editId){
     document.getElementById('pf-pos-avgcost').value=p.avgCost||'';
     document.getElementById('pf-pos-price').value=p.currentPrice!=null?p.currentPrice:'';
     document.getElementById('pf-pos-notes').value=p.notes||'';
+    if(p.assetType==='real_estate'){
+      document.getElementById('pf-pos-re-location').value=p.reLocation||'';
+      document.getElementById('pf-pos-re-date').value=p.rePurchaseDate||'';
+      document.getElementById('pf-pos-re-purchase').value=p.rePurchasePrice||'';
+      document.getElementById('pf-pos-re-value').value=p.reCurrentValue||'';
+      document.getElementById('pf-pos-re-rental').value=p.reMonthlyRental||'';
+      document.getElementById('pf-pos-re-costs').value=p.reAnnualCosts||'';
+    }else if(p.assetType==='bond'){
+      document.getElementById('pf-pos-bond-type').value=p.bondType||'';
+      document.getElementById('pf-pos-bond-face').value=p.bondFaceValue||'';
+      document.getElementById('pf-pos-bond-coupon').value=p.bondCouponRate||'';
+      document.getElementById('pf-pos-bond-maturity').value=p.bondMaturityDate||'';
+      document.getElementById('pf-pos-bond-freq').value=p.bondPaymentFreq||'annual';
+    }else if(p.assetType==='cash'){
+      document.getElementById('pf-pos-cash-amount').value=p.cashAmount||'';
+    }
     const acc=pfAccounts.find(a=>a.id===p.accountId);
     document.getElementById('pf-pos-currency').value=acc?acc.currency:(p.currency||'USD');
   }else{
@@ -3550,6 +3660,18 @@ function openPositionModal(editId){
     document.getElementById('pf-pos-avgcost').value='';
     document.getElementById('pf-pos-price').value='';
     document.getElementById('pf-pos-notes').value='';
+    document.getElementById('pf-pos-re-location').value='';
+    document.getElementById('pf-pos-re-date').value='';
+    document.getElementById('pf-pos-re-purchase').value='';
+    document.getElementById('pf-pos-re-value').value='';
+    document.getElementById('pf-pos-re-rental').value='';
+    document.getElementById('pf-pos-re-costs').value='';
+    document.getElementById('pf-pos-bond-type').value='';
+    document.getElementById('pf-pos-bond-face').value='';
+    document.getElementById('pf-pos-bond-coupon').value='';
+    document.getElementById('pf-pos-bond-maturity').value='';
+    document.getElementById('pf-pos-bond-freq').value='annual';
+    document.getElementById('pf-pos-cash-amount').value='';
   }
   modal.classList.add('active');
   setTimeout(()=>document.getElementById('pf-pos-ticker').focus(),100);
@@ -3561,19 +3683,38 @@ function savePosition(){
   const name=document.getElementById('pf-pos-name').value.trim();
   const accountId=parseInt(document.getElementById('pf-pos-account').value);
   const assetType=document.getElementById('pf-pos-type').value;
-  const shares=parseFloat(document.getElementById('pf-pos-shares').value);
-  const avgCost=parseFloat(document.getElementById('pf-pos-avgcost').value);
+  let shares=parseFloat(document.getElementById('pf-pos-shares').value);
+  let avgCost=parseFloat(document.getElementById('pf-pos-avgcost').value);
   const priceVal=document.getElementById('pf-pos-price').value.trim();
-  const currentPrice=priceVal?parseFloat(priceVal):null;
+  let currentPrice=priceVal?parseFloat(priceVal):null;
   const currency=document.getElementById('pf-pos-currency').value;
   const notes=document.getElementById('pf-pos-notes').value.trim();
   const editId=parseInt(document.getElementById('pf-pos-edit-id').value)||0;
 
   if(!ticker){showToast('Ticker / identifier is required','error');return}
   if(!accountId||!pfAccounts.find(a=>a.id===accountId)){showToast('Select a valid account','error');return}
-  if(!isFinite(shares)||shares<0){showToast('Enter a valid number of shares','error');return}
-  if(!isFinite(avgCost)||avgCost<0){showToast('Enter a valid average cost','error');return}
-  if(shares===0&&avgCost===0){showToast('Enter shares or average cost','error');return}
+
+  let extra={};
+  if(assetType==='real_estate'){
+    const rePurchase=parseFloat(document.getElementById('pf-pos-re-purchase').value)||0;
+    const reValue=parseFloat(document.getElementById('pf-pos-re-value').value)||0;
+    if(!rePurchase&&!reValue){showToast('Enter purchase price or current value','error');return}
+    extra={reLocation:document.getElementById('pf-pos-re-location').value.trim(),rePurchaseDate:document.getElementById('pf-pos-re-date').value,rePurchasePrice:rePurchase,reCurrentValue:reValue,reMonthlyRental:parseFloat(document.getElementById('pf-pos-re-rental').value)||0,reAnnualCosts:parseFloat(document.getElementById('pf-pos-re-costs').value)||0};
+    shares=1;avgCost=rePurchase;currentPrice=reValue;
+  }else if(assetType==='cash'){
+    const cashAmount=parseFloat(document.getElementById('pf-pos-cash-amount').value)||0;
+    if(!cashAmount){showToast('Enter a cash amount','error');return}
+    extra={cashAmount};
+    shares=cashAmount;avgCost=1;currentPrice=1;
+  }else if(assetType==='bond'){
+    extra={bondType:document.getElementById('pf-pos-bond-type').value.trim(),bondFaceValue:parseFloat(document.getElementById('pf-pos-bond-face').value)||0,bondCouponRate:parseFloat(document.getElementById('pf-pos-bond-coupon').value)||0,bondMaturityDate:document.getElementById('pf-pos-bond-maturity').value,bondPaymentFreq:document.getElementById('pf-pos-bond-freq').value};
+    if(!isFinite(shares)||shares<0){showToast('Enter a valid number of shares/units','error');return}
+    if(!isFinite(avgCost)||avgCost<0){showToast('Enter a valid average cost','error');return}
+  }else{
+    if(!isFinite(shares)||shares<0){showToast('Enter a valid number of shares','error');return}
+    if(!isFinite(avgCost)||avgCost<0){showToast('Enter a valid average cost','error');return}
+    if(shares===0&&avgCost===0){showToast('Enter shares or average cost','error');return}
+  }
 
   const dup=pfPositions.find(p=>p.ticker===ticker&&p.accountId===accountId&&p.id!==editId);
   if(dup){showToast(`Position for ${ticker} already exists in this account. Edit it instead.`,'error');return}
@@ -3581,9 +3722,9 @@ function savePosition(){
   const now=new Date().toISOString();
   if(editId){
     const p=pfPositions.find(x=>x.id===editId);
-    if(p){Object.assign(p,{ticker,name,accountId,assetType,shares,avgCost,currentPrice,currency,notes,updatedAt:now})}
+    if(p){Object.assign(p,{ticker,name,accountId,assetType,shares,avgCost,currentPrice,currency,notes,...extra,updatedAt:now})}
   }else{
-    pfPositions.push({id:pfNextId(pfPositions),ticker,name,accountId,assetType,shares,avgCost,currentPrice,currency,notes,createdAt:now,updatedAt:now});
+    pfPositions.push({id:pfNextId(pfPositions),ticker,name,accountId,assetType,shares,avgCost,currentPrice,currency,notes,...extra,createdAt:now,updatedAt:now});
   }
   savePortfolioPositions();
   closeModals();
@@ -3824,7 +3965,7 @@ function takeSnapshot(){
     const converted=convertCurrency(mktVal,pos.currency||'USD',base);
     const valueInBase=converted!=null?converted:mktVal;
     totalValue+=valueInBase;
-    return{ticker:pos.ticker,accountId:pos.accountId,shares,pricePerShare:price||0,marketValue:mktVal,currency:pos.currency||'USD',valueInBase};
+    return{ticker:pos.ticker,accountId:pos.accountId,assetType:pos.assetType||'stock',shares,pricePerShare:price||0,marketValue:mktVal,currency:pos.currency||'USD',valueInBase};
   });
   pfSnapshots.push({id:pfNextId(pfSnapshots),date:today,totalValue,baseCurrency:base,notes:'',positions,createdAt:new Date().toISOString()});
   pfSnapshots.sort((a,b)=>a.date.localeCompare(b.date));
@@ -4052,7 +4193,7 @@ function switchAllocChart(groupBy){
     let key;
     if(groupBy==='ticker')key=pos.ticker||'Unknown';
     else if(groupBy==='account')key=getAccountName(pos.accountId);
-    else if(groupBy==='type')key=pos.assetType||'other';
+    else if(groupBy==='type'){const t=pos.assetType||'other';key=t==='real_estate'?'Real Estate':t.charAt(0).toUpperCase()+t.slice(1)}
     else key=pos.currency||'USD';
     groups[key]=(groups[key]||0)+valInBase;
   });
@@ -4485,7 +4626,7 @@ function renderDbAllocCharts(){
       let key;
       if(groupBy==='ticker')key=pos.ticker||'?';
       else if(groupBy==='account')key=getAccountName(pos.accountId);
-      else if(groupBy==='type')key=pos.assetType||'other';
+      else if(groupBy==='type'){const t=pos.assetType||'other';key=t==='real_estate'?'Real Estate':t.charAt(0).toUpperCase()+t.slice(1)}
       else key=pos.currency||'USD';
       groups[key]=(groups[key]||0)+valInBase;
     });
