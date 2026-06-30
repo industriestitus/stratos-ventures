@@ -4346,7 +4346,10 @@ let dbBenchmark={ticker:'SPY',prices:[],fetchedAt:null};
 let db52wHighs={};
 
 async function loadDashTodos(){
-  if(d1Mode){try{const r=await API.get('general_todos?limit=500');dbTodos=(r.data||[]).map(t=>({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order}));return}catch(e){console.error('D1 load todos, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('general_todos?limit=500');dbTodos=(r.data||[]).map(t=>({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order}));
+    // Merge any localStorage todos not yet in D1 (race condition safety net)
+    try{const ls=JSON.parse(localStorage.getItem('dashboard_todos_v1'));if(Array.isArray(ls)){const d1Ids=new Set(dbTodos.map(t=>t.id));const missing=ls.filter(t=>!d1Ids.has(t.id));if(missing.length){dbTodos.push(...missing);saveDashTodos()}}}catch(e){}
+    return}catch(e){console.error('D1 load todos, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_todos_v1'));if(Array.isArray(d))dbTodos=d}catch(e){}
 }
 function saveDashTodos(){

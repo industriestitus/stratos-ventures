@@ -672,17 +672,19 @@ async function handleApi(path, method, url, request, env, origin) {
             results.push({ [pk]: item.key, action: 'upserted' });
           }
         } else if (item[pk]) {
-          const sets = [];
-          const vals = [];
+          const cols = [pk];
+          const vals = [item[pk]];
+          const ph = ['?'];
           for (const col of cfg.cols) {
-            if (item[col] !== undefined) { sets.push(`${col} = ?`); vals.push(item[col]); }
+            if (item[col] !== undefined) { cols.push(col); vals.push(item[col]); ph.push('?'); }
           }
-          if (sets.length && cfg.hasUpdatedAt) sets.push("updated_at = datetime('now')");
-          if (sets.length) {
-            vals.push(item[pk]);
-            stmts.push(db.prepare(`UPDATE ${table} SET ${sets.join(',')} WHERE ${pk} = ?`).bind(...vals));
+          if (cols.length > 1) {
+            const updateCols = cols.slice(1);
+            const updates = updateCols.map(c => `${c} = excluded.${c}`).join(',');
+            const updatedAtClause = cfg.hasUpdatedAt ? `, updated_at = datetime('now')` : '';
+            stmts.push(db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')}) ON CONFLICT(${pk}) DO UPDATE SET ${updates}${updatedAtClause}`).bind(...vals));
           }
-          results.push({ [pk]: item[pk], action: 'updated' });
+          results.push({ [pk]: item[pk], action: 'upserted' });
         } else {
           const cols = [];
           const vals = [];
