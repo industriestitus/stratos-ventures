@@ -9899,6 +9899,35 @@ function renderClSources(ticker,data){
     h+=`<div class="cl-check-row"><input type="checkbox" id="cl-tenk-${i}" ${checked} onchange="saveClField('${escH(ticker)}','research_sources','${k}',this.checked)"><label for="cl-tenk-${i}">${escH(item)}</label></div>`;
   });
   h+=`<div class="cl-field" style="margin-top:12px"><label>10-K / Filing Notes</label><textarea placeholder="Notes from 10-K analysis..." onchange="saveClField('${escH(ticker)}','research_sources','tenkNotes',this.value)" oninput="debounceSaveClField('${escH(ticker)}','research_sources','tenkNotes',this.value)">${escH(data.tenkNotes||'')}</textarea></div>`;
+  h+=`<div style="font-size:12px;font-weight:600;color:var(--text2);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid var(--border);padding-top:12px">Follow Sources</div>`;
+  const srcFields=[
+    {k:'irPageUrl',label:'Investor Relations Page',ph:'https://investor.company.com'},
+    {k:'seekingAlphaUrl',label:'SeekingAlpha',ph:'https://seekingalpha.com/symbol/...'},
+    {k:'twitterAccounts',label:'Twitter / X Accounts',ph:'@CEO, @Company, @Analyst...'},
+    {k:'youtubeChannels',label:'YouTube Channels',ph:'Channel names for analysis videos'},
+    {k:'substackUrl',label:'Substack / Newsletters',ph:'https://newsletter.substack.com'}
+  ];
+  h+=`<div class="cl-qf-fields">`;
+  srcFields.forEach(f=>{
+    h+=`<div class="cl-field"><label>${f.label}</label><input type="text" value="${escH(data[f.k]||'')}" placeholder="${escH(f.ph)}" onchange="saveClField('${escH(ticker)}','research_sources','${f.k}',this.value)"></div>`;
+  });
+  h+=`</div>`;
+  h+=`<div class="cl-field" style="margin-top:6px"><label>Other Follow Sources</label><textarea rows="2" placeholder="Other URLs, forums, Discord servers..." onchange="saveClField('${escH(ticker)}','research_sources','followOther',this.value)" oninput="debounceSaveClField('${escH(ticker)}','research_sources','followOther',this.value)">${escH(data.followOther||'')}</textarea></div>`;
+  h+=`<div style="font-size:12px;font-weight:600;color:var(--text2);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid var(--border);padding-top:12px">Quick Links</div>`;
+  h+=`<div style="display:flex;flex-wrap:wrap;gap:6px">`;
+  const links=[
+    {label:'Finviz',url:`https://finviz.com/quote.ashx?t=${encodeURIComponent(ticker)}`},
+    {label:'Macrotrends',url:`https://www.macrotrends.net/stocks/charts/${encodeURIComponent(ticker)}`},
+    {label:'TickerTrends',url:`https://www.tickertrends.io/social-arbitrage?ticker=${encodeURIComponent(ticker)}`},
+    {label:'SEC Filings',url:`https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${encodeURIComponent(ticker)}&type=10-K&dateb=&owner=include&count=10`},
+    {label:'Glassdoor',url:`https://www.glassdoor.com/Reviews/company-reviews.htm?sc.keyword=${encodeURIComponent(ticker)}`},
+    {label:'Yahoo Finance',url:`https://finance.yahoo.com/quote/${encodeURIComponent(ticker)}`},
+    {label:'Wisesheets',url:`https://wisesheets.io/quote/${encodeURIComponent(ticker)}`}
+  ];
+  links.forEach(l=>{
+    h+=`<a href="${escH(l.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;background:var(--surface2);color:var(--accent);font-size:11px;font-weight:600;text-decoration:none;border:1px solid var(--border);transition:background .2s" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--surface2)';this.style.color='var(--accent)'">${escH(l.label)} ↗</a>`;
+  });
+  h+=`</div>`;
   return h;
 }
 
