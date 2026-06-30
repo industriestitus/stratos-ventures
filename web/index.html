@@ -859,7 +859,7 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .cl-threshold{display:flex;align-items:center;gap:8px;padding:6px 0}
 .cl-threshold-icon{font-size:16px}
 .cl-threshold-label{font-size:13px;color:var(--text);flex:1}
-.cl-qf-entry{border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;background:var(--surface)}
+.cl-qf-entry{border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;background:var(--surface)}.cl-qf-entry:last-child{margin-bottom:16px}
 .cl-qf-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .cl-qf-quarter{font-weight:600;font-size:13px;color:var(--accent)}
 .cl-qf-date{font-size:11px;color:var(--text2)}
@@ -9900,25 +9900,51 @@ function renderClQuarters(ticker,data){
   if(!entries.length){h+=`<div style="color:var(--text2);font-size:12px">No quarterly follow-ups yet.</div>`;return h}
   entries.slice().reverse().forEach((e,ri)=>{
     const i=entries.length-1-ri;
+    const t=escH(ticker);
+    const sel=(field,val,opts)=>opts.map(o=>`<option value="${o[0]}"${val===o[0]?' selected':''}>${o[1]}</option>`).join('');
+    const ta=(field,label,ph,rows)=>`<div class="cl-field"><label>${label}</label><textarea rows="${rows||2}" placeholder="${escH(ph||'')}" onchange="updateClQuarter('${t}',${i},'${field}',this.value)">${escH(e[field]||'')}</textarea></div>`;
+    const convBtns=[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="${parseInt(e.convictionLevel)===n?'active':''}" onclick="updateClQuarter('${t}',${i},'convictionLevel','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('');
     h+=`<div class="cl-qf-entry">
       <div class="cl-qf-header">
         <span class="cl-qf-quarter">${escH(e.quarter||'')}</span>
-        <span class="cl-qf-date">${e.date||''}</span>
-        <button style="margin-left:auto;background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px" onclick="removeClQuarter('${escH(ticker)}',${i})" title="Remove">✕</button>
+        <span class="cl-qf-date">${escH(e.date||'')}</span>
+        <button style="margin-left:auto;background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px" onclick="removeClQuarter('${t}',${i})" title="Remove">✕</button>
       </div>
+      ${e.previousQuarterFollowup?`<div class="cl-field" style="margin-bottom:12px;padding:8px 12px;background:var(--surface2);border-radius:var(--radius);border-left:3px solid var(--accent)"><label style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">Previous Quarter Follow-up</label><div style="font-size:12px;color:var(--text1);white-space:pre-wrap;margin-top:4px">${escH(e.previousQuarterFollowup)}</div></div>`:''}
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Numbers & Business</div>
       <div class="cl-qf-fields">
-        <div class="cl-field"><label>Numbers OK?</label><select onchange="updateClQuarter('${escH(ticker)}',${i},'numbersOk',this.value)">
-          <option value=""${e.numbersOk==null?' selected':''}>—</option><option value="yes"${e.numbersOk==='yes'?' selected':''}>Yes</option><option value="no"${e.numbersOk==='no'?' selected':''}>No</option>
-        </select></div>
-        <div class="cl-field"><label>Thesis Intact?</label><select onchange="updateClQuarter('${escH(ticker)}',${i},'thesisIntact',this.value)">
-          <option value=""${e.thesisIntact==null?' selected':''}>—</option><option value="yes"${e.thesisIntact==='yes'?' selected':''}>Yes</option><option value="no"${e.thesisIntact==='no'?' selected':''}>No</option>
-        </select></div>
-        <div class="cl-field"><label>Action</label><select onchange="updateClQuarter('${escH(ticker)}',${i},'action',this.value)">
-          <option value=""${!e.action?' selected':''}>—</option><option value="hold"${e.action==='hold'?' selected':''}>Hold</option><option value="add"${e.action==='add'?' selected':''}>Add</option><option value="trim"${e.action==='trim'?' selected':''}>Trim</option><option value="sell"${e.action==='sell'?' selected':''}>Sell</option>
-        </select></div>
-        <div class="cl-field"><label>News/Developments</label><textarea rows="2" onchange="updateClQuarter('${escH(ticker)}',${i},'news',this.value)">${escH(e.news||'')}</textarea></div>
+        ${ta('numbers','Revenue, Profit, Margins, EPS','On track vs expectations?')}
+        ${ta('news','News / Developments','Significant news this quarter')}
+        ${ta('managementCommentary','Management Commentary','Key management statements')}
+        ${ta('companyForecast','Company Forecast / Guidance','Company\'s own guidance')}
       </div>
-      <div class="cl-field" style="margin-top:8px"><label>Notes</label><textarea rows="2" onchange="updateClQuarter('${escH(ticker)}',${i},'notes',this.value)">${escH(e.notes||'')}</textarea></div>
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;border-top:1px solid var(--border);padding-top:12px">Thesis & Quality</div>
+      <div class="cl-qf-fields">
+        <div class="cl-field"><label>Thesis Status</label><select onchange="updateClQuarter('${t}',${i},'thesisStatus',this.value)">
+          ${sel('thesisStatus',e.thesisStatus||'',[['','—'],['ON TRACK','On Track'],['BROKEN','Broken'],['UNCLEAR','Unclear']])}
+        </select></div>
+        <div class="cl-field"><label>Moat Status</label><select onchange="updateClQuarter('${t}',${i},'moatStatus',this.value)">
+          ${sel('moatStatus',e.moatStatus||'',[['','—'],['Widened','Widened'],['Stable','Stable'],['Narrowed','Narrowed']])}
+        </select></div>
+        <div class="cl-field"><label>Quality Trend</label><select onchange="updateClQuarter('${t}',${i},'qualityTrend',this.value)">
+          ${sel('qualityTrend',e.qualityTrend||'',[['','—'],['Improving','Improving'],['Stable','Stable'],['Declining','Declining']])}
+        </select></div>
+        ${ta('thesisChanges','What Changed vs Thesis?','What changed from original thesis?')}
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;border-top:1px solid var(--border);padding-top:12px">Decision</div>
+      <div class="cl-qf-fields">
+        ${ta('valuationUpdate','Valuation Update','Updated valuation notes')}
+        <div class="cl-field"><label>Conviction (1-10)</label><div class="cl-rating">${convBtns}</div></div>
+        <div class="cl-field"><label>Action</label><select onchange="updateClQuarter('${t}',${i},'action',this.value)">
+          ${sel('action',e.action||'',[['','—'],['hold','Hold'],['add','Buy More'],['trim','Reduce'],['sell','Sell']])}
+        </select></div>
+      </div>
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 6px;border-top:1px solid var(--border);padding-top:12px">Forward Looking</div>
+      <div class="cl-qf-fields">
+        ${ta('watchNextQuarter','Watch Next Quarter','What to watch for next quarter')}
+        ${ta('uncertainties','Uncertainties','Any new uncertainties?')}
+      </div>
+      <div class="cl-field" style="margin-top:8px"><label>Notes</label><textarea rows="2" placeholder="Additional notes..." onchange="updateClQuarter('${t}',${i},'notes',this.value)">${escH(e.notes||'')}</textarea></div>
     </div>`;
   });
   return h;
@@ -9930,7 +9956,9 @@ function addClQuarter(ticker){
   const entries=cl.sections.quarterly_followup.entries;
   const now=new Date();
   const q='Q'+Math.ceil((now.getMonth()+1)/3)+' '+now.getFullYear();
-  entries.push({quarter:q,date:now.toISOString().slice(0,10),numbersOk:null,thesisIntact:null,action:'',news:'',notes:''});
+  const prev=entries.length?entries[entries.length-1]:null;
+  const carry=prev&&prev.watchNextQuarter?prev.watchNextQuarter:'';
+  entries.push({quarter:q,date:now.toISOString().slice(0,10),numbers:'',news:'',managementCommentary:'',companyForecast:'',thesisStatus:'',thesisChanges:'',moatStatus:'',qualityTrend:'',valuationUpdate:'',convictionLevel:'',action:'',watchNextQuarter:'',uncertainties:'',previousQuarterFollowup:carry,notes:''});
   clLogChange(ticker,'quarter_added','quarterly_followup','',q);
   saveTrackerStocks();
   renderChecklist(ticker);
@@ -10055,11 +10083,10 @@ function calcClProgress(ticker){
     if(sec.key==='quarterly_followup'){
       const entries=data.entries||[];
       if(!entries.length){data.progress=0}else{
+        const qFields=['numbers','news','managementCommentary','companyForecast','thesisStatus','moatStatus','qualityTrend','thesisChanges','valuationUpdate','convictionLevel','action','watchNextQuarter','uncertainties'];
         entries.forEach(e=>{
-          total+=3;
-          if(e.numbersOk)filled++;
-          if(e.thesisIntact)filled++;
-          if(e.action)filled++;
+          total+=qFields.length;
+          qFields.forEach(f=>{if(e[f])filled++;});
         });
         data.progress=total?Math.round(filled/total*100):0;
       }

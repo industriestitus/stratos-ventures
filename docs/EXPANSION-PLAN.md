@@ -504,7 +504,7 @@ All with METRIC_TIPS tooltips.
 
 ## Phase 15: Follow-up & Monitoring (~2 sessions)
 
-### 15.1 Quarterly Follow-up expansion
+### 15.1 Quarterly Follow-up expansion ✅ DONE
 - **Difficulty:** MEDIUM (2 hours)
 - **Cost:** Free
 - **What:** Add structured fields to quarterly_followup entries
