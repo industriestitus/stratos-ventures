@@ -733,7 +733,7 @@ Risk: Very safe → 1.3x, Normal → 1x, Fragile → 0.7x, High risk → 0.5x
 
 **UI:** Row of small icon buttons below company name, each opens in new tab.
 
-### 18.2 Basic Earnings Calendar
+### 18.2 Basic Earnings Calendar ✅
 - **Difficulty:** EASY (1.5 hours)
 - **Cost:** Free (FMP free tier endpoint)
 - **What:** Show upcoming earnings dates for tracked companies + mark as read/listened

@@ -1066,6 +1066,12 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       <div id="db-todo-summary-content"></div>
     </div>
 
+    <!-- Upcoming Earnings -->
+    <div class="db-widget" id="db-earnings-widget">
+      <div class="db-widget-title">Upcoming Earnings <button onclick="fetchEarningsCalendar()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit">Refresh</button></div>
+      <div id="db-earnings-content"></div>
+    </div>
+
     <!-- General TODO List -->
     <div class="db-widget" id="db-todo-widget">
       <div class="db-widget-title">General TODO</div>
@@ -4574,6 +4580,7 @@ function renderDashboard(){
   renderDbBenchmark();
   renderDbDipFinder();
   renderDbFiTracker();
+  renderDbEarnings();
   renderDbTodoSummary();
   renderDbTodoList();
 }
@@ -5109,6 +5116,95 @@ function deleteDashTodo(id){
   if(d1Mode)API.del('general_todos/'+id).catch(e=>console.error('D1 del todo:',e));
   dbTodos=dbTodos.filter(x=>x.id!==id);
   saveDashTodos();renderDbTodoList();renderDbTodoSummary();showToast('Deleted','success');
+}
+
+// ---- Upcoming Earnings Widget ----
+function renderDbEarnings(){
+  const el=document.getElementById('db-earnings-content');
+  if(!el)return;
+  const today=new Date().toISOString().slice(0,10);
+  const items=[];
+  Object.entries(tStocks).forEach(([ticker,s])=>{
+    const pipe=s.pipeline||'';
+    if(pipe!=='Owned'&&pipe!=='Buy target')return;
+    const earn=s.earningsCalendar||{};
+    if(earn.date){
+      const daysUntil=Math.round((new Date(earn.date)-new Date(today))/(86400000));
+      const isPast=daysUntil<0;
+      const reviewed=earn.reviewed||false;
+      const listened=earn.listened||false;
+      let status='Upcoming';
+      if(isPast&&reviewed)status='Reviewed';
+      else if(isPast)status='Reported';
+      items.push({ticker,name:s.name||ticker,date:earn.date,daysUntil,status,reviewed,listened,isPast});
+    }
+  });
+  if(!items.length){
+    el.innerHTML='<div class="db-empty">No earnings data. Click Refresh to fetch from FMP.</div>';
+    return;
+  }
+  items.sort((a,b)=>a.date.localeCompare(b.date));
+  let h='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  h+='<tr style="color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:.3px"><th style="text-align:left;padding:4px 6px">Company</th><th style="text-align:left;padding:4px 6px">Date</th><th style="text-align:right;padding:4px 6px">Days</th><th style="text-align:center;padding:4px 6px">Status</th></tr>';
+  items.forEach(it=>{
+    const statusCls=it.status==='Reviewed'?'positive':it.status==='Reported'?'warn':'';
+    const daysCls=!it.isPast&&it.daysUntil<=7?'warn':'';
+    h+=`<tr style="border-top:1px solid var(--border)">`;
+    h+=`<td style="padding:6px"><a href="#" onclick="event.preventDefault();showProfile('${escH(it.ticker)}')" style="color:var(--accent);text-decoration:none;font-weight:500">${escH(it.name)}</a></td>`;
+    h+=`<td style="padding:6px;white-space:nowrap">${escH(it.date)}</td>`;
+    h+=`<td style="padding:6px;text-align:right;font-weight:600" class="${daysCls}">${it.isPast?it.daysUntil+'d':'+'+it.daysUntil+'d'}</td>`;
+    h+=`<td style="padding:6px;text-align:center;white-space:nowrap">`;
+    h+=`<label style="cursor:pointer;font-size:11px" title="Report Read"><input type="checkbox" ${it.reviewed?'checked':''} onchange="toggleEarningsStatus('${escH(it.ticker)}','reviewed')" style="vertical-align:middle"> <span class="${statusCls}" style="font-weight:500">${it.status}</span></label>`;
+    h+=` <label style="cursor:pointer;font-size:11px;margin-left:4px" title="Call Listened"><input type="checkbox" ${it.listened?'checked':''} onchange="toggleEarningsStatus('${escH(it.ticker)}','listened')" style="vertical-align:middle;accent-color:var(--accent)"> 🎧</label>`;
+    h+=`</td></tr>`;
+  });
+  h+='</table>';
+  el.innerHTML=h;
+}
+
+async function fetchEarningsCalendar(){
+  const s=stSettings();
+  if(!s.apiKey){showToast('FMP API key not set — go to Settings','warning');return}
+  showToast('Fetching earnings calendar...','info');
+  const tickers=Object.entries(tStocks).filter(([,s])=>{const p=s.pipeline||'';return p==='Owned'||p==='Buy target';}).map(([t])=>t);
+  if(!tickers.length){showToast('No Owned/Buy Target companies','warning');return}
+  let updated=0;
+  for(const ticker of tickers){
+    try{
+      const data=await fmpFetch('earning-calendar',{symbol:ticker});
+      if(data&&Array.isArray(data)&&data.length>0){
+        const today=new Date().toISOString().slice(0,10);
+        const upcoming=data.filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date))[0];
+        const recent=data.filter(e=>e.date<today).sort((a,b)=>b.date.localeCompare(a.date))[0];
+        const best=upcoming||recent;
+        if(best){
+          if(!tStocks[ticker].earningsCalendar)tStocks[ticker].earningsCalendar={};
+          const prev=tStocks[ticker].earningsCalendar;
+          tStocks[ticker].earningsCalendar={
+            date:best.date,
+            eps:best.eps,
+            epsEstimated:best.epsEstimated,
+            revenue:best.revenue,
+            revenueEstimated:best.revenueEstimated,
+            reviewed:prev.date===best.date?prev.reviewed:false,
+            listened:prev.date===best.date?prev.listened:false
+          };
+          updated++;
+        }
+      }
+    }catch(e){console.warn('Earnings fetch failed for',ticker,e)}
+    await new Promise(r=>setTimeout(r,300));
+  }
+  saveTrackerStocks();
+  renderDbEarnings();
+  showToast(`Updated earnings for ${updated}/${tickers.length} companies`,'success');
+}
+
+function toggleEarningsStatus(ticker,field){
+  const s=tStocks[ticker];if(!s||!s.earningsCalendar)return;
+  s.earningsCalendar[field]=!s.earningsCalendar[field];
+  saveTrackerStocks();
+  renderDbEarnings();
 }
 
 function renderDbTodoList(){
@@ -7158,8 +7254,11 @@ function renderEarningsGrid(ticker){
       if(!earnings[yr][q])earnings[yr][q]={done:false,note:''};
       const eq=earnings[yr][q];
       h+=`<div class="cp-earn-q">`;
-      h+=`<input type="checkbox" id="earn-${eyr}-${q}" ${eq.done?'checked':''} onchange="toggleEarning('${escH(ticker)}','${eyr}','${q}',this.checked)">`;
+      h+=`<input type="checkbox" id="earn-${eyr}-${q}" ${eq.done?'checked':''} onchange="toggleEarning('${escH(ticker)}','${eyr}','${q}',this.checked)" title="Report Read">`;
       h+=`<label for="earn-${eyr}-${q}">${q}</label>`;
+      h+=`<input type="checkbox" id="earn-listen-${eyr}-${q}" ${eq.listened?'checked':''} onchange="toggleEarningField('${escH(ticker)}','${eyr}','${q}','listened',this.checked)" title="Call Listened" style="accent-color:var(--accent)">`;
+      h+=`<label for="earn-listen-${eyr}-${q}" style="font-size:10px;color:var(--text2)" title="Call Listened">🎧</label>`;
+      h+=`<input type="date" value="${escH(eq.earningsDate||'')}" onchange="toggleEarningField('${escH(ticker)}','${eyr}','${q}','earningsDate',this.value)" title="Earnings Date" style="font-size:11px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-family:inherit;max-width:120px">`;
       h+=`<input type="text" value="${escH(eq.note||'')}" placeholder="Notes..." onchange="saveEarningNote('${escH(ticker)}','${eyr}','${q}',this.value)">`;
       h+=`</div>`;
     });
@@ -7184,6 +7283,13 @@ function saveEarningNote(ticker,year,quarter,value){
   if(!s.notes.earnings[year])return;
   if(!s.notes.earnings[year][quarter])s.notes.earnings[year][quarter]={done:false,note:''};
   s.notes.earnings[year][quarter].note=value;
+  saveTrackerStocks();
+}
+function toggleEarningField(ticker,year,quarter,field,value){
+  const s=tStocks[ticker];if(!s||!s.notes||!s.notes.earnings)return;
+  if(!s.notes.earnings[year])return;
+  if(!s.notes.earnings[year][quarter])s.notes.earnings[year][quarter]={done:false,note:''};
+  s.notes.earnings[year][quarter][field]=value;
   saveTrackerStocks();
 }
 function addEarningsYear(ticker){

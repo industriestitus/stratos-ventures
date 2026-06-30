@@ -440,6 +440,30 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ---
 
+## Audit 21 — Phase 18.2: Earnings Calendar (2026-07-01)
+
+**6 bugs found, 6 fixed**
+
+### Bug 21.1 — CRITICAL: Wrong FMP API endpoint path
+**Problem:** `v3/earning_calendar` under `/stable/` base URL produced invalid path. **Fix:** Changed to `earning-calendar`.
+
+### Bug 21.2 — HIGH: Dashboard earnings status not interactive
+**Problem:** `toggleEarningsStatus` defined but never called — no way to mark reviewed/listened from dashboard. **Fix:** Added review + listened checkboxes in table rows.
+
+### Bug 21.3 — LOW: Unused `_earningsCalendarCache` variable
+**Fix:** Removed dead code.
+
+### Bug 21.4 — MEDIUM: No rate-limit delay between sequential API calls
+**Fix:** Added 300ms delay between FMP requests.
+
+### Bug 21.5 — MEDIUM: `data.find` on unsorted array may select wrong upcoming date
+**Fix:** Changed to `data.filter().sort()[0]` for correct nearest date.
+
+### Bug 21.6 — MEDIUM: Missing try/catch around fetch loop
+**Problem:** Unexpected error would abort without saving partial results. **Fix:** Wrapped inner loop in try/catch.
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth) and any future Worker changes:
