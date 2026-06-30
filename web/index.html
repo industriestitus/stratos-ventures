@@ -5845,14 +5845,18 @@ function showProfile(ticker){
   ${s.price!=null?`<div style="font-size:11px;color:var(--text2);margin-top:6px">Current: $${s.price.toFixed(2)}${pa.alertAbove&&s.price>=parseFloat(pa.alertAbove)?' <span style="color:var(--green);font-weight:600">▲ ABOVE TARGET</span>':''}${pa.alertBelow&&s.price<=parseFloat(pa.alertBelow)?' <span style="color:var(--red);font-weight:600">▼ BELOW TARGET</span>':''}</div>`:''}
   </div>`;
 
-  // Card 5: Conviction Tracker
+  // Card 5: Expected Return Breakdown
+  h+=`<div class="card"><div class="card-title">Expected Return Breakdown</div><div id="cp-expected-return"></div></div>`;
+
+  // Card 6: Conviction Tracker
   h+=`<div class="card"><div class="card-title">Conviction Tracker</div><div id="cp-conviction-chart" style="min-height:100px"></div></div>`;
 
   document.getElementById('cp-overview-content').innerHTML=h;
 
-  // Render pipeline, company type & conviction
+  // Render pipeline, company type, expected return & conviction
   renderPipeline(ticker);
   renderCompanyType(ticker);
+  renderExpectedReturn(ticker);
   renderConvictionBadge(ticker);
   renderConvictionChart(ticker);
 
@@ -6098,6 +6102,102 @@ function setCompanyType(ticker,type){
   s.companyType=s.companyType===type?'':type;
   saveTrackerStocks();
   renderCompanyType(ticker);
+}
+
+// Expected Return Breakdown
+function getExpectedReturnDefaults(ticker){
+  const s=tStocks[ticker];if(!s)return{};
+  const r=calcStockRatios(s);
+  const dh=divHistory[ticker];
+  const divYld=dh?.yieldPct||0;
+  const bbYld=r.buyback||0;
+  return{
+    revGrowth:s.revCAGR3!=null?parseFloat(s.revCAGR3.toFixed(1)):null,
+    marginExpansion:null,
+    multipleChange:null,
+    capitalReturn:parseFloat((divYld+bbYld).toFixed(1))||null
+  };
+}
+function renderExpectedReturn(ticker){
+  const container=document.getElementById('cp-expected-return');
+  if(!container)return;
+  const s=tStocks[ticker];if(!s)return;
+  const cl=s.checklist||{};
+  const bs=cl.sections?.buy_sell||{};
+  const defaults=getExpectedReturnDefaults(ticker);
+  const rev=bs.returnRevGrowth!=null&&bs.returnRevGrowth!==''?parseFloat(bs.returnRevGrowth):defaults.revGrowth;
+  const margin=bs.returnMarginExpansion!=null&&bs.returnMarginExpansion!==''?parseFloat(bs.returnMarginExpansion):defaults.marginExpansion;
+  const mult=bs.returnMultipleChange!=null&&bs.returnMultipleChange!==''?parseFloat(bs.returnMultipleChange):defaults.multipleChange;
+  const cap=bs.returnCapitalReturn!=null&&bs.returnCapitalReturn!==''?parseFloat(bs.returnCapitalReturn):defaults.capitalReturn;
+  const drivers=[
+    {key:'returnRevGrowth',label:'Revenue Growth',value:rev,color:'#6c5ce7',auto:defaults.revGrowth,hint:'3Y Revenue CAGR'},
+    {key:'returnMarginExpansion',label:'Margin Expansion',value:margin,color:'#00b894',auto:null,hint:'Manual estimate'},
+    {key:'returnMultipleChange',label:'Multiple Change',value:mult,color:'#fdcb6e',auto:null,hint:'Manual estimate'},
+    {key:'returnCapitalReturn',label:'Capital Return',value:cap,color:'#e17055',auto:defaults.capitalReturn,hint:'Div yield + buyback'}
+  ];
+  const hasData=drivers.some(d=>d.value!=null&&!isNaN(d.value));
+  const total=drivers.reduce((sum,d)=>(d.value!=null&&!isNaN(d.value))?sum+d.value:sum,0);
+  const totalCls=total>=15?'positive':total>=10?'warn':'negative';
+  const minLine=15;
+  let h='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:16px">';
+  drivers.forEach(d=>{
+    const val=d.value!=null&&!isNaN(d.value)?d.value:'';
+    const autoTag=d.auto!=null?`<div style="font-size:9px;color:var(--text2);margin-top:2px">API: ${d.auto}%</div>`:'';
+    h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px">
+      <div style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px">${d.label}</div>
+      <input type="number" step="any" value="${val}" placeholder="${d.hint}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--text);font-size:14px;font-weight:600;font-family:inherit"
+        onchange="saveExpectedReturnField('${escH(ticker)}','${d.key}',this.value)">
+      ${autoTag}
+    </div>`;
+  });
+  h+='</div>';
+  if(hasData){
+    const maxAbs=Math.max(Math.abs(total),minLine,Math.max(...drivers.map(d=>Math.abs(d.value||0))));
+    const scale=maxAbs>0?100/maxAbs:1;
+    h+=`<div style="margin-bottom:12px">`;
+    h+=`<div style="position:relative;height:32px;background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;display:flex">`;
+    let cumPct=0;
+    drivers.forEach(d=>{
+      if(d.value==null||isNaN(d.value)||d.value===0)return;
+      const w=Math.abs(d.value)*scale;
+      const neg=d.value<0;
+      const bg=neg?`repeating-linear-gradient(135deg,${d.color},${d.color} 4px,transparent 4px,transparent 8px)`:d.color;
+      h+=`<div style="width:${w}%;background:${bg};opacity:0.8;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden" title="${d.label}: ${d.value>0?'+':''}${d.value.toFixed(1)}%">${Math.abs(d.value)>=2?d.value.toFixed(1)+'%':''}</div>`;
+      cumPct+=w;
+    });
+    h+=`</div>`;
+    const minPos=minLine*scale;
+    h+=`<div style="position:relative;height:16px"><div style="position:absolute;left:${minPos}%;transform:translateX(-50%);font-size:9px;color:var(--text2);white-space:nowrap">▲ 15% min</div></div>`;
+    h+=`</div>`;
+    h+=`<div style="display:flex;align-items:baseline;gap:10px;margin-top:4px">
+      <span style="font-size:22px;font-weight:700" class="${totalCls}">${total>=0?'+':''}${total.toFixed(1)}%</span>
+      <span style="font-size:12px;color:var(--text2)">Expected CAGR</span>
+    </div>`;
+    h+=`<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:8px">`;
+    drivers.forEach(d=>{
+      if(d.value==null||isNaN(d.value))return;
+      h+=`<div style="display:flex;align-items:center;gap:4px;font-size:11px"><span style="width:10px;height:10px;border-radius:2px;background:${d.color};display:inline-block"></span>${d.label}: ${d.value>0?'+':''}${d.value.toFixed(1)}%</div>`;
+    });
+    h+=`</div>`;
+  }else{
+    h+=`<div style="color:var(--text2);font-size:13px;text-align:center;padding:10px">Fill in the return drivers above, or set them in Checklist → Buy/Sell Decision.</div>`;
+  }
+  container.innerHTML=h;
+}
+function saveExpectedReturnField(ticker,field,value){
+  const s=tStocks[ticker];if(!s)return;
+  if(!s.checklist)s.checklist={};
+  if(!s.checklist.sections)s.checklist.sections={};
+  if(!s.checklist.sections.buy_sell)s.checklist.sections.buy_sell={};
+  s.checklist.sections.buy_sell[field]=value===''?'':parseFloat(value);
+  const drivers=['returnRevGrowth','returnMarginExpansion','returnMultipleChange','returnCapitalReturn'];
+  const bsd=s.checklist.sections.buy_sell;
+  const total=drivers.reduce((sum,k)=>{const v=parseFloat(bsd[k]);return !isNaN(v)?sum+v:sum},0);
+  if(drivers.some(k=>bsd[k]!=null&&bsd[k]!=='')){
+    bsd.expectedCagr=parseFloat(total.toFixed(1));
+  }
+  saveTrackerStocks();
+  renderExpectedReturn(ticker);
 }
 
 // Conviction tracker
@@ -10314,6 +10414,12 @@ function saveClField(ticker,section,field,value){
   if(old!==value&&!(old==null&&value==null))clLogChange(ticker,'field_changed',section+'.'+field,old,value);
   cl.lastUpdated=new Date().toISOString();
   calcClProgress(ticker);
+  if(section==='buy_sell'&&field.startsWith('return')){
+    const bsd=cl.sections.buy_sell;
+    const drvs=['returnRevGrowth','returnMarginExpansion','returnMultipleChange','returnCapitalReturn'];
+    const total=drvs.reduce((s,k)=>{const v=parseFloat(bsd[k]);return !isNaN(v)?s+v:s},0);
+    if(drvs.some(k=>bsd[k]!=null&&bsd[k]!==''))bsd.expectedCagr=parseFloat(total.toFixed(1));
+  }
   saveTrackerStocks();
 }
 
