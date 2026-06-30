@@ -601,7 +601,7 @@ All with METRIC_TIPS tooltips.
 
 ---
 
-## Phase 16: Review & Psychology Expansion (~1 session)
+## Phase 16: Review & Psychology Expansion (~1 session) ✅ COMPLETE (2026-07-01)
 
 ### 16.1 Psychology section expansion ✅ (done early in Phase 11 session, 2026-06-30)
 - **Difficulty:** EASY (1 hour)
@@ -620,7 +620,7 @@ All with METRIC_TIPS tooltips.
 - `speculationCheck` (select: Investing / Speculating / Unsure) — "Am I investing or speculating?"
 - `emotionalAttachment` (select: None / Some / High) — "Do I have emotional attachment to this stock?"
 
-### 16.2 Review template questions expansion
+### 16.2 Review template questions expansion ✅ (2026-07-01)
 - **Difficulty:** EASY (30 min)
 - **Cost:** Free
 - **What:** Add questions to RV_QUESTIONS weekly/monthly/quarterly arrays
@@ -639,7 +639,7 @@ All with METRIC_TIPS tooltips.
 - `q12` — "What to specifically watch for next quarter?"
 - `q13` — "Where was I wrong this quarter and what did I learn?"
 
-### 16.3 Conviction Tracker timeline
+### 16.3 Conviction Tracker timeline ✅ (2026-07-01)
 - **Difficulty:** MEDIUM (2 hours)
 - **Cost:** Free
 - **What:** Per-company conviction level over time, visualized as line chart

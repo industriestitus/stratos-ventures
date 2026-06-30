@@ -398,6 +398,36 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ---
 
+## Audit 19 — Phase 16.3: Conviction Tracker (2026-07-01)
+
+**Commit:** `c5f14b8` | **3 bugs found, 3 fixed**
+
+### Bug 19.1 — Memory leak: conviction chart not destroyed on closeProfile
+
+**File:** `web/index.html:6061`
+
+**Problem:** `closeProfile()` destroyed `cpHistCharts` but not `window._convictionChart`, leaking chart instances.
+
+**Fix:** Added `if(window._convictionChart){window._convictionChart.destroy();window._convictionChart=null;}` to `closeProfile()`.
+
+### Bug 19.2 — Missing null check in renderConvictionBadge
+
+**File:** `web/index.html:6144`
+
+**Problem:** `renderConvictionBadge` didn't null-check the DOM element before accessing `.innerHTML`.
+
+**Fix:** Added `if(!el)return;` guard after `getElementById`.
+
+### Bug 19.3 — NaN conviction values from non-numeric input
+
+**File:** `web/index.html:6108-6120`
+
+**Problem:** Psychology checklist and quarterly follow-up sources used `parseInt()` without validating the result, unlike the review source which had `>=1 && <=10` guard.
+
+**Fix:** Added `>=1 && <=10` validation to both checklist and quarterly_followup conviction sources.
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth) and any future Worker changes:
