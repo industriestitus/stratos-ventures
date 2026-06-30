@@ -6055,14 +6055,48 @@ function renderValuation(ticker){
     return`<span class="cp-val-badge ${cls}" style="background:${cls==='positive'?'rgba(0,184,148,.15)':cls==='negative'?'rgba(225,112,85,.15)':'rgba(253,203,110,.15)'}">${typeof v==='string'?v:v.toFixed(1)}${suffix||''}</span>`;
   }
 
-  // DCF
-  h+='<div class="card cp-val-model"><div class="cp-val-header"><div class="cp-val-model-title">DCF (Perpetuity)</div>'+badge(c.dcf,0,30,'%')+'</div>';
+  // DCF with FCFF toggle
+  const dcfMode=s.dcfMode||'fcfe';
+  const isFCFF=dcfMode==='fcff';
+  // FCFF calculation
+  const fcffIs0=s._isData?.[0], fcffCf0=s._cfData?.[0], fcffBs0=s._bsData?.[0], fcffBs1=s._bsData?.[1];
+  const fcffEbit=s.ebit;
+  const fcffTaxExp=fcffIs0?.incomeTaxExpense, fcffPreTax=fcffIs0?.incomeBeforeTax;
+  const fcffEffTax=fcffTaxExp!=null&&fcffPreTax&&fcffPreTax>0?Math.max(0,Math.min(fcffTaxExp/fcffPreTax,1)):0.21;
+  const fcffDepr=fcffIs0?.depreciationAndAmortization??fcffCf0?.depreciationAndAmortization??null;
+  const fcffCapex=fcffCf0?.capitalExpenditure!=null?Math.abs(fcffCf0.capitalExpenditure):null;
+  const fcffWC0=fcffBs0?((fcffBs0.totalCurrentAssets||0)-(fcffBs0.totalCurrentLiabilities||0)):null;
+  const fcffWC1=fcffBs1?((fcffBs1.totalCurrentAssets||0)-(fcffBs1.totalCurrentLiabilities||0)):null;
+  const fcffDeltaWC=fcffWC0!=null&&fcffWC1!=null?fcffWC0-fcffWC1:0;
+  const fcffVal=fcffEbit!=null&&fcffDepr!=null&&fcffCapex!=null?fcffEbit*(1-fcffEffTax)+fcffDepr-fcffCapex-fcffDeltaWC:null;
+  // FCFF DCF
+  let dcfFcffUpside=null;
+  const fcffWacc=s.evaWacc??10;
+  if(isFCFF&&fcffVal!=null&&fcffVal>0&&s.marketCap){
+    const waccR=fcffWacc/100,tgR=tg/100;
+    let dcfS=0;const fcffs=[fcffVal];
+    const fcffGrowths=[...Array(5).fill(g1),...Array(5).fill(g2)];
+    for(let i=0;i<10;i++)fcffs.push(fcffs[i]*(1+fcffGrowths[i]/100));
+    for(let i=1;i<=10;i++)dcfS+=fcffs[i]/Math.pow(1+waccR,i);
+    if(waccR>tgR){const tv=(fcffs[10]*(1+tgR))/(waccR-tgR);const ev=dcfS+tv/Math.pow(1+waccR,10);const eqVal=ev-(s.totalDebt||0)+(s.totalCash||0);dcfFcffUpside=((eqVal-s.marketCap)/s.marketCap)*100;}
+  }
+  const dcfUpside=isFCFF?dcfFcffUpside:c.dcf;
+  const dcfLabel=isFCFF?'DCF — FCFF (to Firm)':'DCF (Perpetuity)';
+  const dcfCF0=isFCFF?fcffVal:s.fcfSbc;
+  const dcfCF0Label=isFCFF?'FCFF (Y0)':'FCF-SBC (Y0)';
+
+  h+='<div class="card cp-val-model"><div class="cp-val-header"><div class="cp-val-model-title">'+dcfLabel+'</div>'+badge(dcfUpside,0,30,'%')+'</div>';
+  h+=`<div style="display:flex;gap:4px;margin-bottom:8px"><button class="btn ${!isFCFF?'btn-primary':'btn-secondary'}" style="padding:4px 10px;font-size:11px" onclick="tStocks['${escH(ticker)}'].dcfMode='fcfe';saveTrackerStocks();renderValuation('${escH(ticker)}')">FCF to Equity</button><button class="btn ${isFCFF?'btn-primary':'btn-secondary'}" style="padding:4px 10px;font-size:11px" onclick="tStocks['${escH(ticker)}'].dcfMode='fcff';saveTrackerStocks();renderValuation('${escH(ticker)}')">FCFF to Firm</button></div>`;
   h+='<div class="cp-val-details">';
-  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Upside/Downside</div><div class="cp-val-item-value ${c.dcf!=null?(c.dcf>=30?'positive':c.dcf>=0?'warn':'negative'):''}">${c.dcf!=null?c.dcf.toFixed(1)+'%':'-'}</div></div>`;
-  h+=`<div class="cp-val-item"><div class="cp-val-item-label">FCF-SBC (Y0)</div><div class="cp-val-item-value">${fmt(s.fcfSbc)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Upside/Downside</div><div class="cp-val-item-value ${dcfUpside!=null?(dcfUpside>=30?'positive':dcfUpside>=0?'warn':'negative'):''}">${dcfUpside!=null?dcfUpside.toFixed(1)+'%':'-'}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">${dcfCF0Label}</div><div class="cp-val-item-value">${fmt(dcfCF0)}</div></div>`;
   h+=`<div class="cp-val-item"><div class="cp-val-item-label">Market Cap</div><div class="cp-val-item-value">${fmt(s.marketCap)}</div></div>`;
   h+='</div>';
-  h+=`<div class="cp-val-assumptions"><strong>Assumptions:</strong> Growth Y1-5: ${g1}%, Y6-10: ${g2}%, Y11-15: ${g3}% · DR: ${dr}% · Terminal: ${tg}%</div>`;
+  if(isFCFF){
+    h+=`<div class="cp-val-assumptions"><strong>FCFF:</strong> EBIT×(1-${(fcffEffTax*100).toFixed(0)}%) + D&A − CAPEX − ΔWC · Discount: WACC ${fcffWacc}% · Terminal: ${tg}%</div>`;
+  }else{
+    h+=`<div class="cp-val-assumptions"><strong>Assumptions:</strong> Growth Y1-5: ${g1}%, Y6-10: ${g2}%, Y11-15: ${g3}% · DR: ${dr}% · Terminal: ${tg}%</div>`;
+  }
   h+='</div>';
 
   // Reverse DCF

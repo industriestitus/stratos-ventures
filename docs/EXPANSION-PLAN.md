@@ -403,18 +403,20 @@ All with METRIC_TIPS tooltips.
 
 **QA:** 0 CRITICAL, 2 WARN fixed (tax rate clamped 0-100%, WACC editable input added)
 
-### 13.4 Unlevered FCF (FCFF) toggle in DCF
+### 13.4 Unlevered FCF (FCFF) toggle in DCF ✅ COMPLETE
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Toggle between FCF (equity) and FCFF (firm) in DCF calculator
-- **Implementation:** Add toggle switch to DCF calculator UI
+- **Implementation:** Toggle buttons in company profile DCF card
 
 **FCFF calculation:**
-- FCFF = EBIT × (1 - Tax Rate) + Depreciation - CAPEX - ΔWorking Capital
-- When FCFF mode: DCF discounts at WACC, result = Enterprise Value, subtract net debt for Equity Value
-- When FCF mode: existing behavior (discount at required return)
+- FCFF = EBIT × (1 - Eff. Tax Rate) + D&A - CAPEX - ΔWorking Capital
+- FCFF mode: discounts at WACC (reuses EVA's editable WACC), 3-phase growth (g1/g2), enterprise value → subtract net debt
+- FCF mode: existing behavior (FCF-SBC, discount at required return)
 
-**UI change:** Single toggle: "FCF to Equity" | "FCF to Firm (FCFF)"
+**UI:** "FCF to Equity" / "FCFF to Firm" toggle buttons, mode saved per company
+
+**QA:** 1 CRITICAL fixed (single growth rate → 3-phase g1/g2), 1 WARN fixed (dead variable removed)
 
 ### 13.5 Valuation history tracking
 - **Difficulty:** MEDIUM (2 hours)
