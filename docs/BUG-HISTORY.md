@@ -23,8 +23,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 11 | Dashboard Widget Overflow | `b5fdc36` | 2026-06-27 | 3 | 0 |
 | 14 | Dashboard Grid Bottom Clipping | `e74446c` | 2026-06-28 | 1 | 0 |
 | 15 | D1 Data Persistence | `f053cb7`+`cf9c284` | 2026-06-30 | 2 | 0 |
+| 16 | Phase 15 Feature QA | `bc15b16`+`872b96b` | 2026-06-30 | 4 | 0 |
 
-**Total: 156 fixed, 21 potential (unfixed)**
+**Total: 160 fixed, 21 potential (unfixed)**
 
 ---
 
@@ -302,6 +303,44 @@ User-reported: TODOs added on dashboard disappeared after page refresh.
 **Problem:** Worker batch endpoint used `UPDATE ... WHERE id = ?` for items with IDs. New items have locally-generated IDs that don't exist in D1 — UPDATE matched 0 rows, silently dropping data. Additionally, race condition on quick refresh: D1 load could succeed before scheduleSave (1500ms debounce) had synced new items.
 
 **Fix (server):** Changed batch handler from `UPDATE WHERE id` to `INSERT ... ON CONFLICT(id) DO UPDATE SET ...` (upsert) — works for both new and existing items across ALL tables. **Fix (client):** After successful D1 load in `loadDashTodos()`, merge any localStorage todos whose IDs aren't in D1 result (race condition safety net).
+
+---
+
+## Category 16: Phase 15 Feature QA (2026-06-30 — 2026-07-01)
+
+### Bug 16.1 — CRITICAL: Unescaped date output in Quarterly Follow-up
+
+**Commit:** `bc15b16` | **File:** `web/index.html:9947`
+
+**Problem:** `e.date` was output directly in HTML without escaping, potential XSS vector.
+
+**Fix:** Wrapped with `escH(e.date||'')`.
+
+### Bug 16.2 — CRITICAL: Progress calculation referenced removed field names
+
+**Commit:** `bc15b16` | **File:** `web/index.html:10083`
+
+**Problem:** `calcClProgress` for quarterly_followup section still counted old fields `numbersOk` and `thesisIntact` which no longer exist after the 14-field expansion. Progress bar was always wrong.
+
+**Fix:** Replaced with array of 13 correct field names: `numbers`, `news`, `managementCommentary`, `companyForecast`, `thesisStatus`, `moatStatus`, `qualityTrend`, `thesisChanges`, `valuationUpdate`, `convictionLevel`, `action`, `watchNextQuarter`, `uncertainties`.
+
+### Bug 16.3 — WARN: Missing bottom padding on last quarterly entry
+
+**Commit:** `bc15b16` | **File:** `web/index.html:862`
+
+**Problem:** Last `.cl-qf-entry` was clipped at the bottom of the scrollable container.
+
+**Fix:** Added `.cl-qf-entry:last-child{margin-bottom:16px}`.
+
+### Bug 16.4 — WARN: Learning log category dropdown white background
+
+**Commit:** `872b96b` | **File:** `web/index.html`
+
+**Problem:** Category `<select>` in Learning Log section had white background because it wasn't wrapped in a `.cl-field` div, so dark theme styling didn't apply.
+
+**Fix:** Wrapped the select in `<div class="cl-field">`.
+
+**Phase 15.3 (Follow Sources & Quick Links):** QA clean — 0 issues found (commit `7156d8f`).
 
 ---
 

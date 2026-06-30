@@ -544,7 +544,7 @@ All with METRIC_TIPS tooltips.
 
 **Dashboard aggregation:** "My top learning categories" — bar chart showing most common mistake types across all companies.
 
-### 15.3 Company follow sources (External Links)
+### 15.3 Company follow sources (External Links) ✅ DONE
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Per-company URL list for news/research tracking
