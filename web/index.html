@@ -1005,6 +1005,12 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       </div>
     </div>
 
+    <!-- Net Worth -->
+    <div class="db-widget" id="db-networth-widget">
+      <div class="db-widget-title">Net Worth</div>
+      <div id="db-networth-content"></div>
+    </div>
+
     <!-- Terry Smith Metrics -->
     <div class="db-widget" id="db-smith-widget">
       <div class="db-widget-title">Portfolio Quality (Weighted)</div>
@@ -4540,6 +4546,7 @@ function dbValClass(v,low,high,invert){
 function renderDashboard(){
   renderDbPortfolioSummary();
   renderDbAllocCharts();
+  renderDbNetWorth();
   renderDbSmithMetrics();
   renderDbAlerts();
   renderDbBenchmark();
@@ -4643,6 +4650,88 @@ function renderDbAllocCharts(){
       data:{labels,datasets:[{data,backgroundColor:colors.slice(0,data.length),borderWidth:0}]},
       options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${formatMoney(ctx.parsed,base)}`}}},cutout:'60%'}
     });
+  });
+}
+
+// ---- 5A2: Net Worth ----
+function renderDbNetWorth(){
+  const el=document.getElementById('db-networth-content');
+  if(!pfPositions.length){
+    document.getElementById('db-networth-widget').style.display='none';
+    return;
+  }
+  document.getElementById('db-networth-widget').style.display='';
+  const base=getBaseCurrency();
+  const baseColors=['#6c5ce7','#74b9ff','#00b894','#fdcb6e','#e17055','#a29bfe','#55efc4','#ffeaa7','#fab1a0','#81ecec','#dfe6e9','#636e72'];
+
+  const groups={};
+  let totalNW=0;
+  pfPositions.forEach(pos=>{
+    const price=getPositionPrice(pos);
+    const shares=parseFloat(pos.shares)||0;
+    const mktVal=price!=null?shares*price:0;
+    const valInBase=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+    const t=pos.assetType||'other';
+    groups[t]=(groups[t]||0)+valInBase;
+    totalNW+=valInBase;
+  });
+
+  if(totalNW===0){
+    el.innerHTML='<div class="db-empty">Waiting for price data...</div>';
+    return;
+  }
+
+  const sorted=Object.entries(groups).sort((a,b)=>b[1]-a[1]);
+  const typeLabels={stock:'Stock',etf:'ETF',crypto:'Crypto',bond:'Bond',real_estate:'Real Estate',cash:'Cash',other:'Other'};
+
+  let yoyHtml='';
+  if(pfSnapshots.length){
+    const now=new Date();
+    const oneYearAgo=new Date(now.getFullYear()-1,now.getMonth(),now.getDate()).toISOString().slice(0,10);
+    const sortedSnaps=[...pfSnapshots].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+    let closest=null,closestDiff=Infinity;
+    sortedSnaps.forEach(s=>{
+      const diff=Math.abs(new Date(s.date)-new Date(oneYearAgo));
+      if(diff<closestDiff){closestDiff=diff;closest=s}
+    });
+    if(closest&&closestDiff<180*86400000){
+      const snapVal=closest.baseCurrency&&closest.baseCurrency!==base?(convertCurrency(closest.totalValue,closest.baseCurrency,base)||closest.totalValue):closest.totalValue;
+      const delta=totalNW-snapVal;
+      const pct=snapVal>0?(delta/snapVal*100):0;
+      const cls=delta>=0?'positive':'negative';
+      yoyHtml=`<div style="font-size:13px;color:var(--text2);margin-top:4px">YoY: <span class="${cls}">${delta>=0?'+':''}${formatMoney(delta,base)} (${delta>=0?'+':''}${pct.toFixed(1)}%)</span> <span style="opacity:.6">vs ${closest.date}</span></div>`;
+    }
+  }
+
+  const colors=baseColors.slice();
+  while(colors.length<sorted.length)colors.push(`hsl(${(colors.length*47)%360},60%,55%)`);
+
+  const legendRows=sorted.map(([type,val],i)=>{
+    const label=typeLabels[type]||type.charAt(0).toUpperCase()+type.slice(1);
+    const pct=totalNW>0?(val/totalNW*100):0;
+    return`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i<sorted.length-1?'border-bottom:1px solid var(--border)':''}">
+      <span style="width:10px;height:10px;border-radius:50%;background:${colors[i]};flex-shrink:0"></span>
+      <span style="flex:1;font-size:13px;color:var(--text1)">${label}</span>
+      <span style="font-size:13px;color:var(--text1);font-weight:500">${formatMoney(val,base)}</span>
+      <span style="font-size:12px;color:var(--text2);min-width:45px;text-align:right">${pct.toFixed(1)}%</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:28px;font-weight:700;color:var(--text1)">${formatMoney(totalNW,base)}</div>
+      ${yoyHtml}
+    </div>
+    <div style="max-width:220px;margin:0 auto 16px"><canvas id="db-networth-chart"></canvas></div>
+    <div style="margin-top:8px">${legendRows}</div>`;
+
+  const labels=sorted.map(([t])=>typeLabels[t]||t.charAt(0).toUpperCase()+t.slice(1));
+  const data=sorted.map(([,v])=>v);
+  if(_dbCharts['db-networth-chart'])_dbCharts['db-networth-chart'].destroy();
+  _dbCharts['db-networth-chart']=new Chart(document.getElementById('db-networth-chart'),{
+    type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors.slice(0,data.length),borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${formatMoney(ctx.parsed,base)} (${totalNW>0?(ctx.parsed/totalNW*100).toFixed(1):'0'}%)`}}},cutout:'65%'}
   });
 }
 
