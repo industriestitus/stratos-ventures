@@ -5901,14 +5901,17 @@ async function fetchHistoricalCharts(ticker){
   const startTicker=profileTicker;
   try{
     const histRaw=await cachedFetch(ticker,'historical_charts',async()=>{
-      const [inc,cf]=await Promise.all([
+      const [inc,cf,bs]=await Promise.all([
         fmpFetch('income-statement',{symbol:ticker,limit:10}),
-        fmpFetch('cash-flow-statement',{symbol:ticker,limit:10})
+        fmpFetch('cash-flow-statement',{symbol:ticker,limit:10}),
+        fmpFetch('balance-sheet-statement',{symbol:ticker,limit:3})
       ]);
-      return {incData:inc,cfData:cf};
+      return {incData:inc,cfData:cf,bsData:bs};
     });
     const incData=histRaw?.incData;
     const cfData=histRaw?.cfData;
+    if(histRaw?.bsData?.length&&tStocks[ticker])tStocks[ticker]._bsData=histRaw.bsData;
+    if(histRaw?.incData?.length&&tStocks[ticker])tStocks[ticker]._isData=histRaw.incData.slice(0,3);
     if(profileTicker!==startTicker)return;
     const loading=document.getElementById('cp-hist-loading');
     const container=document.getElementById('cp-hist-charts');
@@ -6468,7 +6471,9 @@ function saveTrackerStocks(){
     }
     if(batch.length)await Promise.all(batch);
   })}
-  try{localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}catch(e){showToast('Storage full — export your data to avoid data loss','error',8000)}
+  try{const _transient=['_bsData','_isData','_source','_origData'];
+    const cleaned={};Object.entries(tStocks).forEach(([k,v])=>{const c={...v};_transient.forEach(t=>delete c[t]);cleaned[k]=c});
+    localStorage.setItem('tracker_stocks_v1',JSON.stringify(cleaned))}catch(e){showToast('Storage full — export your data to avoid data loss','error',8000)}
 }
 
 function _d1CompanyToTStock(c){
@@ -8804,6 +8809,93 @@ const CL_RESEARCH_SOURCES=['10-K','10-Q','Earnings Call','Investor Presentation'
 
 const CL_10K_CHECKLIST=['Auditor opinion checked (Unqualified = Good)','Item 1B — SEC unanswered questions','Item 8 — Financial statements reviewed','Item 9 — Disagreements with accountants','DEF 14A — CEO compensation & insider ownership','Proxy statement reviewed','Form S-3 — New stock issuance to employees','Form 4 — Changes in stock ownership','ASC-718 — Stock compensation details','Annual letter to shareholders read'];
 
+const YELLOW_FLAGS=[
+  {key:'goodwillHigh',label:'Goodwill > 50% of total assets',category:'balance_sheet',severity:'yellow',
+    check:(s)=>{const bs=s._bsData?.[0];if(!bs||bs.goodwill==null||!bs.totalAssets)return null;return bs.goodwill/bs.totalAssets>0.5},
+    value:(s)=>{const bs=s._bsData?.[0];if(!bs||bs.goodwill==null||!bs.totalAssets)return null;return(bs.goodwill/bs.totalAssets*100).toFixed(1)+'%'}},
+  {key:'receivablesRising',label:'Receivables rising faster than revenue (YoY)',category:'balance_sheet',severity:'yellow',
+    check:(s)=>{const bs=s._bsData;const is=s._isData;if(!bs?.[0]||!bs?.[1]||!is?.[0]||!is?.[1])return null;
+      const recGrowth=bs[1].netReceivables?((bs[0].netReceivables||0)/bs[1].netReceivables-1):null;
+      const revGrowth=is[1].revenue?((is[0].revenue||0)/is[1].revenue-1):null;
+      if(recGrowth==null||revGrowth==null)return null;return recGrowth>revGrowth&&recGrowth>0.05},
+    value:(s)=>{const bs=s._bsData;const is=s._isData;if(!bs?.[0]||!bs?.[1]||!is?.[0]||!is?.[1])return null;
+      const recGrowth=bs[1].netReceivables?((bs[0].netReceivables||0)/bs[1].netReceivables-1)*100:null;
+      const revGrowth=is[1].revenue?((is[0].revenue||0)/is[1].revenue-1)*100:null;
+      if(recGrowth==null||revGrowth==null)return null;return'Rec '+recGrowth.toFixed(0)+'% vs Rev '+revGrowth.toFixed(0)+'%'}},
+  {key:'inventoryRising',label:'Inventory rising faster than profits',category:'balance_sheet',severity:'yellow',
+    check:(s)=>{const bs=s._bsData;const is=s._isData;if(!bs?.[0]||!bs?.[1]||!is?.[0]||!is?.[1])return null;
+      if(!bs[1].inventory||!bs[0].inventory)return null;
+      const invGrowth=(bs[0].inventory/bs[1].inventory-1);
+      const profGrowth=is[1].netIncome?((is[0].netIncome||0)/is[1].netIncome-1):null;
+      if(profGrowth==null)return null;return invGrowth>profGrowth&&invGrowth>0.05},
+    value:(s)=>{const bs=s._bsData;const is=s._isData;if(!bs?.[0]||!bs?.[1]||!is?.[0]||!is?.[1])return null;
+      if(!bs[1].inventory||!bs[0].inventory)return null;
+      const invGrowth=(bs[0].inventory/bs[1].inventory-1)*100;
+      const profGrowth=is[1].netIncome?((is[0].netIncome||0)/is[1].netIncome-1)*100:null;
+      if(profGrowth==null)return null;return'Inv '+invGrowth.toFixed(0)+'% vs Profit '+profGrowth.toFixed(0)+'%'}},
+  {key:'debtSpike',label:'Debt spike (D/E > 2× previous year)',category:'balance_sheet',severity:'red',
+    check:(s)=>{const bs=s._bsData;if(!bs?.[0]||!bs?.[1])return null;
+      const de0=bs[0].totalStockholdersEquity?(bs[0].totalDebt||0)/bs[0].totalStockholdersEquity:null;
+      const de1=bs[1].totalStockholdersEquity?(bs[1].totalDebt||0)/bs[1].totalStockholdersEquity:null;
+      if(de0==null||de1==null||de1<=0)return null;return de0>de1*2},
+    value:(s)=>{const bs=s._bsData;if(!bs?.[0]||!bs?.[1])return null;
+      const de0=bs[0].totalStockholdersEquity?(bs[0].totalDebt||0)/bs[0].totalStockholdersEquity:null;
+      const de1=bs[1].totalStockholdersEquity?(bs[1].totalDebt||0)/bs[1].totalStockholdersEquity:null;
+      if(de0==null||de1==null)return null;return de0.toFixed(2)+' vs '+de1.toFixed(2)+' prior'}},
+  {key:'cashLow',label:'Cash < 25% of total debt',category:'balance_sheet',severity:'yellow',
+    check:(s)=>{const bs=s._bsData?.[0];if(!bs)return null;const debt=bs.totalDebt||0;if(debt<=0)return null;
+      const cash=bs.cashAndCashEquivalents||0;return cash<debt*0.25},
+    value:(s)=>{const bs=s._bsData?.[0];if(!bs)return null;const debt=bs.totalDebt||0;if(debt<=0)return null;
+      const cash=bs.cashAndCashEquivalents||0;return(cash/debt*100).toFixed(0)+'%'}},
+  {key:'retainedEarningsNeg',label:'Retained earnings negative',category:'balance_sheet',severity:'red',
+    check:(s)=>{const bs=s._bsData?.[0];if(!bs||bs.retainedEarnings==null)return null;return bs.retainedEarnings<0},
+    value:(s)=>{const bs=s._bsData?.[0];if(!bs||bs.retainedEarnings==null)return null;return fmt(bs.retainedEarnings)}},
+  {key:'intangiblesHigh',label:'Intangibles > 50% of balance sheet',category:'balance_sheet',severity:'yellow',
+    check:(s)=>{const bs=s._bsData?.[0];if(!bs||!bs.totalAssets)return null;
+      const intang=bs.goodwillAndIntangibleAssets||((bs.goodwill||0)+(bs.intangibleAssets||0));
+      return intang/bs.totalAssets>0.5},
+    value:(s)=>{const bs=s._bsData?.[0];if(!bs||!bs.totalAssets)return null;
+      const intang=bs.goodwillAndIntangibleAssets||((bs.goodwill||0)+(bs.intangibleAssets||0));
+      return(intang/bs.totalAssets*100).toFixed(1)+'%'}},
+  {key:'preferredStock',label:'Preferred stock present',category:'balance_sheet',severity:'yellow',
+    check:(s)=>{const bs=s._bsData?.[0];if(!bs)return null;return(bs.preferredStock||0)>0},
+    value:(s)=>{const bs=s._bsData?.[0];if(!bs||!(bs.preferredStock>0))return null;return fmt(bs.preferredStock)}},
+  {key:'revenueSlowdown',label:'Revenue sudden slowdown (growth dropped >50% vs prior year)',category:'income',severity:'yellow',
+    check:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[1]||!is?.[2])return null;
+      const g1=is[2].revenue?((is[1].revenue||0)/is[2].revenue-1):null;
+      const g0=is[1].revenue?((is[0].revenue||0)/is[1].revenue-1):null;
+      if(g0==null||g1==null||g1<=0)return null;return g0<g1*0.5},
+    value:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[1]||!is?.[2])return null;
+      const g1=is[2].revenue?((is[1].revenue||0)/is[2].revenue-1)*100:null;
+      const g0=is[1].revenue?((is[0].revenue||0)/is[1].revenue-1)*100:null;
+      if(g0==null||g1==null)return null;return g0.toFixed(1)+'% vs '+g1.toFixed(1)+'% prior'}},
+  {key:'grossMarginDecline',label:'Gross margin declining (2+ consecutive years)',category:'income',severity:'yellow',
+    check:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[1]||!is?.[2])return null;
+      const gm=is.slice(0,3).map(d=>d.revenue&&d.grossProfit!=null?d.grossProfit/d.revenue:null);
+      if(gm[0]==null||gm[1]==null||gm[2]==null)return null;return gm[0]<gm[1]&&gm[1]<gm[2]},
+    value:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[1]||!is?.[2])return null;
+      const gm=is.slice(0,3).map(d=>d.revenue&&d.grossProfit!=null?(d.grossProfit/d.revenue*100).toFixed(1)+'%':'-');
+      return gm.reverse().join(' → ')}},
+  {key:'earningsQuality',label:'Profit exceeds operating cash flow (earnings quality concern)',category:'income',severity:'yellow',
+    check:(s)=>{if(s.profit==null||s.ocf==null)return null;if(s.profit<=0)return null;return s.profit>s.ocf},
+    value:(s)=>{if(s.profit==null||s.ocf==null)return null;return'NI '+fmt(s.profit)+' vs OCF '+fmt(s.ocf)}},
+  {key:'sgaRising',label:'SG&A rising faster than revenue',category:'income',severity:'yellow',
+    check:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[1])return null;
+      const sga0=is[0].sellingGeneralAndAdministrativeExpenses;const sga1=is[1].sellingGeneralAndAdministrativeExpenses;
+      if(!sga0||!sga1||!is[0].revenue||!is[1].revenue)return null;
+      const sgaGrowth=sga0/sga1-1;const revGrowth=is[0].revenue/is[1].revenue-1;
+      return sgaGrowth>revGrowth&&sgaGrowth>0.05},
+    value:(s)=>{const is=s._isData;if(!is?.[0]||!is?.[1])return null;
+      const sga0=is[0].sellingGeneralAndAdministrativeExpenses;const sga1=is[1].sellingGeneralAndAdministrativeExpenses;
+      if(!sga0||!sga1||!is[0].revenue||!is[1].revenue)return null;
+      return'SG&A '+(sga0/sga1*100-100).toFixed(0)+'% vs Rev '+(is[0].revenue/is[1].revenue*100-100).toFixed(0)+'%'}},
+  {key:'rdHigh',label:'R&D expense > 30% of revenue',category:'income',severity:'yellow',
+    check:(s)=>{const is=s._isData?.[0];if(!is||!is.revenue)return null;
+      const rd=is.researchAndDevelopmentExpenses||0;if(!rd)return null;return rd/is.revenue>0.3},
+    value:(s)=>{const is=s._isData?.[0];if(!is||!is.revenue)return null;
+      const rd=is.researchAndDevelopmentExpenses||0;if(!rd)return null;return(rd/is.revenue*100).toFixed(1)+'%'}}
+];
+
 const CL_THRESHOLDS=[
   {k:'revenueGrowthOk',label:'Revenue growing (3yr CAGR > 0)'},
   {k:'marginTrendOk',label:'Margins stable or expanding'},
@@ -9023,6 +9115,35 @@ function removeClRisk(ticker,idx){
 function renderClFinancials(ticker,data){
   const s=tStocks[ticker]||{};
   let h='';
+
+  const flagResults=YELLOW_FLAGS.map(f=>{const r=f.check(s);return{...f,triggered:r,val:r!=null?f.value(s):null}});
+  const triggered=flagResults.filter(f=>f.triggered===true);
+  const checked=flagResults.filter(f=>f.triggered!=null);
+  const hasBsData=!!(s._bsData?.length);
+
+  h+=`<div style="margin-bottom:16px">
+    <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Yellow Flags — Auto-detected Warnings</div>`;
+  if(!hasBsData){
+    h+=`<div style="color:var(--text2);font-size:12px;padding:8px 12px;background:var(--surface);border-radius:6px">No balance sheet data yet — use the Refresh button on the Overview tab to fetch data.</div>`;
+  }else if(!triggered.length&&checked.length){
+    h+=`<div style="color:var(--green);font-size:12px;padding:8px 12px;background:var(--surface);border-radius:6px">✅ No yellow flags detected (${checked.length} checks passed)</div>`;
+  }else if(!checked.length){
+    h+=`<div style="color:var(--text2);font-size:12px;padding:8px 12px;background:var(--surface);border-radius:6px">Insufficient data for yellow flag checks</div>`;
+  }
+  flagResults.forEach(f=>{
+    if(f.triggered==null)return;
+    const sev=f.triggered?f.severity:'pass';
+    const icon=sev==='red'?'🔴':sev==='yellow'?'🟡':'🟢';
+    const bg=f.triggered?(sev==='red'?'rgba(231,76,60,0.08)':'rgba(241,196,15,0.08)'):'';
+    h+=`<div class="cl-threshold" style="${bg?'background:'+bg+';border-radius:4px;padding:4px 8px;margin:2px 0':''}">
+      <span class="cl-threshold-icon">${icon}</span>
+      <span class="cl-threshold-label">${escH(f.label)}</span>
+      ${f.val!=null?`<span style="font-size:11px;color:var(--text2);margin-left:auto;white-space:nowrap">${escH(f.val)}</span>`:''}
+    </div>`;
+  });
+  h+=`</div>`;
+
+  h+=`<div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Financial Thresholds</div>`;
   CL_THRESHOLDS.forEach(t=>{
     let autoVal=null;
     if(t.k==='revenueGrowthOk'&&s.revCAGR3!=null)autoVal=s.revCAGR3>0;
