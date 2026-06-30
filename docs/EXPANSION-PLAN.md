@@ -300,11 +300,11 @@ Shares outstanding decreasing (3yr trend)
 Each threshold: `{k, label, formula, check: (data) => boolean, value: (data) => number}`
 Display: green checkmark if passes, red X if fails, gray dash if data unavailable.
 
-### 12.3 Cash Flow deep dive panel
+### 12.3 Cash Flow deep dive panel ✅ DONE (2026-06-30)
 - **Difficulty:** EASY (1.5 hours)
 - **Cost:** Free
-- **What:** New sub-panel in company profile Financial section
-- **Implementation:** New render function `renderCashFlowDeepDive(ticker)` called from profile page
+- **What:** New card in Financials tab with 10 deep dive metrics + tooltips
+- **Implementation:** Inline in `renderFinancials`, uses `_cfData`/`_bsData`/`_isData`. 2 QA bugs fixed (NaN CAGR, capex null mask).
 
 **Calculated metrics (from existing FMP data):**
 - CAPEX % of OCF = `capex / operatingCashFlow × 100`

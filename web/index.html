@@ -5837,6 +5837,41 @@ function renderFinancials(ticker){
   });
   h+='</div></div>';
 
+  // Cash Flow Deep Dive
+  h+='<div class="card"><div class="card-title">Cash Flow Deep Dive</div><div class="cp-fin-grid">';
+  const cf0=s._cfData?.[0];const cf2=s._cfData?.[2];
+  const bs0=s._bsData?.[0];const bs1=s._bsData?.[1];
+  const is0=s._isData?.[0];const is2=s._isData?.[2];
+  const capex=cf0&&cf0.capitalExpenditure!=null?Math.abs(cf0.capitalExpenditure):null;
+  const shares0=is0?(is0.weightedAverageShsOutDil||is0.weightedAverageShsOut):null;
+  const shares2=is2?(is2.weightedAverageShsOutDil||is2.weightedAverageShsOut):null;
+  const fcfPerShare=s.fcf!=null&&shares0?s.fcf/shares0:null;
+  const fcfPerShare2=cf2&&is2&&cf2.freeCashFlow!=null?(cf2.freeCashFlow/(is2.weightedAverageShsOutDil||is2.weightedAverageShsOut||1)):null;
+  const fcfPsCAGR=(fcfPerShare!=null&&fcfPerShare>0&&fcfPerShare2!=null&&fcfPerShare2>0)?((Math.pow(fcfPerShare/fcfPerShare2,1/3)-1)*100):null;
+  const wc0=bs0?(bs0.totalCurrentAssets||0)-(bs0.totalCurrentLiabilities||0):null;
+  const wc1=bs1?(bs1.totalCurrentAssets||0)-(bs1.totalCurrentLiabilities||0):null;
+  const cfdItems=[
+    {l:'CAPEX % of OCF',k:'capexOcf',v:capex!=null&&s.ocf&&s.ocf>0?(capex/s.ocf*100).toFixed(1)+'%':'-',cls:capex!=null&&s.ocf&&s.ocf>0?(capex/s.ocf<0.15?'positive':capex/s.ocf<0.30?'warn':'negative'):''},
+    {l:'CAPEX / Sales',k:'capexSales',v:capex!=null&&s.revenue?(capex/s.revenue*100).toFixed(1)+'%':'-',cls:capex!=null&&s.revenue?(capex/s.revenue<0.05?'positive':capex/s.revenue<0.10?'warn':'negative'):''},
+    {l:'FCF Conversion',k:'fcfConversion',v:s.fcf!=null&&s.profit&&s.profit>0?(s.fcf/s.profit*100).toFixed(0)+'%':'-',cls:s.fcf!=null&&s.profit&&s.profit>0?(s.fcf/s.profit>0.9?'positive':s.fcf/s.profit>0.7?'warn':'negative'):'',sub:'FCF / Net Income'},
+    {l:'FCF Yield',k:'fcfYield',v:fcfPerShare!=null&&s.price?(fcfPerShare/s.price*100).toFixed(1)+'%':'-',cls:fcfPerShare!=null&&s.price?(fcfPerShare/s.price>0.05?'positive':fcfPerShare/s.price>0.03?'warn':'negative'):'',sub:'FCF/Share ÷ Price'},
+    {l:'FCF per Share',k:'fcfPerShare',v:fcfPerShare!=null?'$'+fcfPerShare.toFixed(2):'-'},
+    {l:'FCF/Share 3Y CAGR',k:'fcfPsCAGR',v:fcfPsCAGR!=null?fcfPsCAGR.toFixed(1)+'%':'-',cls:fcfPsCAGR!=null?(fcfPsCAGR>=10?'positive':fcfPsCAGR>=0?'warn':'negative'):''},
+    {l:'Dividend Coverage',k:'divCoverage',v:cf0&&cf0.dividendsPaid&&s.fcf!=null&&cf0.dividendsPaid<0?(s.fcf/Math.abs(cf0.dividendsPaid)).toFixed(1)+'×':cf0&&!cf0.dividendsPaid?'No div':'-',cls:cf0&&cf0.dividendsPaid&&s.fcf!=null&&cf0.dividendsPaid<0?(s.fcf/Math.abs(cf0.dividendsPaid)>2?'positive':s.fcf/Math.abs(cf0.dividendsPaid)>1.2?'warn':'negative'):''},
+    {l:'Dilution Rate (3yr)',k:'dilutionRate',v:shares0!=null&&shares2?((shares0/shares2-1)*100).toFixed(1)+'%':'-',cls:shares0!=null&&shares2?(shares0<=shares2?'positive':shares0/shares2-1<0.03?'warn':'negative'):'',sub:shares0!=null&&shares2?(shares0<=shares2?'Buyback':'Dilution'):null},
+    {l:'Working Capital',k:'workingCapital',v:wc0!=null?fmt(wc0):'-',cls:wc0!=null?(wc0>0?'positive':'warn'):''},
+    {l:'WC Change (YoY)',k:'wcChange',v:wc0!=null&&wc1!=null?fmt(wc0-wc1):'-',cls:wc0!=null&&wc1!=null?(wc0-wc1>=0?'warn':'positive'):'',sub:wc0!=null&&wc1!=null?(wc0-wc1<0?'Cash efficient':'Needs more cash'):null}
+  ];
+  if(!cf0&&!bs0){
+    h+='<div class="cp-fin-item" style="grid-column:1/-1;color:var(--text2)">No statement data yet — visit Overview and use Refresh to fetch.</div>';
+  }else{
+    cfdItems.forEach(m=>{
+      const inner=`<div class="cp-fin-label">${m.l}</div><div class="cp-fin-value ${m.cls||''}">${m.v}</div>${m.sub?`<div class="cp-fin-sub">${m.sub}</div>`:''}`;
+      h+=`<div class="cp-fin-item">${m.k?tipWrap(m.k,inner):inner}</div>`;
+    });
+  }
+  h+='</div></div>';
+
   h+='<div class="card"><div class="card-title">Growth</div><div class="cp-fin-grid">';
   const grItems=[
     {l:'Revenue Growth (TTM)',v:s.revenueGrowth!=null?s.revenueGrowth.toFixed(1)+'%':'-',cls:s.revenueGrowth!=null?(s.revenueGrowth>=10?'positive':s.revenueGrowth>=0?'warn':'negative'):''},
@@ -6306,7 +6341,17 @@ const METRIC_TIPS={
   roe:{name:'Return on Equity',formula:'Net Income / Shareholder Equity × 100',bench:'> 15% excellent, 10-15% good, < 10% weak',desc:'How effectively the company uses shareholder capital to generate profit.'},
   roic:{name:'Return on Invested Capital',formula:'NOPAT / (Equity + Debt - Cash) × 100',bench:'> 15% excellent, 10-15% good, < 10% weak',desc:'Return on all invested capital (debt + equity). Best measure of capital allocation.'},
   debtEquity:{name:'Debt / Equity',formula:'Total Debt / Shareholder Equity',bench:'< 0.5 conservative, 0.5-1.0 moderate, > 1.0 leveraged',desc:'How much the company relies on debt. Lower = safer balance sheet.'},
-  currentRatio:{name:'Current Ratio',formula:'Current Assets / Current Liabilities',bench:'> 1.5 safe, 1.0-1.5 adequate, < 1.0 risky',desc:'Short-term liquidity. Above 1.0 means assets cover near-term obligations.'}
+  currentRatio:{name:'Current Ratio',formula:'Current Assets / Current Liabilities',bench:'> 1.5 safe, 1.0-1.5 adequate, < 1.0 risky',desc:'Short-term liquidity. Above 1.0 means assets cover near-term obligations.'},
+  capexOcf:{name:'CAPEX % of OCF',formula:'Capital Expenditure / Operating Cash Flow × 100',bench:'< 15% light, 15-30% moderate, > 30% capital intensive',desc:'How much operating cash flow is consumed by capital expenditure. Low = more cash left for shareholders.'},
+  capexSales:{name:'CAPEX / Sales',formula:'Capital Expenditure / Revenue × 100',bench:'< 5% asset-light, 5-10% moderate, > 10% capital heavy',desc:'Capital intensity relative to revenue. Asset-light businesses need less reinvestment.'},
+  fcfConversion:{name:'FCF Conversion',formula:'Free Cash Flow / Net Income × 100',bench:'> 90% excellent, 70-90% good, < 70% poor',desc:'How much of reported earnings converts to real cash. High = quality earnings, low = accruals or capex drag.'},
+  fcfYield:{name:'FCF Yield',formula:'(FCF / Shares) / Stock Price × 100',bench:'> 5% cheap, 3-5% fair, < 3% expensive',desc:'Free cash flow return on the current stock price. Higher = more cash flow per dollar invested.'},
+  fcfPerShare:{name:'FCF per Share',formula:'Free Cash Flow / Diluted Shares Outstanding',bench:'Growing = good',desc:'Cash flow available per share after all capital expenditures. The real earning power per share.'},
+  fcfPsCAGR:{name:'FCF/Share 3Y CAGR',formula:'(FCF/Share Now / FCF/Share 3Y Ago)^(1/3) - 1',bench:'> 10% strong, 0-10% moderate, < 0% declining',desc:'Compound annual growth rate of FCF per share over 3 years. Shows real cash flow growth to shareholders.'},
+  divCoverage:{name:'Dividend Coverage',formula:'Free Cash Flow / Dividends Paid',bench:'> 2× safe, 1.2-2× adequate, < 1.2× at risk',desc:'How many times FCF covers dividend payments. Below 1× means dividends exceed cash flow — unsustainable.'},
+  dilutionRate:{name:'Dilution Rate (3yr)',formula:'(Shares Now - Shares 3Y Ago) / Shares 3Y Ago × 100',bench:'Negative = buyback, 0-3% mild, > 3% significant dilution',desc:'Share count change over 3 years. Negative means buybacks (good). Positive means dilution from SBC or offerings.'},
+  workingCapital:{name:'Working Capital',formula:'Current Assets - Current Liabilities',bench:'Positive = buffer, Negative = uses supplier cash',desc:'Short-term financial cushion. Negative WC can be a strength (like Amazon) if the business model supports it.'},
+  wcChange:{name:'Working Capital Change',formula:'WC This Year - WC Last Year',bench:'Negative change = cash efficient, Positive = needs more cash',desc:'Year-over-year change in working capital. Decreasing WC frees up cash; increasing WC ties up cash.'}
 };
 function tipWrap(key,innerHtml){
   const t=METRIC_TIPS[key];
