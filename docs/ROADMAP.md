@@ -202,11 +202,25 @@ Status: COMPLETE (2026-06-27)
 - [x] Online event: auto re-syncs all data to D1 when connection returns
 - [x] QA: 6 bugs fixed (clean cache data, Yahoo→stock flow, force-refresh finally block, refresh all data types, simplified online handler, cache age scoped to stock_data)
 
+## Phases 11-18: Expansion Plan
+> Deep feature expansion — see [EXPANSION-PLAN.md](EXPANSION-PLAN.md) for full details.
+> Status: PLANNING (2026-06-30)
+> 8 phases, 34 tasks, ~12-14 sessions
+
+- Phase 11: Checklist deepening (Company Details, Moat, SWOT, Management, Industry, Edge, Anti-Thesis, 10K guide)
+- Phase 12: Financial Analysis deepening (Yellow Flags, detailed thresholds, Cash Flow & Balance Sheet deep dive)
+- Phase 13: Valuation calculators (Scenario Builder, 10cap, EVA, FCFF toggle, Valuation History)
+- Phase 14: Portfolio asset types (Real Estate, Bonds enhanced, Cash, Net Worth widget)
+- Phase 15: Follow-up & Monitoring (Quarterly expansion, Learning Log, Follow Sources, Price Alerts, Sell Trigger dashboard)
+- Phase 16: Review & Psychology expansion (Psychology questions, Review templates, Conviction Tracker)
+- Phase 17: Expected Return calculator (Return breakdown, Position sizing recommendation)
+- Phase 18: External Links & Earnings Calendar (Quick links, Basic earnings tracking)
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 
-- [ ] Notifications (earnings coming up, price alerts)
-- [ ] Google Drive migration tool (import existing Docs)
+- [ ] Notifications (push notifications for price alerts — basic on-load alerts in Phase 15.4)
+- [ ] Google Drive migration tool (manual export/import sufficient for now)
 ### Maybe Later (Integrations)
 - [ ] Brokerage sync (SnapTrade or similar) — automatikus pozíció import brókerből. SnapTrade $100-500/hó (nincs free tier), Plaid/Finicity szintén fizetős és US-focused. CSV import (már kész) gyakorlatilag elég, kézi futtatás havonta egyszer.
 ### Maybe Later (AI & Analysis)

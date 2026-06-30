@@ -8577,47 +8577,145 @@ function deleteFwEntry(type,id){
 // ====== CHECKLIST ======
 const CL_SECTIONS=[
   {key:'company_details',title:'Company Details',num:1,fields:[
+    {k:'_g_basic',type:'group',label:'Basic Info'},
     {k:'businessModel',label:'Business Model',type:'textarea',ph:'What does the company do? How does it make money?'},
-    {k:'tam',label:'Total Addressable Market',type:'textarea',ph:'TAM estimate and source'},
+    {k:'founded',label:'Founded',type:'text',ph:'Year founded'},
+    {k:'ipoDate',label:'IPO Date',type:'text',ph:'When did it go public?'},
+    {k:'headquarters',label:'Headquarters',type:'text',ph:'Where is the company headquartered?'},
+    {k:'maturityStage',label:'Maturity Stage',type:'select',opts:['','Early Growth','Growth','Mature','Declining']},
+    {k:'companyMission',label:'Mission',type:'textarea',ph:'What is their mission?'},
+    {k:'_g_bizmodel',type:'group',label:'Business Model Deep Dive'},
     {k:'revenueSplit',label:'Revenue Split',type:'textarea',ph:'Breakdown by segment/geography/product'},
+    {k:'productType',label:'Product Type',type:'select',opts:['','Painkiller / Must-have','Nice-to-have','Mission Critical','Mixed']},
+    {k:'productCommodity',label:'Commodity Product?',type:'select',opts:['','Yes','No','Partially']},
+    {k:'revenueRecurring',label:'Revenue Model',type:'select',opts:['','Recurring','Transactional','Mixed']},
+    {k:'fixVarCosts',label:'Cost Structure',type:'textarea',ph:'Fix vs variable costs? Can operations be maintained with minimal reinvestment?'},
+    {k:'operatingLeverage',label:'Operating Leverage',type:'textarea',ph:'Growing revenue but costs stay same? Is operating leverage ahead?'},
+    {k:'valueChain',label:'Value Chain',type:'textarea',ph:'What does the value chain look like? What is different vs competitors at each step?'},
+    {k:'_g_customer',type:'group',label:'Customer Economics'},
+    {k:'customers',label:'Customer Profile',type:'textarea',ph:'Who pays? Top 5 customers % of revenue?'},
+    {k:'netRetentionRate',label:'Net Retention Rate',type:'text',ph:'NRR % (e.g., 120%)'},
+    {k:'churnRate',label:'Churn Rate',type:'text',ph:'Annual churn %'},
+    {k:'customerConcentration',label:'Customer Concentration',type:'textarea',ph:'Concentration risk? If business disappeared, what impact on customers?'},
+    {k:'wordOfMouth',label:'Word of Mouth',type:'select',opts:['','Yes','No','Unknown']},
+    {k:'recessionProof',label:'Recession Proof?',type:'select',opts:['','Yes','Partially','No']},
+    {k:'canDelayPurchase',label:'Can Delay Purchase?',type:'select',opts:['','Yes','No']},
+    {k:'easyToSell',label:'Easy to Sell?',type:'select',opts:['','Easy','Hard','Depends']},
+    {k:'sharedEconomics',label:'Shared Economics',type:'textarea',ph:'Scale Economics Shared model? (like Costco — savings passed to customers who increase scale)'},
+    {k:'_g_growth',type:'group',label:'Growth & Optionality'},
+    {k:'tam',label:'Total Addressable Market',type:'textarea',ph:'TAM estimate, saturation level, is TAM growing?'},
+    {k:'growthDrivers',label:'Growth Drivers',type:'textarea',ph:'What drove returns historically? Can those persist? Already priced in?'},
+    {k:'bigOpportunity',label:'Big Opportunity',type:'textarea',ph:'What big growth engine / growth vertical is there?'},
+    {k:'spawner',label:'Spawner?',type:'select',opts:['','Yes','No']},
+    {k:'newProducts',label:'New Products / Pipeline',type:'textarea',ph:'Does it create new products? Pipeline strong? Have new products increased sales?'},
+    {k:'optionality',label:'Optionality',type:'textarea',ph:'R&D spillover products? Unexpected growth paths?'},
+    {k:'secularTrends',label:'Secular Trends',type:'textarea',ph:'Secular growth trends benefiting the company?'},
+    {k:'tailwindsHeadwinds',label:'Tailwinds / Headwinds',type:'textarea',ph:'What tailwinds and headwinds? Short-term or long-term?'},
+    {k:'tenYearOutlook',label:'10-Year Outlook',type:'textarea',ph:'Will it be a great company in 10 years? Will it be in business?'},
+    {k:'shareOfMind',label:'Share of Mind?',type:'select',opts:['','Yes','No','Partially']},
+    {k:'firstMover',label:'First Mover / Disruptor?',type:'select',opts:['','Yes','No']},
+    {k:'_g_structure',type:'group',label:'Ownership & Performance'},
+    {k:'shareholderStructure',label:'Shareholder Structure',type:'textarea',ph:'Institutional, insider, retail ownership %'},
+    {k:'historicalPerformance',label:'Historical Stock Performance',type:'textarea',ph:'Historical return notes, what drives stock price'},
+    {k:'kpiTrend',label:'Key KPI Trends',type:'textarea',ph:'Finchat KPIs going in the right direction? Which ones matter?'},
+    {k:'geographicMix',label:'Geographic Mix',type:'textarea',ph:'Revenue by geography. Growing in each? Which is highest growth?'},
     {k:'moatDescription',label:'Moat Description',type:'textarea',ph:'What is the durable competitive advantage?'},
-    {k:'competitiveAdvantage',label:'Competitive Advantage',type:'textarea',ph:'Why will this company win vs competitors?'},
-    {k:'customers',label:'Customer Profile',type:'textarea',ph:'Who pays? Customer concentration risk?'},
-    {k:'geographicMix',label:'Geographic Mix',type:'textarea',ph:'Revenue by geography'}
+    {k:'competitiveAdvantage',label:'Competitive Advantage',type:'textarea',ph:'Why will this company win vs competitors?'}
   ]},
   {key:'moat',title:'Moat Analysis',num:2,fields:[
-    {k:'pricingPower',label:'Pricing Power — Evidence',type:'textarea',ph:'Evidence of pricing power'},
+    {k:'_g_classic',type:'group',label:'Classic Moat Types'},
+    {k:'pricingPower',label:'Pricing Power — Evidence',type:'textarea',ph:'Evidence of pricing power. Has the company raised prices? Effect on volume?'},
     {k:'pricingPowerRating',label:'Pricing Power — Rating',type:'rating'},
-    {k:'switchingCosts',label:'Switching Costs — Evidence',type:'textarea',ph:'How hard is it for customers to leave?'},
+    {k:'switchingCosts',label:'Switching Costs — Evidence',type:'textarea',ph:'Effort, time, psychological cost, money, training, disruption to switch'},
     {k:'switchingCostsRating',label:'Switching Costs — Rating',type:'rating'},
-    {k:'networkEffects',label:'Network Effects — Evidence',type:'textarea',ph:'Does value increase with more users?'},
+    {k:'networkEffects',label:'Network Effects — Evidence',type:'textarea',ph:'Positive feedback loop — more users = better product? Critical mass reached?'},
     {k:'networkEffectsRating',label:'Network Effects — Rating',type:'rating'},
-    {k:'brandStrength',label:'Brand Strength — Evidence',type:'textarea',ph:'Brand recognition and loyalty'},
+    {k:'brandStrength',label:'Brand Strength — Evidence',type:'textarea',ph:'Brand recognition and loyalty. Are customers willing to pay more?'},
     {k:'brandStrengthRating',label:'Brand Strength — Rating',type:'rating'},
-    {k:'costAdvantage',label:'Cost Advantage — Evidence',type:'textarea',ph:'Scale, process, or structural cost advantages'},
+    {k:'costAdvantage',label:'Cost Advantage / Scale — Evidence',type:'textarea',ph:'Lower cost through process, scale, distribution, purchasing power, or unique resources'},
     {k:'costAdvantageRating',label:'Cost Advantage — Rating',type:'rating'},
-    {k:'intangibleAssets',label:'Intangible Assets — Evidence',type:'textarea',ph:'Patents, licenses, regulatory moats'},
+    {k:'intangibleAssets',label:'Intangible Assets — Evidence',type:'textarea',ph:'Patents, licenses, regulatory moats, government licenses, IP'},
     {k:'intangibleAssetsRating',label:'Intangible Assets — Rating',type:'rating'},
-    {k:'overallMoatRating',label:'Overall Moat Rating',type:'select',opts:['','None','Narrow','Wide']}
+    {k:'_g_advanced',type:'group',label:'Advanced Moat Types'},
+    {k:'floatMoat',label:'Float — Evidence',type:'textarea',ph:'Customers pay upfront — company invests before delivering (insurance, subscriptions, deposits)'},
+    {k:'floatMoatRating',label:'Float — Rating',type:'rating'},
+    {k:'flywheelMoat',label:'Flywheel — Evidence',type:'textarea',ph:'Self-reinforcing loop where growth in one area drives growth in another'},
+    {k:'flywheelMoatRating',label:'Flywheel — Rating',type:'rating'},
+    {k:'complexityMoat',label:'Complexity — Evidence',type:'textarea',ph:'Product/ecosystem so technically complex it creates barriers. High learning curve.'},
+    {k:'complexityMoatRating',label:'Complexity — Rating',type:'rating'},
+    {k:'counterPositioning',label:'Counter-positioning — Evidence',type:'textarea',ph:'Competition must give up sales to adopt this business model'},
+    {k:'counterPositioningRating',label:'Counter-positioning — Rating',type:'rating'},
+    {k:'aggregationMoat',label:'Aggregation — Evidence',type:'textarea',ph:'Controls customer relationship — suppliers compete on the platform'},
+    {k:'aggregationMoatRating',label:'Aggregation — Rating',type:'rating'},
+    {k:'cultMoat',label:'Cult Following — Evidence',type:'textarea',ph:'Evangelical customers, strong emotional brand connection, community'},
+    {k:'cultMoatRating',label:'Cult Following — Rating',type:'rating'},
+    {k:'antiFragilityMoat',label:'Anti-fragility — Evidence',type:'textarea',ph:'Company benefits from volatility, shocks, or disruptions (Taleb concept)'},
+    {k:'antiFragilityMoatRating',label:'Anti-fragility — Rating',type:'rating'},
+    {k:'_g_moatstruct',type:'group',label:'Moat Structure & Durability'},
+    {k:'overallMoatRating',label:'Overall Moat Rating',type:'select',opts:['','None','Narrow','Wide']},
+    {k:'moatType',label:'Moat Type',type:'select',opts:['','Legacy Moat (wide but can\'t reinvest at high rates)','Reinvestment Moat (can reinvest at high rates)','Both']},
+    {k:'moatTrend',label:'Moat Trend',type:'select',opts:['','Expanding','Stable','Contracting']},
+    {k:'moatAttacked',label:'Has Moat Been Attacked?',type:'textarea',ph:'Has the moat been tested? How did it hold up? Why was it not disrupted yet?'},
+    {k:'hundredBillionTest',label:'$100B Test',type:'textarea',ph:'If you had $100B, could you disrupt the moat?'},
+    {k:'moatDisruptionRisk',label:'Moat Disruption Risk',type:'textarea',ph:'How can the moat be disrupted? What will change or not change?'},
+    {k:'_g_advanalysis',type:'group',label:'Production vs Consumer Advantage'},
+    {k:'productionAdvantage',label:'Production Advantage',type:'textarea',ph:'Process complexity, patents, resource uniqueness, cost decline rate, indivisibility, distribution, purchasing, R&D spillover, advertising scale'},
+    {k:'consumerAdvantage',label:'Consumer Advantage',type:'textarea',ph:'Habit, experience goods, switching costs, network effects, customer lock-in'},
+    {k:'_g_fakemoat',type:'group',label:'Fake Moat Check (should be unchecked)'},
+    {k:'fakeMoatProduct',label:'Great product alone (no structural protection)',type:'checkbox'},
+    {k:'fakeMoatMarketShare',label:'Strong market share alone (without understanding how/why)',type:'checkbox'},
+    {k:'fakeMoatExecution',label:'Great execution alone (can be copied)',type:'checkbox'},
+    {k:'fakeMoatManagement',label:'Great management alone (management changes)',type:'checkbox'},
+    {k:'fakeMoatBrand',label:'Brand alone (without pricing power or loyalty data)',type:'checkbox'}
   ]},
   {key:'management',title:'Management',num:3,fields:[
+    {k:'_g_mgmtbasic',type:'group',label:'Leadership'},
     {k:'ceoName',label:'CEO Name',type:'text',ph:'Current CEO'},
     {k:'ceoTenure',label:'CEO Tenure',type:'text',ph:'Years in role'},
-    {k:'trackRecord',label:'Track Record',type:'textarea',ph:'Past decisions, capital allocation history'},
-    {k:'insiderOwnership',label:'Insider Ownership',type:'text',ph:'Percentage or description'},
-    {k:'compensationNotes',label:'Compensation',type:'textarea',ph:'Reasonable? Aligned with shareholders?'},
-    {k:'capitalAllocation',label:'Capital Allocation',type:'textarea',ph:'Buybacks, dividends, reinvestment, M&A'},
-    {k:'culturalNotes',label:'Culture',type:'textarea',ph:'Company culture observations'},
-    {k:'boardQuality',label:'Board Quality',type:'textarea',ph:'Independent? Experienced? Diverse?'}
+    {k:'founderLed',label:'Founder-led?',type:'select',opts:['','Yes','No']},
+    {k:'familyOwned',label:'Family Owned?',type:'select',opts:['','Yes','No','Partially']},
+    {k:'trackRecord',label:'Track Record',type:'textarea',ph:'Past decisions, execution history. High energy? Rational?'},
+    {k:'_g_mgmtalign',type:'group',label:'Alignment & Incentives'},
+    {k:'insiderOwnership',label:'Insider Ownership',type:'text',ph:'CEO/management stock ownership %'},
+    {k:'insiderBuying',label:'Insider Buying Activity',type:'textarea',ph:'Are insiders buying stock? Recent transactions?'},
+    {k:'compensationNotes',label:'Compensation',type:'textarea',ph:'Base pay? Reasonable? SBC basis — based on what metrics?'},
+    {k:'guidanceTrackRecord',label:'Guidance Track Record',type:'select',opts:['','Conservative (beats guidance)','Accurate','Aggressive (misses guidance)']},
+    {k:'underPromise',label:'Under Promise & Over Deliver?',type:'select',opts:['','Yes','No','Mixed']},
+    {k:'longTermOriented',label:'Long-term Oriented?',type:'select',opts:['','Yes','No','Unclear']},
+    {k:'_g_mgmtquality',type:'group',label:'Capital Allocation & Quality'},
+    {k:'capitalAllocation',label:'Capital Allocation',type:'textarea',ph:'Buybacks, dividends, reinvestment, M&A — good allocators?'},
+    {k:'maTrackRecord',label:'M&A Track Record',type:'textarea',ph:'Useful or wasteful acquisitions? Sacrificed profitability for growth?'},
+    {k:'shareholderFriendly',label:'Shareholder Friendly?',type:'textarea',ph:'Returns capital? Candid with shareholders? Hides bad news?'},
+    {k:'culturalNotes',label:'Culture',type:'textarea',ph:'Glassdoor? Employee relations? Labor relations?'},
+    {k:'glassdoorLink',label:'Glassdoor Link',type:'text',ph:'https://glassdoor.com/...'},
+    {k:'boardQuality',label:'Board Quality',type:'textarea',ph:'Independent? Experienced? Diverse? Institutional imperative resisted?'}
   ]},
   {key:'industry',title:'Industry & Competitors',num:4,fields:[
-    {k:'marketShareEstimate',label:'Market Share',type:'text',ph:'Estimated market share'},
-    {k:'industryGrowthRate',label:'Industry Growth Rate',type:'text',ph:'Annual growth rate'},
-    {k:'competitorList',label:'Key Competitors',type:'textarea',ph:'Main competitors and their strengths'},
+    {k:'_g_indstruct',type:'group',label:'Industry Structure'},
     {k:'concentrationLevel',label:'Concentration Level',type:'select',opts:['','Fragmented','Consolidated','Oligopoly','Monopoly']},
-    {k:'barriersToEntry',label:'Barriers to Entry',type:'textarea',ph:'What stops new competitors?'},
-    {k:'regulatoryEnvironment',label:'Regulatory Environment',type:'textarea',ph:'Regulatory risks and protections'},
-    {k:'disruptionRisk',label:'Disruption Risk',type:'textarea',ph:'Technology or business model disruption risk'}
+    {k:'hhiIndex',label:'HHI Index',type:'text',ph:'> 1800 = less rivalry (concentrated)'},
+    {k:'industryGrowthRate',label:'Industry Growth Rate',type:'text',ph:'Annual growth rate. Growing, stable, or declining?'},
+    {k:'industryEndState',label:'Industry End State',type:'textarea',ph:'What is the end state of the market/industry? Zero-sum or expanding?'},
+    {k:'verticalHorizontal',label:'Industry Type',type:'select',opts:['','Vertical','Horizontal','Mixed']},
+    {k:'valueCreation',label:'Value & Profit Location',type:'textarea',ph:'Where is value/profit created in the industry? Who has the most power/leverage?'},
+    {k:'_g_indcompet',type:'group',label:'Competitive Position'},
+    {k:'marketShareEstimate',label:'Market Share',type:'text',ph:'Estimated market share. Stable over time?'},
+    {k:'competitorList',label:'Key Competitors',type:'textarea',ph:'Who are they? Market share each? Growth rate? Profitability of each?'},
+    {k:'competitorProfitability',label:'Competitor Comparison',type:'textarea',ph:'Peer comparison — compare all competitors, buy the best one(s)'},
+    {k:'barriersToEntry',label:'Barriers to Entry',type:'textarea',ph:'What stops new competitors? Are barriers increasing as the company grows?'},
+    {k:'priceIncreaseHistory',label:'Price Increase Evidence',type:'textarea',ph:'Examples of companies raising prices without losing business?'},
+    {k:'_g_indforces',type:'group',label:'Porter\'s Five Forces'},
+    {k:'supplierPower',label:'Supplier Power',type:'rating'},
+    {k:'buyerPower',label:'Buyer Power',type:'rating'},
+    {k:'buyerInformed',label:'How Informed Are Buyers?',type:'select',opts:['','Very informed','Somewhat','Not informed']},
+    {k:'entryExitRates',label:'Entry/Exit Rates',type:'textarea',ph:'Rates of entry and exit? Minimum efficient production scale?'},
+    {k:'regulatoryEnvironment',label:'Regulatory Environment',type:'textarea',ph:'Regulatory risks and protections? Limited regulatory risk?'},
+    {k:'_g_inddisrupt',type:'group',label:'Disruption & Innovation'},
+    {k:'disruptionRisk',label:'Disruption Risk',type:'textarea',ph:'Vulnerable to disruption? Immune to fast-changing industry?'},
+    {k:'innovationEffect',label:'Innovation Effect',type:'textarea',ph:'Does innovation improve product margins or just get passed to customer?'},
+    {k:'foreignLowCost',label:'Foreign Low-Cost Threat?',type:'select',opts:['','Yes','No','Partially']},
+    {k:'commodityDependence',label:'Commodity Price Dependence?',type:'select',opts:['','Yes','No','Partially']},
+    {k:'aiImpact',label:'AI Impact',type:'textarea',ph:'Does AI make the company\'s processes cheaper, or obsolete?'}
   ]},
   {key:'risks',title:'Risks',num:5,fields:'dynamic_risks'},
   {key:'financials',title:'Financial Analysis',num:6,fields:'auto_thresholds'},
@@ -8632,32 +8730,79 @@ const CL_SECTIONS=[
     {k:'valuationNotes',label:'Notes',type:'textarea',ph:'Additional valuation thoughts'}
   ]},
   {key:'buy_sell',title:'Buy/Sell Decision',num:8,fields:[
-    {k:'thesis',label:'Investment Thesis',type:'textarea',ph:'1-3 sentence thesis: why own this?'},
-    {k:'expectedCagr',label:'Expected CAGR (%)',type:'number',ph:'Target annual return'},
+    {k:'_g_investcase',type:'group',label:'Investment Case'},
+    {k:'howMakesMoney',label:'How Does It Make Money?',type:'textarea',ph:'If can\'t figure out → TOO HARD pile'},
+    {k:'whyOwn3Reasons',label:'Why Own It? (3 Reasons)',type:'textarea',ph:'3 most compelling reasons to own this company (irrespective of price)'},
+    {k:'thesis',label:'Investment Thesis (1-3 sentences)',type:'textarea',ph:'Short thesis: why own this?'},
+    {k:'expectedCagr',label:'Expected CAGR (%)',type:'number',ph:'Target annual return (min 15%)'},
+    {k:'_g_expectedreturn',type:'group',label:'Expected Return Breakdown'},
+    {k:'returnRevGrowth',label:'Revenue Growth %',type:'number',ph:'Expected annual revenue growth'},
+    {k:'returnMarginExpansion',label:'Margin Expansion %',type:'number',ph:'Expected annual margin change'},
+    {k:'returnMultipleChange',label:'Multiple Change %',type:'number',ph:'Expected annual P/E change'},
+    {k:'returnCapitalReturn',label:'Capital Return %',type:'number',ph:'Dividend yield + buyback yield'},
+    {k:'_g_edge',type:'group',label:'My Edge'},
     {k:'edge',label:'My Edge',type:'textarea',ph:'What do I know/believe that the market doesn\'t?'},
+    {k:'marketMispricing',label:'Market Mispricing',type:'textarea',ph:'Mi az, amit a piac rosszul áraz?'},
+    {k:'consensusError',label:'Consensus Error',type:'textarea',ph:'Miben téved a konszenzus?'},
+    {k:'kpiMisread',label:'Misread KPI',type:'textarea',ph:'Mi az a KPI, ami félre van értelmezve?'},
+    {k:'timeHorizonMismatch',label:'Time Horizon Mismatch',type:'textarea',ph:'Időhorizont mismatch? Short-term pain vs long-term value?'},
+    {k:'whyOpportunityExists',label:'Why Does Opportunity Exist?',type:'textarea',ph:'Why is the market offering this? Most of the time the market is efficient.'},
+    {k:'_g_sizing',type:'group',label:'Position Sizing & Timing'},
+    {k:'whenToOwn',label:'When to Own / Target Price',type:'textarea',ph:'At what price level? Set a price alert!'},
+    {k:'buyPrice',label:'Target Buy Price',type:'number',ph:'Price I want to buy at'},
+    {k:'sellPrice',label:'Target Sell Price',type:'number',ph:'Price I would sell at'},
+    {k:'upsidePotential',label:'Upside Potential',type:'textarea',ph:'Order of magnitude: 2x? 3x? (min 100% over 5yr = 15% CAGR)'},
+    {k:'betterThanOwned',label:'Better Than What I Own?',type:'textarea',ph:'Does it make my portfolio stronger? If not → do nothing, set price alert'},
+    {k:'_g_bear',type:'group',label:'Bear Case & Risk'},
+    {k:'downsideRisk',label:'Downside Risk',type:'textarea',ph:'What could go wrong? Metrics to track to verify if business stays strong'},
     {k:'bearArgument1',label:'Bear Argument #1',type:'textarea',ph:'Strongest case against owning this'},
     {k:'bearArgument2',label:'Bear Argument #2',type:'textarea',ph:'Second bear case'},
     {k:'bearArgument3',label:'Bear Argument #3',type:'textarea',ph:'Third bear case'},
+    {k:'shortSellerView',label:'Short Seller View',type:'textarea',ph:'What would a short seller say about this company?'},
+    {k:'valueTrapRisk',label:'Value Trap Risk',type:'textarea',ph:'What would make this a value trap?'},
+    {k:'_g_sell',type:'group',label:'Sell Triggers (auto-sell if triggered)'},
     {k:'sellTrigger1',label:'Sell Trigger #1',type:'textarea',ph:'I will sell if...'},
     {k:'sellTrigger2',label:'Sell Trigger #2',type:'textarea',ph:'I will sell if...'},
-    {k:'sellTrigger3',label:'Sell Trigger #3',type:'textarea',ph:'I will sell if...'},
-    {k:'buyPrice',label:'Target Buy Price',type:'number',ph:'Price I want to buy at'},
-    {k:'sellPrice',label:'Target Sell Price',type:'number',ph:'Price I would sell at'}
+    {k:'sellTrigger3',label:'Sell Trigger #3',type:'textarea',ph:'I will sell if...'}
   ]},
   {key:'research_sources',title:'Research Sources',num:9,fields:'checkboxes'},
   {key:'psychology',title:'Psychology Check',num:10,fields:[
     {k:'convictionLevel',label:'Conviction Level (1-10)',type:'rating10'},
-    {k:'fomoCheck',label:'FOMO Check',type:'textarea',ph:'Am I buying because everyone else is?'},
-    {k:'patienceCheck',label:'Patience Check',type:'textarea',ph:'Am I willing to hold 5+ years?'},
-    {k:'contraryEvidence',label:'Contrary Evidence',type:'textarea',ph:'Have I actively sought opposing views?'},
-    {k:'downsidePrepared',label:'Downside Prepared',type:'textarea',ph:'Can I stomach a 50% drawdown?'},
-    {k:'positionSizeComfort',label:'Position Size Comfort',type:'textarea',ph:'Is the position size appropriate for my conviction?'}
+    {k:'borrowedConviction',label:'Borrowing Conviction?',type:'select',opts:['','No — my own research','Yes — influenced by others']},
+    {k:'speculationCheck',label:'Investing or Speculating?',type:'select',opts:['','Investing','Speculating','Unsure']},
+    {k:'emotionalAttachment',label:'Emotional Attachment',type:'select',opts:['','None','Some','High']},
+    {k:'fomoCheck',label:'FOMO Check',type:'textarea',ph:'Am I buying because everyone else is? Fear, FOMO, or hype?'},
+    {k:'patienceCheck',label:'Patience Check',type:'textarea',ph:'Am I willing to hold 5+ years? 10 years? Forever?'},
+    {k:'contraryEvidence',label:'Contrary Evidence',type:'textarea',ph:'Have I actively sought and reconciled opposing views?'},
+    {k:'downsidePrepared',label:'Downside Prepared',type:'textarea',ph:'Can I stomach a 50% drawdown? What would I do if stock dropped 30%?'},
+    {k:'positionSizeComfort',label:'Position Size Comfort',type:'textarea',ph:'Is the position size appropriate for my conviction?'},
+    {k:'priceAnchoringBias',label:'Price Anchoring Bias?',type:'textarea',ph:'Am I anchored to a historical price? Ignoring daily fluctuations?'},
+    {k:'tooHardPile',label:'Too Hard Pile?',type:'select',opts:['','No — within circle of competence','Yes — should skip','Borderline']},
+    {k:'highestOpportunityCost',label:'Highest Opportunity Cost?',type:'select',opts:['','Yes','No','Unsure']},
+    {k:'independenceOfThought',label:'Independence of Thought',type:'textarea',ph:'Am I relying on first-hand sources or am I influenced by others?'},
+    {k:'expectationsVsConsensus',label:'Expectations vs Consensus',type:'textarea',ph:'How do my expectations differ from the consensus? Why am I right?'}
   ]},
   {key:'quarterly_followup',title:'Quarterly Follow-up',num:11,fields:'dynamic_quarters'},
-  {key:'change_log',title:'Change Tracking',num:12,fields:'auto_log'}
+  {key:'swot',title:'SWOT & SPLEEN Analysis',num:12,fields:[
+    {k:'_g_swot',type:'group',label:'SWOT'},
+    {k:'strengths',label:'Strengths',type:'textarea',ph:'Internal strengths of the company'},
+    {k:'weaknesses',label:'Weaknesses',type:'textarea',ph:'Internal weaknesses'},
+    {k:'opportunities',label:'Opportunities',type:'textarea',ph:'External opportunities'},
+    {k:'threats',label:'Threats',type:'textarea',ph:'External threats'},
+    {k:'_g_spleen',type:'group',label:'SPLEEN Analysis'},
+    {k:'social',label:'Social Factors',type:'textarea',ph:'Social trends affecting the company'},
+    {k:'political',label:'Political Factors',type:'textarea',ph:'Political/government risks or benefits'},
+    {k:'legal',label:'Legal Factors',type:'textarea',ph:'Legal risks, lawsuits, regulations'},
+    {k:'economic',label:'Economic Factors',type:'textarea',ph:'Macro-economic exposure, interest rate sensitivity'},
+    {k:'environmental',label:'Environmental Factors',type:'textarea',ph:'ESG, climate, sustainability risks'},
+    {k:'niche',label:'Niche / Industry-Specific',type:'textarea',ph:'Industry-specific factors not covered above'}
+  ]},
+  {key:'change_log',title:'Change Tracking',num:13,fields:'auto_log'}
 ];
 
-const CL_RESEARCH_SOURCES=['10-K','10-Q','Earnings Call','Investor Presentation','Annual Report','YouTube Analysis','Reddit/Forums','Twitter/X','Analyst Reports','News Articles'];
+const CL_RESEARCH_SOURCES=['10-K','10-Q','Earnings Call','Investor Presentation','Annual Report','YouTube Analysis','Reddit/Forums','Twitter/X','Analyst Reports','News Articles','CEO Interview','Substack','Morningstar Report','SeekingAlpha','Consumer Reviews (Forums, Google Maps)','Company Website / App Review','Capital Market Day / Investor Day'];
+
+const CL_10K_CHECKLIST=['Auditor opinion checked (Unqualified = Good)','Item 1B — SEC unanswered questions','Item 8 — Financial statements reviewed','Item 9 — Disagreements with accountants','DEF 14A — CEO compensation & insider ownership','Proxy statement reviewed','Form S-3 — New stock issuance to employees','Form 4 — Changes in stock ownership','ASC-718 — Stock compensation details','Annual letter to shareholders read'];
 
 const CL_THRESHOLDS=[
   {k:'revenueGrowthOk',label:'Revenue growing (3yr CAGR > 0)'},
@@ -8796,6 +8941,10 @@ function renderClSectionBody(ticker,sec){
 
   let h='';
   sec.fields.forEach(f=>{
+    if(f.type==='group'){
+      h+=`<div style="font-size:12px;font-weight:600;color:var(--text2);margin:${h?'16px':'0'} 0 8px;text-transform:uppercase;letter-spacing:.5px;${h?'border-top:1px solid var(--border);padding-top:12px':''}">${escH(f.label)}</div>`;
+      return;
+    }
     const val=data[f.k]||'';
     if(f.type==='textarea'){
       h+=`<div class="cl-field"><label>${f.label}</label><textarea placeholder="${escH(f.ph||'')}" onchange="saveClField('${escH(ticker)}','${sec.key}','${f.k}',this.value)" oninput="debounceSaveClField('${escH(ticker)}','${sec.key}','${f.k}',this.value)">${escH(val)}</textarea></div>`;
@@ -8805,6 +8954,9 @@ function renderClSectionBody(ticker,sec){
       h+=`<div class="cl-field"><label>${f.label}</label><input type="number" placeholder="${escH(f.ph||'')}" value="${escH(val)}" step="any" onchange="saveClField('${escH(ticker)}','${sec.key}','${f.k}',this.value)"></div>`;
     }else if(f.type==='select'){
       h+=`<div class="cl-field"><label>${f.label}</label><select onchange="saveClField('${escH(ticker)}','${sec.key}','${f.k}',this.value)">${f.opts.map(o=>`<option value="${escH(o)}"${val===o?' selected':''}>${o||'— Select —'}</option>`).join('')}</select></div>`;
+    }else if(f.type==='checkbox'){
+      const checked=data[f.k]?'checked':'';
+      h+=`<div class="cl-check-row"><input type="checkbox" id="cl-cb-${sec.key}-${f.k}" ${checked} onchange="saveClField('${escH(ticker)}','${sec.key}','${f.k}',this.checked)"><label for="cl-cb-${sec.key}-${f.k}">${escH(f.label)}</label></div>`;
     }else if(f.type==='rating'){
       h+=`<div class="cl-field"><label>${f.label}</label><div class="cl-rating">${[1,2,3,4,5].map(n=>`<button class="${parseInt(val)===n?'active':''}" onclick="saveClField('${escH(ticker)}','${sec.key}','${f.k}','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('')}</div></div>`;
     }else if(f.type==='rating10'){
@@ -8896,13 +9048,20 @@ function renderClFinancials(ticker,data){
 }
 
 function renderClSources(ticker,data){
-  let h='';
+  let h='<div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Research Sources</div>';
   CL_RESEARCH_SOURCES.forEach((src,i)=>{
     const k='src_'+i;
     const checked=data[k]?'checked':'';
     h+=`<div class="cl-check-row"><input type="checkbox" id="cl-src-${i}" ${checked} onchange="saveClField('${escH(ticker)}','research_sources','${k}',this.checked)"><label for="cl-src-${i}">${escH(src)}</label></div>`;
   });
   h+=`<div class="cl-field" style="margin-top:12px"><label>Other Sources</label><textarea placeholder="Other research sources..." onchange="saveClField('${escH(ticker)}','research_sources','otherSources',this.value)" oninput="debounceSaveClField('${escH(ticker)}','research_sources','otherSources',this.value)">${escH(data.otherSources||'')}</textarea></div>`;
+  h+=`<div style="font-size:12px;font-weight:600;color:var(--text2);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px;border-top:1px solid var(--border);padding-top:12px">10-K / Filing Analysis Checklist</div>`;
+  CL_10K_CHECKLIST.forEach((item,i)=>{
+    const k='tenk_'+i;
+    const checked=data[k]?'checked':'';
+    h+=`<div class="cl-check-row"><input type="checkbox" id="cl-tenk-${i}" ${checked} onchange="saveClField('${escH(ticker)}','research_sources','${k}',this.checked)"><label for="cl-tenk-${i}">${escH(item)}</label></div>`;
+  });
+  h+=`<div class="cl-field" style="margin-top:12px"><label>10-K / Filing Notes</label><textarea placeholder="Notes from 10-K analysis..." onchange="saveClField('${escH(ticker)}','research_sources','tenkNotes',this.value)" oninput="debounceSaveClField('${escH(ticker)}','research_sources','tenkNotes',this.value)">${escH(data.tenkNotes||'')}</textarea></div>`;
   return h;
 }
 
@@ -9097,11 +9256,15 @@ function calcClProgress(ticker){
     if(sec.fields==='checkboxes'){
       CL_RESEARCH_SOURCES.forEach((_,i)=>{total++;if(data['src_'+i])filled++});
       if(data.otherSources&&data.otherSources.trim())filled++;total++;
+      CL_10K_CHECKLIST.forEach((_,i)=>{total++;if(data['tenk_'+i])filled++});
+      if(data.tenkNotes&&data.tenkNotes.trim())filled++;total++;
       data.progress=total?Math.round(filled/total*100):0;
       totalPct+=data.progress;sectionCount++;return;
     }
 
+    if(!Array.isArray(sec.fields))return;
     sec.fields.forEach(f=>{
+      if(f.type==='group'||f.type==='checkbox')return;
       total++;
       const v=data[f.k];
       if(f.type==='number'?v!=null&&v!=='':v!=null&&v!==''&&v!==0&&v!==false)filled++;
