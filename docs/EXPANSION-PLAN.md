@@ -338,11 +338,11 @@ All with METRIC_TIPS tooltips.
 - Working Capital Management = `(payables - receivables - inventory) / revenue` (negative = good, like Amazon)
 - Preferred Stock present? Yes/No flag
 
-### 12.5 Extended metric tooltips
+### 12.5 Extended metric tooltips ✅ DONE (2026-06-30)
 - **Difficulty:** EASY (30 min)
 - **Cost:** Free
 - **What:** Add tooltip entries for all new metrics from 12.3 and 12.4
-- **Implementation:** Expand METRIC_TIPS object with ~15 new entries
+- **Implementation:** Already done inline with 12.3 (10 entries) and 12.4 (11 entries) — 21 new METRIC_TIPS total, each with name/formula/benchmark/description
 
 ---
 

@@ -208,7 +208,7 @@ Status: COMPLETE (2026-06-27)
 > 8 phases, 34 tasks, ~12-14 sessions
 
 - Phase 11: Checklist deepening (Company Details, Moat, SWOT, Management, Industry, Edge, Anti-Thesis, 10K guide)
-- Phase 12: Financial Analysis deepening — 12.1 Yellow Flags ✅, 12.2 Thresholds ✅, 12.3 CF Deep Dive ✅, 12.4-12.5 remaining
+- Phase 12: Financial Analysis deepening — ALL COMPLETE ✅ (12.1 Yellow Flags, 12.2 Thresholds 6→22, 12.3 CF Deep Dive 10 metrics, 12.4 BS Deep Dive 11 metrics, 12.5 Tooltips 21 new)
 - Phase 13: Valuation calculators (Scenario Builder, 10cap, EVA, FCFF toggle, Valuation History)
 - Phase 14: Portfolio asset types (Real Estate, Bonds enhanced, Cash, Net Worth widget)
 - Phase 15: Follow-up & Monitoring (Quarterly expansion, Learning Log, Follow Sources, Price Alerts, Sell Trigger dashboard)
