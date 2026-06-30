@@ -25,8 +25,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 15 | D1 Data Persistence | `f053cb7`+`cf9c284` | 2026-06-30 | 2 | 0 |
 | 16 | Phase 15 Feature QA | `bc15b16`+`872b96b` | 2026-06-30 | 4 | 0 |
 | 17 | Phase 14 Asset Types QA | `5cd3a24` | 2026-07-01 | 6 | 0 |
+| 18 | Phase 15.4 Price Alerts QA | `631a3e2` | 2026-07-01 | 2 | 0 |
 
-**Total: 166 fixed, 21 potential (unfixed)**
+**Total: 168 fixed, 21 potential (unfixed)**
 
 ---
 
@@ -372,6 +373,28 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 **17.6 [WARN] Snapshot positions missing `assetType` field (index.html:3968)**
 `takeSnapshot()` stored positions without `assetType`, losing type info for historical asset class breakdown.
 **Fix:** Added `assetType:pos.assetType||'stock'` to snapshot position objects.
+
+---
+
+## Category 18 — Phase 15.4 Price Alerts QA (`631a3e2`)
+
+**Date:** 2026-07-01 | **Fixed: 2** | **Unfixed: 0**
+
+### Bug 18.1 — CRITICAL: priceAlerts lost in D1 mode on reload
+
+**Commit:** `631a3e2` | **File:** `web/index.html:7178`
+
+**Problem:** D1 `loadTrackerStocks` sets `tStocks={}` and rebuilds from D1 data. `_d1CompanyToTStock` does not include `priceAlerts` (not in D1 schema). Result: price alerts work in-session but vanish on reload for D1 users.
+
+**Fix:** After D1 full load, merge `priceAlerts` from localStorage backup: `Object.entries(ls).forEach(([t,s])=>{if(tStocks[t]&&s.priceAlerts)tStocks[t].priceAlerts=s.priceAlerts})`.
+
+### Bug 18.2 — WARN: Negative price alert values accepted
+
+**Commit:** `631a3e2` | **File:** `web/index.html:5805,7071`
+
+**Problem:** `savePriceAlert` accepted any parseable float including negatives. Inputs lacked `min` attribute.
+
+**Fix:** Added `min="0.01"` to both `<input>` elements. Added `num<=0` guard in `savePriceAlert()` to delete invalid values.
 
 ---
 

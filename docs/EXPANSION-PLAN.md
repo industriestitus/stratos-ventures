@@ -564,7 +564,7 @@ All with METRIC_TIPS tooltips.
 - Finviz: `finviz.com/quote.ashx?t={TICKER}`
 - Macrotrends: `macrotrends.net/stocks/charts/{TICKER}`
 
-### 15.4 Price Alerts (basic — on app load)
+### 15.4 Price Alerts (basic — on app load) ✅ DONE
 - **Difficulty:** EASY (1.5 hours for basic) / HARD (4 hours for push notifications)
 - **Cost:** Free
 - **What:** Set price targets, get notified when reached
