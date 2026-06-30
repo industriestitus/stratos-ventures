@@ -529,7 +529,7 @@ All with METRIC_TIPS tooltips.
 
 **Auto-carry:** When creating a new quarter entry, auto-populate `previousQuarterFollowup` with the previous quarter's `watchNextQuarter` text.
 
-### 15.2 "Where I Was Wrong" learning log
+### 15.2 "Where I Was Wrong" learning log ✅ DONE
 - **Difficulty:** EASY (1.5 hours)
 - **Cost:** Free
 - **What:** Per-company error tracking for skill compounding

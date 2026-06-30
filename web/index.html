@@ -864,6 +864,11 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .cl-qf-quarter{font-weight:600;font-size:13px;color:var(--accent)}
 .cl-qf-date{font-size:11px;color:var(--text2)}
 .cl-qf-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cl-learn-entry{border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:8px;background:var(--surface)}.cl-learn-entry:last-child{margin-bottom:16px}
+.cl-learn-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cl-learn-date{font-size:11px;color:var(--text2)}
+.cl-learn-cat{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;text-transform:uppercase}
+.cl-learn-cat-growth{background:#6c5ce733;color:#6c5ce7}.cl-learn-cat-management{background:#00b89433;color:#00b894}.cl-learn-cat-valuation{background:#e1720633;color:#e17206}.cl-learn-cat-moat{background:#0984e333;color:#0984e3}.cl-learn-cat-industry{background:#d63031cc;color:#ff7675}.cl-learn-cat-psychology{background:#e84393cc;color:#fd79a8}.cl-learn-cat-other{background:var(--border);color:var(--text2)}
 .cl-log-entry{font-size:11px;color:var(--text2);padding:6px 0;border-bottom:1px solid var(--border)}
 .cl-log-entry:last-child{border-bottom:none}
 .cl-hybrid-section{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
@@ -9418,7 +9423,8 @@ const CL_SECTIONS=[
     {k:'environmental',label:'Environmental Factors',type:'textarea',ph:'ESG, climate, sustainability risks'},
     {k:'niche',label:'Niche / Industry-Specific',type:'textarea',ph:'Industry-specific factors not covered above'}
   ]},
-  {key:'change_log',title:'Change Tracking',num:13,fields:'auto_log'}
+  {key:'change_log',title:'Change Tracking',num:13,fields:'auto_log'},
+  {key:'learning_log',title:'Where I Was Wrong',num:14,fields:'dynamic_learning'}
 ];
 
 const CL_RESEARCH_SOURCES=['10-K','10-Q','Earnings Call','Investor Presentation','Annual Report','YouTube Analysis','Reddit/Forums','Twitter/X','Analyst Reports','News Articles','CEO Interview','Substack','Morningstar Report','SeekingAlpha','Consumer Reviews (Forums, Google Maps)','Company Website / App Review','Capital Market Day / Investor Day'];
@@ -9626,6 +9632,7 @@ function ensureChecklist(ticker){
   if(!cl.sections.risks.items)cl.sections.risks.items=[];
   if(!cl.sections.quarterly_followup.entries)cl.sections.quarterly_followup.entries=[];
   if(!cl.sections.change_log.entries)cl.sections.change_log.entries=[];
+  if(!cl.sections.learning_log.entries)cl.sections.learning_log.entries=[];
   return cl;
 }
 
@@ -9738,6 +9745,7 @@ function renderClSectionBody(ticker,sec){
   if(sec.fields==='checkboxes')return renderClSources(ticker,data);
   if(sec.fields==='dynamic_quarters')return renderClQuarters(ticker,data);
   if(sec.fields==='auto_log')return renderClLog(ticker,data);
+  if(sec.fields==='dynamic_learning')return renderClLearningLog(ticker,data);
 
   let h='';
   sec.fields.forEach(f=>{
@@ -9986,6 +9994,72 @@ function removeClQuarter(ticker,idx){
   renderChecklist(ticker);
 }
 
+const LEARN_CATEGORIES=[['','—'],['growth','Growth'],['management','Management'],['valuation','Valuation'],['moat','Moat'],['industry','Industry'],['psychology','Psychology'],['other','Other']];
+
+function renderClLearningLog(ticker,data){
+  const entries=data.entries||[];
+  const t=escH(ticker);
+  let h=`<button class="btn btn-primary" onclick="addClLearning('${t}')" style="margin-bottom:12px;font-size:12px;padding:6px 14px">+ Add Learning</button>`;
+  if(!entries.length){h+=`<div style="color:var(--text2);font-size:12px">No learnings recorded yet. Track mistakes and lessons to compound your investing skill.</div>`;return h}
+  entries.slice().reverse().forEach((e,ri)=>{
+    const i=entries.length-1-ri;
+    const catClass=e.category?'cl-learn-cat-'+e.category:'cl-learn-cat-other';
+    const catLabel=LEARN_CATEGORIES.find(c=>c[0]===e.category);
+    h+=`<div class="cl-learn-entry">
+      <div class="cl-learn-header">
+        <span class="cl-learn-date">${escH(e.date||'')}</span>
+        ${e.category?`<span class="cl-learn-cat ${catClass}">${escH(catLabel?catLabel[1]:e.category)}</span>`:''}
+        <span style="flex:1"></span>
+        <button class="btn-icon" onclick="removeClLearning('${t}',${i})" title="Remove" style="font-size:12px;opacity:.5">✕</button>
+      </div>
+      <div class="cl-field" style="margin-bottom:6px">
+        <label>Category</label>
+        <select onchange="updateClLearning('${t}',${i},'category',this.value)">
+          ${LEARN_CATEGORIES.map(o=>`<option value="${o[0]}"${e.category===o[0]?' selected':''}>${o[1]}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cl-qf-fields">
+        <div class="cl-field"><label>What went wrong?</label><textarea rows="2" placeholder="Describe the mistake or surprise..." onchange="updateClLearning('${t}',${i},'whatHappened',this.value)">${escH(e.whatHappened||'')}</textarea></div>
+        <div class="cl-field"><label>What did I learn?</label><textarea rows="2" placeholder="Key takeaway..." onchange="updateClLearning('${t}',${i},'whatILearned',this.value)">${escH(e.whatILearned||'')}</textarea></div>
+      </div>
+      <div class="cl-field" style="margin-top:6px"><label>Impact on thesis</label><textarea rows="2" placeholder="How did this affect my investment thesis?" onchange="updateClLearning('${t}',${i},'impactOnThesis',this.value)">${escH(e.impactOnThesis||'')}</textarea></div>
+    </div>`;
+  });
+  return h;
+}
+
+function addClLearning(ticker){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  cl.sections.learning_log.entries.push({date:new Date().toISOString().slice(0,10),category:'',whatHappened:'',whatILearned:'',impactOnThesis:''});
+  clLogChange(ticker,'learning_added','learning_log','','New learning');
+  saveTrackerStocks();
+  renderChecklist(ticker);
+}
+
+function updateClLearning(ticker,idx,field,value){
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  const entry=cl.sections.learning_log.entries[idx];
+  if(!entry)return;
+  const old=entry[field];
+  entry[field]=value;
+  if(field==='category')renderChecklist(ticker);
+  clLogChange(ticker,'learning_updated','learning_log.'+field,old,value);
+  calcClProgress(ticker);
+  saveTrackerStocks();
+}
+
+function removeClLearning(ticker,idx){
+  if(!confirm('Remove this learning?'))return;
+  const cl=ensureChecklist(ticker);
+  if(!cl)return;
+  cl.sections.learning_log.entries.splice(idx,1);
+  calcClProgress(ticker);
+  saveTrackerStocks();
+  renderChecklist(ticker);
+}
+
 function renderClLog(ticker,data){
   const entries=data.entries||[];
   if(!entries.length)return'<div style="color:var(--text2);font-size:12px">No changes recorded yet. Changes are tracked automatically when you edit checklist fields.</div>';
@@ -10088,6 +10162,15 @@ function calcClProgress(ticker){
           total+=qFields.length;
           qFields.forEach(f=>{if(e[f])filled++;});
         });
+        data.progress=total?Math.round(filled/total*100):0;
+      }
+      totalPct+=data.progress;sectionCount++;return;
+    }
+    if(sec.key==='learning_log'){
+      const entries=data.entries||[];
+      if(!entries.length){data.progress=0}else{
+        const lFields=['category','whatHappened','whatILearned','impactOnThesis'];
+        entries.forEach(e=>{total+=lFields.length;lFields.forEach(f=>{if(e[f])filled++;});});
         data.progress=total?Math.round(filled/total*100):0;
       }
       totalPct+=data.progress;sectionCount++;return;
