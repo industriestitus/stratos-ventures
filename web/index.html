@@ -6126,6 +6126,51 @@ function renderValuation(ticker){
   h+=`<div class="cp-val-assumptions"><strong>Phil Town Rule #1:</strong> Owner Earnings = NI + D&A − Maint.CAPEX · 10cap = OE × 10 · Buy at 50% MOS</div>`;
   h+='</div>';
 
+  // EVA (Economic Value Added)
+  const bs0_v=s._bsData?.[0];
+  const evaEbit=s.ebit;
+  const evaTaxExp=is0_v?.incomeTaxExpense;
+  const evaPreTax=is0_v?.incomeBeforeTax;
+  const evaEffTax=evaTaxExp!=null&&evaPreTax&&evaPreTax>0?(evaTaxExp/evaPreTax):null;
+  const evaTaxRate=evaEffTax!=null?Math.max(0,Math.min(evaEffTax,1)):0.21;
+  const evaNopat=evaEbit!=null?evaEbit*(1-evaTaxRate):null;
+  const evaEquity=bs0_v?.totalStockholdersEquity??null;
+  const evaDebt=s.totalDebt??bs0_v?.totalDebt??null;
+  const evaCash=s.totalCash??bs0_v?.cashAndCashEquivalents??null;
+  const evaIC=evaEquity!=null&&evaDebt!=null&&evaCash!=null?evaEquity+evaDebt-evaCash:null;
+  const evaWacc=s.evaWacc??10;
+  const eva=evaNopat!=null&&evaIC!=null?evaNopat-(evaIC*evaWacc/100):null;
+  const evaSpread=s.roic!=null?s.roic-evaWacc:null;
+  const evaRoic=evaIC!=null&&evaIC>0&&evaNopat!=null?(evaNopat/evaIC*100):null;
+
+  h+='<div class="card cp-val-model"><div class="cp-val-header"><div class="cp-val-model-title">EVA (Economic Value Added)</div>';
+  if(eva!=null){
+    const evaPos=eva>0;
+    h+=`<span class="cp-val-badge ${evaPos?'positive':'negative'}" style="background:${evaPos?'rgba(0,184,148,.15)':'rgba(225,112,85,.15)'}">${evaPos?'Creating':'Destroying'} Value</span>`;
+  }else{
+    h+='<span class="cp-val-badge" style="background:var(--surface);color:var(--text2)">N/A</span>';
+  }
+  h+='</div>';
+  h+='<div class="cp-val-details">';
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">EBIT</div><div class="cp-val-item-value">${fmt(evaEbit)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Eff. Tax Rate</div><div class="cp-val-item-value">${evaEffTax!=null?(evaEffTax*100).toFixed(1)+'%':'21% (default)'}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">NOPAT</div><div class="cp-val-item-value">${fmt(evaNopat)}</div></div>`;
+  h+='</div>';
+  h+='<div class="cp-val-details" style="margin-top:4px">';
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Total Equity</div><div class="cp-val-item-value">${fmt(evaEquity)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Total Debt</div><div class="cp-val-item-value">${fmt(evaDebt)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Cash</div><div class="cp-val-item-value">${fmt(evaCash)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">Invested Capital</div><div class="cp-val-item-value">${fmt(evaIC)}</div></div>`;
+  h+='</div>';
+  h+='<div class="cp-val-details" style="margin-top:4px">';
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">WACC</div><div class="cp-val-item-value"><input type="number" value="${evaWacc}" step="0.5" min="0" max="30" style="width:60px;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:4px 6px;color:var(--text);font-size:13px;text-align:right" onchange="tStocks['${escH(ticker)}'].evaWacc=+this.value;saveTrackerStocks();renderValuation('${escH(ticker)}')">%</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">EVA</div><div class="cp-val-item-value ${eva!=null?(eva>0?'positive':'negative'):''}">${fmt(eva)}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">ROIC (calc)</div><div class="cp-val-item-value ${evaRoic!=null?(evaRoic>evaWacc?'positive':'negative'):''}">${evaRoic!=null?evaRoic.toFixed(1)+'%':'-'}</div></div>`;
+  h+=`<div class="cp-val-item"><div class="cp-val-item-label">EVA Spread</div><div class="cp-val-item-value ${evaSpread!=null?(evaSpread>0?'positive':'negative'):''}">${evaSpread!=null?evaSpread.toFixed(1)+'%':'-'}</div></div>`;
+  h+='</div>';
+  h+=`<div class="cp-val-assumptions"><strong>EVA:</strong> NOPAT − (Invested Capital × WACC) · Positive = creating shareholder value above cost of capital</div>`;
+  h+='</div>';
+
   // Scenario Builder (Bear / Base / Bull)
   const sc=s.scenarios||{bear:{revGrowth:-5,termMargin:10,exitMult:10,prob:20},base:{revGrowth:g1,termMargin:s.netMargin||15,exitMult:em||15,prob:60},bull:{revGrowth:g1*1.5,termMargin:(s.netMargin||15)*1.2,exitMult:(em||15)*1.3,prob:20}};
   function scenarioFV(scen){

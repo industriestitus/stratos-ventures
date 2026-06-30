@@ -386,19 +386,22 @@ All with METRIC_TIPS tooltips.
 
 **QA:** 0 CRITICAL, 1 WARN fixed (|| → ?? for D&A fallback)
 
-### 13.3 EVA (Economic Value Added) calculator
+### 13.3 EVA (Economic Value Added) calculator ✅ COMPLETE
 - **Difficulty:** EASY (1 hour)
 - **Cost:** Free
 - **What:** Shows if company earns above cost of capital
 
 **Formula:**
-- NOPAT = EBIT × (1 - Tax Rate)
+- NOPAT = EBIT × (1 - Effective Tax Rate) — auto-derived from API, fallback 21%
 - Invested Capital = Total Equity + Total Debt - Cash
-- WACC = user input (default 10%)
+- WACC = editable input (default 10%, saved per company as `evaWacc`)
 - EVA = NOPAT - (Invested Capital × WACC)
 - EVA Spread = ROIC - WACC
+- ROIC (calc) = NOPAT / Invested Capital
 
-**Display:** EVA positive = green (creating value), negative = red (destroying value)
+**Display:** "Creating Value" (green) / "Destroying Value" (red) badge
+
+**QA:** 0 CRITICAL, 2 WARN fixed (tax rate clamped 0-100%, WACC editable input added)
 
 ### 13.4 Unlevered FCF (FCFF) toggle in DCF
 - **Difficulty:** EASY (1 hour)
