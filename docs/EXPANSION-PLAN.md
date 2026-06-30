@@ -660,7 +660,7 @@ All with METRIC_TIPS tooltips.
 
 ## Phase 17: Expected Return Calculator (~1 session)
 
-### 17.1 Expected Return breakdown
+### 17.1 Expected Return breakdown ✅ (2026-07-01)
 - **Difficulty:** MEDIUM (2 hours)
 - **Cost:** Free
 - **What:** Decompose expected return into 4 drivers
