@@ -348,22 +348,25 @@ All with METRIC_TIPS tooltips.
 
 ## Phase 13: Valuation Calculators Expansion (~2 sessions)
 
-### 13.1 Base / Bull / Bear scenario builder
+### 13.1 Base / Bull / Bear scenario builder ✅ COMPLETE
 - **Difficulty:** MEDIUM (3 hours)
 - **Cost:** Free
 - **What:** 3-scenario valuation with probability weighting
-- **Implementation:** New calculator tab alongside existing DCF/ARIA/Money Back tabs
+- **Implementation:** Scenario Builder card in company profile Valuation tab
 
 **UI:**
-- 3 columns: Bear | Base | Bull
-- Each column inputs: Revenue Growth %, Terminal Margin %, Exit P/FCF Multiple, Probability %
-- Probabilities must sum to 100%
-- Auto-prefill Base case from current API data
+- 3 columns: Bear | Base | Bull (responsive — collapses to 1 column on mobile)
+- Each column inputs: Revenue Growth %, Terminal Margin %, Exit P/E Multiple, Probability %
+- Probability sum validation (warns if ≠ 100%)
+- Auto-prefill Base case from current settings + stock data (g1, netMargin, em)
 - Calculated: Fair Value per scenario, Weighted Fair Value = Σ(probability × fair_value)
-- Chart: horizontal bar chart showing 3 scenarios + weighted average
-- Upside/downside % from current price
+- Horizontal bar chart: Bear/Base/Bull/Weighted/Market Cap comparison
+- Upside/downside % from current price with color-coded badge
+- Per-share fair value display
 
 **Save:** Store scenarios per company in `tStocks[ticker].scenarios`
+
+**QA:** 0 CRITICAL, 3 WARN fixed (default value mismatch, mobile responsive, toFixed guard)
 
 ### 13.2 10cap calculator
 - **Difficulty:** EASY (1 hour)

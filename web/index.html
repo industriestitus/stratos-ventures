@@ -6098,10 +6098,107 @@ function renderValuation(ticker){
   h+=`<div class="cp-val-assumptions"><strong>How many years</strong> of cumulative FCF-SBC to pay back the entire market cap?</div>`;
   h+='</div>';
 
+  // Scenario Builder (Bear / Base / Bull)
+  const sc=s.scenarios||{bear:{revGrowth:-5,termMargin:10,exitMult:10,prob:20},base:{revGrowth:g1,termMargin:s.netMargin||15,exitMult:em||15,prob:60},bull:{revGrowth:g1*1.5,termMargin:(s.netMargin||15)*1.2,exitMult:(em||15)*1.3,prob:20}};
+  function scenarioFV(scen){
+    if(!s.revenue||s.revenue<=0)return null;
+    const termRev=s.revenue*Math.pow(1+(scen.revGrowth||0)/100,5);
+    const termProfit=termRev*(scen.termMargin||10)/100;
+    return termProfit*(scen.exitMult||15);
+  }
+  const fvBear=scenarioFV(sc.bear),fvBase=scenarioFV(sc.base),fvBull=scenarioFV(sc.bull);
+  const probSum=(sc.bear.prob||0)+(sc.base.prob||0)+(sc.bull.prob||0);
+  const weightedFV=probSum>0&&fvBear!=null&&fvBase!=null&&fvBull!=null?(fvBear*(sc.bear.prob||0)+fvBase*(sc.base.prob||0)+fvBull*(sc.bull.prob||0))/probSum:null;
+  const shares=s.marketCap&&s.price?s.marketCap/s.price:null;
+  const wfvPerShare=weightedFV!=null&&shares?weightedFV/shares:null;
+  const upside=wfvPerShare!=null&&s.price?((wfvPerShare/s.price-1)*100):null;
+
+  h+='<div class="card cp-val-model"><div class="cp-val-header"><div class="cp-val-model-title">Scenario Builder</div>'+badge(upside,0,30,'%')+'</div>';
+  if(!s.revenue){
+    h+='<div style="color:var(--text2);font-size:12px;padding:8px">No revenue data — load company data first.</div>';
+  }else{
+    h+='<div class="three-col" style="gap:12px;margin-bottom:12px">';
+    ['bear','base','bull'].forEach(type=>{
+      const label=type==='bear'?'🐻 Bear':type==='base'?'📊 Base':'🐂 Bull';
+      const color=type==='bear'?'var(--red)':type==='base'?'var(--text)':'var(--green)';
+      const scn=sc[type];
+      const fv=scenarioFV(scn);
+      const fvps=fv!=null&&shares?fv/shares:null;
+      h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px">
+        <div style="font-size:13px;font-weight:700;color:${color};margin-bottom:10px;text-align:center">${label}</div>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label style="font-size:10px;color:var(--text2)">Revenue Growth %/yr</label>
+          <input type="number" value="${scn.revGrowth||0}" step="1" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-size:13px" onchange="saveScenario('${escH(ticker)}','${type}','revGrowth',+this.value)">
+          <label style="font-size:10px;color:var(--text2)">Terminal Margin %</label>
+          <input type="number" value="${(scn.termMargin||0).toFixed(1)}" step="0.5" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-size:13px" onchange="saveScenario('${escH(ticker)}','${type}','termMargin',+this.value)">
+          <label style="font-size:10px;color:var(--text2)">Exit P/E Multiple</label>
+          <input type="number" value="${scn.exitMult||0}" step="0.5" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-size:13px" onchange="saveScenario('${escH(ticker)}','${type}','exitMult',+this.value)">
+          <label style="font-size:10px;color:var(--text2)">Probability %</label>
+          <input type="number" value="${scn.prob||0}" min="0" max="100" step="5" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:6px;color:var(--text);font-size:13px" onchange="saveScenario('${escH(ticker)}','${type}','prob',+this.value)">
+        </div>
+        <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);text-align:center">
+          <div style="font-size:10px;color:var(--text2)">Fair Value</div>
+          <div style="font-size:16px;font-weight:700;color:${color}">${fv!=null?fmt(fv):'-'}</div>
+          ${fvps!=null?`<div style="font-size:11px;color:var(--text2)">$${fvps.toFixed(2)}/share</div>`:''}
+        </div>
+      </div>`;
+    });
+    h+='</div>';
+    h+='<div class="cp-val-details" style="margin-bottom:8px">';
+    h+=`<div class="cp-val-item"><div class="cp-val-item-label">Weighted Fair Value</div><div class="cp-val-item-value">${weightedFV!=null?fmt(weightedFV):'-'}</div></div>`;
+    h+=`<div class="cp-val-item"><div class="cp-val-item-label">Per Share</div><div class="cp-val-item-value">${wfvPerShare!=null?'$'+wfvPerShare.toFixed(2):'-'}</div></div>`;
+    h+=`<div class="cp-val-item"><div class="cp-val-item-label">Current Price</div><div class="cp-val-item-value">$${s.price?s.price.toFixed(2):'-'}</div></div>`;
+    h+=`<div class="cp-val-item"><div class="cp-val-item-label">Upside / Downside</div><div class="cp-val-item-value ${upside!=null?(upside>=30?'positive':upside>=0?'warn':'negative'):''}">${upside!=null?upside.toFixed(1)+'%':'-'}</div></div>`;
+    h+='</div>';
+    if(probSum!==100){
+      h+=`<div style="color:var(--red);font-size:12px;padding:4px 8px;background:rgba(225,112,85,.1);border-radius:4px;margin-bottom:8px">⚠ Probabilities sum to ${probSum}% — should be 100%</div>`;
+    }
+    // Horizontal bar chart
+    const maxFV=Math.max(fvBear||0,fvBase||0,fvBull||0,weightedFV||0);
+    if(maxFV>0){
+      h+='<div style="margin-top:8px">';
+      [{l:'Bear',v:fvBear,c:'var(--red)'},{l:'Base',v:fvBase,c:'var(--text)'},{l:'Bull',v:fvBull,c:'var(--green)'},{l:'Weighted',v:weightedFV,c:'var(--accent)'}].forEach(b=>{
+        const pct=b.v!=null?(b.v/maxFV*100):0;
+        h+=`<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+          <span style="width:60px;font-size:11px;color:var(--text2);text-align:right">${b.l}</span>
+          <div style="flex:1;background:var(--surface);border-radius:4px;height:20px;overflow:hidden">
+            <div style="width:${pct.toFixed(1)}%;height:100%;background:${b.c};border-radius:4px;opacity:0.7"></div>
+          </div>
+          <span style="width:70px;font-size:11px;color:var(--text2)">${b.v!=null?fmt(b.v):'-'}</span>
+        </div>`;
+      });
+      if(s.marketCap&&maxFV>0){
+        const mcPct=Math.min(s.marketCap/maxFV*100,100);
+        h+=`<div style="display:flex;align-items:center;gap:8px;margin:4px 0">
+          <span style="width:60px;font-size:11px;color:var(--text2);text-align:right">Market</span>
+          <div style="flex:1;background:var(--surface);border-radius:4px;height:20px;overflow:hidden">
+            <div style="width:${mcPct.toFixed(1)}%;height:100%;background:var(--orange);border-radius:4px;opacity:0.5"></div>
+          </div>
+          <span style="width:70px;font-size:11px;color:var(--text2)">${fmt(s.marketCap)}</span>
+        </div>`;
+      }
+      h+='</div>';
+    }
+  }
+  h+='</div>';
+
   // Open in calculator button
   h+=`<div style="text-align:center;margin-top:8px"><button class="btn btn-secondary" onclick="const t=profileTicker;closeProfile();loadStockToCalc(t)" style="padding:10px 24px">Open Full Calculator (DCF tables, charts, sensitivity)</button></div>`;
 
   document.getElementById('cp-valuation-content').innerHTML=h;
+}
+
+function saveScenario(ticker,type,field,value){
+  const s=tStocks[ticker];if(!s)return;
+  if(!s.scenarios){
+    const st=stSettings(),ov=s.overrides||{};
+    const g1=ov.g1??st.g1,em=ov.em??st.em,nm=s.netMargin||15;
+    s.scenarios={bear:{revGrowth:-5,termMargin:10,exitMult:10,prob:20},base:{revGrowth:g1,termMargin:nm,exitMult:em||15,prob:60},bull:{revGrowth:g1*1.5,termMargin:nm*1.2,exitMult:(em||15)*1.3,prob:20}};
+  }
+  if(!s.scenarios[type])s.scenarios[type]={};
+  s.scenarios[type][field]=value;
+  saveTrackerStocks();
+  renderValuation(ticker);
 }
 
 // Notes tab
