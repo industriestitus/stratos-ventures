@@ -723,6 +723,8 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .skel-table-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
 .skel-table-row .skel{flex:1;height:14px;border-radius:4px}
 @media(max-width:768px){.skel-grid--3,.skel-grid--4{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.skel-grid--2{grid-template-columns:1fr}}
+[data-theme="light"] .skel::after{background:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.06) 50%,transparent 100%)}
 /* Empty state */
 .empty-state{text-align:center;padding:60px 20px;color:var(--text2)}
 .empty-state svg{width:48px;height:48px;opacity:.4;margin-bottom:12px}
@@ -6961,7 +6963,9 @@ async function renderInsiderTrading(ticker){
     return;
   }
   el.innerHTML='';showSkeleton(el,'table');
-  const result=await fetchInsiderTrading(ticker);
+  let result;
+  try{result=await fetchInsiderTrading(ticker)}catch(e){console.error('Insider fetch error:',e);el.innerHTML='<div class="card"><p style="color:var(--text2)">Failed to load insider data.</p></div>';return}
+  finally{hideSkeleton(el)}
   if(result&&result.rateLimited){
     el.innerHTML='<div class="card"><p style="color:var(--text2)">Finnhub rate limit reached — try again in a minute.</p></div>';
     return;
