@@ -273,6 +273,79 @@ Responsive fixes tested at 2-3 sizes missed overflow at boundary widths.
 
 ---
 
+## AI Assistant Behavioral Patterns
+
+Self-assessment based on 196+ bugs across 23 QA categories. These are recurring patterns in AI-generated code that require conscious correction.
+
+### 1. Think Failure-First for Async Save/Load
+
+**Pattern:** AI writes the happy path for async persistence and skips failure modes. 14 save functions had early-return bugs that skipped localStorage in D1 mode (Bug 15.1). Dedup flags not in `finally` blocks permanently lock functions on exception (P.7). Closures read live mutable state during async operations (Bug 19.6).
+
+**Rule:** Before writing any async save/load function, answer these questions first:
+1. What happens on timeout or network error?
+2. What happens if this is called concurrently?
+3. What happens if the async part hasn't finished when data is read back?
+4. Does the dedup/lock flag reset in `finally`?
+5. Does the closure snapshot mutable state at call time?
+
+### 2. Test Both Axes, Both Ends, Both Platforms on First Write
+
+**Pattern:** AI builds for desktop Chrome and retrofits mobile during QA. 40+ elements overflowed at 375px. Chart.js canvases exceeded containers. `transform: translateY` hiding worked in Chrome but rendered a visible bar in Safari.
+
+**Rule:** Before committing any UI change:
+- Test at 375px AND 1440px minimum
+- Check both scroll axes (horizontal AND vertical)
+- Scroll to the very bottom — last-element clipping is invisible without it
+- Take a screenshot — JS measurements lie about visual clipping
+- If hiding elements: use `display: none`, never `transform`/`opacity` alone
+
+### 3. Apply Defensive Patterns on First Write, Not During QA
+
+**Pattern:** AI knows all the correct defensive patterns but consistently skips them during implementation, only adding them when QA catches the bug. This accounts for 60+ bugs.
+
+**Checklist — apply on every first write:**
+- `isFinite()` over `isNaN()` (4 bugs: 8.3, 8.4, 9.2, 20.1)
+- `??` over `||` for numeric defaults (2 bugs: 8.6, 8.8)
+- `try/finally` on every dedup/lock flag (3+ bugs: P.7, 5.10-5.12)
+- `try/catch` on every `JSON.parse()` (3+ bugs: 8.1, 9.7)
+- `escH()` on every dynamic HTML insertion (3+ bugs: X.10, 16.1, D.2)
+- `fetchWithTimeout()` on every API call (6 bugs: 5.1, 5.4-5.7)
+- `min-width: 0` on every grid/flex child (40+ overflow bugs)
+- `padding-bottom` on every scrollable container (3+ clipping bugs)
+
+### 4. Treat External APIs as Scarce Resources
+
+**Pattern:** AI treats APIs as infinite. No call budget tracking, no client-side cache when D1 is off, no rate limiting on the proxy Worker, retry on non-idempotent methods, rate-limit responses cached as valid data.
+
+**Rule:** For every API integration:
+- Track call count against quota (warn at 80%, block at 100%)
+- Cache responses client-side with appropriate TTLs
+- Only retry GET requests
+- Add 300ms delay between sequential calls in loops
+- Never cache error/rate-limit responses
+
+### 5. Fix the System, Not the Symptom
+
+**Pattern:** AI optimizes for "make the current bug go away" without testing adjacent effects. Categories 11→13→14 required three separate commits for what should have been one careful fix (`overflow:hidden` → vertical clipping → missing padding).
+
+**Rule:** After any layout or overflow fix:
+1. Test the full chain of affected elements
+2. Check sibling and parent elements for new breaks
+3. Verify both axes at multiple viewport sizes
+4. If the fix constrains one dimension, check the other
+
+### 6. Assume Concurrency by Default
+
+**Pattern:** AI writes async code as if it runs sequentially. Every save/load, every event handler, every auto-trigger can race with itself or other callers.
+
+**Rule:** For every async function, ask:
+- Can the user trigger this while it's already running? (click + auto-load)
+- Can the browser trigger this from multiple events? (beforeunload + visibilitychange)
+- Can multiple call sites invoke this simultaneously? (autoLoad from 4 places)
+- Does the closure capture mutable state that changes during await?
+
+---
+
 ## Summary
 
 | Domain | Lessons | Bugs Found |
@@ -283,8 +356,9 @@ Responsive fixes tested at 2-3 sizes missed overflow at boundary widths.
 | API & Caching | 4 | 30+ (Categories 5, 6, 21) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |
+| AI Behavioral | 6 | 100+ (cross-cutting) |
 
-**Total:** 171+ bugs fixed, 25 lessons, 6 domains.
+**Total:** 196+ bugs fixed, 31 lessons, 7 domains.
 
 ## Related Documents
 
