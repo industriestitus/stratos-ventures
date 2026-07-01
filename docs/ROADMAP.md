@@ -262,7 +262,11 @@ Status: COMPLETE (2026-06-27)
 - [x] Form validation — visual inline validation for position and transaction forms with Hungarian error messages, red border highlights, auto-clear on focus
 - [x] Keyboard shortcuts — Cmd+1-7 section nav, N for new item (context-aware), ? for shortcut guide in Settings, Esc to close. Shortcut guide card in Settings section.
 - [x] Empty states — Icon + Hungarian heading + description + CTA button for Portfolio Overview, Positions, Transactions, Reviews, and Dashboard widgets
-- [x] Bulk operations — Multi-select checkboxes, floating action bar (delete + CSV export), undo support for positions and transactions
+- [x] Bulk operations — Multi-select checkboxes, floating action bar (delete + CSV export), undo support for all 5 sections (positions, transactions, notes, reviews, tracked stocks), cross-mode guard, D1 delete propagation
+- [x] Section fade transitions — 150ms fade-in animation on section switch (opacity + translateY)
+- [x] Skeleton loading screens — shimmer-animated placeholders for dashboard, profile, table, insider trading; light/dark theme support
+- [x] Confirmation dialogs — 3-tier system replacing native confirm(): simple confirm (cascade deletes), danger confirm with type-to-confirm (backup restore, permanent stock delete), bulk confirm (3+ items); focus trap, keyboard support, ARIA, re-entrancy guard, Hungarian UI
+- [ ] Scroll position preservation — partially done (already works for most sections, needs review for edge cases)
 - [ ] Onboarding flow — Welcome screen for new users (3-4 steps: add first company → set up portfolio → explore dashboard). Currently new users land on a pre-filled DCF calculator with no context. Could include guided tour, sample data option, or progressive disclosure.
 - [ ] Undo system evolution — Current: 6s undo toast for positions, transactions, notes, reviews, saved stocks (local only). Future: D1 cloud undo (re-insert on undo instead of local-only restore), undo stack for Ctrl+Z support, soft-delete with trash view and 30-day purge, batch undo for multi-item operations.
 - [ ] Lazy-load charts (defer Chart.js rendering until canvas is visible)

@@ -38,8 +38,10 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 28 | Keyboard Shortcuts + Empty States | `79f0927` | 2026-07-02 | 2 QA | 0 |
 | 29 | Bulk Operations | `11c3e3a` | 2026-07-02 | 2 QA | 0 |
 | 30 | Bulk Ops: Notes/Reviews/Stocks | `73e7dfb` | 2026-07-02 | 4 QA | 0 |
+| 31 | Skeleton/Animation QA | `c7412e9` | 2026-07-02 | 3 QA | 0 |
+| 32 | Confirmation Dialogs | `a0362db` | 2026-07-02 | 3 QA | 0 |
 
-**Total: 237 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 243 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -773,6 +775,26 @@ Extended bulk operations to research notes, reviews, and tracked stocks. Select 
 | 2 | HIGH | Missing D1 delete for notes — `saveResearchNotes()` only upserts remaining, never deletes removed from D1 | Added `onConfirm` callback with `API.del('notes/'+id)` for each deleted note |
 | 3 | MED | Missing D1 delete for stocks — `_putSavedStocks` only batch-upserts remaining valuations | Added `onConfirm` with `API.del('valuations/'+id)` for deleted stocks |
 | 4 | MED | No cross-mode guard — selecting items in two sections simultaneously shows wrong bulk bar | Added `_clearOtherBulk(keep)` that clears all other Sets when a new one gains an entry |
+
+---
+
+## Category 31 — Skeleton/Animation QA (`c7412e9`)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MED | Light theme shimmer invisible — `rgba(255,255,255,.04)` gradient on white background | Added `[data-theme="light"] .skel::after` with `rgba(0,0,0,.06)` |
+| 2 | LOW | `skel-grid--2` not collapsed on small phones (<480px) | Added `@media(max-width:480px){.skel-grid--2{grid-template-columns:1fr}}` |
+| 3 | MED | Insider trading skeleton orphaned on error — no try/catch around fetchInsiderTrading | Wrapped in try/catch/finally with `hideSkeleton(el)` in finally block |
+
+---
+
+## Category 32 — Confirmation Dialogs (`a0362db`)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MED | z-index tie with global search — both at 300 | Bumped confirm overlay to z-index:350 |
+| 2 | MED | Re-entrancy promise leak — calling showConfirm while one is open loses old resolve | Auto-resolve old promise with `false` before replacing `_confirmResolve` |
+| 3 | MED | No focus trap — user can Tab out of confirm dialog | Reuse existing `_trapFocus` mechanism, added `role="dialog"` and `aria-modal="true"` |
 
 ---
 
