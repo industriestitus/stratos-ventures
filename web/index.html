@@ -11392,6 +11392,7 @@ let _autoLoadRunning=false;
 async function autoLoad(){
   if(_autoLoadRunning)return;
   _autoLoadRunning=true;
+  try{
   if(typeof marked!=='undefined')marked.setOptions({breaks:true,gfm:true});
   runMigrations();
   loadTrackerSettings();
@@ -11481,7 +11482,7 @@ async function autoLoad(){
   document.querySelectorAll('input[type="number"]').forEach(el=>el.setAttribute('inputmode','decimal'));
   handleRoute();
   checkPriceAlerts();
-  _autoLoadRunning=false;
+  }finally{_autoLoadRunning=false}
 }
 function autoSave(){
   try{
