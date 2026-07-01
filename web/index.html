@@ -4510,6 +4510,18 @@ function importCsvTransactions(){
 
   let imported=0,skipped=0;
   const now=new Date().toISOString();
+  // Auto-detect date format: scan all dates to determine DD/MM vs MM/DD
+  let _dateFmt='dmy';
+  if('date' in mapping){
+    let hasFirst13=false,hasSecond13=false;
+    _csvParsed.rows.forEach(row=>{
+      const d=(row[mapping.date]||'').trim();
+      const m=d.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.]\d{2,4}$/);
+      if(m){if(parseInt(m[1])>12)hasFirst13=true;if(parseInt(m[2])>12)hasSecond13=true}
+    });
+    if(hasSecond13&&!hasFirst13)_dateFmt='dmy';
+    else if(hasFirst13&&!hasSecond13)_dateFmt='mdy';
+  }
   _csvParsed.rows.forEach(row=>{
     const get=(field)=>mapping[field]!=null?row[mapping[field]]?.trim():'';
     const ticker=get('ticker').toUpperCase();
@@ -4522,8 +4534,8 @@ function importCsvTransactions(){
     else type='buy';
 
     let date=get('date')||now.split('T')[0];
-    if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4}$/.test(date)){const p=date.split(/[\/\-\.]/);date=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
-    else if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2}$/.test(date)){const p=date.split(/[\/\-\.]/);date='20'+p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
+    if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4}$/.test(date)){const p=date.split(/[\/\-\.]/);if(_dateFmt==='mdy')date=p[2]+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0');else date=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
+    else if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2}$/.test(date)){const p=date.split(/[\/\-\.]/);if(_dateFmt==='mdy')date='20'+p[2]+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0');else date='20'+p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
     const parseNum=(s)=>{if(!s)return NaN;s=s.replace(/\s/g,'');if(/^\d{1,3}(\.\d{3})+,\d+$/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(',')&&!s.includes('.'))s=s.replace(',','.');return parseFloat(s)};
     const sharesRaw=get('shares'),priceRaw=get('price');
     const shares=parseNum(sharesRaw);
@@ -4542,9 +4554,31 @@ function importCsvTransactions(){
   });
 
   savePortfolioTransactions();
+  // Reconcile positions from imported transactions
+  const importedTickers=new Set();
+  _csvParsed.rows.forEach(row=>{const t=(mapping.ticker!=null?row[mapping.ticker]:'');if(t)importedTickers.add(t.trim().toUpperCase())});
+  let posUpdated=0,posCreated=0;
+  importedTickers.forEach(ticker=>{
+    const txns=pfTransactions.filter(t=>t.ticker===ticker&&t.accountId===accountId);
+    if(!txns.length)return;
+    let totalShares=0,totalCost=0;
+    txns.forEach(t=>{
+      const sh=parseFloat(t.shares)||0;const pr=parseFloat(t.pricePerShare)||0;const tot=parseFloat(t.totalAmount)||0;
+      if(t.type==='buy'){totalShares+=sh;totalCost+=tot||sh*pr}
+      else if(t.type==='sell'){totalShares-=sh;totalCost-=tot||sh*pr}
+    });
+    if(totalShares<0)totalShares=0;
+    const avgCost=totalShares>0?totalCost/totalShares:0;
+    const existing=pfPositions.find(p=>p.ticker===ticker&&p.accountId===accountId);
+    if(existing){existing.shares=totalShares;existing.avgCost=avgCost;posUpdated++}
+    else{pfPositions.push({id:pfNextId(pfPositions),ticker,name:tStocks[ticker]?.name||ticker,accountId,assetType:'stock',shares:totalShares,avgCost,currency:acc.currency,notes:'',createdAt:new Date().toISOString()});posCreated++}
+  });
+  if(posUpdated||posCreated)savePortfolioPositions();
   closeModals();
   renderTransactions();
-  showToast(`Imported ${imported} transactions${skipped?' ('+skipped+' skipped)':''}`,'success');
+  renderPortfolioOverview();
+  const posMsg=(posUpdated?`, ${posUpdated} position updated`:'')+(posCreated?`, ${posCreated} position created`:'');
+  showToast(`Imported ${imported} transactions${skipped?' ('+skipped+' skipped)':''}${posMsg}`,'success');
 }
 
 // ====== DASHBOARD (Phase 5) ======
@@ -7558,7 +7592,7 @@ let tStocks={};
 let stSort={col:'ticker',dir:'asc'};
 let stExpanded={};
 
-function parseNum(s){s=String(s).trim().replace(/,/g,'').replace(/\s/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
+function parseNum(s){s=String(s).trim().replace(/\s/g,'');if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(/^-?\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');s=s.replace(/,/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
 function asPct(v){if(v==null)return null;return Math.abs(v)<1&&Math.abs(v)>0?v*100:v}
 function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct){const n=parseFloat(v);return isFinite(n)?n.toFixed(1):''}return typeof v==='number'?(isFinite(v)?v.toFixed(2):''):v}
 
