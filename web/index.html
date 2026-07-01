@@ -610,6 +610,16 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .db-todo-group-title:first-child{border-top:none;margin-top:0;padding-top:0}
 .db-bench-chart{position:relative;height:220px;margin-top:12px}
 .db-empty{text-align:center;padding:24px;color:var(--text2);font-size:13px}
+.db-review-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--surface2);margin-bottom:6px;font-size:13px;cursor:pointer;transition:background .2s}
+.db-review-row:hover{background:var(--border)}
+.db-review-row .rv-ticker{font-weight:600;color:var(--accent2);min-width:60px}
+.db-review-row .rv-name{flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.db-review-row .rv-days{font-weight:600;flex-shrink:0;font-size:12px}
+.db-review-row.rv-warn .rv-days{color:var(--orange)}
+.db-review-row.rv-danger .rv-days{color:var(--red)}
+.cp-review-due{display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:600;cursor:pointer}
+.cp-review-due.rv-warn{background:rgba(255,165,0,.15);color:var(--orange)}
+.cp-review-due.rv-danger{background:rgba(255,71,87,.15);color:var(--red)}
 @media(max-width:768px){
   .db-grid{grid-template-columns:1fr}
   .db-hero{padding:16px}
@@ -1078,6 +1088,12 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       <div id="db-fi-content"></div>
     </div>
 
+    <!-- Reviews Due -->
+    <div class="db-widget" id="db-reviews-due-widget">
+      <div class="db-widget-title">Reviews Due</div>
+      <div id="db-reviews-due-content"></div>
+    </div>
+
     <!-- TODO Summary -->
     <div class="db-widget" id="db-todo-summary-widget">
       <div class="db-widget-title">TODO Summary</div>
@@ -1503,6 +1519,7 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
         <div class="cp-pipeline" id="cp-pipeline"></div>
         <div class="cp-type-wrap" id="cp-type-wrap"></div>
         <div id="cp-conviction-badge"></div>
+        <div id="cp-review-due-badge"></div>
         <div id="cp-cache-age" style="display:none;font-size:11px;padding:3px 8px;border-radius:4px;background:var(--surface2);color:var(--text2);white-space:nowrap"></div>
         <button id="cp-refresh-btn" class="btn btn-secondary" onclick="refreshProfileData()" style="padding:3px 10px;font-size:11px;display:none" title="Force refresh from API">↻ Refresh</button>
       </div>
@@ -4742,6 +4759,7 @@ function renderDashboard(){
   renderDbDipFinder();
   renderDbFiTracker();
   renderDbEarnings();
+  renderDbReviewsDue();
   renderDbTodoSummary();
   renderDbTodoList();
 }
@@ -5388,7 +5406,40 @@ function renderDbTodoList(){
   }).join('');
 }
 
-// ---- 5D: TODO Summary ----
+// ---- 5D: Reviews Due ----
+function getReviewDueCompanies(){
+  const now=Date.now(),threshold=90*86400000;
+  return Object.values(tStocks).filter(s=>{
+    const p=s.pipeline||'';
+    return p==='Owned'||p==='Buy target';
+  }).map(s=>{
+    const reviews=(rvData.entries||[]).filter(e=>e.companyTicker===s.ticker&&e.type==='quarterly').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    const last=reviews[0];
+    const lastDate=last?last.date:null;
+    const daysSince=lastDate?Math.floor((now-new Date(lastDate).getTime())/86400000):Infinity;
+    return {ticker:s.ticker,name:s.name||s.ticker,daysSince,lastReviewDate:lastDate,pipeline:s.pipeline};
+  }).filter(c=>c.daysSince>=90).sort((a,b)=>b.daysSince===a.daysSince?0:b.daysSince>a.daysSince?1:-1);
+}
+
+function renderDbReviewsDue(){
+  const el=document.getElementById('db-reviews-due-content');
+  if(!el)return;
+  const due=getReviewDueCompanies();
+  if(!due.length){el.innerHTML='<div class="db-empty">All reviews up to date.</div>';return}
+  let html=`<div style="margin-bottom:8px;font-size:12px;color:var(--text2)">${due.length} compan${due.length===1?'y':'ies'} due for quarterly review</div>`;
+  due.forEach(c=>{
+    const cls=c.daysSince>=180?'rv-danger':'rv-warn';
+    const label=c.daysSince===Infinity?'Never reviewed':c.daysSince+'d ago';
+    html+=`<div class="db-review-row ${cls}" onclick="showProfile('${escH(c.ticker)}');setTimeout(()=>{switchProfileTab('overview');openReview('quarterly',null,'${escH(c.ticker)}')},200)">
+      <span class="rv-ticker">${escH(c.ticker)}</span>
+      <span class="rv-name">${escH(c.name)}</span>
+      <span class="rv-days">${label}</span>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+// ---- 5E: TODO Summary ----
 function renderDbTodoSummary(){
   const el=document.getElementById('db-todo-summary-content');
   const today=new Date().toISOString().split('T')[0];
@@ -6124,6 +6175,7 @@ function showProfile(ticker){
   renderExpectedReturn(ticker);
   renderPositionSizing(ticker);
   renderConvictionBadge(ticker);
+  renderReviewDueBadge(ticker);
   renderConvictionChart(ticker);
 
   // Render all tab content
@@ -6662,6 +6714,20 @@ function renderExternalLinks(ticker){
     {label:'Glassdoor',url:`https://www.glassdoor.com/Search/results.htm?keyword=${encodeURIComponent(tStocks[ticker]?.name||ticker)}`}
   ];
   el.innerHTML=links.map(l=>`<a href="${escH(l.url)}" target="_blank" rel="noopener noreferrer">${escH(l.label)} ↗</a>`).join('');
+}
+
+function renderReviewDueBadge(ticker){
+  const el=document.getElementById('cp-review-due-badge');
+  if(!el){return}
+  const p=(tStocks[ticker]||{}).pipeline||'';
+  if(p!=='Owned'&&p!=='Buy target'){el.innerHTML='';return}
+  const reviews=(rvData.entries||[]).filter(e=>e.companyTicker===ticker&&e.type==='quarterly').sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const last=reviews[0];
+  const daysSince=last&&last.date?Math.floor((Date.now()-new Date(last.date).getTime())/86400000):Infinity;
+  if(daysSince<90){el.innerHTML='';return}
+  const cls=daysSince>=180?'rv-danger':'rv-warn';
+  const label=daysSince===Infinity?'Never reviewed':'Review: '+daysSince+'d ago';
+  el.innerHTML=`<span class="cp-review-due ${cls}" onclick="openReview('quarterly',null,'${escH(ticker)}')" title="Click to start quarterly review">${label}</span>`;
 }
 
 function renderConvictionBadge(ticker){
@@ -11274,6 +11340,8 @@ function saveReview(){
   closeModals();
   const activeTab=document.querySelector('.rv-tabs .tab.active');
   renderRvFeed(activeTab?.dataset.rvtab||'all');
+  renderDbReviewsDue();
+  if(ticker)renderReviewDueBadge(ticker);
   showToast(editId?'Review updated':'Review added','success');
 }
 

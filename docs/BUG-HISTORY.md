@@ -609,6 +609,14 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 | 25.10 | Tracker UI not updated after sync (missing renderTracker calls) | Added renderTracker() to _syncTickerToCompanies, batch, and _checkSellAllPositions | index.html:8633 |
 | 25.11 | String shares "0" treated as >0 in _checkSellAllPositions | Changed to parseFloat(p.shares)>0 | index.html:8669 |
 
+### Review Reminders (Session 3)
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 25.12 | saveReview() doesn't refresh dashboard widget or profile badge | Added renderDbReviewsDue() and renderReviewDueBadge() after save | index.html:11342 |
+| 25.13 | Sort NaN when multiple companies have Infinity daysSince | Replaced subtraction with comparison-based sort | index.html:5421 |
+| 25.14 | Light theme hover uses hardcoded dark color #252836 | Changed fallback to var(--border) | index.html:614 |
+| 25.15 | Null review date produces NaN daysSince, silently hides badge | Added last.date truthiness check before Date computation | index.html:6726 |
+
 ### Unfixed (0)
 
 ---
