@@ -897,6 +897,19 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{body{background:#fff;color:#000}#sidebar,#bottom-nav,.toast-container,#lock-screen,.cp-back,.btn,.conn-btn{display:none!important}.card{border-color:#ccc;break-inside:avoid}#main-content{margin-left:0!important;padding-bottom:0!important}}
 body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;background:var(--orange,#e67e22);color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;z-index:10001;pointer-events:none}
+.pdf-dialog-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px}
+.pdf-dialog{background:var(--surface);border-radius:12px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden}
+.pdf-dialog-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.pdf-dialog-header h3{margin:0;font-size:15px;color:var(--text)}
+.pdf-dialog-close{background:none;border:none;color:var(--text2);font-size:18px;cursor:pointer;padding:4px 8px}
+.pdf-dialog-body{padding:16px 20px}
+.pdf-dialog-controls{display:flex;gap:8px;margin-bottom:12px}
+.pdf-sections-list{display:flex;flex-direction:column;gap:6px}
+.pdf-sec-label{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text);transition:background .15s}
+.pdf-sec-label:hover{background:var(--surface2)}
+.pdf-sec-cb{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.pdf-dialog-footer{display:flex;justify-content:flex-end;gap:8px;padding:12px 20px;border-top:1px solid var(--border)}
+@media(max-width:480px){.pdf-dialog{max-width:calc(100vw - 20px)}.pdf-sections-list{max-height:300px;overflow-y:auto}}
 </style>
 </head>
 <body>
@@ -1470,6 +1483,10 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
           </div>
         </div>
         <div class="cp-actions">
+          <button class="btn btn-secondary" onclick="showPdfExportDialog(profileTicker)" title="Export PDF Report">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><path d="M6 2h8l4 4v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/><path d="M14 2v4h4"/><path d="M10 10v6m-3-3l3 3 3-3"/></svg>
+            PDF
+          </button>
           <button class="btn btn-secondary" onclick="const t=profileTicker;closeProfile();loadStockToCalc(t)" title="Open in Calculator">
             <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" width="16" height="16"><rect x="4" y="2" width="12" height="16" rx="2"/><line x1="7" y1="6" x2="13" y2="6"/><circle cx="7.5" cy="9.5" r=".7" fill="currentColor"/><circle cx="10" cy="9.5" r=".7" fill="currentColor"/><circle cx="12.5" cy="9.5" r=".7" fill="currentColor"/><circle cx="7.5" cy="12.5" r=".7" fill="currentColor"/><circle cx="10" cy="12.5" r=".7" fill="currentColor"/><circle cx="12.5" cy="12.5" r=".7" fill="currentColor"/></svg>
             Calculator
@@ -11573,6 +11590,654 @@ function installPwa(){
     if(btn)btn.style.display='none';
   }).catch(()=>{});
 }
+// ── PDF Export ──────────────────────────────────────────────
+let _jsPDFLoaded=false;
+function loadJsPDF(){
+  if(_jsPDFLoaded)return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';
+    s.onload=()=>{_jsPDFLoaded=true;resolve()};
+    s.onerror=()=>reject(new Error('Failed to load jsPDF'));
+    document.head.appendChild(s);
+  });
+}
+
+function showPdfExportDialog(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  const sections=[
+    {key:'profile',label:'Company Profile & Thesis',default:true},
+    {key:'financials',label:'Financial Summary & Tables',default:true},
+    {key:'checklist',label:'Checklist Analysis',default:true},
+    {key:'valuations',label:'Valuations',default:true},
+    {key:'notes',label:'Research Notes',default:true},
+    {key:'earnings',label:'Earnings Notes',default:true},
+    {key:'portfolio',label:'Portfolio (Positions & Transactions)',default:true},
+    {key:'dividends',label:'Dividends',default:true},
+    {key:'reviews',label:'Reviews',default:true},
+    {key:'todos',label:'TODOs & Alerts',default:true}
+  ];
+  let h=`<div class="pdf-dialog-overlay" id="pdf-dialog-overlay" onclick="if(event.target===this)closePdfDialog()">
+    <div class="pdf-dialog">
+      <div class="pdf-dialog-header">
+        <h3>Export PDF — ${escH(s.name||ticker)}</h3>
+        <button onclick="closePdfDialog()" class="pdf-dialog-close">✕</button>
+      </div>
+      <div class="pdf-dialog-body">
+        <div class="pdf-dialog-controls">
+          <button onclick="document.querySelectorAll('.pdf-sec-cb').forEach(c=>c.checked=true)" class="btn btn-secondary" style="font-size:11px;padding:4px 10px">Select All</button>
+          <button onclick="document.querySelectorAll('.pdf-sec-cb').forEach(c=>c.checked=false)" class="btn btn-secondary" style="font-size:11px;padding:4px 10px">Deselect All</button>
+        </div>
+        <div class="pdf-sections-list">`;
+  sections.forEach(sec=>{
+    h+=`<label class="pdf-sec-label"><input type="checkbox" class="pdf-sec-cb" data-key="${sec.key}" ${sec.default?'checked':''}><span>${sec.label}</span></label>`;
+  });
+  h+=`</div></div>
+      <div class="pdf-dialog-footer">
+        <button onclick="closePdfDialog()" class="btn btn-secondary">Cancel</button>
+        <button class="btn btn-primary" id="pdf-generate-btn" data-ticker="${escH(ticker)}">Export PDF</button>
+      </div>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML('beforeend',h);
+  document.getElementById('pdf-generate-btn').addEventListener('click',function(){generatePdf(this.dataset.ticker)});
+}
+
+function closePdfDialog(){
+  const el=document.getElementById('pdf-dialog-overlay');
+  if(el)el.remove();
+}
+
+async function generatePdf(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  const selected=new Set();
+  document.querySelectorAll('.pdf-sec-cb:checked').forEach(cb=>selected.add(cb.dataset.key));
+  if(!selected.size){showToast('Select at least one section','error');return}
+  const btn=document.getElementById('pdf-generate-btn');
+  btn.disabled=true;btn.textContent='Generating...';
+  try{
+    await loadJsPDF();
+    if(!window.jspdf)throw new Error('jsPDF failed to load');
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pw=210,ph=297,ml=20,mr=20,mt=35,mb=25;
+    const cw=pw-ml-mr;
+    let y=mt;
+
+    const colors={
+      black:[15,17,23],dark:[40,44,55],gray:[120,125,140],light:[200,205,215],
+      accent:[108,92,231],green:[0,184,148],red:[255,118,117],orange:[253,203,110],
+      white:[255,255,255],bg:[248,249,252]
+    };
+
+    function addHeader(){
+      doc.setFillColor(...colors.accent);
+      doc.rect(0,0,pw,22,'F');
+      doc.setFontSize(14);doc.setTextColor(...colors.white);
+      doc.setFont('helvetica','bold');
+      doc.text('STRATOS VENTURES',ml,10);
+      doc.setFontSize(9);doc.setFont('helvetica','normal');
+      doc.text('Investment Research Report',ml,16);
+      const dateStr=new Date().toISOString().slice(0,10);
+      doc.text(dateStr,pw-mr,10,{align:'right'});
+      doc.text(ticker,pw-mr,16,{align:'right'});
+    }
+
+    function addFooter(pageNum){
+      doc.setFontSize(8);doc.setTextColor(...colors.gray);doc.setFont('helvetica','normal');
+      doc.text('Stratos Ventures — Confidential',ml,ph-10);
+      doc.text('Page '+pageNum,pw-mr,ph-10,{align:'right'});
+      doc.setDrawColor(...colors.light);
+      doc.line(ml,ph-15,pw-mr,ph-15);
+    }
+
+    let pageNum=1;
+    addHeader();addFooter(pageNum);
+
+    function checkPage(need){
+      if(y+need>ph-mb){
+        doc.addPage();pageNum++;y=mt;
+        addHeader();addFooter(pageNum);
+      }
+    }
+
+    function newSection(){
+      if(y>mt+10){
+        if(y>ph-mb-60){doc.addPage();pageNum++;y=mt;addHeader();addFooter(pageNum)}
+        else{y+=10}
+      }
+    }
+
+    function sectionTitle(title){
+      newSection();
+      checkPage(18);
+      doc.setFontSize(13);doc.setTextColor(...colors.accent);doc.setFont('helvetica','bold');
+      doc.text(title,ml,y);
+      y+=2;
+      doc.setDrawColor(...colors.accent);doc.setLineWidth(0.5);
+      doc.line(ml,y,ml+cw,y);
+      y+=8;
+    }
+
+    function subTitle(title){
+      checkPage(12);
+      doc.setFontSize(10);doc.setTextColor(...colors.dark);doc.setFont('helvetica','bold');
+      doc.text(title,ml,y);y+=6;
+    }
+
+    function textLine(label,value,indent){
+      indent=indent||0;
+      checkPage(6);
+      doc.setFontSize(9);doc.setFont('helvetica','bold');doc.setTextColor(...colors.dark);
+      doc.text(label+':',ml+indent,y);
+      const labelW=doc.getTextWidth(label+': ');
+      doc.setFont('helvetica','normal');doc.setTextColor(...colors.black);
+      const maxW=cw-indent-labelW;
+      const lines=doc.splitTextToSize(String(value||'-'),maxW);
+      doc.text(lines,ml+indent+labelW,y);
+      y+=lines.length*4.5;
+      if(lines.length===1)y+=1;
+    }
+
+    function metricRow(items){
+      checkPage(14);
+      const colW=cw/items.length;
+      doc.setFillColor(...colors.bg);
+      doc.roundedRect(ml,y-3,cw,12,1,1,'F');
+      items.forEach((item,i)=>{
+        const x=ml+i*colW;
+        doc.setFontSize(7);doc.setTextColor(...colors.gray);doc.setFont('helvetica','normal');
+        doc.text(item.label,x+2,y);
+        doc.setFontSize(9);doc.setTextColor(...colors.black);doc.setFont('helvetica','bold');
+        doc.text(String(item.value||'-'),x+2,y+5);
+      });
+      y+=14;
+    }
+
+    function tableHeader(cols,colWidths){
+      checkPage(10);
+      doc.setFillColor(...colors.accent);
+      doc.rect(ml,y-3.5,cw,6,'F');
+      doc.setFontSize(7.5);doc.setTextColor(...colors.white);doc.setFont('helvetica','bold');
+      let x=ml;
+      cols.forEach((c,i)=>{doc.text(c,x+1,y);x+=colWidths[i]});
+      y+=5;
+    }
+
+    function tableRow(vals,colWidths,alt){
+      checkPage(7);
+      if(alt){doc.setFillColor(...colors.bg);doc.rect(ml,y-3.5,cw,6,'F')}
+      doc.setFontSize(7.5);doc.setTextColor(...colors.black);doc.setFont('helvetica','normal');
+      let x=ml;
+      vals.forEach((v,i)=>{
+        const txt=String(v??'-').substring(0,40);
+        doc.text(txt,x+1,y);x+=colWidths[i];
+      });
+      y+=5;
+    }
+
+    function wrapText(text,maxWidth){
+      if(!text)return[];
+      doc.setFontSize(9);doc.setFont('helvetica','normal');
+      const clean=text.replace(/[#*_`~>]/g,'').replace(/\n{3,}/g,'\n\n');
+      return doc.splitTextToSize(clean,maxWidth||cw);
+    }
+
+    function writeWrapped(text,maxWidth){
+      if(!text)return;
+      const lines=wrapText(text,maxWidth);
+      for(let i=0;i<lines.length;i++){
+        checkPage(5);
+        doc.setFontSize(9);doc.setTextColor(...colors.black);doc.setFont('helvetica','normal');
+        doc.text(lines[i],ml,y);
+        y+=4.2;
+      }
+      y+=2;
+    }
+
+    // ── Cover area ──
+    y=40;
+    doc.setFontSize(24);doc.setTextColor(...colors.black);doc.setFont('helvetica','bold');
+    doc.text(s.name||ticker,ml,y);y+=10;
+    doc.setFontSize(14);doc.setTextColor(...colors.gray);doc.setFont('helvetica','normal');
+    const metaLine=[ticker,s.sector,s.exchange,s.currency].filter(Boolean).join(' • ');
+    doc.text(metaLine,ml,y);y+=8;
+    if(s.pipelineStatus){
+      doc.setFontSize(10);doc.setTextColor(...colors.accent);
+      doc.text('Pipeline: '+s.pipelineStatus.replace(/_/g,' ').toUpperCase(),ml,y);y+=6;
+    }
+    if(s.companyType){
+      doc.text('Type: '+s.companyType.charAt(0).toUpperCase()+s.companyType.slice(1),ml,y);y+=6;
+    }
+    y+=6;
+    doc.setDrawColor(...colors.light);doc.line(ml,y,pw-mr,y);y+=10;
+
+    const r=calcStockRatios(s);
+    const c=calcStockCalcs(s);
+    const sc=calcStockScore(s);
+
+    // ── Key Metrics Summary ──
+    if(selected.has('profile')){
+      metricRow([
+        {label:'Price',value:s.price?'$'+s.price.toFixed(2):'-'},
+        {label:'Market Cap',value:fmt(s.marketCap)},
+        {label:'Revenue',value:fmt(s.revenue)},
+        {label:'Net Income',value:fmt(s.profit)}
+      ]);
+      metricRow([
+        {label:'FCF',value:fmt(s.fcf)},
+        {label:'P/E',value:r.pe?.toFixed(1)||'-'},
+        {label:'P/FCF',value:r.pfcf?.toFixed(1)||'-'},
+        {label:'EV/EBIT',value:r.evEbit?.toFixed(1)||'-'}
+      ]);
+      metricRow([
+        {label:'ROE',value:s.roe!=null?s.roe.toFixed(1)+'%':'-'},
+        {label:'ROIC',value:s.roic!=null?s.roic.toFixed(1)+'%':'-'},
+        {label:'Gross Margin',value:s.grossMargin!=null?s.grossMargin.toFixed(1)+'%':'-'},
+        {label:'Net Margin',value:s.netMargin!=null?s.netMargin.toFixed(1)+'%':'-'}
+      ]);
+      metricRow([
+        {label:'Rev Growth',value:s.revenueGrowth!=null?s.revenueGrowth.toFixed(1)+'%':'-'},
+        {label:'3Y CAGR',value:s.revCAGR3!=null?s.revCAGR3.toFixed(1)+'%':'-'},
+        {label:'Quality Score',value:sc.total!=null?sc.total+'/100':'-'},
+        {label:'Debt/Equity',value:s.debtEquity!=null?s.debtEquity.toFixed(2):'-'}
+      ]);
+
+      // Assessment
+      const assessFields=['moat','risk','uncertainty','conviction','expectedReturn'];
+      const assessVals=assessFields.map(f=>({label:f.charAt(0).toUpperCase()+f.slice(1).replace(/([A-Z])/g,' $1'),value:s[f]||'-'}));
+      if(assessVals.some(a=>a.value!=='-')){
+        y+=4;subTitle('Assessment');
+        assessVals.forEach(a=>{if(a.value!=='-')textLine(a.label,a.value)});
+      }
+
+      // Thesis
+      if(s.thesis){
+        y+=4;subTitle('Investment Thesis');
+        writeWrapped(s.thesis);
+      }
+    }
+
+    // ── Financials ──
+    if(selected.has('financials')){
+      sectionTitle('Financial Analysis');
+
+      // 3-year tables
+      const years=s._isData||[];
+      if(years.length){
+        subTitle('Income Statement (3 Years)');
+        const colW=[cw*0.34,cw*0.22,cw*0.22,cw*0.22];
+        const yrLabels=years.map(yr=>yr.calendarYear||yr.date?.substring(0,4)||'-');
+        tableHeader(['Metric',...yrLabels],colW);
+        const isRows=[
+          {l:'Revenue',f:'revenue'},
+          {l:'Gross Profit',f:'grossProfit'},
+          {l:'EBITDA',f:'ebitda'},
+          {l:'EBIT (Op. Income)',f:'operatingIncome'},
+          {l:'Net Income',f:'netIncome'},
+          {l:'EPS (Diluted)',f:'epsdiluted',dec:2},
+          {l:'Shares Out (Diluted)',f:'weightedAverageShsOutDil'}
+        ];
+        isRows.forEach((row,ri)=>{
+          const vals=years.map(yr=>{const v=yr[row.f];return v!=null?(row.dec?v.toFixed(row.dec):fmt(v)):'-'});
+          tableRow([row.l,...vals],colW,ri%2===0);
+        });
+        y+=6;
+      }
+
+      const cfYears=s._cfData||[];
+      if(cfYears.length){
+        subTitle('Cash Flow (3 Years)');
+        const colW=[cw*0.34,cw*0.22,cw*0.22,cw*0.22];
+        const yrLabels=cfYears.map(yr=>yr.calendarYear||yr.date?.substring(0,4)||'-');
+        tableHeader(['Metric',...yrLabels],colW);
+        const cfRows=[
+          {l:'Operating CF',f:'operatingCashFlow'},
+          {l:'Capital Expenditure',f:'capitalExpenditure'},
+          {l:'Free Cash Flow',f:'freeCashFlow'},
+          {l:'Dividends Paid',f:'dividendsPaid'},
+          {l:'Share Buybacks',f:'commonStockRepurchased'},
+          {l:'SBC',f:'stockBasedCompensation'}
+        ];
+        cfRows.forEach((row,ri)=>{
+          const vals=cfYears.map(yr=>{const v=yr[row.f];return v!=null?fmt(v):'-'});
+          tableRow([row.l,...vals],colW,ri%2===0);
+        });
+        y+=6;
+      }
+
+      const bsYears=s._bsData||[];
+      if(bsYears.length){
+        subTitle('Balance Sheet (3 Years)');
+        const colW=[cw*0.34,cw*0.22,cw*0.22,cw*0.22];
+        const yrLabels=bsYears.map(yr=>yr.calendarYear||yr.date?.substring(0,4)||'-');
+        tableHeader(['Metric',...yrLabels],colW);
+        const bsRows=[
+          {l:'Total Assets',f:'totalAssets'},
+          {l:'Total Liabilities',f:'totalLiabilities'},
+          {l:'Total Equity',f:'totalStockholdersEquity'},
+          {l:'Cash & Equivalents',f:'cashAndCashEquivalents'},
+          {l:'Total Debt',f:'totalDebt'},
+          {l:'Net Debt',f:'netDebt'},
+          {l:'Current Assets',f:'totalCurrentAssets'},
+          {l:'Current Liabilities',f:'totalCurrentLiabilities'}
+        ];
+        bsRows.forEach((row,ri)=>{
+          const vals=bsYears.map(yr=>{const v=yr[row.f];return v!=null?fmt(v):'-'});
+          tableRow([row.l,...vals],colW,ri%2===0);
+        });
+        y+=6;
+      }
+
+      // Cash Flow Deep Dive metrics
+      subTitle('Key Ratios');
+      const ovd=s.overriddenData||{};
+      function ov(f){return ovd[f]!=null?ovd[f]:s[f]}
+      const cf0=s._cfData?.[0];const is0=s._isData?.[0];
+      const capex=cf0&&cf0.capitalExpenditure!=null?Math.abs(cf0.capitalExpenditure):null;
+      const shares0=is0?(is0.weightedAverageShsOutDil||is0.weightedAverageShsOut):null;
+      const fcfPerShare=s.fcf!=null&&shares0?s.fcf/shares0:null;
+      metricRow([
+        {label:'CAPEX % of OCF',value:capex!=null&&s.ocf&&s.ocf>0?(capex/s.ocf*100).toFixed(1)+'%':'-'},
+        {label:'FCF Conversion',value:s.fcf!=null&&s.profit&&s.profit>0?(s.fcf/s.profit*100).toFixed(0)+'%':'-'},
+        {label:'FCF Yield',value:fcfPerShare!=null&&s.price?(fcfPerShare/s.price*100).toFixed(1)+'%':'-'},
+        {label:'FCF/Share',value:fcfPerShare!=null?'$'+fcfPerShare.toFixed(2):'-'}
+      ]);
+    }
+
+    // ── Checklist ──
+    if(selected.has('checklist')){
+      sectionTitle('Checklist Analysis');
+      const cl=s.checklist;
+      if(cl){
+        const overall=cl.overallProgress||0;
+        textLine('Overall Progress',overall+'%');y+=2;
+
+        CL_SECTIONS.forEach(sec=>{
+          const secData=cl.sections[sec.key]||{};
+          const pct=secData.progress||0;
+          checkPage(12);
+          subTitle(sec.num+'. '+sec.title+' ('+pct+'%)');
+
+          if(Array.isArray(sec.fields)){
+            sec.fields.forEach(f=>{
+              if(f.type==='group')return;
+              const val=secData[f.k];
+              if(val&&String(val).trim()){
+                textLine(f.label,String(val),2);
+              }
+            });
+          }else if(sec.fields==='dynamic_risks'){
+            const items=secData.items||[];
+            items.forEach(r=>{
+              if(r.description)textLine('Risk',r.description+' ['+r.status+']',2);
+            });
+          }else if(sec.fields==='dynamic_quarters'){
+            const quarters=secData.quarters||[];
+            quarters.forEach(q=>{
+              if(q.notes)textLine(q.label||q.quarter,q.notes,2);
+            });
+          }else if(sec.fields==='dynamic_learning'){
+            const items=secData.items||[];
+            items.forEach(it=>{
+              if(it.lesson)textLine(it.date||'Entry',it.lesson,2);
+            });
+          }
+          y+=2;
+        });
+
+        // Framework traits
+        if(fwData.idealTraits.length){
+          subTitle('Ideal Traits');
+          fwData.idealTraits.forEach(t=>{
+            const met=cl.idealTraitChecks&&cl.idealTraitChecks[t.id];
+            textLine(met?'✓':'✗',t.label,2);
+          });
+        }
+        if(fwData.avoidList.length){
+          subTitle('Red Flags');
+          fwData.avoidList.forEach(a=>{
+            const present=cl.avoidChecks&&cl.avoidChecks[a.id];
+            textLine(present?'⚠':'✓',a.label,2);
+          });
+        }
+      }else{
+        writeWrapped('No checklist data available.');
+      }
+    }
+
+    // ── Valuations ──
+    if(selected.has('valuations')){
+      sectionTitle('Valuations');
+
+      // Valuation calcs summary
+      subTitle('Calculated Valuations');
+      metricRow([
+        {label:'DCF Upside',value:c.dcf!=null?c.dcf.toFixed(0)+'%':'-'},
+        {label:'Reverse DCF',value:c.reverseDcf!=null?c.reverseDcf.toFixed(1)+'%':'-'},
+        {label:'ARIA CAGR',value:c.aria!=null?c.aria.toFixed(1)+'%':'-'},
+        {label:'Money Back',value:typeof c.moneyBack==='number'?c.moneyBack.toFixed(1)+'y':c.moneyBack||'-'}
+      ]);
+
+      // Saved valuations
+      const saved=_getSavedStocks();
+      const tickerVals=Object.entries(saved).filter(([k,v])=>(v.name||k)===ticker||k.startsWith(ticker+' '));
+      if(tickerVals.length){
+        y+=4;subTitle('Saved Valuation Models');
+        tickerVals.forEach(([name,v])=>{
+          textLine(name,'Intrinsic: '+(v.intrinsicValue?'$'+parseFloat(v.intrinsicValue).toFixed(2):'-')+' | Upside: '+(v.upside_pct!=null?v.upside_pct.toFixed(0)+'%':'-'));
+        });
+      }
+
+      // Valuation history
+      if(s.valuationHistory&&s.valuationHistory.length){
+        y+=4;subTitle('Valuation History');
+        const colW=[cw*0.2,cw*0.2,cw*0.3,cw*0.15,cw*0.15];
+        tableHeader(['Date','Method','Intrinsic Value','Price','Upside'],colW);
+        s.valuationHistory.slice(-10).forEach((vh,i)=>{
+          tableRow([
+            vh.date||'-',
+            vh.method||'-',
+            vh.intrinsicValue?'$'+parseFloat(vh.intrinsicValue).toFixed(2):'-',
+            vh.price?'$'+parseFloat(vh.price).toFixed(2):'-',
+            vh.upside!=null?vh.upside.toFixed(0)+'%':'-'
+          ],colW,i%2===0);
+        });
+      }
+    }
+
+    // ── Research Notes ──
+    if(selected.has('notes')){
+      sectionTitle('Research Notes');
+      const allNotes=[];
+      ['journal','news','market'].forEach(type=>{
+        (researchNotes[type]||[]).forEach(n=>{
+          if(n.ticker===ticker)allNotes.push({...n,_type:type});
+        });
+      });
+      // Also check inline notes
+      if(s.notes&&s.notes.research){
+        allNotes.push({_type:'inline',title:'Research Notes',content:s.notes.research,date:''});
+      }
+      if(s.notes&&s.notes.thesis){
+        allNotes.push({_type:'inline',title:'Thesis Notes',content:s.notes.thesis,date:''});
+      }
+      allNotes.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      if(allNotes.length){
+        allNotes.forEach(n=>{
+          checkPage(20);
+          doc.setFontSize(10);doc.setTextColor(...colors.dark);doc.setFont('helvetica','bold');
+          const titleLine=[n.title||'Untitled',n.date?'('+n.date+')':'',n._type!=='inline'?'['+n._type+']':''].filter(Boolean).join(' ');
+          doc.text(titleLine.substring(0,80),ml,y);y+=5;
+          if(n.source||n.sourceName){
+            doc.setFontSize(8);doc.setTextColor(...colors.gray);doc.setFont('helvetica','italic');
+            doc.text('Source: '+(n.sourceName||n.source||''),ml,y);y+=4;
+          }
+          writeWrapped(n.content);
+          y+=4;
+        });
+      }else{
+        writeWrapped('No research notes for this company.');
+      }
+    }
+
+    // ── Earnings Notes ──
+    if(selected.has('earnings')){
+      sectionTitle('Earnings Notes');
+      const eNotes=s.notes?.earnings;
+      let hasEarnings=false;
+      if(eNotes&&typeof eNotes==='object'){
+        Object.entries(eNotes).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([year,quarters])=>{
+          if(typeof quarters==='object'){
+            Object.entries(quarters).sort((a,b)=>b[0].localeCompare(a[0])).forEach(([q,data])=>{
+              if(data&&data.note&&data.note.trim()){
+                hasEarnings=true;
+                subTitle(year+' '+q.toUpperCase()+(data.done?' ✓':''));
+                writeWrapped(data.note);
+              }
+            });
+          }
+        });
+      }
+      // Quarterly follow-up from checklist
+      const qNotes=(researchNotes.journal||[]).filter(n=>n.ticker===ticker&&n.quarter);
+      qNotes.forEach(n=>{
+        hasEarnings=true;
+        subTitle((n.quarter||'')+(n.title?' — '+n.title:''));
+        writeWrapped(n.content);
+      });
+      if(!hasEarnings)writeWrapped('No earnings notes for this company.');
+    }
+
+    // ── Portfolio ──
+    if(selected.has('portfolio')){
+      sectionTitle('Portfolio');
+
+      const positions=pfPositions.filter(p=>p.ticker===ticker);
+      if(positions.length){
+        subTitle('Positions');
+        const colW=[cw*0.25,cw*0.15,cw*0.2,cw*0.2,cw*0.2];
+        tableHeader(['Account','Shares','Avg Cost','Currency','Value'],colW);
+        positions.forEach((p,i)=>{
+          const acct=pfAccounts.find(a=>a.id===p.accountId);
+          const val=p.shares&&s.price?(p.shares*s.price).toFixed(0):'-';
+          tableRow([acct?.name||p.accountId,p.shares,p.avgCost?'$'+parseFloat(p.avgCost).toFixed(2):'-',p.currency||'-',val?'$'+fmt(parseFloat(val)):'-'],colW,i%2===0);
+        });
+        y+=6;
+      }
+
+      const txns=pfTransactions.filter(t=>t.ticker===ticker);
+      if(txns.length){
+        subTitle('Transaction History');
+        const colW=[cw*0.18,cw*0.12,cw*0.14,cw*0.18,cw*0.18,cw*0.2];
+        tableHeader(['Date','Type','Shares','Price','Total','Notes'],colW);
+        txns.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach((t,i)=>{
+          tableRow([
+            t.date||'-',t.type||'-',t.shares||'-',
+            t.pricePerShare?'$'+parseFloat(t.pricePerShare).toFixed(2):'-',
+            t.totalAmount?'$'+fmt(parseFloat(t.totalAmount)):'-',
+            (t.notes||'-').substring(0,25)
+          ],colW,i%2===0);
+        });
+      }
+
+      if(!positions.length&&!txns.length)writeWrapped('No portfolio data for this company.');
+    }
+
+    // ── Dividends ──
+    if(selected.has('dividends')){
+      sectionTitle('Dividend History');
+      const dh=divHistory[ticker];
+      if(dh&&dh.history&&dh.history.length){
+        // Summary
+        const latest=dh.history[0];
+        textLine('Latest Dividend','$'+(latest.amount||latest.dividend||0).toFixed(4)+' ('+latest.frequency+')');
+        if(s.dividendYield!=null)textLine('Current Yield',s.dividendYield.toFixed(2)+'%');
+        y+=4;
+
+        subTitle('Payment History');
+        const colW=[cw*0.25,cw*0.25,cw*0.25,cw*0.25];
+        tableHeader(['Ex-Date','Pay Date','Amount','Frequency'],colW);
+        dh.history.slice(0,20).forEach((d,i)=>{
+          tableRow([
+            d.date||d.exDate||'-',
+            d.payDate||d.paymentDate||'-',
+            '$'+(d.amount||d.dividend||0).toFixed(4),
+            d.frequency||'-'
+          ],colW,i%2===0);
+        });
+      }else{
+        writeWrapped('No dividend history available.');
+      }
+    }
+
+    // ── Reviews ──
+    if(selected.has('reviews')){
+      sectionTitle('Reviews');
+      const reviews=rvData.entries.filter(e=>e.companyTicker===ticker).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      if(reviews.length){
+        reviews.forEach(rev=>{
+          checkPage(20);
+          subTitle(rev.type.charAt(0).toUpperCase()+rev.type.slice(1)+' Review — '+(rev.date||''));
+          if(rev.summary){writeWrapped(rev.summary)}
+          if(rev.answers){
+            Object.entries(rev.answers).forEach(([q,a])=>{
+              if(a&&a.trim()){
+                textLine(q.replace(/_/g,' '),a,2);
+              }
+            });
+          }
+          y+=4;
+        });
+      }else{
+        writeWrapped('No reviews for this company.');
+      }
+    }
+
+    // ── TODOs & Alerts ──
+    if(selected.has('todos')){
+      sectionTitle('TODOs & Alerts');
+      const todos=s.todos||[];
+      if(todos.length){
+        subTitle('Action Items');
+        todos.forEach(t=>{
+          textLine(t.done?'✓':'○',t.text+(t.due?' (due: '+t.due+')':''));
+        });
+        y+=4;
+      }
+
+      // Price alerts
+      if(s.priceAlerts){
+        subTitle('Price Alerts');
+        if(s.priceAlerts.alertAbove)textLine('Alert Above','$'+s.priceAlerts.alertAbove);
+        if(s.priceAlerts.alertBelow)textLine('Alert Below','$'+s.priceAlerts.alertBelow);
+        y+=4;
+      }
+
+      // Sell triggers
+      if(s.sellTriggers&&s.sellTriggers.length){
+        subTitle('Sell Triggers');
+        s.sellTriggers.forEach(t=>{
+          textLine(t.triggered?'⚠':'—',t.description||t.text||'');
+        });
+      }
+
+      if(!todos.length&&!s.priceAlerts&&(!s.sellTriggers||!s.sellTriggers.length)){
+        writeWrapped('No TODOs or alerts set.');
+      }
+    }
+
+    const fileName='Stratos-'+ticker+'-'+new Date().toISOString().slice(0,10)+'.pdf';
+    doc.save(fileName);
+    showToast('PDF exported: '+fileName,'success');
+  }catch(e){
+    console.error('PDF generation error:',e);
+    showToast('PDF generation failed: '+e.message,'error');
+  }finally{
+    closePdfDialog();
+  }
+}
+
 window.addEventListener('load',()=>{
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{

@@ -32,7 +32,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 22 | Performance | S6 | 2026-07-01 | 3 | 0 |
 | 23 | Security & Code Quality | S7 | 2026-07-01 | 2 | 0 |
 
-**Total: 196 fixed, 21 potential (unfixed)** — Categories 19-23 ALL COMPLETE (0 unfixed)
+**Total: 201 fixed, 21 potential (unfixed)** — Categories 19-24 ALL COMPLETE (0 unfixed)
 
 ---
 
@@ -567,6 +567,22 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 |---|-----|-----|-----------|
 | 23.1 | 10/12 modal openers bypass `_openModal()` — no focus trap | Routed all 10 modal opens through `_openModal()` | index.html:2840,3512,3772,3968,4483,5706,9287,9794,11044 |
 | 23.2 | `_encPass` in memory with no idle timeout | Added 15-min idle timer (click/keydown/touchstart resets), locks screen on expiry | index.html:2334 |
+
+### Unfixed (0)
+
+---
+
+## Category 24 — PDF Export (QA 2026-07-01)
+
+### Fixed (5)
+
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 24.1 | XSS risk: inline onclick with ticker interpolation in PDF dialog | Replaced with data-attribute + addEventListener | index.html:11637 |
+| 24.2 | Null ref: window.jspdf undefined if CDN blocked | Added validation check before destructuring | index.html:11659 |
+| 24.3 | Memory: jsPDF doc object never cleaned up | Moved closePdfDialog() to finally block (doc goes out of scope) | index.html:12236 |
+| 24.4 | Dialog stays open on PDF generation error | Moved closePdfDialog() to finally block (always runs) | index.html:12233 |
+| 24.5 | PDF dialog not responsive on mobile <480px | Added media query for max-width and scrollable section list | index.html:912 |
 
 ### Unfixed (0)
 

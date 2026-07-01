@@ -65,6 +65,7 @@ No build process, no frameworks, no npm — vanilla JS with CDN libraries.
 - Chart.js v4.4.7 — charting
 - Marked v15.0.7 — markdown rendering
 - DOMPurify v3.2.4 — XSS protection
+- jsPDF v2.5.2 — PDF export (lazy-loaded on first use)
 
 **Six main views** (hash-routed):
 | View | Purpose |

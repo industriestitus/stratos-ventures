@@ -216,6 +216,9 @@ Status: COMPLETE (2026-06-27)
 - Phase 17: Expected Return calculator — ALL COMPLETE ✅ (Return breakdown with stacked bar, Position sizing with score/multipliers/Kelly/bar)
 - Phase 18: External Links & Earnings Calendar — ALL COMPLETE ✅ (7 research links, FMP earnings calendar widget + per-company grid enhancements)
 
+### Standalone Features (post-expansion)
+- [x] PDF Export — per-company research report export (2026-07-01): section chooser dialog, jsPDF lazy-loaded, 10 exportable sections (profile, financials, checklist, valuations, notes, earnings, portfolio, dividends, reviews, todos), Stratos branding header/footer, continuous-flow layout
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 

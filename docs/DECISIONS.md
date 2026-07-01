@@ -901,6 +901,32 @@ Visual design choice. Peter prefers dark theme, specific accent color.
 
 **Date:** 2026-03-xx (Phase 0, visual design)
 
+## ADR-030: Client-Side PDF Export with jsPDF
+
+**Status:** Accepted (2026-07-01)
+
+**Context:**  
+Need per-company research report export as PDF. Options: server-side (Cloudflare Worker), CSS print, or client-side library.
+
+**Decision:**  
+- jsPDF 2.5.2 via CDN (`cdn.jsdelivr.net`), lazy-loaded on first export click
+- Client-side only — no Worker dependency
+- Section chooser dialog lets user pick which data sections to include
+- Continuous-flow layout — sections don't force page breaks unless needed
+
+**Alternatives Rejected:**
+- **Server-side (Worker):** Adds complexity, Cloudflare Workers have limited PDF support
+- **CSS @media print:** Limited control over layout, no section selection, browser-dependent
+- **html2canvas + jsPDF:** Heavier, slower, renders as image (not selectable text)
+
+**Consequences:**
+- ✅ **Gained:** Works offline, no server dependency, selectable text in PDF
+- ✅ **Gained:** Lazy loading means zero impact on app startup
+- ❌ **Lost:** No embedded charts (jsPDF can't render Chart.js canvases without html2canvas)
+- ❌ **Lost:** Limited to Helvetica font (jsPDF built-in, no custom fonts without large font files)
+
+**Date:** 2026-07-01 (Standalone feature, post-expansion)
+
 ---
 
 ## Summary Table
@@ -936,6 +962,7 @@ Visual design choice. Peter prefers dark theme, specific accent color.
 | 027 | TWR + MWR + P&L metrics | Accepted | Phase 4 |
 | 028 | Multi-currency with FX rates | Accepted | Phase 4 |
 | 029 | Dark UI, purple accent | Accepted | Phase 0 |
+| 030 | Client-side PDF with jsPDF | Accepted | 2026-07-01 |
 
 ---
 
