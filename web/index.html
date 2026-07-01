@@ -173,6 +173,19 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .btn{padding:8px 16px;border-radius:8px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s}
 .btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
 .btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent)}
+.btn-danger{background:#e74c3c;color:#fff;border:none}.btn-danger:hover{background:#c0392b}
+.btn-danger:disabled{opacity:.4;cursor:not-allowed;background:#e74c3c}
+/* Confirmation dialog */
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:350;align-items:center;justify-content:center}
+.confirm-overlay.active{display:flex}
+.confirm-dialog{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:420px;width:90%;animation:sectionFadeIn .15s ease-out}
+.confirm-dialog h3{margin:0 0 8px;font-size:15px;font-weight:600}
+.confirm-dialog p{color:var(--text2);font-size:13px;line-height:1.5;margin:0 0 16px}
+.confirm-dialog .confirm-type-input{margin-top:12px}
+.confirm-dialog .confirm-type-input label{display:block;font-size:12px;color:var(--text2);margin-bottom:6px}
+.confirm-dialog .confirm-type-input input{width:100%;padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;outline:none;font-family:inherit;box-sizing:border-box}
+.confirm-dialog .confirm-type-input input:focus{border-color:var(--accent)}
+.confirm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
 .saved-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .saved-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:6px;background:var(--surface2);border:1px solid var(--border);font-size:12px;cursor:pointer;transition:all .2s}
 .saved-chip:hover{border-color:var(--accent)}
@@ -2064,6 +2077,22 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
 
 </div><!-- end app-shell -->
 
+<!-- Confirmation Dialog -->
+<div class="confirm-overlay" id="confirm-overlay" onclick="if(event.target===this)_confirmCancel()">
+  <div class="confirm-dialog" id="confirm-dialog" role="dialog" aria-modal="true">
+    <h3 id="confirm-title"></h3>
+    <p id="confirm-message"></p>
+    <div class="confirm-type-input" id="confirm-type-wrap" style="display:none">
+      <label id="confirm-type-label"></label>
+      <input type="text" id="confirm-type-field" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="_confirmCancel()">Mégsem</button>
+      <button class="btn btn-danger" id="confirm-ok-btn" onclick="_confirmOk()">Törlés</button>
+    </div>
+  </div>
+</div>
+
 <!-- Global Search Palette -->
 <div class="gs-overlay" id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
   <div class="gs-box">
@@ -2764,6 +2793,56 @@ function undoableDelete(msg,doDelete,doRestore,onConfirm){
   while(c.children.length>5)c.firstChild.remove();
 }
 
+// ====== CONFIRMATION DIALOG ======
+var _confirmResolve=null;
+function showConfirm(title,message,opts){
+  opts=opts||{};
+  if(_confirmResolve){_confirmResolve(false);_confirmResolve=null}
+  const ov=document.getElementById('confirm-overlay');
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-message').textContent=message;
+  const btn=document.getElementById('confirm-ok-btn');
+  btn.textContent=opts.okLabel||'Törlés';
+  btn.className=opts.danger===false?'btn btn-primary':'btn btn-danger';
+  const tw=document.getElementById('confirm-type-wrap');
+  const tf=document.getElementById('confirm-type-field');
+  if(opts.typeToConfirm){
+    tw.style.display='';
+    document.getElementById('confirm-type-label').textContent='Írd be: '+opts.typeToConfirm;
+    tf.value='';
+    btn.disabled=true;
+    tf.oninput=()=>{btn.disabled=tf.value.trim()!==opts.typeToConfirm};
+  }else{
+    tw.style.display='none';
+    tf.oninput=null;
+    btn.disabled=false;
+  }
+  ov.classList.add('active');
+  _trapFocusModal=document.getElementById('confirm-dialog');
+  document.addEventListener('keydown',_trapFocus);
+  document.addEventListener('keydown',_confirmKeyHandler);
+  if(opts.typeToConfirm)tf.focus();else btn.focus();
+  return new Promise(resolve=>{_confirmResolve=resolve})
+}
+function _confirmOk(){
+  const btn=document.getElementById('confirm-ok-btn');
+  if(btn.disabled)return;
+  document.getElementById('confirm-overlay').classList.remove('active');
+  document.removeEventListener('keydown',_confirmKeyHandler);
+  document.removeEventListener('keydown',_trapFocus);_trapFocusModal=null;
+  if(_confirmResolve){_confirmResolve(true);_confirmResolve=null}
+}
+function _confirmCancel(){
+  document.getElementById('confirm-overlay').classList.remove('active');
+  document.removeEventListener('keydown',_confirmKeyHandler);
+  document.removeEventListener('keydown',_trapFocus);_trapFocusModal=null;
+  if(_confirmResolve){_confirmResolve(false);_confirmResolve=null}
+}
+function _confirmKeyHandler(e){
+  if(e.key==='Escape')_confirmCancel();
+  else if(e.key==='Enter'){e.preventDefault();_confirmOk()}
+}
+
 // ====== GLOBAL SEARCH (Cmd+K) ======
 let _gsActive=false,_gsIdx=-1,_gsItems=[];
 function openGlobalSearch(){
@@ -3433,7 +3512,7 @@ function doRestore(){
         const d=JSON.parse(ev.target.result);
         if(!d.version){showToast('Invalid backup file — no version field','error');return}
         if(d.version>SCHEMA_VERSION){showToast('This backup was created by a newer app version (v'+d.version+'). Please update the app first.','error');return}
-        if(!confirm('This will REPLACE ALL your data with the backup file.\n\nCurrent data will be lost. Continue?'))return;
+        if(!await showConfirm('Backup visszaállítás','Ez FELÜLÍRJA az összes jelenlegi adatot a backup fájl tartalmával. A jelenlegi adatok elvesznek.',{okLabel:'Visszaállítás',typeToConfirm:'RESTORE'}))return;
         const keepKeys=['enc_salt','enc_verify','enc_recovery','enc_skipped','schema_version','tracker_settings'];
         const snapshot={};
         Object.keys(localStorage).forEach(k=>{snapshot[k]=localStorage.getItem(k)});
@@ -4022,8 +4101,8 @@ async function deleteAccount(id){
   const a=pfAccounts.find(x=>x.id===id);
   if(!a)return;
   const posCount=pfPositions.filter(p=>p.accountId===id).length;
-  const msg=posCount?`Delete "${a.name}"? This will also remove ${posCount} position(s).`:`Delete "${a.name}"?`;
-  if(!confirm(msg))return;
+  const msg=posCount?`"${a.name}" és ${posCount} pozíció is törlődik.`:`"${a.name}" törlése.`;
+  if(!await showConfirm('Bróker törlése',msg))return;
   if(d1Mode){
     try{
       const delOps=[...pfPositions.filter(p=>p.accountId===id).map(p=>API.del('positions/'+p.id)),...pfTransactions.filter(t=>t.accountId===id).map(t=>API.del('transactions/'+t.id))];
@@ -4116,9 +4195,10 @@ function _toggleAllTx(checked){
   _updateBulkBar();
 }
 
-function bulkDeletePositions(){
+async function bulkDeletePositions(){
   const ids=[..._bulkPosIds];
   if(!ids.length)return;
+  if(ids.length>=3&&!await showConfirm('Tömeges törlés',`${ids.length} pozíció törlése. Visszavonható.`))return;
   const snapshots=ids.map(id=>({idx:pfPositions.findIndex(p=>p.id===id),data:JSON.parse(JSON.stringify(pfPositions.find(p=>p.id===id)))})).filter(s=>s.data);
   const tickers=new Set(snapshots.map(s=>s.data.ticker));
   undoableDelete(`${ids.length} pozíció törölve`,()=>{
@@ -4137,9 +4217,10 @@ function bulkDeletePositions(){
   });
 }
 
-function bulkDeleteTransactions(){
+async function bulkDeleteTransactions(){
   const ids=[..._bulkTxIds];
   if(!ids.length)return;
+  if(ids.length>=3&&!await showConfirm('Tömeges törlés',`${ids.length} tranzakció törlése. Visszavonható.`))return;
   const snapshots=ids.map(id=>({idx:pfTransactions.findIndex(t=>t.id===id),data:JSON.parse(JSON.stringify(pfTransactions.find(t=>t.id===id)))})).filter(s=>s.data);
   const tickers=new Set(snapshots.map(s=>s.data.ticker));
   undoableDelete(`${ids.length} tranzakció törölve`,()=>{
@@ -4198,8 +4279,9 @@ function _toggleAllNotes(checked){
   getAllResearchEntries(type).forEach(e=>{const k=e._type+':'+e.id;if(checked)_bulkNoteKeys.add(k);else _bulkNoteKeys.delete(k)});
   _updateBulkBar();renderResearchFeed(type);
 }
-function bulkDeleteNotes(){
+async function bulkDeleteNotes(){
   const keys=[..._bulkNoteKeys];if(!keys.length)return;
+  if(keys.length>=3&&!await showConfirm('Tömeges törlés',`${keys.length} jegyzet törlése. Visszavonható.`))return;
   const snapshots=[];
   keys.forEach(k=>{const[t,idStr]=k.split(':');const id=parseInt(idStr,10);const list=researchNotes[t];if(!list)return;const idx=list.findIndex(e=>e.id===id);if(idx!==-1)snapshots.push({type:t,idx,entry:JSON.parse(JSON.stringify(list[idx]))})});
   undoableDelete(`${keys.length} jegyzet törölve`,()=>{
@@ -4224,8 +4306,9 @@ function _toggleAllRv(checked){
   entries.forEach(e=>{if(checked)_bulkRvIds.add(e.id);else _bulkRvIds.delete(e.id)});
   _updateBulkBar();renderRvFeed(type);
 }
-function bulkDeleteReviews(){
+async function bulkDeleteReviews(){
   const ids=[..._bulkRvIds];if(!ids.length)return;
+  if(ids.length>=3&&!await showConfirm('Tömeges törlés',`${ids.length} review törlése. Visszavonható.`))return;
   const snapshots=ids.map(id=>{const e=rvData.entries.find(x=>x.id===id);return e?{idx:rvData.entries.indexOf(e),entry:JSON.parse(JSON.stringify(e))}:null}).filter(Boolean);
   undoableDelete(`${ids.length} review törölve`,()=>{
     rvData.entries=rvData.entries.filter(e=>!_bulkRvIds.has(e.id));
@@ -4244,8 +4327,9 @@ function _toggleAllStocks(checked){
   Object.keys(s).forEach(n=>{if(checked)_bulkStockNames.add(n);else _bulkStockNames.delete(n)});
   _updateBulkBar();renderSavedStocks();
 }
-function bulkDeleteStocks(){
+async function bulkDeleteStocks(){
   const names=[..._bulkStockNames];if(!names.length)return;
+  if(names.length>=3&&!await showConfirm('Tömeges törlés',`${names.length} részvény törlése. Visszavonható.`))return;
   const s=_getSavedStocks();const backups={};
   names.forEach(n=>{if(s[n])backups[n]=JSON.parse(JSON.stringify(s[n]))});
   undoableDelete(`${names.length} részvény törölve`,()=>{
@@ -4757,11 +4841,11 @@ function savePortfolioSnapshots(){
   try{localStorage.setItem('portfolio_snapshots_v1',JSON.stringify(pfSnapshots))}catch(e){showToast('Storage full','error')}
 }
 
-function takeSnapshot(){
+async function takeSnapshot(){
   if(!pfPositions.length){showToast('No positions to snapshot','error');return}
   const today=new Date().toISOString().split('T')[0];
   if(pfSnapshots.find(s=>s.date===today)){
-    if(!confirm('A snapshot for today already exists. Replace it?'))return;
+    if(!await showConfirm('Snapshot felülírása','Ma már készült pillanatfelvétel. Felülírod?',{okLabel:'Felülírás',danger:false}))return;
     pfSnapshots=pfSnapshots.filter(s=>s.date!==today);
   }
   const base=getBaseCurrency();
@@ -4782,8 +4866,8 @@ function takeSnapshot(){
   showToast(`Snapshot taken: ${formatMoney(totalValue,base)}`,'success');
 }
 
-function deleteSnapshot(id){
-  if(!confirm('Delete this snapshot?'))return;
+async function deleteSnapshot(id){
+  if(!await showConfirm('Snapshot törlése','Biztosan törlöd ezt a pillanatfelvételt?'))return;
   if(d1Mode)API.del('portfolio_snapshots/'+id).catch(e=>console.error('D1 del snapshot:',e));
   pfSnapshots=pfSnapshots.filter(s=>s.id!==id);
   savePortfolioSnapshots();
@@ -9505,9 +9589,9 @@ function doArchiveStock(){
   if(typeof profileTicker!=='undefined'&&profileTicker===ticker)closeProfile();
   showToast(ticker+' archived','success');
 }
-function doDeleteStock(){
+async function doDeleteStock(){
   const ticker=document.getElementById('archive-modal-ticker').value;
-  if(!confirm('Permanently delete '+ticker+' and ALL associated data? This cannot be undone.'))return;
+  if(!await showConfirm('Végleges törlés',ticker+' és az összes kapcsolódó adat (jegyzet, review, pozíció, tranzakció) véglegesen törlődik.',{okLabel:'Véglegesen törlöm',typeToConfirm:ticker}))return;
   const d1Id=tStocks[ticker]&&tStocks[ticker]._d1Id;
   if(d1Mode&&d1Id)API.del('companies/'+d1Id).catch(e=>console.error('D1 del company:',e));
   delete tStocks[ticker];
@@ -10940,8 +11024,8 @@ function saveFwEntry(){
   showToast(editId?'Updated':'Added','success');
 }
 
-function deleteFwEntry(type,id){
-  if(!confirm('Delete this item?'))return;
+async function deleteFwEntry(type,id){
+  if(!await showConfirm('Elem törlése','Biztosan törlöd ezt az elemet?'))return;
   const arr=getFwArr(type);
   const idx=arr.findIndex(x=>x.id===id);
   if(idx>=0)arr.splice(idx,1);
@@ -11574,8 +11658,8 @@ function updateClRisk(ticker,idx,field,value){
   saveTrackerStocks();
 }
 
-function removeClRisk(ticker,idx){
-  if(!confirm('Remove this risk?'))return;
+async function removeClRisk(ticker,idx){
+  if(!await showConfirm('Kockázat törlése','Biztosan törlöd ezt a kockázatot?'))return;
   const cl=ensureChecklist(ticker);
   if(!cl)return;
   const removed=cl.sections.risks.items.splice(idx,1)[0];
@@ -11770,8 +11854,8 @@ function updateClQuarter(ticker,idx,field,value){
   saveTrackerStocks();
 }
 
-function removeClQuarter(ticker,idx){
-  if(!confirm('Remove this quarter?'))return;
+async function removeClQuarter(ticker,idx){
+  if(!await showConfirm('Negyedév törlése','Biztosan törlöd ezt a negyedéves bejegyzést?'))return;
   const cl=ensureChecklist(ticker);
   if(!cl)return;
   cl.sections.quarterly_followup.entries.splice(idx,1);
@@ -11836,8 +11920,8 @@ function updateClLearning(ticker,idx,field,value){
   saveTrackerStocks();
 }
 
-function removeClLearning(ticker,idx){
-  if(!confirm('Remove this learning?'))return;
+async function removeClLearning(ticker,idx){
+  if(!await showConfirm('Tanulság törlése','Biztosan törlöd ezt a tanulságot?'))return;
   const cl=ensureChecklist(ticker);
   if(!cl)return;
   cl.sections.learning_log.entries.splice(idx,1);
@@ -12267,9 +12351,9 @@ function updateD1UI(){
 
 async function startD1Migration(){
   if(localStorage.getItem('d1_migrating')==='1'){
-    if(!confirm('A previous migration may not have completed.\n\nRetry? (existing cloud data will be overwritten with local data)'))return;
+    if(!await showConfirm('Migráció újrapróbálása','Egy korábbi migráció nem fejeződött be. Újrapróbálod? A felhő adatok felülíródnak.',{okLabel:'Újrapróbálás'}))return;
   }else{
-    if(!confirm('This will upload all your local data to the D1 cloud database.\n\nYour localStorage data will be kept as a backup.\n\nContinue?'))return;
+    if(!await showConfirm('D1 migráció','Ez feltölti az összes helyi adatot a D1 felhő adatbázisba. A localStorage adatok megmaradnak backupként.',{okLabel:'Migráció indítása'}))return;
   }
   const btn=document.getElementById('d1-migrate-btn');
   const status=document.getElementById('d1-migrate-status');
