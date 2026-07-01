@@ -702,6 +702,27 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .loading-overlay span{font-size:12px;color:var(--text2)}
 .btn-loading{pointer-events:none;opacity:.7}
 .btn-loading .spinner{display:inline-block;vertical-align:middle;margin-right:6px}
+/* Section transitions */
+.section-fade-in{animation:sectionFadeIn .15s ease-out}
+@keyframes sectionFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* Skeleton loading */
+.skel{background:var(--surface);border-radius:8px;position:relative;overflow:hidden}
+.skel::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.04) 50%,transparent 100%);animation:shimmer 1.5s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.skel-line{height:14px;margin-bottom:8px;border-radius:4px}
+.skel-line--short{width:40%}
+.skel-line--med{width:65%}
+.skel-line--long{width:85%}
+.skel-line--full{width:100%}
+.skel-card{border:1px solid var(--border);border-radius:10px;padding:16px}
+.skel-grid{display:grid;gap:12px}
+.skel-grid--2{grid-template-columns:1fr 1fr}
+.skel-grid--3{grid-template-columns:1fr 1fr 1fr}
+.skel-grid--4{grid-template-columns:repeat(4,1fr)}
+.skel-circle{border-radius:50%}
+.skel-table-row{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.skel-table-row .skel{flex:1;height:14px;border-radius:4px}
+@media(max-width:768px){.skel-grid--3,.skel-grid--4{grid-template-columns:1fr 1fr}}
 /* Empty state */
 .empty-state{text-align:center;padding:60px 20px;color:var(--text2)}
 .empty-state svg{width:48px;height:48px;opacity:.4;margin-bottom:12px}
@@ -2978,6 +2999,29 @@ function hideSpinner(container){
   const o=container.querySelector('.loading-overlay');
   if(o)o.remove();
 }
+function skelLine(w){return`<div class="skel skel-line skel-line--${w||'full'}"></div>`}
+function skelCard(content,style){return`<div class="skel-card">${content||skelLine('short')+skelLine('long')+skelLine('med')}</div>`}
+function showSkeleton(container,type){
+  hideSkeleton(container);
+  const el=document.createElement('div');el.className='skeleton-placeholder';
+  if(type==='dashboard'){
+    el.innerHTML=`<div class="skel-grid skel-grid--4" style="margin-bottom:16px">${Array(4).fill(skelCard(skelLine('short')+'<div class="skel skel-line" style="height:28px;width:50%;margin-top:8px"></div>')).join('')}</div>
+    <div class="skel-grid skel-grid--2">${skelCard('<div class="skel" style="height:180px;border-radius:8px"></div>')+skelCard(skelLine('short')+skelLine('long')+skelLine('med')+skelLine('short'))}</div>`;
+  }else if(type==='profile'){
+    el.innerHTML=`<div style="display:flex;gap:12px;align-items:center;margin-bottom:20px"><div class="skel skel-line" style="height:24px;width:200px"></div><div class="skel skel-line" style="height:16px;width:80px"></div></div>
+    <div class="skel-grid skel-grid--4" style="margin-bottom:16px">${Array(8).fill('<div class="skel skel-line" style="height:40px"></div>').join('')}</div>
+    ${skelCard('<div class="skel" style="height:200px;border-radius:8px"></div>')}`;
+  }else if(type==='table'){
+    el.innerHTML=`<div style="margin-bottom:12px">${skelLine('short')}</div>${Array(5).fill('<div class="skel-table-row">'+Array(6).fill('<div class="skel"></div>').join('')+'</div>').join('')}`;
+  }else{
+    el.innerHTML=skelCard()+skelCard()+skelCard();
+  }
+  container.appendChild(el);
+}
+function hideSkeleton(container){
+  const el=container.querySelector('.skeleton-placeholder');
+  if(el)el.remove();
+}
 function setBtnLoading(btn,loading,origText){
   if(loading){btn._origText=btn.textContent;btn.disabled=true;btn.classList.add('btn-loading');btn.textContent='';const sp=document.createElement('div');sp.className='spinner spinner--sm';btn.appendChild(sp);btn.appendChild(document.createTextNode(origText||btn._origText||''));}
   else{btn.disabled=false;btn.classList.remove('btn-loading');btn.textContent=btn._origText||origText||'';}
@@ -3777,7 +3821,9 @@ function showSection(name){
   _previousSection=name;
   SECTIONS.forEach(s=>{
     const el=document.getElementById('section-'+s);
-    if(el)el.style.display=s===name?'':'none';
+    if(!el)return;
+    if(s===name){el.style.display='';el.classList.remove('section-fade-in');void el.offsetWidth;el.classList.add('section-fade-in')}
+    else el.style.display='none';
   });
   document.querySelectorAll('#sidebar .nav-item').forEach(b=>{
     b.classList.toggle('active',b.dataset.section===name);
@@ -6914,7 +6960,7 @@ async function renderInsiderTrading(ticker){
     el.innerHTML='<div class="card"><p style="color:var(--text2)">Finnhub API key not set — go to <a href="#" onclick="showSection(\'settings\');return false" style="color:var(--accent)">Settings</a> to add your free key from <a href="https://finnhub.io" target="_blank" style="color:var(--accent)">finnhub.io</a></p></div>';
     return;
   }
-  el.innerHTML='<div class="card"><p style="color:var(--text2)">Loading insider transactions...</p></div>';
+  el.innerHTML='';showSkeleton(el,'table');
   const result=await fetchInsiderTrading(ticker);
   if(result&&result.rateLimited){
     el.innerHTML='<div class="card"><p style="color:var(--text2)">Finnhub rate limit reached — try again in a minute.</p></div>';
@@ -7708,7 +7754,7 @@ function renderFinancials(ticker){
   h+='</div></div>';
 
   h+='<div class="card"><div class="card-title">Historical Trends (10 Year)</div>';
-  h+='<div id="cp-hist-loading" class="cp-hist-loading">Loading historical data...</div>';
+  h+='<div id="cp-hist-loading" class="cp-hist-loading"><div class="skel-grid skel-grid--2" style="margin:20px 0">'+'<div class="skel" style="height:140px;border-radius:8px"></div>'.repeat(4)+'</div></div>';
   h+='<div class="cp-hist-charts" id="cp-hist-charts" style="display:none">';
   h+='<div class="cp-hist-chart"><canvas id="cp-hist-rev"></canvas></div>';
   h+='<div class="cp-hist-chart"><canvas id="cp-hist-fcf"></canvas></div>';
@@ -9246,6 +9292,8 @@ async function refreshProfileData(){
   _refreshingProfile=true;
   const btn=document.getElementById('cp-refresh-btn');
   if(btn){btn.disabled=true;btn.textContent='⏳...'}
+  const ov=document.getElementById('cp-overview');
+  if(ov)showSkeleton(ov,'profile');
   _forceRefresh=true;
   try{
     await fetchStockData(profileTicker);
@@ -9255,7 +9303,7 @@ async function refreshProfileData(){
     saveTrackerStocks();
     showProfile(profileTicker);
     showToast('Data refreshed from API','success',2000);
-  }catch(e){showToast('Refresh failed','error')}finally{_forceRefresh=false;_refreshingProfile=false}
+  }catch(e){showToast('Refresh failed','error')}finally{_forceRefresh=false;_refreshingProfile=false;if(ov)hideSkeleton(ov)}
   if(btn){btn.disabled=false;btn.textContent='↻ Refresh'}
 }
 
