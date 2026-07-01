@@ -1620,9 +1620,10 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
 
   <div id="pf-panel-overview">
     <div id="pf-overview-empty" class="card placeholder-section" style="display:none">
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="10" cy="10" r="7.5"/><path d="M10 2.5V10h7.5"/></svg>
-      <h2>Portfolio Overview</h2>
-      <p>Add accounts and positions to see your portfolio dashboard.</p>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--accent);margin-bottom:12px"><circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/></svg>
+      <h2 style="margin-bottom:6px">Portfolio Overview</h2>
+      <p style="color:var(--text2);margin-bottom:16px">Hozz létre egy brókert számlafiókot és adj hozzá pozíciókat a portfólió áttekintéshez.</p>
+      <button class="btn btn-primary" onclick="switchPortfolioTab('accounts')">+ Számla hozzáadása</button>
     </div>
     <div id="pf-overview-content">
       <div id="pf-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
@@ -1956,6 +1957,24 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
     </div>
   </div>
 </div>
+
+  <div class="card" id="shortcut-guide" style="margin-top:16px">
+    <h3 style="margin-bottom:14px;font-size:15px;font-weight:600">Keyboard Shortcuts</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px">
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘K</kbd> Keresés</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">?</kbd> Shortcut guide</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘1</kbd> Dashboard</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘2</kbd> Companies</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘3</kbd> Portfolio</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘4</kbd> Research</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘5</kbd> Framework</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘6</kbd> Reviews</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘7</kbd> Settings</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">N</kbd> Új elem hozzáadása</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">Esc</kbd> Bezárás</div>
+    </div>
+    <p style="margin-top:12px;font-size:11px;color:var(--text2)">Az N gomb az aktuális szekció alapján nyit új elemet: pozíció/tranzakció (Portfolio), jegyzet (Research), review (Reviews), ticker input (Companies).</p>
+  </div>
 
 </div><!-- end section-settings -->
 
@@ -2841,7 +2860,34 @@ function _gsKeydown(e){
 }
 document.addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();if(_gsActive)closeGlobalSearch();else openGlobalSearch();return}
-  _gsKeydown(e);
+  if(_gsActive){_gsKeydown(e);return}
+  const tag=document.activeElement?.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||document.activeElement?.isContentEditable)return;
+  if(e.metaKey||e.ctrlKey){
+    const n=parseInt(e.key,10);
+    if(n>=1&&n<=7){e.preventDefault();showSection(SECTIONS[n-1]);return}
+  }
+  if(e.key==='n'&&!e.metaKey&&!e.ctrlKey&&!e.altKey){
+    e.preventDefault();
+    const sec=SECTIONS.find(s=>document.getElementById('section-'+s)?.style.display!=='none');
+    if(sec==='portfolio'){
+      const visTx=document.getElementById('pf-panel-transactions')?.style.display!=='none';
+      if(visTx)openTransactionModal();
+      else openPositionModal();
+    }else if(sec==='research'){
+      openResearchEntry('journal');
+    }else if(sec==='reviews'){
+      openReview('weekly');
+    }else if(sec==='companies'){
+      document.getElementById('st-input')?.focus();
+    }
+    return;
+  }
+  if(e.key==='?'&&!e.metaKey&&!e.ctrlKey){
+    e.preventDefault();showSection('settings');
+    setTimeout(()=>{const el=document.getElementById('shortcut-guide');if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},100);
+    return;
+  }
 });
 document.getElementById('gs-input')?.addEventListener('input',onGlobalSearchInput);
 
@@ -3960,7 +4006,7 @@ function renderPositions(){
 
   if(!pfPositions.length){
     sumEl.innerHTML='';
-    c.innerHTML='<div class="pf-empty"><p>No positions yet.</p><p>Add your holdings to start tracking your portfolio.</p></div>';
+    c.innerHTML='<div class="pf-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">Még nincs pozíciód</p><p style="color:var(--text2);margin-bottom:16px">Add hozzá a befektetéseidet a portfólió követéséhez.</p><button class="btn btn-primary" onclick="openPositionModal()">+ Pozíció hozzáadása</button></div>';
     return;
   }
 
@@ -4245,7 +4291,7 @@ function renderTransactions(){
 
   if(!pfTransactions.length){
     sumEl.innerHTML='';
-    c.innerHTML='<div class="pf-empty"><p>No transactions yet.</p><p>Log your first buy, sell, or dividend transaction.</p></div>';
+    c.innerHTML='<div class="pf-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><path d="M12 2v20M17 7l-5-5-5 5"/><path d="M3 12h18" stroke-dasharray="3 3"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">Még nincs tranzakciód</p><p style="color:var(--text2);margin-bottom:16px">Rögzítsd az első vételi, eladási vagy osztalék tranzakciódat.</p><button class="btn btn-primary" onclick="openTransactionModal()">+ Tranzakció rögzítése</button></div>';
     return;
   }
 
@@ -5266,7 +5312,7 @@ function renderDbNetWorth(){
 // ---- 5B: Terry Smith Weighted Metrics ----
 function renderDbSmithMetrics(){
   const el=document.getElementById('db-smith-content');
-  if(!pfPositions.length){el.innerHTML='<div class="db-empty">Add positions to see weighted portfolio metrics.</div>';return}
+  if(!pfPositions.length){el.innerHTML='<div class="db-empty">Adj hozzá pozíciókat a portfólió metrikákhoz. <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';return}
 
   const base=getBaseCurrency();
   let totalValue=0;
@@ -5321,7 +5367,7 @@ function renderDbSmithMetrics(){
 function renderDbAlerts(){
   const el=document.getElementById('db-alerts-content');
   const countEl=document.getElementById('db-alerts-count');
-  if(!pfPositions.length){el.innerHTML='<div class="db-empty">Add positions to see alerts.</div>';countEl.textContent='';return}
+  if(!pfPositions.length){el.innerHTML='<div class="db-empty">Adj hozzá pozíciókat az áralertekhez. <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';countEl.textContent='';return}
 
   const ownedTickers=new Set(pfPositions.map(p=>p.ticker));
   const alerts=[];
@@ -5386,7 +5432,7 @@ function renderDbSellTriggers(){
     });
   });
   countEl.textContent=triggers.length?`(${triggers.length} across ${new Set(triggers.map(t=>t.ticker)).size} companies)`:'';
-  if(!ownedTickers.size){el.innerHTML='<div class="db-empty">Add positions to see sell triggers.</div>';return}
+  if(!ownedTickers.size){el.innerHTML='<div class="db-empty">Adj hozzá pozíciókat az eladási trigger-ekhez. <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';return}
   if(!triggers.length){el.innerHTML='<div style="color:var(--text2);font-size:12px;padding:8px 0">No sell triggers set. Add them in each company\'s Checklist → Buy/Sell Decision.</div>';return}
   el.innerHTML=triggers.map(t=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
     <span style="color:var(--accent);font-weight:600;font-size:12px;min-width:50px;cursor:pointer" onclick="showProfile('${escH(t.ticker)}')">${escH(t.ticker)}</span>
@@ -11756,7 +11802,7 @@ function renderRvFeed(type){
   let h=`<div class="rv-header"><h3>${type==='all'?'All Reviews':type.charAt(0).toUpperCase()+type.slice(1)+' Reviews'}</h3><button class="btn btn-primary" onclick="openReview('${type==='all'?'weekly':type}')">+ New Review</button></div>`;
 
   if(!entries.length){
-    h+=`<div class="rv-empty">No reviews yet. Start by adding your first ${type==='all'?'':type+' '}review.</div>`;
+    h+=`<div class="rv-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><path d="M4 4h16v18H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">Még nincs review-d</p><p style="color:var(--text2);margin-bottom:16px">Kezdd el az első ${type==='all'?'':type+' '}review-dat a befektetési döntéseid nyomon követéséhez.</p><button class="btn btn-primary" onclick="openReview('${type==='all'?'weekly':type}')">+ Új Review</button></div>`;
     panel.innerHTML=h;return;
   }
 
