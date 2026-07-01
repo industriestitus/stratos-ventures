@@ -30,41 +30,26 @@ Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and cod
 
 ## Medium Priority
 
-### P.3 — FMP `/profile` Missing Debt/Cash Data
-- **Location:** `web/index.html`
-- **Problem:** FMP `/profile` endpoint doesn't return `totalDebt`/`totalCash`. EV/EBIT calculations use 0 for debt/cash on FMP-only stocks.
-- **Impact:** Inaccurate EV/EBIT for stocks without Yahoo data.
-- **Fix:** Needs separate balance sheet API call, but FMP free tier rate limits make this expensive.
+### P.3 — FMP `/profile` Missing Debt/Cash Data (ACCEPTED)
+- **Status:** Won't fix — external API limitation. Yahoo Finance data provides debt/cash when available. FMP free tier doesn't expose balance sheet in `/profile`. Separate API call would consume too much quota.
 
-### P.5 — Worker: Yahoo Chart Missing Crumb Auth
-- **Location:** `web/cloudflare-worker/src/index.js`
-- **Problem:** `/quote/` uses crumb/cookie auth but `/chart/` doesn't. May break if Yahoo enforces auth on the chart endpoint.
-- **Impact:** Chart data could stop working without warning.
+### ~~P.5 — Worker: Yahoo Chart Missing Crumb Auth (FIXED 2026-07-01)~~
+- **Fix applied:** Chart endpoint now uses `getCrumb()` for cookie+crumb auth, with 401/403 retry (same pattern as `/quote/`).
 
-### P.8 — Service Worker `skipWaiting()` Unconditional
-- **Location:** `web/sw.js`
-- **Problem:** New Service Worker activates immediately via `skipWaiting()`, potentially disrupting active sessions.
-- **Fix:** Use `clients.claim()` strategy or prompt user before activating.
+### ~~P.8 — Service Worker `skipWaiting()` Unconditional (FIXED 2026-07-01)~~
+- **Fix applied:** Removed auto-`skipWaiting()`. New SW waits in `installed` state. User sees "New version available — reload now" toast with click-to-activate.
 
-### P.9 — `chInited` Chart Flag Never Resets
-- **Location:** `web/index.html`
-- **Problem:** Flag set on first chart render, never cleared on navigation. Causes stale chart data when navigating away and back.
-- **Fix:** Reset flag on route change.
+### ~~P.9 — `chInited` Chart Flag Never Resets (FIXED 2026-07-01)~~
+- **Fix applied:** Added `resetCharts()` function, called in `showSection()` when navigating away from companies.
 
-### P.11 — No File Size Limit on Import
-- **Location:** `web/index.html`
-- **Problem:** FileReader reads entire file into memory with no size check. Loading a large file freezes the browser.
-- **Fix:** Check `file.size` before reading (e.g., reject files > 10MB).
+### ~~P.11 — No File Size Limit on Import (FIXED 2026-07-01)~~
+- **Fix applied:** 10MB size check added to all 4 FileReader call sites (settings import, backup restore, CSV import, tracker import).
 
-### P.13 — No `fetchStockData` Deduplication
-- **Location:** `web/index.html`
-- **Problem:** Concurrent calls for the same ticker waste API quota. No in-flight request map.
-- **Fix:** Add dedup guard like other fetch functions already use.
+### ~~P.13 — No `fetchStockData` Deduplication (FIXED 2026-07-01)~~
+- **Fix applied:** In-flight promise map (`_fetchStockInFlight`). Concurrent calls for the same ticker share one fetch.
 
-### P.14 — `autoSave` Has No Debounce
-- **Location:** `web/index.html` — line ~11423
-- **Problem:** 100ms setTimeout on every input event causes overlapping saves when D1 sync is slow.
-- **Fix:** Use proper debounce (clearTimeout + setTimeout pattern).
+### ~~P.14 — `autoSave` Has No Debounce (FIXED 2026-07-01)~~
+- **Fix applied:** Proper clearTimeout+setTimeout debounce (300ms) replacing overlapping 100ms setTimeout calls.
 
 ---
 
@@ -138,7 +123,7 @@ Bundling too many tasks per session (e.g., 9 tasks, ~200 fields) compounds bugs 
 |----------|-------|------------|
 | ~~CRITICAL~~ | ~~1~~ | ~~P.4 — FIXED 2026-07-01~~ |
 | ~~HIGH~~ | ~~5~~ | ~~P.1/P.2/P.6/P.7/P.10 — ALL FIXED 2026-07-01~~ |
-| MEDIUM | 6 | Various — incremental fixes |
+| ~~MEDIUM~~ | ~~6/7~~ | ~~P.5/P.8/P.9/P.11/P.13/P.14 FIXED, P.3 accepted~~ |
 | LOW | 4 | Acceptable risk, cosmetic |
 | Deep Audit | 5 | Low risk, internal data only |
 | Dev Gotchas | 6 | Process discipline, not code fixes |

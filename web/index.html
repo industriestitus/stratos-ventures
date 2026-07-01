@@ -2951,7 +2951,7 @@ function downloadExport(){
   const b=new Blob([document.getElementById('export-data').value],{type:'application/json'}),a=document.createElement('a');
   a.href=URL.createObjectURL(b);a.download=(document.getElementById('stockName').value.trim()||'valuation')+'_export.json';a.click();URL.revokeObjectURL(a.href);
 }
-function loadImportFile(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{document.getElementById('import-data').value=ev.target.result};r.readAsText(f)}
+function loadImportFile(e){const f=e.target.files[0];if(!f)return;if(f.size>10*1024*1024){showToast('File too large (max 10MB)','error');return}const r=new FileReader();r.onload=ev=>{document.getElementById('import-data').value=ev.target.result};r.readAsText(f)}
 function _mergeArrayById(existing,incoming){
   const map=new Map(existing.map(x=>[x.id,x]));
   incoming.forEach(x=>{map.set(x.id,x)});
@@ -3032,6 +3032,7 @@ function doRestore(){
   input.type='file';input.accept='.json';
   input.onchange=e=>{
     const f=e.target.files[0];if(!f)return;
+    if(f.size>10*1024*1024){showToast('File too large (max 10MB)','error');return}
     const r=new FileReader();
     r.onload=async ev=>{
       try{
@@ -3420,6 +3421,7 @@ function showSection(name){
   }
   const currentSection=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
   if(currentSection)_scrollPositions[currentSection]=window.scrollY;
+  if(currentSection==='companies'&&name!=='companies')resetCharts();
   _previousSection=name;
   SECTIONS.forEach(s=>{
     const el=document.getElementById('section-'+s);
@@ -4574,6 +4576,7 @@ function openCsvImportModal(){
 function handleCsvFile(event){
   const file=event.target.files[0];
   if(!file)return;
+  if(file.size>10*1024*1024){showToast('File too large (max 10MB)','error');return}
   const reader=new FileReader();
   reader.onload=function(e){
     let text=e.target.result;
@@ -8800,7 +8803,14 @@ async function _fetchStockDataRaw(ticker){
   return stock;
 }
 
+const _fetchStockInFlight=new Map();
 async function fetchStockData(ticker){
+  if(_fetchStockInFlight.has(ticker))return _fetchStockInFlight.get(ticker);
+  const p=_fetchStockDataInner(ticker);
+  _fetchStockInFlight.set(ticker,p);
+  try{return await p}finally{_fetchStockInFlight.delete(ticker)}
+}
+async function _fetchStockDataInner(ticker){
   const stock=tStocks[ticker]||{ticker,name:TNAMES[ticker]||ticker};
   if(ticker==='ETH'){stock.date=new Date().toISOString().slice(0,10).replace(/-/g,'.');tStocks[ticker]=stock;return stock}
 
@@ -9817,6 +9827,7 @@ function exportTrackerData(){
 
 function importTrackerFile(e){
   const f=e.target.files[0];if(!f)return;
+  if(f.size>10*1024*1024){showToast('File too large (max 10MB)','error');return}
   const r=new FileReader();
   r.onload=ev=>{
     try{
@@ -9842,6 +9853,7 @@ let chMiniCharts={};
 const CH_COLORS=['#6c5ce7','#00b894','#e17055','#74b9ff','#fdcb6e','#a29bfe','#55efc4','#fab1a0','#81ecec','#ffeaa7','#ff7675','#fd79a8','#00cec9','#e84393','#0984e3','#d63031','#e1d44e','#b8e994','#6ab04c','#4834d4','#30336b','#f9ca24','#7ed6df','#c7ecee','#badc58','#f0932b','#eb4d4b','#686de0'];
 
 let chInited=false;
+function resetCharts(){chInited=false;chMiniCharts={}}
 function initCharts(){
   if(!chInited){chInited=true;renderChartChips();renderAllCharts()}
   else{renderChartChips();renderMainChart()}
@@ -11930,7 +11942,8 @@ function autoSave(){
   }
 }
 
-document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
+let _autoSaveTimer=null;
+document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select')){clearTimeout(_autoSaveTimer);_autoSaveTimer=setTimeout(autoSave,300)}});
 window.addEventListener('beforeunload',()=>{
   autoSave();
   if(d1Mode){API.flushAll(true)}
@@ -12663,7 +12676,10 @@ window.addEventListener('load',()=>{
       reg.addEventListener('updatefound',()=>{
         const nw=reg.installing;
         if(nw)nw.addEventListener('statechange',()=>{
-          if(nw.state==='activated'&&navigator.serviceWorker.controller)showToast('App updated — reload for latest version','info',8000);
+          if(nw.state==='installed'&&navigator.serviceWorker.controller){
+            window._waitingSW=nw;
+            showToast('New version available — <a onclick="if(window._waitingSW)window._waitingSW.postMessage(\'skipWaiting\');location.reload()" style="color:var(--accent);cursor:pointer;text-decoration:underline">reload now</a>','info',15000);
+          }
         });
       });
     }).catch(e=>console.warn('SW registration failed:',e));

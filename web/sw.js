@@ -21,8 +21,11 @@ self.addEventListener('install', e => {
           .then(results => {
             results.forEach((r, i) => { if (r.status === 'rejected') console.warn('CDN cache failed:', CDN_ASSETS[i], r.reason) });
           })))
-      .then(() => self.skipWaiting())
   );
+});
+
+self.addEventListener('message', e => {
+  if (e.data === 'skipWaiting') self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {

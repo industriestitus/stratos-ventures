@@ -32,8 +32,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 22 | Performance | S6 | 2026-07-01 | 3 | 0 |
 | 23 | Security & Code Quality | S7 | 2026-07-01 | 2 | 0 |
 | 24 | KNOWN-ISSUES Bugfix Sweep | `bde6c93` | 2026-07-01 | 6 | 0 |
+| 25 | KNOWN-ISSUES Medium Sweep | pending | 2026-07-01 | 6 | 1 |
 
-**Total: 207 fixed, 21 potential (unfixed)** — Categories 19-24 ALL COMPLETE (0 unfixed)
+**Total: 213 fixed, 22 potential (unfixed)** — P.3 accepted as API limitation
 
 ---
 
@@ -653,6 +654,27 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 | 6 | HIGH | P.10: crypto.subtle crashes on non-HTTPS | `isSecureContext` guard in `deriveKey()` |
 
 ### Unfixed (0)
+
+---
+
+## Category 25 — KNOWN-ISSUES Medium Sweep (pending commit)
+
+### Fixed (6)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | P.5: Yahoo Chart endpoint missing crumb auth | Added getCrumb() + cookie auth + 401 retry to /chart/ |
+| 2 | MEDIUM | P.8: Service Worker skipWaiting() unconditional | Message-based activation, user sees "reload now" toast |
+| 3 | MEDIUM | P.9: chInited chart flag never resets on navigation | resetCharts() called in showSection() on leave |
+| 4 | MEDIUM | P.11: No file size limit on FileReader imports | 10MB guard on all 4 FileReader call sites |
+| 5 | MEDIUM | P.13: fetchStockData has no deduplication | In-flight promise map shares concurrent fetches |
+| 6 | MEDIUM | P.14: autoSave has no debounce | clearTimeout+setTimeout 300ms debounce |
+
+### Accepted (1)
+
+| # | Severity | Bug | Reason |
+|---|----------|-----|--------|
+| 1 | MEDIUM | P.3: FMP /profile missing debt/cash data | External API limitation, Yahoo provides data when available |
 
 ---
 

@@ -875,8 +875,16 @@ export default {
       const range = url.searchParams.get('range') || '1y';
       const interval = url.searchParams.get('interval') || '1wk';
       try {
-        const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}`;
-        const resp = await fetch(chartUrl, { headers: { 'User-Agent': UA } });
+        const { crumb, cookie } = await getCrumb();
+        const chartUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}&crumb=${encodeURIComponent(crumb)}`;
+        const resp = await fetch(chartUrl, { headers: { 'Cookie': cookie, 'User-Agent': UA } });
+        if (resp.status === 401 || resp.status === 403) {
+          cachedCrumb = null;
+          const retry = await getCrumb();
+          const chartUrl2 = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}&crumb=${encodeURIComponent(retry.crumb)}`;
+          const resp2 = await fetch(chartUrl2, { headers: { 'Cookie': retry.cookie, 'User-Agent': UA } });
+          return jsonResp(await resp2.json(), resp2.status, allowedOrigin);
+        }
         return jsonResp(await resp.json(), resp.status, allowedOrigin);
       } catch (e) {
         console.error('Chart error:', symbol, e.message);
