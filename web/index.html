@@ -521,7 +521,7 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .bulk-bar .bulk-close{background:none;border:none;color:var(--text2);font-size:16px;padding:4px 8px}
 .pf-pos-table .bulk-cb,.pf-tx-table .bulk-cb{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;margin:0}
 .pf-pos-table th:first-child,.pf-tx-table th:first-child{width:36px}
-.pf-pos-table tr.bulk-selected,.pf-tx-table tr.bulk-selected{background:rgba(108,92,231,.1)}
+.pf-pos-table tr.bulk-selected,.pf-tx-table tr.bulk-selected,.research-entry.bulk-selected,.rv-entry.bulk-selected,.saved-chip.bulk-selected{background:rgba(108,92,231,.1)}
 .pf-summary-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
 .pf-summary-card-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text2)}
 .pf-summary-card-value{font-size:18px;font-weight:700}
@@ -3250,13 +3250,19 @@ function loadStock(name){const saved=_getSavedStocks();if(saved[name]){loadData(
 function deleteStock(name,e){e.stopPropagation();const s=_getSavedStocks();const backup=s[name]?JSON.parse(JSON.stringify(s[name])):null;undoableDelete(`"${name}" törölve`,()=>{const s2=_getSavedStocks();delete s2[name];_putSavedStocks(s2);renderSavedStocks()},()=>{if(backup){const s2=_getSavedStocks();s2[name]=backup;_putSavedStocks(s2);renderSavedStocks()}})}
 function renderSavedStocks(){
   const c=document.getElementById('saved-stocks-list'),s=_getSavedStocks();
-  if(!Object.keys(s).length){c.innerHTML='<p style="color:var(--text2);font-size:12px">No saved stocks yet.</p>';return}
-  c.innerHTML=Object.keys(s).map(n=>{const d=s[n],dt=d.savedAt?new Date(d.savedAt).toLocaleDateString():'';const en=escH(n);
-    return`<div class="saved-chip" data-stock="${en}"><strong>${en}</strong> <span style="color:var(--text2);font-size:10px">${escH(dt)}</span><span class="delete-chip" data-del="${en}">x</span></div>`}).join('');
+  const keys=Object.keys(s);
+  if(!keys.length){c.innerHTML='<p style="color:var(--text2);font-size:12px">No saved stocks yet.</p>';return}
+  const allStSel=_bulkStockNames.size&&keys.every(n=>_bulkStockNames.has(n));
+  let html=`<div style="margin-bottom:8px;display:flex;align-items:center;gap:8px"><input type="checkbox" class="bulk-cb" onchange="_toggleAllStocks(this.checked)"${allStSel?' checked':''}><span style="font-size:12px;color:var(--text2)">Select all</span></div>`;
+  html+=keys.map(n=>{const d=s[n],dt=d.savedAt?new Date(d.savedAt).toLocaleDateString():'';const en=escH(n);const sel=_bulkStockNames.has(n);
+    return`<div class="saved-chip${sel?' bulk-selected':''}" data-stock="${en}"><input type="checkbox" class="bulk-cb" data-bulk-stock="${en}"${sel?' checked':''} style="margin-right:4px"><strong>${en}</strong> <span style="color:var(--text2);font-size:10px">${escH(dt)}</span><span class="delete-chip" data-del="${en}">x</span></div>`}).join('');
+  c.innerHTML=html;
   c.querySelectorAll('.saved-chip').forEach(el=>{
-    el.addEventListener('click',()=>loadStock(el.dataset.stock));
+    el.addEventListener('click',e=>{if(e.target.classList.contains('bulk-cb'))return;loadStock(el.dataset.stock)});
     const del=el.querySelector('.delete-chip');
     if(del)del.addEventListener('click',e=>{e.stopPropagation();deleteStock(del.dataset.del,e)});
+    const cb=el.querySelector('.bulk-cb');
+    if(cb)cb.addEventListener('change',e=>{e.stopPropagation();_toggleBulkStock(el.dataset.stock,cb.checked)});
   });
 }
 function showExportModal(){
@@ -3765,6 +3771,9 @@ function showSection(name){
   if(currentSection)_scrollPositions[currentSection]=window.scrollY;
   if(currentSection==='companies'&&name!=='companies')resetCharts();
   if(currentSection==='portfolio'&&name!=='portfolio'){_bulkPosIds.clear();_bulkTxIds.clear();_updateBulkBar()}
+  if(currentSection==='research'&&name!=='research'){_bulkNoteKeys.clear();_updateBulkBar()}
+  if(currentSection==='reviews'&&name!=='reviews'){_bulkRvIds.clear();_updateBulkBar()}
+  if(currentSection==='companies'&&name!=='companies'){_bulkStockNames.clear();_updateBulkBar()}
   _previousSection=name;
   SECTIONS.forEach(s=>{
     const el=document.getElementById('section-'+s);
@@ -4000,32 +4009,31 @@ function getAccountName(id){
 
 var _bulkPosIds=new Set();
 var _bulkTxIds=new Set();
+var _bulkNoteKeys=new Set();
+var _bulkRvIds=new Set();
+var _bulkStockNames=new Set();
 
 function _updateBulkBar(){
-  const posCount=_bulkPosIds.size;
-  const txCount=_bulkTxIds.size;
+  const modes=[
+    {set:_bulkPosIds,label:'pozíció',del:'bulkDeletePositions()',exp:'bulkExportPositions()',clear:'_bulkPosIds.clear();_updateBulkBar();renderPositions()'},
+    {set:_bulkTxIds,label:'tranzakció',del:'bulkDeleteTransactions()',exp:'bulkExportTransactions()',clear:'_bulkTxIds.clear();_updateBulkBar();renderTransactions()'},
+    {set:_bulkNoteKeys,label:'jegyzet',del:'bulkDeleteNotes()',exp:null,clear:'_bulkNoteKeys.clear();_updateBulkBar();renderResearch()'},
+    {set:_bulkRvIds,label:'review',del:'bulkDeleteReviews()',exp:null,clear:'_bulkRvIds.clear();_updateBulkBar();renderRvFeed(document.querySelector(".rv-tabs .tab.active")?.dataset.rvtab||"all")'},
+    {set:_bulkStockNames,label:'részvény',del:'bulkDeleteStocks()',exp:null,clear:'_bulkStockNames.clear();_updateBulkBar();renderSavedStocks()'}
+  ];
+  const active=modes.find(m=>m.set.size>0);
   let bar=document.getElementById('bulk-action-bar');
-  if(!posCount&&!txCount){
-    if(bar)bar.remove();
-    return;
-  }
-  if(!bar){
-    bar=document.createElement('div');
-    bar.id='bulk-action-bar';
-    bar.className='bulk-bar';
-    document.body.appendChild(bar);
-  }
-  const isPosMode=posCount>0;
-  const count=isPosMode?posCount:txCount;
-  const label=isPosMode?'pozíció':'tranzakció';
-  bar.innerHTML=`<span class="bulk-count">${count} ${label}</span>
-    <button class="bulk-del" onclick="${isPosMode?'bulkDeletePositions()':'bulkDeleteTransactions()'}">Törlés</button>
-    <button onclick="${isPosMode?'bulkExportPositions()':'bulkExportTransactions()'}">Export CSV</button>
-    <button class="bulk-close" onclick="${isPosMode?'_bulkPosIds.clear();_updateBulkBar();renderPositions()':'_bulkTxIds.clear();_updateBulkBar();renderTransactions()'}" title="Mégse">✕</button>`;
+  if(!active){if(bar)bar.remove();return}
+  if(!bar){bar=document.createElement('div');bar.id='bulk-action-bar';bar.className='bulk-bar';document.body.appendChild(bar)}
+  const count=active.set.size;
+  bar.innerHTML=`<span class="bulk-count">${count} ${active.label}</span>
+    <button class="bulk-del" onclick="${active.del}">Törlés</button>
+    ${active.exp?`<button onclick="${active.exp}">Export CSV</button>`:''}
+    <button class="bulk-close" onclick="${active.clear}" title="Mégse">✕</button>`;
 }
 
 function _toggleBulkPos(id,checked){
-  if(checked)_bulkPosIds.add(id);else _bulkPosIds.delete(id);
+  if(checked){_clearOtherBulk(_bulkPosIds);_bulkPosIds.add(id)}else _bulkPosIds.delete(id);
   _updateBulkBar();
   const row=document.querySelector(`tr[data-pos-id="${id}"]`);
   if(row)row.classList.toggle('bulk-selected',checked);
@@ -4043,7 +4051,7 @@ function _toggleAllPos(checked){
 }
 
 function _toggleBulkTx(id,checked){
-  if(checked)_bulkTxIds.add(id);else _bulkTxIds.delete(id);
+  if(checked){_clearOtherBulk(_bulkTxIds);_bulkTxIds.add(id)}else _bulkTxIds.delete(id);
   _updateBulkBar();
   const row=document.querySelector(`tr[data-tx-id="${id}"]`);
   if(row)row.classList.toggle('bulk-selected',checked);
@@ -4132,6 +4140,74 @@ function bulkExportTransactions(){
   a.click();
   URL.revokeObjectURL(a.href);
   showToast(`${list.length} tranzakció exportálva`);
+}
+
+function _clearOtherBulk(keep){[_bulkPosIds,_bulkTxIds,_bulkNoteKeys,_bulkRvIds,_bulkStockNames].forEach(s=>{if(s!==keep)s.clear()})}
+function _toggleBulkNote(key,checked){if(checked){_clearOtherBulk(_bulkNoteKeys);_bulkNoteKeys.add(key)}else _bulkNoteKeys.delete(key);_updateBulkBar()}
+function _toggleAllNotes(checked){
+  const tab=document.querySelector('.research-tab.active');
+  const type=tab?tab.dataset.rtab:'all';
+  getAllResearchEntries(type).forEach(e=>{const k=e._type+':'+e.id;if(checked)_bulkNoteKeys.add(k);else _bulkNoteKeys.delete(k)});
+  _updateBulkBar();renderResearchFeed(type);
+}
+function bulkDeleteNotes(){
+  const keys=[..._bulkNoteKeys];if(!keys.length)return;
+  const snapshots=[];
+  keys.forEach(k=>{const[t,idStr]=k.split(':');const id=parseInt(idStr,10);const list=researchNotes[t];if(!list)return;const idx=list.findIndex(e=>e.id===id);if(idx!==-1)snapshots.push({type:t,idx,entry:JSON.parse(JSON.stringify(list[idx]))})});
+  undoableDelete(`${keys.length} jegyzet törölve`,()=>{
+    const byType={};
+    keys.forEach(k=>{const[t,idStr]=k.split(':');const id=parseInt(idStr,10);if(!byType[t])byType[t]=[];const list=researchNotes[t];if(list){const idx=list.findIndex(e=>e.id===id);if(idx!==-1)byType[t].push(idx)}});
+    Object.keys(byType).forEach(t=>{byType[t].sort((a,b)=>b-a).forEach(idx=>researchNotes[t].splice(idx,1))});
+    _bulkNoteKeys.clear();saveResearchNotes();renderResearch();_updateBulkBar();
+  },()=>{
+    snapshots.sort((a,b)=>a.idx-b.idx).forEach(s=>{researchNotes[s.type].splice(s.idx,0,s.entry)});
+    saveResearchNotes();renderResearch();
+  },()=>{
+    if(d1Mode){snapshots.forEach(s=>{if(s.entry._d1Id)API.del('notes/'+s.entry._d1Id).catch(e=>console.error('D1 del note:',e))})}
+  });
+}
+
+function _toggleBulkRv(id,checked){if(checked){_clearOtherBulk(_bulkRvIds);_bulkRvIds.add(id)}else _bulkRvIds.delete(id);_updateBulkBar()}
+function _toggleAllRv(checked){
+  const tab=document.querySelector('.rv-tabs .tab.active');
+  const type=tab?tab.dataset.rvtab:'all';
+  let entries=rvData.entries.slice();
+  if(type!=='all')entries=entries.filter(e=>e.type===type);
+  entries.forEach(e=>{if(checked)_bulkRvIds.add(e.id);else _bulkRvIds.delete(e.id)});
+  _updateBulkBar();renderRvFeed(type);
+}
+function bulkDeleteReviews(){
+  const ids=[..._bulkRvIds];if(!ids.length)return;
+  const snapshots=ids.map(id=>{const e=rvData.entries.find(x=>x.id===id);return e?{idx:rvData.entries.indexOf(e),entry:JSON.parse(JSON.stringify(e))}:null}).filter(Boolean);
+  undoableDelete(`${ids.length} review törölve`,()=>{
+    rvData.entries=rvData.entries.filter(e=>!_bulkRvIds.has(e.id));
+    _bulkRvIds.clear();saveReviews();const at=document.querySelector('.rv-tabs .tab.active');renderRvFeed(at?.dataset.rvtab||'all');renderDbReviewsDue();_updateBulkBar();
+  },()=>{
+    snapshots.sort((a,b)=>a.idx-b.idx).forEach(s=>{rvData.entries.splice(s.idx,0,s.entry)});
+    saveReviews();const at=document.querySelector('.rv-tabs .tab.active');renderRvFeed(at?.dataset.rvtab||'all');renderDbReviewsDue();
+  },()=>{
+    if(d1Mode){ids.forEach(id=>API.del('reviews/'+id).catch(e=>console.error('D1 del review:',e)))}
+  });
+}
+
+function _toggleBulkStock(name,checked){if(checked){_clearOtherBulk(_bulkStockNames);_bulkStockNames.add(name)}else _bulkStockNames.delete(name);_updateBulkBar()}
+function _toggleAllStocks(checked){
+  const s=_getSavedStocks();
+  Object.keys(s).forEach(n=>{if(checked)_bulkStockNames.add(n);else _bulkStockNames.delete(n)});
+  _updateBulkBar();renderSavedStocks();
+}
+function bulkDeleteStocks(){
+  const names=[..._bulkStockNames];if(!names.length)return;
+  const s=_getSavedStocks();const backups={};
+  names.forEach(n=>{if(s[n])backups[n]=JSON.parse(JSON.stringify(s[n]))});
+  undoableDelete(`${names.length} részvény törölve`,()=>{
+    const s2=_getSavedStocks();names.forEach(n=>delete s2[n]);_putSavedStocks(s2);
+    _bulkStockNames.clear();renderSavedStocks();_updateBulkBar();
+  },()=>{
+    const s2=_getSavedStocks();Object.assign(s2,backups);_putSavedStocks(s2);renderSavedStocks();
+  },()=>{
+    if(d1Mode){Object.values(backups).forEach(v=>{if(v._d1ValId)API.del('valuations/'+v._d1ValId).catch(e=>console.error('D1 del valuation:',e))})}
+  });
 }
 
 function populateAccountFilter(){
@@ -6056,6 +6132,7 @@ function recalcResearchNextId(){
 }
 
 function switchResearchTab(name){
+  _bulkNoteKeys.clear();_updateBulkBar();
   document.querySelectorAll('.research-tab').forEach(b=>b.classList.toggle('active',b.dataset.rtab===name));
   document.querySelectorAll('.research-panel').forEach(p=>p.classList.remove('active'));
   const p=document.getElementById('research-panel-'+name);
@@ -6093,7 +6170,9 @@ function renderResearchFeed(type){
   pinned.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   unpinned.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const sorted=[...pinned,...unpinned];
-  panel.innerHTML=sorted.map(e=>renderResearchEntry(e)).join('');
+  const allSel=_bulkNoteKeys.size&&sorted.every(e=>_bulkNoteKeys.has(e._type+':'+e.id));
+  const selAllCb=`<div style="margin-bottom:8px;display:flex;align-items:center;gap:8px"><input type="checkbox" class="bulk-cb" onchange="_toggleAllNotes(this.checked)"${allSel?' checked':''}><span style="font-size:12px;color:var(--text2)">Select all</span></div>`;
+  panel.innerHTML=selAllCb+sorted.map(e=>renderResearchEntry(e)).join('');
 }
 
 function renderResearchEntry(e){
@@ -6121,8 +6200,11 @@ function renderResearchEntry(e){
   if(t==='market'&&e.title)body=`<div style="font-size:14px;font-weight:600;margin-bottom:6px">${escH(e.title)}</div>`+body;
   let tags='';
   if(t==='market'&&e.tags&&e.tags.length)tags=`<div class="research-entry-tags">${e.tags.map(tg=>`<span class="research-entry-tag">${escH(tg)}</span>`).join('')}</div>`;
-  return `<div class="research-entry ${pinnedClass}">
+  const bulkKey=t+':'+e.id;
+  const bulkSel=_bulkNoteKeys.has(bulkKey);
+  return `<div class="research-entry ${pinnedClass}${bulkSel?' bulk-selected':''}">
     <div class="research-entry-header">
+      <input type="checkbox" class="bulk-cb" onchange="_toggleBulkNote('${escH(bulkKey)}',this.checked)"${bulkSel?' checked':''} onclick="event.stopPropagation()">
       <span class="research-entry-date">${dateStr}</span>
       ${typeBadge}${tickerBadge}${actionBadge}
       <div class="research-entry-actions">
@@ -11934,6 +12016,7 @@ function saveReviews(){
 function rvNextId(){return rvData._nextId++}
 
 function switchRvTab(name){
+  _bulkRvIds.clear();_updateBulkBar();
   document.querySelectorAll('.rv-panel').forEach(p=>p.classList.remove('active'));
   const panel=document.getElementById('rv-panel-'+name);
   if(panel)panel.classList.add('active');
@@ -11957,13 +12040,18 @@ function renderRvFeed(type){
     panel.innerHTML=h;return;
   }
 
+  const allRvSel=_bulkRvIds.size&&entries.every(e=>_bulkRvIds.has(e.id));
+  h+=`<div style="margin-bottom:8px;display:flex;align-items:center;gap:8px"><input type="checkbox" class="bulk-cb" onchange="_toggleAllRv(this.checked)"${allRvSel?' checked':''}><span style="font-size:12px;color:var(--text2)">Select all</span></div>`;
+
   entries.forEach(e=>{
     const typeLabel=e.type||'weekly';
     const preview=e.summary?escH(e.summary).substring(0,120)+(e.summary.length>120?'…':''):'';
     const answeredCount=Object.values(e.answers||{}).filter(v=>v&&v.trim()).length;
     const totalCount=(RV_QUESTIONS[e.type]||[]).length;
-    h+=`<div class="rv-entry" onclick="openReview('${typeLabel}',${e.id})">
+    const rvSel=_bulkRvIds.has(e.id);
+    h+=`<div class="rv-entry${rvSel?' bulk-selected':''}" onclick="openReview('${typeLabel}',${e.id})">
       <div class="rv-entry-header">
+        <input type="checkbox" class="bulk-cb" onchange="event.stopPropagation();_toggleBulkRv(${e.id},this.checked)"${rvSel?' checked':''} onclick="event.stopPropagation()">
         <span class="rv-entry-type rv-entry-type--${typeLabel}">${typeLabel}</span>
         <span class="rv-entry-date">${formatNoteDate(e.date)}</span>
         ${e.companyTicker?`<span class="rv-entry-ticker" onclick="event.stopPropagation();showProfile('${escH(e.companyTicker)}')" style="cursor:pointer" title="Open ${escH(e.companyTicker)} profile">${escH(e.companyTicker)}</span>`:''}
