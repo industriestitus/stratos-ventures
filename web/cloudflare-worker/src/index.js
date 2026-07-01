@@ -127,7 +127,7 @@ async function fetchBatch(symbols, modules, allowedOrigin) {
 // ====== D1 CRUD API ======
 
 const TABLES = {
-  companies:             { cols: ['symbol','name','sector','currency','exchange','company_type','pipeline_status','thesis','sort_order'], hasUpdatedAt: true },
+  companies:             { cols: ['symbol','name','sector','currency','exchange','company_type','pipeline_status','thesis','sort_order','archived_at'], hasUpdatedAt: true },
   company_todos:         { cols: ['company_id','title','due_date','is_done','sort_order'], hasUpdatedAt: true },
   earnings_timeline:     { cols: ['company_id','year','quarter','is_reported','is_reviewed','report_date'], hasUpdatedAt: true },
   filing_tracking:       { cols: ['company_id','filing_type','fiscal_year','fiscal_quarter','is_read','filed_date','notes'], hasUpdatedAt: true },

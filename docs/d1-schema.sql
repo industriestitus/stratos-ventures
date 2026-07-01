@@ -30,9 +30,10 @@ CREATE TABLE companies (
     currency       TEXT NOT NULL DEFAULT 'USD',
     exchange       TEXT NOT NULL DEFAULT '',
     company_type   TEXT NOT NULL DEFAULT '' CHECK (company_type IN ('', 'slow', 'medium', 'fast', 'cyclical', 'turnaround', 'asset')),
-    pipeline_status TEXT NOT NULL DEFAULT 'watchlist' CHECK (pipeline_status IN ('watchlist', 'under_review', 'buy_target', 'owned', 'sold')),
+    pipeline_status TEXT NOT NULL DEFAULT 'watchlist' CHECK (pipeline_status IN ('watchlist', 'under_review', 'buy_target', 'owned', 'sold', 'archived')),
     thesis         TEXT NOT NULL DEFAULT '',
     sort_order     INTEGER NOT NULL DEFAULT 0,
+    archived_at    TEXT DEFAULT NULL,
     created_at     TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );

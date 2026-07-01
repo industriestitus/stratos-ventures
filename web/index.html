@@ -229,6 +229,11 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .cp-pipe-step:hover{background:var(--surface2);color:var(--text)}
 .cp-pipe-step.pipe-active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .cp-pipe-step.pipe-active+.cp-pipe-step{border-left-color:var(--accent)}
+.cp-pipe-step.pipe-archived{border-radius:6px!important;margin-left:8px;border:1px solid var(--border)!important;opacity:.7}
+.cp-pipe-step.pipe-archived.pipe-active{background:var(--text2);color:var(--bg);border-color:var(--text2);opacity:1}
+.st-archived-row{opacity:.5}
+.st-archive-toggle{font-size:12px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer}
+.st-archive-toggle.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
 /* Company type tag */
 .cp-type-wrap{display:flex;gap:6px;flex-wrap:wrap}
 .cp-type-tag{padding:4px 10px;font-size:11px;font-weight:600;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .2s}
@@ -1364,6 +1369,7 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
   <input type="text" id="st-filter" placeholder="Filter..." style="width:160px" oninput="renderTracker()">
   <button onclick="toggleScreener()" id="screener-toggle" title="Advanced filters">Screener</button>
   <button onclick="toggleCompareMode()" id="compare-btn" title="Compare companies side-by-side">Compare</button>
+  <button onclick="toggleShowArchived()" id="show-archived-btn" class="st-archive-toggle" title="Show/hide archived companies"></button>
   <button onclick="exportTrackerData()">Export</button>
   <label class="st-controls button" style="padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px">Import<input type="file" accept=".json" style="display:none" onchange="importTrackerFile(event)"></label>
 </div>
@@ -2338,6 +2344,19 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
   <div class="modal-actions">
     <button class="btn btn-secondary" onclick="closeModals()">Cancel</button>
     <button class="btn btn-primary" onclick="saveReview()">Save</button>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="archive-modal">
+<div class="modal" style="max-width:420px">
+  <h3 id="archive-modal-title">Remove Company</h3>
+  <p id="archive-modal-text" style="color:var(--text2);font-size:14px;line-height:1.6;margin:12px 0 20px"></p>
+  <input type="hidden" id="archive-modal-ticker">
+  <div class="modal-actions" style="flex-direction:column;gap:8px">
+    <button class="btn btn-primary" onclick="doArchiveStock()" style="width:100%">Archive — keep all data</button>
+    <button class="btn btn-secondary" onclick="doDeleteStock()" style="width:100%;color:var(--red);border-color:var(--red)">Delete permanently</button>
+    <button class="btn btn-secondary" onclick="closeModals()" style="width:100%">Cancel</button>
   </div>
 </div>
 </div>
@@ -6306,20 +6325,28 @@ function closeProfile(){
 }
 
 // Pipeline & Company Type
-const PIPE_STAGES=['Watchlist','Under review','Buy target','Owned'];
+const PIPE_STAGES=['Watchlist','Under review','Buy target','Owned','Archived'];
 const COMPANY_TYPES=['slow','medium','fast','cyclical','turnaround','asset'];
 
 function renderPipeline(ticker){
   const s=tStocks[ticker];if(!s)return;
   const cur=s.pipeline||'';
   const el=document.getElementById('cp-pipeline');
-  el.innerHTML=PIPE_STAGES.map(st=>`<button class="cp-pipe-step${cur===st?' pipe-active':''}" onclick="setPipeline('${escH(ticker)}','${st}')">${escH(st)}</button>`).join('');
+  el.innerHTML=PIPE_STAGES.map(st=>{
+    const active=cur===st?' pipe-active':'';
+    const arch=st==='Archived'?' pipe-archived':'';
+    return`<button class="cp-pipe-step${active}${arch}" onclick="setPipeline('${escH(ticker)}','${st}')">${escH(st)}</button>`;
+  }).join('');
 }
 function setPipeline(ticker,stage){
   const s=tStocks[ticker];if(!s)return;
-  s.pipeline=s.pipeline===stage?'':stage;
+  const newVal=s.pipeline===stage?'':stage;
+  s.pipeline=newVal;
+  if(newVal==='Archived')s.archivedAt=new Date().toISOString().slice(0,10);
+  else delete s.archivedAt;
   saveTrackerStocks();
   renderPipeline(ticker);
+  renderTracker();
 }
 function renderCompanyType(ticker){
   const s=tStocks[ticker];if(!s)return;
@@ -7733,7 +7760,8 @@ function saveTrackerStocks(){
     const companies=Object.entries(snapshot).map(([ticker,s])=>({
       symbol:ticker,name:s.name||ticker,sector:s.sector||'',currency:s.currency||'USD',
       exchange:s.exchange||'',company_type:s.companyType||'',
-      pipeline_status:s.pipeline||s.pipelineStatus||'watchlist',thesis:s.thesis||'',sort_order:s.sortOrder||0
+      pipeline_status:(s.pipeline||s.pipelineStatus||'watchlist').toLowerCase().replace(/ /g,'_'),thesis:s.thesis||'',sort_order:s.sortOrder||0,
+      archived_at:s.archivedAt||null
     }));
     await API.postBatch('companies/batch',companies);
     // Refresh company IDs for any new companies
@@ -7784,6 +7812,7 @@ function _d1CompanyToTStock(c){
     exchange:c.exchange||'',companyType:c.company_type||'',pipeline:c.pipeline_status||'watchlist',
     pipelineStatus:c.pipeline_status||'watchlist',thesis:c.thesis||'',sortOrder:c.sort_order||0,
     _d1Id:c.id,todos:[],earnings:{},filings:{},overriddenData:{},_origData:{},notes:{thesis:c.thesis||'',research:'',earnings:{}},checklist:{sections:{}}};
+  if(c.archived_at)s.archivedAt=c.archived_at;
   if(c.todos)c.todos.forEach(t=>{s.todos.push({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order})});
   if(c.earnings)c.earnings.forEach(e=>{
     s.earnings[e.year+'Q'+e.quarter]={reported:!!e.is_reported,reviewed:!!e.is_reviewed,reportDate:e.report_date};
@@ -8501,7 +8530,7 @@ async function fetchStockData(ticker){
 
   const data=await cachedFetch(ticker,'stock_data',()=>_fetchStockDataRaw(ticker));
   if(data){
-    const preserve=['overriddenData','_d1Id','notes','earnings','filings','pipeline','companyType','todos','valuations','checklist','thesis','sortOrder','dcfMode','evaWacc','sellTriggers','priceAlerts','learningLog','convictionHistory','followSources','earningsCalendar','pipelineStatus','dateAdded','sbc','roic'];
+    const preserve=['overriddenData','_d1Id','notes','earnings','filings','pipeline','companyType','todos','valuations','checklist','thesis','sortOrder','dcfMode','evaWacc','sellTriggers','priceAlerts','learningLog','convictionHistory','followSources','earningsCalendar','pipelineStatus','dateAdded','sbc','roic','archivedAt'];
     Object.keys(data).forEach(k=>{if(!preserve.includes(k))stock[k]=data[k]});
   }
   if(stock.price!=null&&(stock.price<0||!isFinite(stock.price))){console.warn('Invalid price for',ticker,stock.price);stock.price=null}
@@ -8532,7 +8561,30 @@ async function addTrackerStock(){
 }
 
 function removeTrackerStock(ticker){
-  if(!confirm('Remove '+escH(ticker)+'?'))return;
+  const s=tStocks[ticker];if(!s)return;
+  const name=s.name||ticker;
+  document.getElementById('archive-modal-ticker').value=ticker;
+  document.getElementById('archive-modal-title').textContent='Remove '+ticker;
+  document.getElementById('archive-modal-text').innerHTML=
+    '<strong>'+escH(name)+'</strong><br><br>'+
+    '<strong>Archive</strong> hides '+escH(ticker)+' from the main list but keeps all data (notes, reviews, positions, transactions).<br><br>'+
+    '<strong>Delete permanently</strong> removes everything irreversibly.';
+  _openModal(document.getElementById('archive-modal'));
+}
+function doArchiveStock(){
+  const ticker=document.getElementById('archive-modal-ticker').value;
+  const s=tStocks[ticker];if(!s)return;
+  s.pipeline='Archived';
+  s.archivedAt=new Date().toISOString().slice(0,10);
+  saveTrackerStocks();
+  closeModals();
+  renderTracker();
+  if(typeof profileTicker!=='undefined'&&profileTicker===ticker)closeProfile();
+  showToast(ticker+' archived','success');
+}
+function doDeleteStock(){
+  const ticker=document.getElementById('archive-modal-ticker').value;
+  if(!confirm('Permanently delete '+ticker+' and ALL associated data? This cannot be undone.'))return;
   const d1Id=tStocks[ticker]&&tStocks[ticker]._d1Id;
   if(d1Mode&&d1Id)API.del('companies/'+d1Id).catch(e=>console.error('D1 del company:',e));
   delete tStocks[ticker];
@@ -8549,15 +8601,25 @@ function removeTrackerStock(ticker){
   if(db52wHighs[ticker]){delete db52wHighs[ticker];saveDash52wHighs()}
   compareSelected.delete(ticker);
   saveTrackerStocks();
+  closeModals();
+  if(typeof profileTicker!=='undefined'&&profileTicker===ticker)closeProfile();
   renderTracker();
-  showToast(ticker+' removed','success');
+  showToast(ticker+' permanently deleted','success');
+}
+function restoreArchivedStock(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  s.pipeline='Watchlist';
+  delete s.archivedAt;
+  saveTrackerStocks();
+  renderTracker();
+  showToast(ticker+' restored to Watchlist','success');
 }
 
 let _refreshing=false;
 async function refreshAllStocks(){
   if(_refreshing){showToast('Refresh already in progress','warning');return}
   _refreshing=true;
-  const tickers=Object.keys(tStocks);
+  const tickers=Object.keys(tStocks).filter(t=>(tStocks[t].pipeline||'')!=='Archived');
   if(!tickers.length){_refreshing=false;showToast('No stocks to refresh','warning');return}
   const prog=document.getElementById('st-progress');
   const wrap=document.querySelector('.st-wrap');
@@ -8807,6 +8869,12 @@ function sortTracker(col){
   renderTracker();
 }
 
+let _showArchived=false;
+function toggleShowArchived(){
+  _showArchived=!_showArchived;
+  renderTracker();
+}
+
 function toggleStockExpand(ticker){
   stExpanded[ticker]=!stExpanded[ticker];
   renderTracker();
@@ -8954,6 +9022,11 @@ function renderScatterChart(){
 function renderTracker(){
   const filter=(document.getElementById('st-filter')?.value||'').toLowerCase();
   let stocks=Object.values(tStocks);
+  const archivedCount=stocks.filter(s=>(s.pipeline||'')==='Archived').length;
+  const archBtn=document.getElementById('show-archived-btn');
+  if(archBtn){archBtn.textContent=archivedCount?(_showArchived?'Hide archived ('+archivedCount+')':'Show archived ('+archivedCount+')'):'No archived';archBtn.classList.toggle('active',_showArchived);archBtn.style.display=archivedCount?'':'none'}
+  const screenerWantsArchived=screenerFilters.pipeline&&screenerFilters.pipeline.value==='Archived';
+  if(!_showArchived&&!screenerWantsArchived)stocks=stocks.filter(s=>(s.pipeline||'')!=='Archived');
   if(filter)stocks=stocks.filter(s=>(s.ticker+' '+(s.name||'')+' '+(s.thesis||'')+' '+(s.moat||'')).toLowerCase().includes(filter));
   stocks=applyScreenerFilters(stocks);
   const scCountEl=document.getElementById('screener-count');
@@ -9019,10 +9092,15 @@ function renderTracker(){
     const calcs=getCalc(s);
     const ratios=getRatio(s);
     const scoreObj=getScore(s);
-    html+='<tr>';
+    const isArchived=(s.pipeline||'')==='Archived';
+    html+=`<tr${isArchived?' class="st-archived-row"':''}>`;
     stCols.forEach(c=>{
       const fr=c.frozen?` st-frozen${c.lastFrozen?' st-frozen-last':''}`:''
       const ls=c.frozen?` style="left:${c.left}px"`:'';
+      if(c.k==='_del'&&isArchived){
+        html+=`<td class="${fr}"${ls}><button class="st-del" onclick="restoreArchivedStock('${escH(s.ticker)}')" title="Restore to Watchlist" style="color:var(--green);font-size:14px">&#8634;</button></td>`;
+        return;
+      }
       if(c.k==='_exp'){
         if(compareMode){
           const chk=compareSelected.has(s.ticker)?'checked':'';
@@ -9182,7 +9260,7 @@ const SCREENER_DEFS=[
   {k:'debtEquity',l:'Debt/Equity',src:'stock'},
   {k:'currentRatio',l:'Current Ratio',src:'stock'},
   {k:'marketCap',l:'Market Cap',src:'stock'},
-  {k:'pipeline',l:'Pipeline',src:'select',options:['Watchlist','Under review','Buy target','Owned']},
+  {k:'pipeline',l:'Pipeline',src:'select',options:['Watchlist','Under review','Buy target','Owned','Archived']},
   {k:'companyType',l:'Company Type',src:'select',options:['slow','medium','fast','cyclical','turnaround','asset']}
 ];
 
