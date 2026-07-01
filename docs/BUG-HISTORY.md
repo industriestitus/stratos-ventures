@@ -36,8 +36,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 26 | LOW + Deep Audit Sweep | `5cadef9` | 2026-07-01 | 8 | 2 |
 | 27 | UX/UI Audit Fixes | `ff47c3f` | 2026-07-01 | 5+3 QA | 0 |
 | 28 | Keyboard Shortcuts + Empty States | `79f0927` | 2026-07-02 | 2 QA | 0 |
+| 29 | Bulk Operations | `11c3e3a` | 2026-07-02 | 2 QA | 0 |
 
-**Total: 231 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 233 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -743,6 +744,19 @@ Features: keyboard shortcuts (Cmd+1-7 nav, N new item, ? guide, Esc close) with 
 |---|----------|-----|-----|
 | 1 | MED | Portfolio Overview CTA button no-ops — `[data-tab=pf-accounts]` selector matches nothing (tabs lack `data-tab` attrs) | Changed to `switchPortfolioTab('accounts')` |
 | 2 | MED | N key always opens position modal — `dataset.tab` undefined on portfolio tabs, so transactions tab never detected | Replaced with `pf-panel-transactions` display check |
+
+---
+
+## Category 29 — Bulk Operations (`11c3e3a`)
+
+Features: multi-select checkboxes + floating action bar (delete/export CSV) for positions and transactions. Undo support for batch deletes. Select all in header.
+
+### QA Fixes (2)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MED | Bulk bar persists when navigating away from portfolio to other sections | Clear `_bulkPosIds`/`_bulkTxIds` and remove bar in `showSection()` when leaving portfolio |
+| 2 | LOW | "Select all" header checkbox always unchecked on re-render even when all items selected | Added dynamic `checked` attribute based on Set vs filtered list comparison |
 
 ---
 
