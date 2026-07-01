@@ -35,8 +35,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 25 | KNOWN-ISSUES Medium Sweep | `2dfccef` | 2026-07-01 | 6 | 1 |
 | 26 | LOW + Deep Audit Sweep | `5cadef9` | 2026-07-01 | 8 | 2 |
 | 27 | UX/UI Audit Fixes | `ff47c3f` | 2026-07-01 | 5+3 QA | 0 |
+| 28 | Keyboard Shortcuts + Empty States | `79f0927` | 2026-07-02 | 2 QA | 0 |
 
-**Total: 229 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 231 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -729,6 +730,19 @@ Full UX/UI audit of app workflows, touch targets, theming, and interaction patte
 ### Audit Scope
 
 22 findings identified across 4 categories (Critical UX, Moderate, Minor Polish, Enhancements). 5 implemented + 3 QA fixes this session, onboarding + undo evolution saved to ROADMAP.md for later.
+
+---
+
+## Category 28 — Keyboard Shortcuts + Empty States (`79f0927`)
+
+Features: keyboard shortcuts (Cmd+1-7 nav, N new item, ? guide, Esc close) with guide card in Settings; empty states with icon + Hungarian text + CTA for Portfolio Overview, Positions, Transactions, Reviews, Dashboard widgets.
+
+### QA Fixes (2)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MED | Portfolio Overview CTA button no-ops — `[data-tab=pf-accounts]` selector matches nothing (tabs lack `data-tab` attrs) | Changed to `switchPortfolioTab('accounts')` |
+| 2 | MED | N key always opens position modal — `dataset.tab` undefined on portfolio tabs, so transactions tab never detected | Replaced with `pf-panel-transactions` display check |
 
 ---
 
