@@ -327,8 +327,9 @@ async function handleMigrate(body, db, origin) {
 
   // Clear existing data (FK cascades handle child tables)
   const clearTables = ['companies','notes','broker_accounts','portfolio_snapshots','exchange_rates','general_todos','framework_entries','reviews','valuations'];
-  for (const t of clearTables) { try { await db.prepare(`DELETE FROM ${t}`).run(); } catch(e) {} }
-  try { await db.prepare("DELETE FROM app_settings WHERE key NOT IN ('schema_version')").run(); } catch(e) {}
+  const clearStmts = clearTables.map(t => db.prepare(`DELETE FROM ${t}`));
+  clearStmts.push(db.prepare("DELETE FROM app_settings WHERE key NOT IN ('schema_version')"));
+  try { await db.batch(clearStmts); } catch(e) { console.error('Clear tables failed:', e); }
 
   // 1. Companies from trackerStocks
   const trackerStocks = body.trackerStocks || {};

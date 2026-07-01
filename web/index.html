@@ -2329,7 +2329,21 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
 // ====== E2E ENCRYPTION ======
 let _encPass=null;
 let _autoLockTimer=null;
+let _encIdleTimer=null;
 const AUTO_LOCK_DELAY=5*60*1000;
+const ENC_IDLE_TIMEOUT=15*60*1000;
+function _resetEncIdleTimer(){
+  if(!_encPass||!isEncryptionEnabled())return;
+  clearTimeout(_encIdleTimer);
+  _encIdleTimer=setTimeout(()=>{
+    _encPass=null;
+    document.getElementById('lock-screen').style.display='flex';
+    showLockView('unlock');
+    document.getElementById('lock-pass').value='';
+    showToast('Session locked due to inactivity','info',4000);
+  },ENC_IDLE_TIMEOUT);
+}
+['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,_resetEncIdleTimer,{passive:true}));
 
 function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)))}
 function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0)).buffer}
@@ -2837,9 +2851,9 @@ function renderSavedStocks(){
 function showExportModal(){
   const s=_getSavedStocks();
   document.getElementById('export-data').value=JSON.stringify({version:SCHEMA_VERSION,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,dashboard52wHighs:db52wHighs,dividendHistory:divHistory,dividendSettings:divSettings,frameworkData:fwData,reviewsData:rvData},null,2);
-  document.getElementById('export-modal').classList.add('active');
+  _openModal(document.getElementById('export-modal'));
 }
-function showImportModal(){document.getElementById('import-data').value='';document.getElementById('import-modal').classList.add('active')}
+function showImportModal(){document.getElementById('import-data').value='';_openModal(document.getElementById('import-modal'))}
 function closeModals(){document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active'));document.removeEventListener('keydown',_trapFocus)}
 let _trapFocusModal=null;
 function _trapFocus(e){
@@ -3425,7 +3439,7 @@ let pfTransactions=[];
 
 async function loadPortfolioAccounts(){
   if(d1Mode){try{const r=await API.get('broker_accounts');pfAccounts=(r.data||[]).map(a=>({id:a.id,name:a.name,currency:a.currency,isActive:!!a.is_active}));return}catch(e){console.error('D1 load accounts, falling back to localStorage:',e)}}
-  try{const d=JSON.parse(localStorage.getItem('portfolio_accounts_v1'));if(Array.isArray(d))pfAccounts=d}catch(e){}
+  try{const d=JSON.parse(localStorage.getItem('portfolio_accounts_v1'));if(Array.isArray(d))pfAccounts=d}catch(e){console.error('Corrupted portfolio_accounts_v1:',e)}
 }
 function savePortfolioAccounts(){
   if(d1Mode){API.scheduleSave('pfAccounts',async()=>{await API.post('broker_accounts/batch',{items:pfAccounts.map(a=>({id:a.id,name:a.name,currency:a.currency,is_active:a.isActive!==false?1:0}))})})}
@@ -3436,7 +3450,7 @@ async function loadPortfolioPositions(){
     let lsExtra={};try{const ls=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(ls))ls.forEach(p=>{if(p.id)lsExtra[p.id]=p})}catch(e){}
     pfPositions=d1Pos.map(p=>{const ex=lsExtra[p.id];if(ex)return{...ex,...p,assetType:ex.assetType||'stock',currentPrice:ex.currentPrice,notes:ex.notes,reLocation:ex.reLocation,rePurchaseDate:ex.rePurchaseDate,rePurchasePrice:ex.rePurchasePrice,reCurrentValue:ex.reCurrentValue,reMonthlyRental:ex.reMonthlyRental,reAnnualCosts:ex.reAnnualCosts,bondType:ex.bondType,bondFaceValue:ex.bondFaceValue,bondCouponRate:ex.bondCouponRate,bondMaturityDate:ex.bondMaturityDate,bondPaymentFreq:ex.bondPaymentFreq,cashAmount:ex.cashAmount};return p});
     try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){}return}catch(e){console.error('D1 load positions, falling back to localStorage:',e)}}
-  try{const d=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(d))pfPositions=d}catch(e){}
+  try{const d=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(d))pfPositions=d}catch(e){console.error('Corrupted portfolio_positions_v1:',e)}
 }
 function savePortfolioPositions(){
   if(d1Mode){API.scheduleSave('pfPositions',async()=>{await API.post('positions/batch',{items:pfPositions.map(p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:p.shares,avg_cost:p.avgCost}))})})}
@@ -3444,7 +3458,7 @@ function savePortfolioPositions(){
 }
 async function loadPortfolioTransactions(){
   if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=(r.data||[]).map(t=>({id:t.id,ticker:_d1CompanyMap[t.company_id]||t.symbol||'',accountId:t.account_id,type:t.transaction_type,date:t.transaction_date,shares:t.shares,pricePerShare:t.price_per_share,totalAmount:t.total_amount,fees:t.fees,currency:t.currency,notes:t.notes,companyId:t.company_id}));return}catch(e){console.error('D1 load transactions, falling back to localStorage:',e)}}
-  try{const d=JSON.parse(localStorage.getItem('portfolio_transactions_v1'));if(Array.isArray(d))pfTransactions=d}catch(e){}
+  try{const d=JSON.parse(localStorage.getItem('portfolio_transactions_v1'));if(Array.isArray(d))pfTransactions=d}catch(e){console.error('Corrupted portfolio_transactions_v1:',e)}
 }
 function savePortfolioTransactions(){
   if(d1Mode){API.scheduleSave('pfTransactions',async()=>{await API.post('transactions/batch',{items:pfTransactions.map(t=>({id:t.id,company_id:t.companyId||_tickerToD1Id(t.ticker),account_id:t.accountId,transaction_type:t.type,transaction_date:t.date,shares:t.shares,price_per_share:t.pricePerShare,total_amount:t.totalAmount,fees:t.fees||0,currency:t.currency||'USD',notes:t.notes||''}))})})}
@@ -3509,8 +3523,7 @@ function openAccountModal(editId){
     document.getElementById('pf-acc-name').value='';
     document.getElementById('pf-acc-currency').value='USD';
   }
-  modal.classList.add('active');
-  setTimeout(()=>document.getElementById('pf-acc-name').focus(),100);
+  _openModal(modal);
 }
 
 function saveAccount(){
@@ -3769,8 +3782,7 @@ function openPositionModal(editId){
     document.getElementById('pf-pos-bond-freq').value='annual';
     document.getElementById('pf-pos-cash-amount').value='';
   }
-  modal.classList.add('active');
-  setTimeout(()=>document.getElementById('pf-pos-ticker').focus(),100);
+  _openModal(modal);
 }
 
 function savePosition(){
@@ -3965,8 +3977,7 @@ function openTransactionModal(editId){
     document.getElementById('pf-tx-fees').value='0';
     document.getElementById('pf-tx-notes').value='';
   }
-  modal.classList.add('active');
-  setTimeout(()=>document.getElementById('pf-tx-ticker').focus(),100);
+  _openModal(modal);
 }
 
 function saveTransaction(){
@@ -4029,7 +4040,7 @@ async function loadPortfolioSnapshots(){
     }
     return;
   }catch(e){console.error('D1 load snapshots, falling back to localStorage:',e)}}
-  try{const d=JSON.parse(localStorage.getItem('portfolio_snapshots_v1'));if(Array.isArray(d))pfSnapshots=d}catch(e){}
+  try{const d=JSON.parse(localStorage.getItem('portfolio_snapshots_v1'));if(Array.isArray(d))pfSnapshots=d}catch(e){console.error('Corrupted portfolio_snapshots_v1:',e)}
 }
 function savePortfolioSnapshots(){
   if(d1Mode){API.scheduleSave('pfSnapshots',async()=>{
@@ -4480,7 +4491,7 @@ function openCsvImportModal(){
   document.getElementById('pf-csv-account').innerHTML=pfAccounts.map(a=>`<option value="${a.id}">${escH(a.name)} (${escH(a.currency)})</option>`).join('');
   document.getElementById('pf-csv-preview-area').innerHTML='<p style="color:var(--text2);text-align:center;padding:20px">Select a CSV file to preview</p>';
   document.getElementById('pf-csv-import-btn').disabled=true;
-  document.getElementById('pf-csv-import-modal').classList.add('active');
+  _openModal(document.getElementById('pf-csv-import-modal'));
 }
 
 function handleCsvFile(event){
@@ -5703,7 +5714,7 @@ function openResearchEntry(type,id){
     if(type&&type!=='all')document.getElementById('re-type').value=type;
   }
   updateResearchModalFields();
-  modal.classList.add('active');
+  _openModal(modal);
 }
 
 function updateResearchModalFields(){
@@ -7701,8 +7712,8 @@ function checkPriceAlerts(){
   return triggered;
 }
 function saveTrackerStocks(){
-  if(d1Mode){API.scheduleSave('trackerStocks',async()=>{
-    const companies=Object.entries(tStocks).map(([ticker,s])=>({
+  if(d1Mode){const snapshot=JSON.parse(JSON.stringify(tStocks));API.scheduleSave('trackerStocks',async()=>{
+    const companies=Object.entries(snapshot).map(([ticker,s])=>({
       symbol:ticker,name:s.name||ticker,sector:s.sector||'',currency:s.currency||'USD',
       exchange:s.exchange||'',company_type:s.companyType||'',
       pipeline_status:s.pipeline||s.pipelineStatus||'watchlist',thesis:s.thesis||'',sort_order:s.sortOrder||0
@@ -7710,10 +7721,10 @@ function saveTrackerStocks(){
     await API.postBatch('companies/batch',companies);
     // Refresh company IDs for any new companies
     const cr=await API.get('companies?limit=500');
-    (cr.data||[]).forEach(c=>{_d1CompanyMap[c.id]=c.symbol;const st=tStocks[c.symbol];if(st)st._d1Id=c.id});
+    (cr.data||[]).forEach(c=>{_d1CompanyMap[c.id]=c.symbol;if(tStocks[c.symbol])tStocks[c.symbol]._d1Id=c.id;if(snapshot[c.symbol])snapshot[c.symbol]._d1Id=c.id});
     // Save sub-entities per company
     const todos=[],earnings=[],filings=[],overrides=[],notes=[],checklist=[];
-    Object.entries(tStocks).forEach(([ticker,s])=>{
+    Object.entries(snapshot).forEach(([ticker,s])=>{
       const cid=s._d1Id;if(!cid)return;
       (s.todos||[]).forEach(t=>todos.push({id:t.id||undefined,company_id:cid,title:t.text||'',due_date:t.due||null,is_done:t.done?1:0,sort_order:t.sortOrder||0}));
       Object.entries(s.earnings||{}).forEach(([k,v])=>{const m=k.match(/(\d{4})Q(\d)/);if(m)earnings.push({company_id:cid,year:+m[1],quarter:+m[2],is_reported:v.reported?1:0,is_reviewed:v.reviewed?1:0,report_date:v.reportDate||null})});
@@ -7795,7 +7806,7 @@ async function loadTrackerStocks(){
     return;
   }catch(e){console.error('D1 load trackerStocks, falling back to localStorage:',e)}}
   const d=localStorage.getItem('tracker_stocks_v1');
-  if(d){try{tStocks=JSON.parse(d)}catch(e){tStocks={}}}
+  if(d){try{tStocks=JSON.parse(d)}catch(e){console.error('Corrupted tracker_stocks_v1:',e);showToast('Company data corrupted — starting fresh. Export your data if you have a backup.','error',10000);tStocks={}}}
   if(!Object.keys(tStocks).length){
     DEFAULT_TICKERS.forEach(t=>{tStocks[t]={ticker:t,name:TNAMES[t]||t}});
     saveTrackerStocks();
@@ -9284,7 +9295,7 @@ function updateCompareCount(){
 function openComparison(){
   if(compareSelected.size<2)return;
   renderComparison();
-  document.getElementById('compare-modal').classList.add('active');
+  _openModal(document.getElementById('compare-modal'));
 }
 
 function renderComparison(){
@@ -9793,8 +9804,7 @@ function openFwModal(type,editId){
     titleEl.textContent='Add '+labels[type];
     titleIn.value='';contentIn.value='';catIn.value='';
   }
-  modal.classList.add('active');
-  titleIn.focus();
+  _openModal(modal);
 }
 
 function getFwItem(type,id){
@@ -11043,7 +11053,7 @@ function openReview(type,editId,prefillTicker){
     summaryInput.value='';
     renderRvQuestions();
   }
-  modal.classList.add('active');
+  _openModal(modal);
 }
 
 function renderRvQuestions(existingAnswers){
@@ -11393,6 +11403,16 @@ async function autoLoad(){
     d1Mode=true;
     const dot=document.getElementById('d1-status-dot');
     if(dot)dot.style.display='';
+    if(!navigator.onLine){
+      showToast('Offline — loading from local cache','warning',4000);
+      d1Mode=false;
+      loadTrackerStocks();loadResearchNotes();
+      loadPortfolioAccounts();loadPortfolioPositions();loadPortfolioTransactions();
+      loadExchangeRates();loadPortfolioSnapshots();
+      loadDashTodos();loadDashFiSettings();loadDashBenchmark();loadDash52wHighs();
+      loadDividendHistory();loadDivSettings();
+      loadFramework();loadReviews();
+    }else{
     // Show loading overlay
     const overlay=document.createElement('div');
     overlay.id='d1-loading-overlay';
@@ -11424,6 +11444,7 @@ async function autoLoad(){
     }catch(e){console.error('D1 load error:',e);showToast('Some data failed to load from D1','warning')}
     API.reconcileDirtyKeys();
     overlay.remove();
+    }
   }else{
     // localStorage mode
     loadTrackerStocks();loadResearchNotes();
@@ -11507,10 +11528,17 @@ window.addEventListener('offline',()=>{
   document.body.classList.add('is-offline');
   showToast('You are offline — some features may be unavailable','warning',5000);
 });
+let _storageDebounce=0;
 window.addEventListener('storage',e=>{
-  if(!e.key||e.key.startsWith('enc_'))return;
-  if(document.hidden)return;
-  showToast('Data changed in another tab — reload recommended','warning',6000);
+  if(!e.key||e.key.startsWith('enc_')||e.key.startsWith('d1_dirty_'))return;
+  if(d1Mode)return;
+  clearTimeout(_storageDebounce);
+  _storageDebounce=setTimeout(()=>{
+    const loaders={tracker_stocks_v1:loadTrackerStocks,portfolio_accounts_v1:loadPortfolioAccounts,portfolio_positions_v1:loadPortfolioPositions,portfolio_transactions_v1:loadPortfolioTransactions,research_notes_v1:loadResearchNotes,dashboard_todos_v1:loadDashTodos,reviews_v1:loadReviews,framework_v1:loadFramework,dividend_history_v1:loadDividendHistory};
+    const loader=loaders[e.key];
+    if(loader){loader();const vis=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});if(vis==='portfolio')renderPortfolioOverview();else if(vis==='dashboard')renderDashboard();else if(vis==='companies')renderTracker();showToast('Data updated from another tab','info',3000)}
+    else if(e.key==='valuation_last_v2'){try{const d=JSON.parse(e.newValue);if(d)loadData(d)}catch(ex){}}
+  },500);
 });
 (function checkStoragePersistence(){
   try{

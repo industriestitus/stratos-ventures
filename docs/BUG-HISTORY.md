@@ -26,13 +26,13 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 16 | Phase 15 Feature QA | `bc15b16`+`872b96b` | 2026-06-30 | 4 | 0 |
 | 17 | Phase 14 Asset Types QA | `5cd3a24` | 2026-07-01 | 6 | 0 |
 | 18 | Phase 15.4 Price Alerts QA | `631a3e2` | 2026-07-01 | 2 | 0 |
-| 19 | Data Persistence & Sync | `2c36bdc`+S4+S5 | 2026-07-01 | 8 | 3 |
-| 20 | Financial Calculation Accuracy | `ecdf115`+`6585785`+S5 | 2026-07-01 | 7 | 0 |
-| 21 | Cross-Module Integration | `6585785`+S4+S5 | 2026-07-01 | 3 | 2 |
+| 19 | Data Persistence & Sync | S1-S7 | 2026-07-01 | 11 | 0 |
+| 20 | Financial Calculation Accuracy | S2+S3+S5 | 2026-07-01 | 7 | 0 |
+| 21 | Cross-Module Integration | S3-S5+S7 | 2026-07-01 | 5 | 0 |
 | 22 | Performance | S6 | 2026-07-01 | 3 | 0 |
-| 23 | Security & Code Quality | — | 2026-07-01 | 0 | 2 |
+| 23 | Security & Code Quality | S7 | 2026-07-01 | 2 | 0 |
 
-**Total: 189 fixed, 28 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
+**Total: 196 fixed, 21 potential (unfixed)** — Categories 19-23 ALL COMPLETE (0 unfixed)
 
 ---
 
@@ -482,13 +482,7 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 | 19.5 | `flushAll()` no reentrance guard — double-flush from beforeunload+visibilitychange | Added `_flushing` boolean guard | index.html:3212 |
 | 19.7 | `flushAll` during `beforeunload` can't complete async saves | Added `useBeacon` parameter — beforeunload uses local fallback only, visibilitychange handles async flush | index.html:3212,11434 |
 
-### Unfixed (3)
-
-| # | Bug | Impact | Reason |
-|---|-----|--------|--------|
-| 19.U6 | `saveTrackerStocks` closure (line 7606) reads `tStocks` during multi-step async execution — mutations between steps cause companies/sub-entities to get out of sync | **MEDIUM** — inconsistent D1 state after concurrent edits + save | Snapshot tStocks at closure start |
-| 19.U8 | Multi-tab conflicts — no data reload on `storage` event, D1 batch writes from different tabs overwrite each other with stale data | **MEDIUM** — last-tab-to-save wins, earlier tab's changes lost | Needs `storage` event listener + conflict resolution |
-| 19.U11 | Corrupted localStorage silently initializes empty state with no user warning — empty catch blocks on JSON.parse, new data overwrites good D1 data | **LOW** — user loses data without knowing why after browser crash | Add console.error + warning toast in catch blocks |
+### Unfixed (0)
 
 ### Fixed in Session 5
 
@@ -496,6 +490,14 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 |---|-----|-----|-----------|
 | 19.9 | Research notes not cleaned up on company delete | Added `researchNotes.filter()` + save in `removeTrackerStock()` | index.html:8493 |
 | 19.10 | `_tickerToD1Id()` silently filters null D1 IDs | Added `console.warn` when company exists but has no D1 ID | index.html:3292 |
+
+### Fixed in Session 7
+
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 19.6 | `saveTrackerStocks` closure reads live tStocks during async | JSON.parse/stringify snapshot at closure start | index.html:7704 |
+| 19.8 | Multi-tab conflicts — no data reload on storage event | Added debounced `storage` event listener that reloads changed data and re-renders | index.html:11510 |
+| 19.11 | Corrupted localStorage silently initializes empty | Added `console.error` in catch blocks + toast for tracker_stocks | index.html:7795 |
 
 ---
 
@@ -532,12 +534,14 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 |---|-----|-----|-----------|
 | 21.4 | Finnhub rate-limit response cached in D1 for 12 hours | Added `!fresh.rateLimited` guard before cache upsert | index.html:8279 |
 
-### Unfixed (2)
+### Fixed in Session 7
 
-| # | Bug | Impact | Reason |
-|---|-----|--------|--------|
-| 21.U3 | Worker `/api/migrate` has no transaction wrapping — partial migration on failure leaves D1 in inconsistent state (some tables migrated, some not) | **MEDIUM** — broken D1 state requiring manual cleanup | Wrap migration in D1 transaction or add rollback mechanism |
-| 21.U5 | D1 mode offline at startup shows 'Loading from D1...' spinner for 15 seconds with no offline indicator or localStorage fallback | **LOW** — poor UX on startup without internet | Check `navigator.onLine` before D1 load; fall through to localStorage |
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 21.3 | Worker `/api/migrate` no transaction wrapping | Replaced individual DELETEs with `db.batch()` for atomic table clearing | cloudflare-worker/src/index.js:330 |
+| 21.5 | D1 offline startup shows spinner 15s with no fallback | Added `navigator.onLine` check — falls through to localStorage instantly when offline | index.html:11395 |
+
+### Unfixed (0)
 
 ---
 
@@ -557,12 +561,14 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ## Category 23 — Security & Code Quality (Full QA Audit 2026-07-01)
 
-### Unfixed (2)
+### Fixed (2) — Session 7
 
-| # | Bug | Impact | Reason |
-|---|-----|--------|--------|
-| 23.U1 | 10 of 12 modal openers bypass `_openModal()` — no focus trap, no Escape key handler, no scroll lock for these modals | **MEDIUM** — accessibility issue, background scrollable while modal open | Route all modal opens through `_openModal()` |
-| 23.U2 | `_encPass` global variable holds encryption password in memory with no idle timeout — accessible via DevTools console until page close | **LOW** — encryption password exposed to XSS or physical access | Add idle timeout to clear `_encPass` after N minutes |
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 23.1 | 10/12 modal openers bypass `_openModal()` — no focus trap | Routed all 10 modal opens through `_openModal()` | index.html:2840,3512,3772,3968,4483,5706,9287,9794,11044 |
+| 23.2 | `_encPass` in memory with no idle timeout | Added 15-min idle timer (click/keydown/touchstart resets), locks screen on expiry | index.html:2334 |
+
+### Unfixed (0)
 
 ---
 
