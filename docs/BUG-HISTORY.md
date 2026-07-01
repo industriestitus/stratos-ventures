@@ -588,6 +588,31 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ---
 
+## Session 25 — Cross-Module Integration: Archive + Portfolio↔Pipeline Sync (2026-07-01)
+
+### Archive System (Session 1)
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 25.1 | D1 CHECK constraint rejects 'archived' pipeline value | Migrated live D1 table, added 'archived' to CHECK, normalized values to lowercase snake_case | index.html:7772 |
+| 25.2 | archivedAt field lost on page refresh (not in preserve array) | Added 'archivedAt' to preserve array | index.html:8528 |
+| 25.3 | setPipeline() doesn't set archivedAt when clicking Archived button | Added archivedAt management in setPipeline() | index.html:6341 |
+| 25.4 | Screener Pipeline=Archived shows 0 results (pre-filtered) | Check screenerWantsArchived before filtering | index.html:8969 |
+
+### Portfolio↔Pipeline Sync (Session 2)
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 25.5 | deletePosition() doesn't trigger pipeline check | Added _checkSellAllPositions(delTicker) after position deletion | index.html:3886 |
+| 25.6 | deleteTransaction() doesn't trigger pipeline check | Added _checkSellAllPositions(delTicker) after transaction deletion | index.html:4064 |
+| 25.7 | CSV import ignores sold-all tickers (pipeline stays Owned) | Added post-import loop calling _checkSellAllPositions for zero-share tickers | index.html:4668 |
+| 25.8 | saveTransaction() passes no name to _syncTickerToCompanies | Added tStocks[ticker]?.name||ticker as name parameter | index.html:4052 |
+| 25.9 | Real estate/bond positions incorrectly synced to Companies tracker | Extended asset type guard to exclude real_estate and bond | index.html:3874 |
+| 25.10 | Tracker UI not updated after sync (missing renderTracker calls) | Added renderTracker() to _syncTickerToCompanies, batch, and _checkSellAllPositions | index.html:8633 |
+| 25.11 | String shares "0" treated as >0 in _checkSellAllPositions | Changed to parseFloat(p.shares)>0 | index.html:8669 |
+
+### Unfixed (0)
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth) and any future Worker changes:

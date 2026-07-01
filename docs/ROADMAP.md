@@ -219,6 +219,12 @@ Status: COMPLETE (2026-06-27)
 ### Standalone Features (post-expansion)
 - [x] PDF Export — per-company research report export (2026-07-01): section chooser dialog, jsPDF lazy-loaded, 10 exportable sections (profile, financials, checklist, valuations, notes, earnings, portfolio, dividends, reviews, todos), Stratos branding header/footer, continuous-flow layout
 
+### Cross-Module Integration (2026-07-01)
+- [x] Archive system — soft delete with "Archived" pipeline stage, archive modal (Archive/Delete permanently/Cancel), tracker toggle, screener filter, D1 CHECK constraint migration
+- [x] Portfolio ↔ Pipeline auto-sync — buy triggers Companies "Owned", sell-all triggers "Watchlist", CSV import batch sync, real estate/bond/cash excluded, delete position/transaction triggers check
+- [ ] Pipeline-based review reminders — 90-day threshold for Owned/Buy target companies, Dashboard widget, company profile badge
+- [ ] Company profile summary tab — aggregated positions, transactions, notes, reviews, sell triggers, TODOs
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 

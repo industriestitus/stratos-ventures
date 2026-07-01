@@ -3871,6 +3871,8 @@ function savePosition(){
     pfPositions.push({id:pfNextId(pfPositions),ticker,name,accountId,assetType,shares,avgCost,currentPrice,currency,notes,...extra,createdAt:now,updatedAt:now});
   }
   savePortfolioPositions();
+  if(shares>0&&assetType!=='cash'&&assetType!=='real_estate'&&assetType!=='bond')_syncTickerToCompanies(ticker,name);
+  else if(shares===0&&assetType!=='cash'&&assetType!=='real_estate'&&assetType!=='bond')_checkSellAllPositions(ticker);
   closeModals();
   renderPositions();
   showToast(editId?'Position updated':'Position added','success');
@@ -3881,8 +3883,10 @@ async function deletePosition(id){
   if(!p)return;
   if(!confirm(`Delete position ${p.ticker}?`))return;
   if(d1Mode){try{await API.del('positions/'+id)}catch(e){console.error('D1 del position:',e);showToast('Cloud delete failed — local only','warning')}}
+  const delTicker=p.ticker;
   pfPositions=pfPositions.filter(x=>x.id!==id);
   savePortfolioPositions();
+  _checkSellAllPositions(delTicker);
   renderPositions();
   showToast('Position deleted','success');
 }
@@ -4047,6 +4051,8 @@ function saveTransaction(){
     pfTransactions.push({id:pfNextId(pfTransactions),type,date,ticker,accountId,shares,pricePerShare,totalAmount,fees,currency,notes,createdAt:now});
   }
   savePortfolioTransactions();
+  if(type==='buy')_syncTickerToCompanies(ticker,tStocks[ticker]?.name||ticker);
+  else if(type==='sell')_checkSellAllPositions(ticker);
   closeModals();
   renderTransactions();
   showToast(editId?'Transaction updated':'Transaction logged','success');
@@ -4057,8 +4063,10 @@ async function deleteTransaction(id){
   if(!t)return;
   if(!confirm(`Delete ${t.type} transaction for ${t.ticker}?`))return;
   if(d1Mode){try{await API.del('transactions/'+id)}catch(e){console.error('D1 del tx:',e);showToast('Cloud delete failed — local only','warning')}}
+  const delTicker=t.ticker;
   pfTransactions=pfTransactions.filter(x=>x.id!==id);
   savePortfolioTransactions();
+  _checkSellAllPositions(delTicker);
   renderTransactions();
   showToast('Transaction deleted','success');
 }
@@ -4656,6 +4664,15 @@ function importCsvTransactions(){
     else{pfPositions.push({id:pfNextId(pfPositions),ticker,name:tStocks[ticker]?.name||ticker,accountId,assetType:'stock',shares:totalShares,avgCost,currency:acc.currency,notes:'',createdAt:new Date().toISOString()});posCreated++}
   });
   if(posUpdated||posCreated)savePortfolioPositions();
+  const ownedTickers=[...importedTickers].filter(t=>{
+    const pos=pfPositions.find(p=>p.ticker===t&&p.accountId===accountId);
+    return pos&&pos.shares>0;
+  }).map(t=>({ticker:t,name:tStocks[t]?.name||t}));
+  if(ownedTickers.length)_syncTickerToCompaniesBatch(ownedTickers);
+  [...importedTickers].forEach(t=>{
+    const pos=pfPositions.find(p=>p.ticker===t&&p.accountId===accountId);
+    if(!pos||pos.shares<=0)_checkSellAllPositions(t);
+  });
   closeModals();
   renderTransactions();
   renderPortfolioOverview();
@@ -8613,6 +8630,60 @@ function restoreArchivedStock(ticker){
   saveTrackerStocks();
   renderTracker();
   showToast(ticker+' restored to Watchlist','success');
+}
+
+function _syncTickerToCompanies(ticker,name){
+  if(!ticker)return;
+  const s=tStocks[ticker];
+  if(!s){
+    tStocks[ticker]={ticker,name:name||ticker,pipeline:'Owned'};
+    saveTrackerStocks();
+    showToast(ticker+' added to Companies as Owned','info',3000);
+    renderTracker();
+  }else if(s.pipeline!=='Owned'){
+    const prev=s.pipeline||'none';
+    s.pipeline='Owned';
+    delete s.archivedAt;
+    saveTrackerStocks();
+    if(prev==='Archived')showToast(ticker+' restored from Archive → Owned','info',3000);
+    else showToast(ticker+' pipeline → Owned','info',3000);
+    renderTracker();
+  }
+}
+
+function _syncTickerToCompaniesBatch(tickers){
+  let added=0,updated=0;
+  tickers.forEach(({ticker,name})=>{
+    if(!ticker)return;
+    const s=tStocks[ticker];
+    if(!s){
+      tStocks[ticker]={ticker,name:name||ticker,pipeline:'Owned'};
+      added++;
+    }else if(s.pipeline!=='Owned'){
+      s.pipeline='Owned';
+      delete s.archivedAt;
+      updated++;
+    }
+  });
+  if(added||updated){
+    saveTrackerStocks();
+    const parts=[];
+    if(added)parts.push(added+' added');
+    if(updated)parts.push(updated+' updated');
+    showToast('Companies synced: '+parts.join(', ')+' → Owned','info',3000);
+    renderTracker();
+  }
+}
+
+function _checkSellAllPositions(ticker){
+  if(!ticker||!tStocks[ticker])return;
+  const remaining=pfPositions.filter(p=>p.ticker===ticker&&parseFloat(p.shares)>0);
+  if(!remaining.length&&tStocks[ticker].pipeline==='Owned'){
+    tStocks[ticker].pipeline='Watchlist';
+    saveTrackerStocks();
+    showToast(ticker+': all positions sold → Watchlist','info',4000);
+    renderTracker();
+  }
 }
 
 let _refreshing=false;
