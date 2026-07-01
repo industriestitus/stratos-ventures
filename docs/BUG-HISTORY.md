@@ -26,13 +26,13 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 16 | Phase 15 Feature QA | `bc15b16`+`872b96b` | 2026-06-30 | 4 | 0 |
 | 17 | Phase 14 Asset Types QA | `5cd3a24` | 2026-07-01 | 6 | 0 |
 | 18 | Phase 15.4 Price Alerts QA | `631a3e2` | 2026-07-01 | 2 | 0 |
-| 19 | Data Persistence & Sync | `2c36bdc`+S4 | 2026-07-01 | 6 | 5 |
-| 20 | Financial Calculation Accuracy | `ecdf115`+`6585785` | 2026-07-01 | 5 | 2 |
-| 21 | Cross-Module Integration | `6585785`+S4 | 2026-07-01 | 2 | 3 |
+| 19 | Data Persistence & Sync | `2c36bdc`+S4+S5 | 2026-07-01 | 8 | 3 |
+| 20 | Financial Calculation Accuracy | `ecdf115`+`6585785`+S5 | 2026-07-01 | 7 | 0 |
+| 21 | Cross-Module Integration | `6585785`+S4+S5 | 2026-07-01 | 3 | 2 |
 | 22 | Performance | — | 2026-07-01 | 0 | 3 |
 | 23 | Security & Code Quality | — | 2026-07-01 | 0 | 2 |
 
-**Total: 181 fixed, 36 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
+**Total: 186 fixed, 31 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
 
 ---
 
@@ -482,36 +482,38 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 | 19.5 | `flushAll()` no reentrance guard — double-flush from beforeunload+visibilitychange | Added `_flushing` boolean guard | index.html:3212 |
 | 19.7 | `flushAll` during `beforeunload` can't complete async saves | Added `useBeacon` parameter — beforeunload uses local fallback only, visibilitychange handles async flush | index.html:3212,11434 |
 
-### Unfixed (5)
+### Unfixed (3)
 
 | # | Bug | Impact | Reason |
 |---|-----|--------|--------|
 | 19.U6 | `saveTrackerStocks` closure (line 7606) reads `tStocks` during multi-step async execution — mutations between steps cause companies/sub-entities to get out of sync | **MEDIUM** — inconsistent D1 state after concurrent edits + save | Snapshot tStocks at closure start |
 | 19.U8 | Multi-tab conflicts — no data reload on `storage` event, D1 batch writes from different tabs overwrite each other with stale data | **MEDIUM** — last-tab-to-save wins, earlier tab's changes lost | Needs `storage` event listener + conflict resolution |
-| 19.U9 | Research notes not cleaned up on company delete — orphaned notes remain in `researchNotes` array and D1 | **MEDIUM** — data leaks, confusing stale notes appear | Add cascade delete in `deleteCompany()` |
-| 19.U10 | `_tickerToD1Id()` silently filters out null returns — if a company has no D1 ID, its sub-entities are silently skipped during save | **MEDIUM** — silent data loss for companies added while D1 is unreachable | Log warning when null D1 ID encountered |
 | 19.U11 | Corrupted localStorage silently initializes empty state with no user warning — empty catch blocks on JSON.parse, new data overwrites good D1 data | **LOW** — user loses data without knowing why after browser crash | Add console.error + warning toast in catch blocks |
+
+### Fixed in Session 5
+
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 19.9 | Research notes not cleaned up on company delete | Added `researchNotes.filter()` + save in `removeTrackerStock()` | index.html:8493 |
+| 19.10 | `_tickerToD1Id()` silently filters null D1 IDs | Added `console.warn` when company exists but has no D1 ID | index.html:3292 |
 
 ---
 
 ## Category 20 — Financial Calculation Accuracy (Full QA Audit 2026-07-01)
 
-### Fixed (5) — `ecdf115` + `6585785`
+### Fixed (7) — `ecdf115` + `6585785` + Session 5
 
 | # | Bug | Fix | File:Line |
 |---|-----|-----|-----------|
 | 20.1 | `convertCurrency()` falsy check passes NaN/undefined/null through | Changed to `if(amount==null\|\|!isFinite(amount))return null` | index.html:4384 |
 | 20.2 | One NaN-price position poisons entire portfolio total | Added `isFinite()` guards to all 8 portfolio sum loops | index.html:3576,4028,4114,4183,4314,4627,4808,6391 |
 | 20.3 | `getConvictionHistory()` reads wrong data path, missing `cl.sections.psychology` | Changed to `cl.psychology\|\|cl.sections?.psychology\|\|{}` | index.html:6441 |
+| 20.4 | `calcReverseDCF()` produces meaningless result when Market Cap or FCF is 0/empty | Added early return guard: shows '—' in all result fields when mc<=0 or fcf0<=0 | index.html:2665 |
 | 20.5 | Global `parseNum()` mishandles European period-as-thousands (`1.500` → 1.5) | Added European format detection regex before comma stripping | index.html:7595 |
 | 20.6 | CSV date parser hardcoded DD/MM/YYYY — swaps day/month for US formats | Added auto-detection: scans all dates for fields >12 to determine DD/MM vs MM/DD | index.html:4525 |
+| 20.7 | Mixed-currency portfolio sums without conversion when rates not loaded | Added `hasRates` check + warning banner with "Fetch rates" button | index.html:3591 |
 
-### Unfixed (2)
-
-| # | Bug | Impact | Reason |
-|---|-----|--------|--------|
-| 20.U4 | `calcReverseDCF()` runs 200-iteration binary search solver when Market Cap or FCF is 0/empty — produces a finite but meaningless implied growth rate that gets displayed | **MEDIUM** — misleading calculated value shown to user | Add guard: `if(mc<=0\|\|fcf0<=0)` show '—' and return |
-| 20.U7 | Mixed-currency portfolio silently sums values without conversion when exchange rates haven't loaded yet | **MEDIUM** — incorrect portfolio total until rates load, no warning shown | Check rates loaded before summing, show "rates loading" indicator |
+### Unfixed (0)
 
 ---
 
@@ -524,12 +526,17 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 | 21.1 | CSV import doesn't update positions or portfolio metrics | Added position reconciliation: aggregates buy/sell per ticker into shares/avgCost, creates/updates positions, re-renders portfolio overview | index.html:4548-4570 |
 | 21.2 | No guard against concurrent `autoLoad()` — 4 call sites can race | Added `_autoLoadRunning` boolean guard at top/bottom of autoLoad() | index.html:11343 |
 
-### Unfixed (3)
+### Fixed in Session 5
+
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 21.4 | Finnhub rate-limit response cached in D1 for 12 hours | Added `!fresh.rateLimited` guard before cache upsert | index.html:8279 |
+
+### Unfixed (2)
 
 | # | Bug | Impact | Reason |
 |---|-----|--------|--------|
 | 21.U3 | Worker `/api/migrate` has no transaction wrapping — partial migration on failure leaves D1 in inconsistent state (some tables migrated, some not) | **MEDIUM** — broken D1 state requiring manual cleanup | Wrap migration in D1 transaction or add rollback mechanism |
-| 21.U4 | Finnhub rate-limit response `{rateLimited:true}` cached in D1 `api_cache` for 12 hours — blocks insider trading data until cache expires | **MEDIUM** — no insider data shown for half a day after rate limit hit | Check response before caching; skip cache on rate-limit |
 | 21.U5 | D1 mode offline at startup shows 'Loading from D1...' spinner for 15 seconds with no offline indicator or localStorage fallback | **LOW** — poor UX on startup without internet | Check `navigator.onLine` before D1 load; fall through to localStorage |
 
 ---

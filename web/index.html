@@ -2664,6 +2664,13 @@ function solveGrowth(fcf0,dr,fadeYears,terminalFn){
 
 function calcReverseDCF(){
   const mc=V('s-mc'),fcf0=V('s-fcf0'),dr=V('s-dr')/100,tg=V('s-tg')/100,em=V('s-em'),cash=V('s-cash'),debt=V('s-debt'),fade=V('s-fade');
+  if(mc<=0||fcf0<=0){
+    ['rdcfp-results','rdcfe-results'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<div class="result-box"><div class="label">Implied Growth</div><div class="value neutral">—</div></div>'});
+    ['sum-rdcfp-val','sum-rdcfe-val'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent='—';el.className='sc-value neutral'}});
+    ['sum-rdcfp-sub','sum-rdcfe-sub'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='enter Market Cap & FCF'});
+    for(let i=0;i<=10;i++){T('rp-f'+i,'—');if(i>0)T('rp-p'+i,'—')}
+    return;
+  }
   const targetEV=mc-cash+debt;
   T('rdcf-fade-label',fade);T('rdcf-term-label',(tg*100).toFixed(1)+'%');
   T('rdcf-fade-label2',fade);T('rdcf-em-label',em);
@@ -3289,7 +3296,7 @@ const API={
 };
 let d1Mode=false;
 let _d1CompanyMap={};
-function _tickerToD1Id(ticker){const s=tStocks[ticker];return s&&s._d1Id?s._d1Id:null}
+function _tickerToD1Id(ticker){const s=tStocks[ticker];if(s&&!s._d1Id)console.warn('_tickerToD1Id: no D1 ID for',ticker);return s&&s._d1Id?s._d1Id:null}
 
 // Data versioning
 const SCHEMA_VERSION=8;
@@ -3581,6 +3588,8 @@ function renderPositions(){
 
   let totalCost=0,totalValue=0;
   const base=getBaseCurrency();
+  const hasRates=pfExchangeRates.rates&&Object.keys(pfExchangeRates.rates).length>0;
+  const hasMixedCurrency=list.some(p=>(p.currency||'USD')!==base);
   const rows=list.map(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
@@ -3630,7 +3639,7 @@ function renderPositions(){
     <div class="pf-summary-item"><span class="pf-summary-label">Total Cost</span><span class="pf-summary-value">${fmt(totalCost,2)}</span></div>
     <div class="pf-summary-item"><span class="pf-summary-label">Market Value</span><span class="pf-summary-value">${fmt(totalValue,2)}</span></div>
     <div class="pf-summary-item"><span class="pf-summary-label">P&L</span><span class="pf-summary-value ${pClass}">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} (${totalPnlPct>=0?'+':''}${totalPnlPct.toFixed(1)}%)</span></div>
-  </div>`;
+  </div>${hasMixedCurrency&&!hasRates?'<div style="color:var(--yellow);font-size:12px;padding:4px 8px">⚠ Exchange rates not loaded — totals may mix currencies. <button onclick="fetchExchangeRates()" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline">Fetch rates</button></div>':''}`;
 
   c.innerHTML=`<div style="overflow-x:auto"><table class="pf-pos-table"><thead><tr>
     <th scope="col">Ticker</th><th scope="col">Account</th><th scope="col">Type</th><th scope="col" class="num">Shares</th><th scope="col" class="num">Avg Cost</th><th scope="col" class="num">Price</th><th scope="col" class="num">Value</th><th scope="col" class="num">P&L</th><th scope="col" class="num">P&L %</th><th></th>
@@ -8276,7 +8285,7 @@ async function cachedFetch(ticker,dataSource,fetchFn){
     }catch(e){console.warn('Cache check failed for '+dataSource+':',e)}
   }
   const fresh=await fetchFn();
-  if(fresh!=null){
+  if(fresh!=null&&!fresh.rateLimited){
     if(dataSource==='stock_data')_lastCacheAge={source:dataSource,fetched_at:new Date().toISOString(),ageHours:0};
     try{await API.put('cache-upsert',{company_id:companyId,data_source:dataSource,data_json:fresh})}catch(e){console.error('Cache upsert failed:',e)}
   }
@@ -8491,6 +8500,9 @@ function removeTrackerStock(ticker){
   if(d1Mode&&d1Id)API.del('companies/'+d1Id).catch(e=>console.error('D1 del company:',e));
   delete tStocks[ticker];
   if(divHistory[ticker]){delete divHistory[ticker];saveDividendHistory()}
+  const notesBefore=researchNotes.length;
+  researchNotes=researchNotes.filter(n=>n.companyTicker!==ticker);
+  if(researchNotes.length<notesBefore)saveResearchNotes();
   rvData.entries=rvData.entries.filter(e=>e.companyTicker!==ticker);
   saveReviews();
   pfPositions=pfPositions.filter(p=>p.ticker!==ticker);
