@@ -26,13 +26,13 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 16 | Phase 15 Feature QA | `bc15b16`+`872b96b` | 2026-06-30 | 4 | 0 |
 | 17 | Phase 14 Asset Types QA | `5cd3a24` | 2026-07-01 | 6 | 0 |
 | 18 | Phase 15.4 Price Alerts QA | `631a3e2` | 2026-07-01 | 2 | 0 |
-| 19 | Data Persistence & Sync | — | 2026-07-01 | 0 | 11 |
-| 20 | Financial Calculation Accuracy | — | 2026-07-01 | 0 | 7 |
-| 21 | Cross-Module Integration | — | 2026-07-01 | 0 | 5 |
+| 19 | Data Persistence & Sync | `2c36bdc` | 2026-07-01 | 3 | 8 |
+| 20 | Financial Calculation Accuracy | `ecdf115`+`6585785` | 2026-07-01 | 5 | 2 |
+| 21 | Cross-Module Integration | `6585785` | 2026-07-01 | 1 | 4 |
 | 22 | Performance | — | 2026-07-01 | 0 | 3 |
 | 23 | Security & Code Quality | — | 2026-07-01 | 0 | 2 |
 
-**Total: 168 fixed, 49 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
+**Total: 177 fixed, 40 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
 
 ---
 
@@ -471,13 +471,18 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ## Category 19 — Data Persistence & Sync (Full QA Audit 2026-07-01)
 
-### Unfixed (11)
+### Fixed (3) — `2c36bdc`
+
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 19.1 | `autoSave()` no try/catch — localStorage quota error kills flushAll | Wrapped in try/catch, shows toast on QuotaExceededError | index.html:11360 |
+| 19.2 | D1 save failure permanently loses data — no retry, D1 overwrites newer localStorage | Added retry with backoff (3 attempts), dirty-key tracking per key, reconcileDirtyKeys() on D1 load prefers localStorage when dirty | index.html:3200-3250 |
+| 19.3 | `refreshProfileData()` overwrites user-editable fields not in preserve list | Added 14 fields to preserve array: thesis, sortOrder, dcfMode, evaWacc, sellTriggers, priceAlerts, learningLog, convictionHistory, followSources, earningsCalendar, pipelineStatus, dateAdded, sbc, roic | index.html:8407 |
+
+### Unfixed (8)
 
 | # | Bug | Impact | Reason |
 |---|-----|--------|--------|
-| 19.U1 | `autoSave()` (line 11360) has no try/catch — localStorage quota error prevents `flushAll()` from running, losing all pending D1 data on page close | **CRITICAL** — silent data loss on full localStorage | Needs careful implementation — must not mask other errors |
-| 19.U2 | D1 save failure permanently loses data — failed saves are never retried, and D1 takes precedence on reload, overwriting newer localStorage fallback | **CRITICAL** — user changes silently lost after network error | Needs retry queue + dirty-flag mechanism + localStorage-vs-D1 timestamp comparison |
-| 19.U3 | `refreshProfileData()` overwrites user-editable fields not in the preserve list (thesis, sortOrder, dcfMode, evaWacc, sellTriggers, priceAlerts, learningLog, convictionHistory, followSources, earningsCalendar) | **HIGH** — user loses manually entered data on profile refresh | Add missing fields to preserve array at line 8379 |
 | 19.U4 | `scheduleSave` (line 3200) can overlap — timer callback and new scheduleSave fire the same key's async fn concurrently, causing duplicate D1 writes | **MEDIUM** — potential write conflicts on D1 | Needs in-flight promise tracking per key |
 | 19.U5 | `flushAll()` (line 3205) has no reentrance guard — `beforeunload` and `visibilitychange` can trigger concurrent flushes, breaking keepalive on in-flight requests | **MEDIUM** — data loss on mobile Safari app-switch | Add `_flushing` guard flag |
 | 19.U6 | `saveTrackerStocks` closure (line 7606) reads `tStocks` during multi-step async execution — mutations between steps cause companies/sub-entities to get out of sync | **MEDIUM** — inconsistent D1 state after concurrent edits + save | Snapshot tStocks at closure start |
@@ -491,27 +496,37 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ## Category 20 — Financial Calculation Accuracy (Full QA Audit 2026-07-01)
 
-### Unfixed (7)
+### Fixed (5) — `ecdf115` + `6585785`
+
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 20.1 | `convertCurrency()` falsy check passes NaN/undefined/null through | Changed to `if(amount==null\|\|!isFinite(amount))return null` | index.html:4384 |
+| 20.2 | One NaN-price position poisons entire portfolio total | Added `isFinite()` guards to all 8 portfolio sum loops | index.html:3576,4028,4114,4183,4314,4627,4808,6391 |
+| 20.3 | `getConvictionHistory()` reads wrong data path, missing `cl.sections.psychology` | Changed to `cl.psychology\|\|cl.sections?.psychology\|\|{}` | index.html:6441 |
+| 20.5 | Global `parseNum()` mishandles European period-as-thousands (`1.500` → 1.5) | Added European format detection regex before comma stripping | index.html:7595 |
+| 20.6 | CSV date parser hardcoded DD/MM/YYYY — swaps day/month for US formats | Added auto-detection: scans all dates for fields >12 to determine DD/MM vs MM/DD | index.html:4525 |
+
+### Unfixed (2)
 
 | # | Bug | Impact | Reason |
 |---|-----|--------|--------|
-| 20.U1 | `convertCurrency()` line 4356 falsy check `if(!amount)return amount` passes NaN/undefined/null through instead of returning null — one bad value can poison totals | **HIGH** — NaN propagates through portfolio calculations | Change to `if(amount==null\|\|!isFinite(amount))return null` |
-| 20.U2 | One position with NaN price poisons entire portfolio total — `totalValue+=NaN` makes all remaining positions sum to NaN in dashboard | **HIGH** — entire dashboard summary shows NaN/broken with one bad position | Guard each position: `if(isFinite(valInBase)) totalValue+=valInBase` |
-| 20.U3 | `getConvictionHistory()` line 6441 reads from `cl.psychology` only, missing `cl.sections.psychology` (the current storage format) — conviction chart/badge always empty for new entries | **HIGH** — conviction tracker shows no data even when user has filled psychology section | Change to `cl.psychology\|\|cl.sections?.psychology\|\|{}` matching line 6313 pattern |
 | 20.U4 | `calcReverseDCF()` runs 200-iteration binary search solver when Market Cap or FCF is 0/empty — produces a finite but meaningless implied growth rate that gets displayed | **MEDIUM** — misleading calculated value shown to user | Add guard: `if(mc<=0\|\|fcf0<=0)` show '—' and return |
-| 20.U5 | Global `parseNum()` (line 7533) mishandles European period-as-thousands numbers — `1.500` (meaning 1500) parsed as 1.5 | **MEDIUM** — wrong values for users pasting European-formatted numbers | Add European format detection regex from CSV parseNum |
-| 20.U6 | CSV date parser (line 4497) hardcoded to DD/MM/YYYY — silently swaps day/month for US-format broker exports (IBKR, Schwab) | **MEDIUM** — wrong transaction dates, corrupted portfolio history | Add date format selector in CSV import modal |
 | 20.U7 | Mixed-currency portfolio silently sums values without conversion when exchange rates haven't loaded yet | **MEDIUM** — incorrect portfolio total until rates load, no warning shown | Check rates loaded before summing, show "rates loading" indicator |
 
 ---
 
 ## Category 21 — Cross-Module Integration (Full QA Audit 2026-07-01)
 
-### Unfixed (5)
+### Fixed (1) — `6585785`
+
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 21.1 | CSV import doesn't update positions or portfolio metrics | Added position reconciliation: aggregates buy/sell per ticker into shares/avgCost, creates/updates positions, re-renders portfolio overview | index.html:4548-4570 |
+
+### Unfixed (4)
 
 | # | Bug | Impact | Reason |
 |---|-----|--------|--------|
-| 21.U1 | CSV transaction import doesn't trigger position recalc or TWR/XIRR update — imported transactions not reflected in portfolio metrics until manual refresh | **HIGH** — portfolio returns show stale values after bulk import | Call position recalc + TWR/XIRR after CSV import completes |
 | 21.U2 | No guard against concurrent `autoLoad()` — 4 call sites with no re-entrancy flag, encryption setup + window.load can race causing duplicate API fetches and `_d1CompanyMap` corruption | **MEDIUM** — data corruption on startup in edge cases | Add `_autoLoadRan` boolean guard |
 | 21.U3 | Worker `/api/migrate` has no transaction wrapping — partial migration on failure leaves D1 in inconsistent state (some tables migrated, some not) | **MEDIUM** — broken D1 state requiring manual cleanup | Wrap migration in D1 transaction or add rollback mechanism |
 | 21.U4 | Finnhub rate-limit response `{rateLimited:true}` cached in D1 `api_cache` for 12 hours — blocks insider trading data until cache expires | **MEDIUM** — no insider data shown for half a day after rate limit hit | Check response before caching; skip cache on rate-limit |
