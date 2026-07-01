@@ -258,6 +258,8 @@ Status: COMPLETE (2026-06-27)
 - [ ] Screener bővítés: globális instrumentumok (150K+) a saját DB helyett
 
 ### Maybe Later (UX & Performance)
+- [x] Global search (Cmd+K) — search palette across all modules: companies, positions, transactions, research notes, reviews, company thesis notes
+- [x] Form validation — visual inline validation for position and transaction forms with Hungarian error messages, red border highlights, auto-clear on focus
 - [ ] Onboarding flow — Welcome screen for new users (3-4 steps: add first company → set up portfolio → explore dashboard). Currently new users land on a pre-filled DCF calculator with no context. Could include guided tour, sample data option, or progressive disclosure.
 - [ ] Undo system evolution — Current: 6s undo toast for positions, transactions, notes, reviews, saved stocks (local only). Future: D1 cloud undo (re-insert on undo instead of local-only restore), undo stack for Ctrl+Z support, soft-delete with trash view and 30-day purge, batch undo for multi-item operations.
 - [ ] Lazy-load charts (defer Chart.js rendering until canvas is visible)
