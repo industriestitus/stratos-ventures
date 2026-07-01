@@ -3197,10 +3197,17 @@ const API={
   put(path,body){return this._fetch('PUT',path,body)},
   del(path){return this._fetch('DELETE',path)},
   _pendingFns:{},
+  _retryCount:{},
+  _dirty:{},
+  _markClean(key){delete this._dirty[key];try{localStorage.removeItem('d1_dirty_'+key)}catch(e){}},
+  _markDirty(key){const ts=Date.now();this._dirty[key]=ts;try{localStorage.setItem('d1_dirty_'+key,String(ts))}catch(e){}},
+  isDirty(key){return !!(this._dirty[key]||localStorage.getItem('d1_dirty_'+key))},
+  getDirtyTs(key){return this._dirty[key]||parseInt(localStorage.getItem('d1_dirty_'+key))||0},
   scheduleSave(key,fn,delay=1500){
     if(this._timers[key])clearTimeout(this._timers[key]);
     this._pendingFns[key]=fn;
-    this._timers[key]=setTimeout(()=>{this._timers[key]=null;delete this._pendingFns[key];fn().catch(e=>{console.error('D1 save error ('+key+'):',e);showToast('Cloud save failed ('+key+') — data kept locally','error',5000);this._localFallback(key)})},delay);
+    this._markDirty(key);
+    this._timers[key]=setTimeout(()=>{this._timers[key]=null;delete this._pendingFns[key];fn().then(()=>{this._retryCount[key]=0;this._markClean(key)}).catch(e=>{console.error('D1 save error ('+key+'):',e);this._localFallback(key);const retries=(this._retryCount[key]||0)+1;this._retryCount[key]=retries;if(retries<=3){const backoff=Math.min(retries*2000,10000);showToast('Cloud save failed ('+key+') — retrying in '+Math.round(backoff/1000)+'s','warning',3000);this.scheduleSave(key,fn,backoff)}else{showToast('Cloud save failed ('+key+') — data kept locally. Will sync on next save.','error',8000);this._retryCount[key]=0}})},delay);
   },
   flushAll(){
     this._keepalive=true;
@@ -3225,6 +3232,27 @@ const API={
         catch(quotaErr){console.error('localStorage quota exceeded for '+key);showToast('Storage full — export your data to avoid data loss','error',5000)}
       }
     }catch(e){console.error('localStorage fallback failed:',e)}
+  },
+  reconcileDirtyKeys(){
+    const lsKeyMap={trackerStocks:'tracker_stocks_v1',pfAccounts:'portfolio_accounts_v1',pfPositions:'portfolio_positions_v1',pfTransactions:'portfolio_transactions_v1',pfSnapshots:'portfolio_snapshots_v1',dashTodos:'dashboard_todos_v1',exRates:'portfolio_exchange_rates_v1',divHistory:'dividend_history_v1',reviews:'reviews_v1',researchNotes:'research_notes_v1',framework:'framework_v1',divSettings:'dividend_settings_v1',dashFi:'dashboard_fi_settings_v1',dashBench:'dashboard_benchmark_v1',dash52w:'dashboard_52w_highs_v1'};
+    const targets={pfAccounts:v=>pfAccounts.splice(0,Infinity,...v),pfPositions:v=>pfPositions.splice(0,Infinity,...v),pfTransactions:v=>pfTransactions.splice(0,Infinity,...v),pfSnapshots:v=>pfSnapshots.splice(0,Infinity,...v),dashTodos:v=>{dbTodos.length=0;v.forEach(t=>dbTodos.push(t))},researchNotes:v=>researchNotes.splice(0,Infinity,...v)};
+    let reconciled=0;
+    Object.entries(lsKeyMap).forEach(([key,lsKey])=>{
+      if(this.isDirty(key)){
+        try{
+          const raw=localStorage.getItem(lsKey);
+          if(raw){
+            const data=JSON.parse(raw);
+            if(targets[key]&&Array.isArray(data)){targets[key](data);reconciled++}
+            else if(key==='trackerStocks'&&typeof data==='object'){Object.assign(tStocks,data);reconciled++}
+            else if(key==='exRates'&&typeof data==='object'){Object.assign(pfExchangeRates,data);reconciled++}
+            else if(key==='reviews'&&typeof data==='object'){Object.assign(rvData,data);reconciled++}
+            else if(key==='framework'&&typeof data==='object'){Object.assign(fwData,data);reconciled++}
+          }
+        }catch(e){console.error('Reconcile dirty key '+key+':',e)}
+      }
+    });
+    if(reconciled)showToast('Recovered '+reconciled+' unsaved change(s) from local cache','info',5000);
   },
   async postBatch(path,items,chunkSize=100){
     if(!items.length)return{results:[]};
@@ -8376,7 +8404,7 @@ async function fetchStockData(ticker){
 
   const data=await cachedFetch(ticker,'stock_data',()=>_fetchStockDataRaw(ticker));
   if(data){
-    const preserve=['overriddenData','_d1Id','notes','earnings','filings','pipeline','companyType','todos','valuations','checklist'];
+    const preserve=['overriddenData','_d1Id','notes','earnings','filings','pipeline','companyType','todos','valuations','checklist','thesis','sortOrder','dcfMode','evaWacc','sellTriggers','priceAlerts','learningLog','convictionHistory','followSources','earningsCalendar','pipelineStatus','dateAdded','sbc','roic'];
     Object.keys(data).forEach(k=>{if(!preserve.includes(k))stock[k]=data[k]});
   }
   if(stock.price!=null&&(stock.price<0||!isFinite(stock.price))){console.warn('Invalid price for',ticker,stock.price);stock.price=null}
@@ -11319,6 +11347,7 @@ async function autoLoad(){
         if(Object.keys(sv).length)_savedStocksCache=sv;
       }catch(e){console.error('D1 load valuations:',e)}
     }catch(e){console.error('D1 load error:',e);showToast('Some data failed to load from D1','warning')}
+    API.reconcileDirtyKeys();
     overlay.remove();
   }else{
     // localStorage mode
@@ -11358,8 +11387,13 @@ async function autoLoad(){
   checkPriceAlerts();
 }
 function autoSave(){
-  localStorage.setItem('valuation_last_v2',JSON.stringify(getAllData()));
-  if(!d1Mode){localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()}
+  try{
+    localStorage.setItem('valuation_last_v2',JSON.stringify(getAllData()));
+    if(!d1Mode){localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()}
+  }catch(e){
+    console.error('autoSave failed:',e);
+    if(e.name==='QuotaExceededError')showToast('Storage full — some data may not be saved locally','error',8000);
+  }
 }
 
 document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});

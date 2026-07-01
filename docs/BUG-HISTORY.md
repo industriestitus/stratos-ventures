@@ -26,8 +26,13 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 16 | Phase 15 Feature QA | `bc15b16`+`872b96b` | 2026-06-30 | 4 | 0 |
 | 17 | Phase 14 Asset Types QA | `5cd3a24` | 2026-07-01 | 6 | 0 |
 | 18 | Phase 15.4 Price Alerts QA | `631a3e2` | 2026-07-01 | 2 | 0 |
+| 19 | Data Persistence & Sync | — | 2026-07-01 | 0 | 11 |
+| 20 | Financial Calculation Accuracy | — | 2026-07-01 | 0 | 7 |
+| 21 | Cross-Module Integration | — | 2026-07-01 | 0 | 5 |
+| 22 | Performance | — | 2026-07-01 | 0 | 3 |
+| 23 | Security & Code Quality | — | 2026-07-01 | 0 | 2 |
 
-**Total: 168 fixed, 21 potential (unfixed)**
+**Total: 168 fixed, 49 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
 
 ---
 
@@ -461,6 +466,79 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ### Bug 21.6 — MEDIUM: Missing try/catch around fetch loop
 **Problem:** Unexpected error would abort without saving partial results. **Fix:** Wrapped inner loop in try/catch.
+
+---
+
+## Category 19 — Data Persistence & Sync (Full QA Audit 2026-07-01)
+
+### Unfixed (11)
+
+| # | Bug | Impact | Reason |
+|---|-----|--------|--------|
+| 19.U1 | `autoSave()` (line 11360) has no try/catch — localStorage quota error prevents `flushAll()` from running, losing all pending D1 data on page close | **CRITICAL** — silent data loss on full localStorage | Needs careful implementation — must not mask other errors |
+| 19.U2 | D1 save failure permanently loses data — failed saves are never retried, and D1 takes precedence on reload, overwriting newer localStorage fallback | **CRITICAL** — user changes silently lost after network error | Needs retry queue + dirty-flag mechanism + localStorage-vs-D1 timestamp comparison |
+| 19.U3 | `refreshProfileData()` overwrites user-editable fields not in the preserve list (thesis, sortOrder, dcfMode, evaWacc, sellTriggers, priceAlerts, learningLog, convictionHistory, followSources, earningsCalendar) | **HIGH** — user loses manually entered data on profile refresh | Add missing fields to preserve array at line 8379 |
+| 19.U4 | `scheduleSave` (line 3200) can overlap — timer callback and new scheduleSave fire the same key's async fn concurrently, causing duplicate D1 writes | **MEDIUM** — potential write conflicts on D1 | Needs in-flight promise tracking per key |
+| 19.U5 | `flushAll()` (line 3205) has no reentrance guard — `beforeunload` and `visibilitychange` can trigger concurrent flushes, breaking keepalive on in-flight requests | **MEDIUM** — data loss on mobile Safari app-switch | Add `_flushing` guard flag |
+| 19.U6 | `saveTrackerStocks` closure (line 7606) reads `tStocks` during multi-step async execution — mutations between steps cause companies/sub-entities to get out of sync | **MEDIUM** — inconsistent D1 state after concurrent edits + save | Snapshot tStocks at closure start |
+| 19.U7 | `flushAll` during `beforeunload` cannot complete multi-step async saves — only first fetch gets keepalive, sub-entities likely lost on page close | **MEDIUM** — sub-entity data (todos, earnings, checklist) lost on tab close | Use `navigator.sendBeacon()` or single-payload endpoint |
+| 19.U8 | Multi-tab conflicts — no data reload on `storage` event, D1 batch writes from different tabs overwrite each other with stale data | **MEDIUM** — last-tab-to-save wins, earlier tab's changes lost | Needs `storage` event listener + conflict resolution |
+| 19.U9 | Research notes not cleaned up on company delete — orphaned notes remain in `researchNotes` array and D1 | **MEDIUM** — data leaks, confusing stale notes appear | Add cascade delete in `deleteCompany()` |
+| 19.U10 | `_tickerToD1Id()` silently filters out null returns — if a company has no D1 ID, its sub-entities are silently skipped during save | **MEDIUM** — silent data loss for companies added while D1 is unreachable | Log warning when null D1 ID encountered |
+| 19.U11 | Corrupted localStorage silently initializes empty state with no user warning — empty catch blocks on JSON.parse, new data overwrites good D1 data | **LOW** — user loses data without knowing why after browser crash | Add console.error + warning toast in catch blocks |
+
+---
+
+## Category 20 — Financial Calculation Accuracy (Full QA Audit 2026-07-01)
+
+### Unfixed (7)
+
+| # | Bug | Impact | Reason |
+|---|-----|--------|--------|
+| 20.U1 | `convertCurrency()` line 4356 falsy check `if(!amount)return amount` passes NaN/undefined/null through instead of returning null — one bad value can poison totals | **HIGH** — NaN propagates through portfolio calculations | Change to `if(amount==null\|\|!isFinite(amount))return null` |
+| 20.U2 | One position with NaN price poisons entire portfolio total — `totalValue+=NaN` makes all remaining positions sum to NaN in dashboard | **HIGH** — entire dashboard summary shows NaN/broken with one bad position | Guard each position: `if(isFinite(valInBase)) totalValue+=valInBase` |
+| 20.U3 | `getConvictionHistory()` line 6441 reads from `cl.psychology` only, missing `cl.sections.psychology` (the current storage format) — conviction chart/badge always empty for new entries | **HIGH** — conviction tracker shows no data even when user has filled psychology section | Change to `cl.psychology\|\|cl.sections?.psychology\|\|{}` matching line 6313 pattern |
+| 20.U4 | `calcReverseDCF()` runs 200-iteration binary search solver when Market Cap or FCF is 0/empty — produces a finite but meaningless implied growth rate that gets displayed | **MEDIUM** — misleading calculated value shown to user | Add guard: `if(mc<=0\|\|fcf0<=0)` show '—' and return |
+| 20.U5 | Global `parseNum()` (line 7533) mishandles European period-as-thousands numbers — `1.500` (meaning 1500) parsed as 1.5 | **MEDIUM** — wrong values for users pasting European-formatted numbers | Add European format detection regex from CSV parseNum |
+| 20.U6 | CSV date parser (line 4497) hardcoded to DD/MM/YYYY — silently swaps day/month for US-format broker exports (IBKR, Schwab) | **MEDIUM** — wrong transaction dates, corrupted portfolio history | Add date format selector in CSV import modal |
+| 20.U7 | Mixed-currency portfolio silently sums values without conversion when exchange rates haven't loaded yet | **MEDIUM** — incorrect portfolio total until rates load, no warning shown | Check rates loaded before summing, show "rates loading" indicator |
+
+---
+
+## Category 21 — Cross-Module Integration (Full QA Audit 2026-07-01)
+
+### Unfixed (5)
+
+| # | Bug | Impact | Reason |
+|---|-----|--------|--------|
+| 21.U1 | CSV transaction import doesn't trigger position recalc or TWR/XIRR update — imported transactions not reflected in portfolio metrics until manual refresh | **HIGH** — portfolio returns show stale values after bulk import | Call position recalc + TWR/XIRR after CSV import completes |
+| 21.U2 | No guard against concurrent `autoLoad()` — 4 call sites with no re-entrancy flag, encryption setup + window.load can race causing duplicate API fetches and `_d1CompanyMap` corruption | **MEDIUM** — data corruption on startup in edge cases | Add `_autoLoadRan` boolean guard |
+| 21.U3 | Worker `/api/migrate` has no transaction wrapping — partial migration on failure leaves D1 in inconsistent state (some tables migrated, some not) | **MEDIUM** — broken D1 state requiring manual cleanup | Wrap migration in D1 transaction or add rollback mechanism |
+| 21.U4 | Finnhub rate-limit response `{rateLimited:true}` cached in D1 `api_cache` for 12 hours — blocks insider trading data until cache expires | **MEDIUM** — no insider data shown for half a day after rate limit hit | Check response before caching; skip cache on rate-limit |
+| 21.U5 | D1 mode offline at startup shows 'Loading from D1...' spinner for 15 seconds with no offline indicator or localStorage fallback | **LOW** — poor UX on startup without internet | Check `navigator.onLine` before D1 load; fall through to localStorage |
+
+---
+
+## Category 22 — Performance (Full QA Audit 2026-07-01)
+
+### Unfixed (3)
+
+| # | Bug | Impact | Reason |
+|---|-----|--------|--------|
+| 22.U1 | `recalcAll()` fires on every keystroke (40+ calculator inputs) with no debounce — runs 5 calculations + destroys/recreates 2 Chart.js instances per keypress | **MEDIUM** — visible flicker on mobile, GC pressure, wasted CPU | Debounce with `requestAnimationFrame` |
+| 22.U2 | Chart.js instances destroyed and recreated on every `recalcAll` call instead of using `chart.update()` — causes flicker and memory churn | **MEDIUM** — poor UX on slower devices | Store chart instances in map, call `chart.update()` on data change |
+| 22.U3 | Redundant `recalcAll()` calls — `loadData()` already calls it internally, but callers (import, password change) call it again | **LOW** — wasteful double calculation on import/restore | Remove redundant calls or debounce with RAF |
+
+---
+
+## Category 23 — Security & Code Quality (Full QA Audit 2026-07-01)
+
+### Unfixed (2)
+
+| # | Bug | Impact | Reason |
+|---|-----|--------|--------|
+| 23.U1 | 10 of 12 modal openers bypass `_openModal()` — no focus trap, no Escape key handler, no scroll lock for these modals | **MEDIUM** — accessibility issue, background scrollable while modal open | Route all modal opens through `_openModal()` |
+| 23.U2 | `_encPass` global variable holds encryption password in memory with no idle timeout — accessible via DevTools console until page close | **LOW** — encryption password exposed to XSS or physical access | Add idle timeout to clear `_encPass` after N minutes |
 
 ---
 
