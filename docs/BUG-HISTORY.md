@@ -33,7 +33,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 23 | Security & Code Quality | S7 | 2026-07-01 | 2 | 0 |
 | 24 | KNOWN-ISSUES Bugfix Sweep | `bde6c93` | 2026-07-01 | 6 | 0 |
 | 25 | KNOWN-ISSUES Medium Sweep | `2dfccef` | 2026-07-01 | 6 | 1 |
-| 26 | LOW + Deep Audit Sweep | pending | 2026-07-01 | 8 | 2 |
+| 26 | LOW + Deep Audit Sweep | `5cadef9` | 2026-07-01 | 8 | 2 |
 
 **Total: 221 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -679,7 +679,7 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ---
 
-## Category 26 — LOW + Deep Audit Sweep (pending commit)
+## Category 26 — LOW + Deep Audit Sweep (`5cadef9`)
 
 ### Fixed (8)
 
