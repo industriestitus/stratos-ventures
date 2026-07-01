@@ -31,8 +31,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 21 | Cross-Module Integration | S3-S5+S7 | 2026-07-01 | 5 | 0 |
 | 22 | Performance | S6 | 2026-07-01 | 3 | 0 |
 | 23 | Security & Code Quality | S7 | 2026-07-01 | 2 | 0 |
+| 24 | KNOWN-ISSUES Bugfix Sweep | `bde6c93` | 2026-07-01 | 6 | 0 |
 
-**Total: 201 fixed, 21 potential (unfixed)** — Categories 19-24 ALL COMPLETE (0 unfixed)
+**Total: 207 fixed, 21 potential (unfixed)** — Categories 19-24 ALL COMPLETE (0 unfixed)
 
 ---
 
@@ -638,9 +639,26 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ---
 
+## Category 24 — KNOWN-ISSUES Bugfix Sweep (`bde6c93`)
+
+### Fixed (6)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | CRITICAL | P.4: Worker has no rate limiting — attacker can exhaust API quotas | Per-IP rate limiting: 30/min Yahoo proxy, 120/min D1 API, 429+Retry-After |
+| 2 | HIGH | P.1: No FMP API call budget tracking (250/day limit) | localStorage daily counter with auto-reset, toast at 80%/100% |
+| 3 | HIGH | P.2: No client-side cache in non-D1 mode | In-memory TTL cache (`_memCache` Map) respecting `CACHE_TTLS` |
+| 4 | HIGH | P.6: Company DELETE + notes DELETE not atomic | Wrapped in `db.batch()` |
+| 5 | HIGH | P.7: Dividend fetch dedup flag not in finally block | try/finally wrapping entire function body |
+| 6 | HIGH | P.10: crypto.subtle crashes on non-HTTPS | `isSecureContext` guard in `deriveKey()` |
+
+### Unfixed (0)
+
+---
+
 ## Deployment Notes
 
-- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth) and any future Worker changes:
+- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), and any future Worker changes:
   ```bash
   cd web/cloudflare-worker && npx wrangler deploy
   ```
