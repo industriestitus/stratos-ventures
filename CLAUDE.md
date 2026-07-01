@@ -8,20 +8,30 @@ cd web && python3 -m http.server 8765
 ```
 
 ## Tech Stack
-- **Web app**: Vanilla HTML/JS/CSS, Chart.js, localStorage + Cloudflare KV sync
-- **Backend**: Cloudflare Workers + KV (migrating to D1)
-- **Data APIs**: FMP (fundamentals), Finnhub (real-time), Yahoo Finance (EU stocks, via CF Worker proxy)
+- **Web app**: Vanilla HTML/JS/CSS, Chart.js, localStorage + D1 cloud sync
+- **Backend**: Cloudflare Workers + D1 (SQLite), KV (legacy sync)
+- **Data APIs**: FMP (fundamentals), Finnhub (real-time/insider), Yahoo Finance (EU stocks, via CF Worker proxy)
+- **Hosting**: GitHub Pages (frontend), Cloudflare Workers (backend)
 
 ## Architecture
 ```
 web/
-  index.html          — Main app (calculator + tracker + charts + settings)
-  cloudflare-worker/  — Yahoo Finance proxy + data sync backend
-  server.py           — Local dev server
-  serve.sh            — Local dev startup script
+  index.html          — Main app (11.6K lines, all-in-one SPA)
+  sw.js               — Service Worker (PWA caching, stratos-v5)
+  manifest.json       — PWA manifest
+  cloudflare-worker/  — Yahoo Finance proxy + D1 CRUD + sync backend
 docs/
+  ARCHITECTURE.md     — System architecture, data flow, cache layers
+  API-REFERENCE.md    — All API endpoints (Worker, FMP, Finnhub, Yahoo)
+  GLOSSARY.md         — Financial formulas, metrics, scoring thresholds
+  CODING-LESSONS.md   — 25 validated coding pitfalls from 171+ bug fixes
+  KNOWN-ISSUES.md     — Unfixed issues, tech debt, dev gotchas
+  DECISIONS.md        — 29 Architecture Decision Records (ADRs)
+  DEPLOYMENT.md       — Deploy guide (GitHub Pages, Worker, D1, secrets)
   ROADMAP.md          — Project phases and progress
-  reference-desktop-schema.sql — Old desktop SQLite schema (for D1 design reference)
+  d1-schema.sql       — D1 database schema (22 tables)
+  BUG-HISTORY.md      — QA audit log (171+ fixes, 19 categories)
+  EXPANSION-PLAN.md   — Phase 11-18 detailed specs
 ```
 
 ## Code Standards
@@ -42,6 +52,13 @@ docs/
 - Commit messages in English, concise
 - One feature per commit
 - Branch per major feature: `feature/portfolio`, `feature/notes`, etc.
+
+## Documentation Maintenance
+After each session, update relevant docs (see `memory/feedback_doc-maintenance.md` for full rules):
+- **Every session:** ROADMAP.md checkboxes, BUG-HISTORY.md QA findings
+- **Feature work:** KNOWN-ISSUES.md, CODING-LESSONS.md, GLOSSARY.md
+- **Architecture changes:** ARCHITECTURE.md, API-REFERENCE.md, DECISIONS.md, DEPLOYMENT.md
+- **Schema changes:** d1-schema.sql, ARCHITECTURE.md § 5
 
 ## Project Status
 See `docs/ROADMAP.md` for current phase, tasks, and progress.
