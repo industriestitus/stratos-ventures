@@ -33,8 +33,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 23 | Security & Code Quality | S7 | 2026-07-01 | 2 | 0 |
 | 24 | KNOWN-ISSUES Bugfix Sweep | `bde6c93` | 2026-07-01 | 6 | 0 |
 | 25 | KNOWN-ISSUES Medium Sweep | `2dfccef` | 2026-07-01 | 6 | 1 |
+| 26 | LOW + Deep Audit Sweep | pending | 2026-07-01 | 8 | 2 |
 
-**Total: 213 fixed, 22 potential (unfixed)** — P.3 accepted as API limitation
+**Total: 221 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -675,6 +676,30 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 | # | Severity | Bug | Reason |
 |---|----------|-----|--------|
 | 1 | MEDIUM | P.3: FMP /profile missing debt/cash data | External API limitation, Yahoo provides data when available |
+
+---
+
+## Category 26 — LOW + Deep Audit Sweep (pending commit)
+
+### Fixed (8)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | LOW | P.12: Two inconsistent parseNum functions | CSV version renamed to `csvNum()`, no more name collision |
+| 2 | LOW | P.17: renderPositions NaN propagation in P&L % | `isFinite()` guard, shows '—' instead of 'NaN' |
+| 3 | LOW | P.18: Screener score cache missing | `_screenerScoreCache` Map, invalidated on stock save |
+| 4 | Deep | D.1: Screener filter keys not escaped in onclick | All keys/labels escaped with `escH()` |
+| 5 | Deep | D.2: md.label in innerHTML without escH() | Fixed alongside D.1 |
+| 6 | Deep | D.3: parseInt without radix in 32 locations | Added `,10` radix to all 32 calls |
+| 7 | Deep | D.4: CSV regex backtracking risk | Length guard (>30 chars) before regex |
+| 8 | Deep | D.5: Prototype pollution in portfolio grouping | `Object.create(null)` for grouping objects |
+
+### Accepted (2)
+
+| # | Severity | Bug | Reason |
+|---|----------|-----|--------|
+| 1 | LOW | P.15: accent-color needs Safari 15.4+ | CSS spec limitation, cosmetic only |
+| 2 | LOW | P.16: fetch keepalive ignored in Firefox 90-99 | Browser limitation, negligible user base |
 
 ---
 

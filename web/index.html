@@ -2790,7 +2790,7 @@ function calcReverseDCF(){
 
 let ariaMultiples=[10,15,20,25,30,35],ariaInit=false;
 function initAriaMultiples(force){
-  const count=parseInt(document.getElementById('aria-mult-count').value);
+  const count=parseInt(document.getElementById('aria-mult-count',10).value);
   if(force||!ariaInit||ariaMultiples.length!==count){
     if(force||ariaMultiples.length!==count){const d=[10,15,20,25,30,35,40,45];ariaMultiples=d.slice(0,count)}
     ariaInit=true;
@@ -3304,7 +3304,7 @@ const API={
   _markClean(key){delete this._dirty[key];try{localStorage.removeItem('d1_dirty_'+key)}catch(e){}},
   _markDirty(key){const ts=Date.now();this._dirty[key]=ts;try{localStorage.setItem('d1_dirty_'+key,String(ts))}catch(e){}},
   isDirty(key){return !!(this._dirty[key]||localStorage.getItem('d1_dirty_'+key))},
-  getDirtyTs(key){return this._dirty[key]||parseInt(localStorage.getItem('d1_dirty_'+key))||0},
+  getDirtyTs(key){return this._dirty[key]||parseInt(localStorage.getItem('d1_dirty_'+key,10))||0},
   scheduleSave(key,fn,delay=1500){
     if(this._timers[key])clearTimeout(this._timers[key]);
     this._pendingFns[key]=fn;
@@ -3397,7 +3397,7 @@ const MIGRATIONS=[];
 MIGRATIONS[7]=function(){};
 
 function runMigrations(){
-  let v=parseInt(localStorage.getItem('schema_version')||'7');
+  let v=parseInt(localStorage.getItem('schema_version',10)||'7');
   if(v>SCHEMA_VERSION){console.warn('Data schema v'+v+' is newer than app v'+SCHEMA_VERSION+' — update the app');showToast('Your data was saved by a newer app version. Please update to avoid issues.','warning',8000);return}
   if(v>=SCHEMA_VERSION)return;
   for(;v<SCHEMA_VERSION;v++){
@@ -3601,7 +3601,7 @@ function saveAccount(){
   if(saveAccount._lock)return;saveAccount._lock=true;setTimeout(()=>saveAccount._lock=false,500);
   const name=document.getElementById('pf-acc-name').value.trim();
   const currency=document.getElementById('pf-acc-currency').value;
-  const editId=parseInt(document.getElementById('pf-acc-edit-id').value)||0;
+  const editId=parseInt(document.getElementById('pf-acc-edit-id',10).value)||0;
   if(!name){showToast('Account name is required','error');return}
   const dup=pfAccounts.find(a=>a.name.toLowerCase()===name.toLowerCase()&&a.id!==editId);
   if(dup){showToast('Account name already exists','error');return}
@@ -3667,7 +3667,7 @@ function renderPositions(){
   const filterAcc=document.getElementById('pf-pos-filter-account')?.value;
   const filterType=document.getElementById('pf-pos-filter-type')?.value;
   let list=pfPositions.slice();
-  if(filterAcc)list=list.filter(p=>p.accountId===parseInt(filterAcc));
+  if(filterAcc)list=list.filter(p=>p.accountId===parseInt(filterAcc,10));
   if(filterType)list=list.filter(p=>p.assetType===filterType);
 
   const sumEl=document.getElementById('pf-positions-summary');
@@ -3731,7 +3731,7 @@ function renderPositions(){
     <div class="pf-summary-item"><span class="pf-summary-label">Positions</span><span class="pf-summary-value">${list.length}</span></div>
     <div class="pf-summary-item"><span class="pf-summary-label">Total Cost</span><span class="pf-summary-value">${fmt(totalCost,2)}</span></div>
     <div class="pf-summary-item"><span class="pf-summary-label">Market Value</span><span class="pf-summary-value">${fmt(totalValue,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">P&L</span><span class="pf-summary-value ${pClass}">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} (${totalPnlPct>=0?'+':''}${totalPnlPct.toFixed(1)}%)</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">P&L</span><span class="pf-summary-value ${pClass}">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} (${isFinite(totalPnlPct)?(totalPnlPct>=0?'+':'')+totalPnlPct.toFixed(1)+'%':'—'})</span></div>
   </div>${hasMixedCurrency&&!hasRates?'<div style="color:var(--yellow);font-size:12px;padding:4px 8px">⚠ Exchange rates not loaded — totals may mix currencies. <button onclick="fetchExchangeRates()" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline">Fetch rates</button></div>':''}`;
 
   c.innerHTML=`<div style="overflow-x:auto"><table class="pf-pos-table"><thead><tr>
@@ -3786,10 +3786,10 @@ function updatePositionModalFields(){
 
   const accSel=document.getElementById('pf-pos-account');
   accSel.innerHTML=pfAccounts.map(a=>`<option value="${a.id}">${escH(a.name)} (${escH(a.currency)})</option>`).join('');
-  const selAcc=pfAccounts.find(a=>a.id===parseInt(accSel.value));
+  const selAcc=pfAccounts.find(a=>a.id===parseInt(accSel.value,10));
   document.getElementById('pf-pos-currency').value=selAcc?selAcc.currency:'USD';
   accSel.onchange=function(){
-    const acc=pfAccounts.find(a=>a.id===parseInt(this.value));
+    const acc=pfAccounts.find(a=>a.id===parseInt(this.value,10));
     document.getElementById('pf-pos-currency').value=acc?acc.currency:'USD';
   };
 }
@@ -3860,7 +3860,7 @@ function savePosition(){
   if(savePosition._lock)return;savePosition._lock=true;setTimeout(()=>savePosition._lock=false,500);
   const ticker=document.getElementById('pf-pos-ticker').value.trim().toUpperCase();
   const name=document.getElementById('pf-pos-name').value.trim();
-  const accountId=parseInt(document.getElementById('pf-pos-account').value);
+  const accountId=parseInt(document.getElementById('pf-pos-account',10).value);
   const assetType=document.getElementById('pf-pos-type').value;
   let shares=parseFloat(document.getElementById('pf-pos-shares').value);
   let avgCost=parseFloat(document.getElementById('pf-pos-avgcost').value);
@@ -3868,7 +3868,7 @@ function savePosition(){
   let currentPrice=priceVal?parseFloat(priceVal):null;
   const currency=document.getElementById('pf-pos-currency').value;
   const notes=document.getElementById('pf-pos-notes').value.trim();
-  const editId=parseInt(document.getElementById('pf-pos-edit-id').value)||0;
+  const editId=parseInt(document.getElementById('pf-pos-edit-id',10).value)||0;
 
   if(!ticker){showToast('Ticker / identifier is required','error');return}
   if(!accountId||!pfAccounts.find(a=>a.id===accountId)){showToast('Select a valid account','error');return}
@@ -3942,7 +3942,7 @@ function renderTransactions(){
   const filterTicker=(document.getElementById('pf-tx-filter-ticker')?.value||'').toUpperCase().trim();
 
   let list=pfTransactions.slice();
-  if(filterAcc)list=list.filter(t=>t.accountId===parseInt(filterAcc));
+  if(filterAcc)list=list.filter(t=>t.accountId===parseInt(filterAcc,10));
   if(filterType)list=list.filter(t=>t.type===filterType);
   if(filterTicker)list=list.filter(t=>(t.ticker||'').includes(filterTicker));
   list.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id-a.id);
@@ -4060,13 +4060,13 @@ function saveTransaction(){
   const type=document.getElementById('pf-tx-type').value;
   const date=document.getElementById('pf-tx-date').value;
   const ticker=document.getElementById('pf-tx-ticker').value.trim().toUpperCase();
-  const accountId=parseInt(document.getElementById('pf-tx-account').value);
+  const accountId=parseInt(document.getElementById('pf-tx-account',10).value);
   const shares=type!=='dividend'?parseFloat(document.getElementById('pf-tx-shares').value):null;
   const pricePerShare=type!=='dividend'?parseFloat(document.getElementById('pf-tx-price').value):null;
   const totalAmount=parseFloat(document.getElementById('pf-tx-total').value);
   const fees=parseFloat(document.getElementById('pf-tx-fees').value)||0;
   const notes=document.getElementById('pf-tx-notes').value.trim();
-  const editId=parseInt(document.getElementById('pf-tx-edit-id').value)||0;
+  const editId=parseInt(document.getElementById('pf-tx-edit-id',10).value)||0;
 
   if(!date){showToast('Date is required','error');return}
   if(date>new Date().toISOString().slice(0,10)){showToast('Date cannot be in the future','error');return}
@@ -4370,7 +4370,7 @@ function switchAllocChart(groupBy){
   document.querySelectorAll('#pf-panel-overview .card .tabs .tab')[idx]?.classList.add('active');
 
   const base=getBaseCurrency();
-  const groups={};
+  const groups=Object.create(null);
   pfPositions.forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
@@ -4625,11 +4625,11 @@ function renderCsvPreview(){
 
 function importCsvTransactions(){
   if(!_csvParsed||!_csvParsed.rows.length)return;
-  const accountId=parseInt(document.getElementById('pf-csv-account').value);
+  const accountId=parseInt(document.getElementById('pf-csv-account',10).value);
   const acc=pfAccounts.find(a=>a.id===accountId);
   if(!acc){showToast('Select an account','error');return}
   const mapping={};
-  Object.entries(_csvMapping).forEach(([i,field])=>{if(field!=='skip')mapping[field]=parseInt(i)});
+  Object.entries(_csvMapping).forEach(([i,field])=>{if(field!=='skip')mapping[field]=parseInt(i,10)});
 
   if(!('ticker' in mapping)){showToast('Map at least the Ticker column','error');return}
   if(!('date' in mapping)&&!('total' in mapping)){showToast('Map at least Date or Total column','error');return}
@@ -4643,7 +4643,7 @@ function importCsvTransactions(){
     _csvParsed.rows.forEach(row=>{
       const d=(row[mapping.date]||'').trim();
       const m=d.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.]\d{2,4}$/);
-      if(m){if(parseInt(m[1])>12)hasFirst13=true;if(parseInt(m[2])>12)hasSecond13=true}
+      if(m){if(parseInt(m[1],10)>12)hasFirst13=true;if(parseInt(m[2],10)>12)hasSecond13=true}
     });
     if(hasSecond13&&!hasFirst13)_dateFmt='dmy';
     else if(hasFirst13&&!hasSecond13)_dateFmt='mdy';
@@ -4662,17 +4662,17 @@ function importCsvTransactions(){
     let date=get('date')||now.split('T')[0];
     if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4}$/.test(date)){const p=date.split(/[\/\-\.]/);if(_dateFmt==='mdy')date=p[2]+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0');else date=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
     else if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2}$/.test(date)){const p=date.split(/[\/\-\.]/);if(_dateFmt==='mdy')date='20'+p[2]+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0');else date='20'+p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
-    const parseNum=(s)=>{if(!s)return NaN;s=s.replace(/\s/g,'');if(/^\d{1,3}(\.\d{3})+,\d+$/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(',')&&!s.includes('.'))s=s.replace(',','.');return parseFloat(s)};
+    const csvNum=(s)=>{if(!s||s.length>30)return NaN;s=s.replace(/\s/g,'');if(/^\d{1,3}(\.\d{3})+,\d+$/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(',')&&!s.includes('.'))s=s.replace(',','.');return parseFloat(s)};
     const sharesRaw=get('shares'),priceRaw=get('price');
-    const shares=parseNum(sharesRaw);
-    const price=parseNum(priceRaw);
+    const shares=csvNum(sharesRaw);
+    const price=csvNum(priceRaw);
     if(sharesRaw&&isNaN(shares)){skipped++;return}
     if(priceRaw&&isNaN(price)){skipped++;return}
-    let total=parseNum(get('total'));
+    let total=csvNum(get('total'));
     if(isNaN(total)&&!isNaN(shares)&&!isNaN(price))total=shares*price;
     if(isNaN(total)){skipped++;return}
 
-    const fees=parseNum(get('fees'))||0;
+    const fees=csvNum(get('fees'))||0;
     const notes=get('notes');
 
     pfTransactions.push({id:pfNextId(pfTransactions),type,date,ticker,accountId,shares,pricePerShare:price,totalAmount:Math.abs(total),fees,currency:acc.currency,notes,createdAt:now});
@@ -4851,7 +4851,7 @@ function renderDbAllocCharts(){
   const baseColors=['#6c5ce7','#74b9ff','#00b894','#fdcb6e','#e17055','#a29bfe','#55efc4','#ffeaa7','#fab1a0','#81ecec','#dfe6e9','#636e72'];
 
   groupKeys.forEach(groupBy=>{
-    const groups={};
+    const groups=Object.create(null);
     pfPositions.forEach(pos=>{
       const price=getPositionPrice(pos);
       const shares=parseFloat(pos.shares)||0;
@@ -5648,7 +5648,7 @@ function renderMarkdown(text,images){
   let processed=text;
   if(images&&images.length){
     processed=processed.replace(/!\[([^\]]*)\]\(img:(\d+)\)/g,(m,alt,idx)=>{
-      const i=parseInt(idx);
+      const i=parseInt(idx,10);
       if(images[i]&&images[i].data)return`![${alt||'Research image'}](${images[i].data})`;
       return m;
     });
@@ -5864,7 +5864,7 @@ function saveResearchEntry(){
   const now=new Date().toISOString();
   if(editId){
     const list=researchNotes[type]||[];
-    const idx=list.findIndex(e=>e.id===parseInt(editId));
+    const idx=list.findIndex(e=>e.id===parseInt(editId,10));
     if(idx===-1){showToast('Entry not found','error');return}
     const entry=list[idx];
     entry.date=date;
@@ -6554,7 +6554,7 @@ function calcPositionSizing(ticker){
   const psych=cl.psychology||cl.sections?.psychology||{};
   const cagr=parseFloat(bs.expectedCagr);
   if(isNaN(cagr)||cagr<=0)return null;
-  const convRaw=parseInt(psych.convictionLevel);
+  const convRaw=parseInt(psych.convictionLevel,10);
   const conv=convRaw>=1&&convRaw<=10?convRaw:null;
   const risk=bs.riskLevel||'';
   let cagrMult=0.8;
@@ -6681,7 +6681,7 @@ function getConvictionHistory(ticker){
   const cl=s.checklist||{};
   const psych=cl.psychology||cl.sections?.psychology||{};
   if(psych.convictionLevel){
-    const lvl0=parseInt(psych.convictionLevel);
+    const lvl0=parseInt(psych.convictionLevel,10);
     if(lvl0>=1&&lvl0<=10){
       const ts=cl._changeLog?.find(c=>c.section==='psychology'&&c.field==='convictionLevel');
       points.push({date:ts?.date||s.dateAdded||'',level:lvl0,source:'checklist',notes:'Psychology checklist'});
@@ -6691,7 +6691,7 @@ function getConvictionHistory(ticker){
   const entries=qfu.entries||[];
   entries.forEach(e=>{
     if(e.convictionLevel){
-      const lvl1=parseInt(e.convictionLevel);
+      const lvl1=parseInt(e.convictionLevel,10);
       if(lvl1>=1&&lvl1<=10){
         points.push({date:e.date||'',level:lvl1,source:'quarterly',notes:e.quarter||''});
       }
@@ -6701,7 +6701,7 @@ function getConvictionHistory(ticker){
   rvEntries.forEach(r=>{
     const ans=r.answers||{};
     if(ans.q8){
-      const lvl=parseInt(ans.q8);
+      const lvl=parseInt(ans.q8,10);
       if(lvl>=1&&lvl<=10){
         points.push({date:r.date||'',level:lvl,source:'review',notes:'Quarterly review'});
       }
@@ -6836,7 +6836,7 @@ function renderSummaryTab(ticker){
   }else{
     recentReviews.forEach(rv=>{
       const summary=(rv.summary||'').substring(0,80);
-      h+=`<div class="cp-sum-row" style="cursor:pointer" onclick="showSection('reviews');setTimeout(()=>openReview('${escH(rv.type)}',${parseInt(rv.id)||0}),100)">
+      h+=`<div class="cp-sum-row" style="cursor:pointer" onclick="showSection('reviews');setTimeout(()=>openReview('${escH(rv.type)}',${parseInt(rv.id,10)||0}),100)">
         <span class="cp-sum-label">${rv.date||'—'}</span>
         <span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface2);color:var(--text2);text-transform:uppercase">${rv.type}</span>
         <span class="cp-sum-val" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(summary)||'—'}</span>
@@ -7934,7 +7934,7 @@ let tStocks={};
 let stSort={col:'ticker',dir:'asc'};
 let stExpanded={};
 
-function parseNum(s){s=String(s).trim().replace(/\s/g,'');if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(/^-?\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');s=s.replace(/,/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
+function parseNum(s){s=String(s).trim().replace(/\s/g,'');if(s.length>30)return 0;if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(/^-?\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');s=s.replace(/,/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
 function asPct(v){if(v==null)return null;return Math.abs(v)<1&&Math.abs(v)>0?v*100:v}
 function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct){const n=parseFloat(v);return isFinite(n)?n.toFixed(1):''}return typeof v==='number'?(isFinite(v)?v.toFixed(2):''):v}
 
@@ -8007,7 +8007,7 @@ function checkPriceAlerts(){
   });
   return triggered;
 }
-function saveTrackerStocks(){
+function saveTrackerStocks(){invalidateScreenerCache();
   if(d1Mode){const snapshot=JSON.parse(JSON.stringify(tStocks));API.scheduleSave('trackerStocks',async()=>{
     const companies=Object.entries(snapshot).map(([ticker,s])=>({
       symbol:ticker,name:s.name||ticker,sector:s.sector||'',currency:s.currency||'USD',
@@ -8314,11 +8314,11 @@ function calcDividendForecast(months){
     const cur=pos.currency||'USD';
     const sorted=[...dh.history].sort((a,b)=>b.date.localeCompare(a.date));
     const recentPayments=sorted.slice(0,12);
-    const payMonths=recentPayments.map(p=>parseInt((p.paymentDate||p.date).slice(5,7)));
+    const payMonths=recentPayments.map(p=>parseInt((p.paymentDate||p.date,10).slice(5,7)));
     const uniqueMonths=[...new Set(payMonths)];
     const latestDPS=recentPayments.length>0?(dh.annualDPS/(uniqueMonths.length||1)):0;
     result.forEach(slot=>{
-      const slotMonth=parseInt(slot.month.slice(5,7));
+      const slotMonth=parseInt(slot.month.slice(5,7,10));
       if(uniqueMonths.includes(slotMonth)){
         const gross=shares*latestDPS;
         const net=gross*(1-taxRate/100);
@@ -8340,7 +8340,7 @@ function getPaymentsForMonth(year,month){
     dh.history.forEach(d=>{
       const pDate=d.paymentDate||d.date;
       if(pDate.startsWith(monthStr)){
-        const day=parseInt(pDate.slice(8,10));
+        const day=parseInt(pDate.slice(8,10),10);
         if(!payments[day])payments[day]=[];
         const shares=parseFloat(pos.shares)||0;
         payments[day].push({ticker:pos.ticker,amount:(d.adjDividend||d.dividend)*shares});
@@ -9633,17 +9633,18 @@ function renderScreenerUI(){
     if(!def)return;
     const f=screenerFilters[k];
     h+=`<div style="background:var(--surface2);padding:8px 10px;border-radius:6px;display:flex;flex-direction:column;gap:4px">`;
-    h+=`<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600;color:var(--text2)">${def.l}</span><button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:0 2px" onclick="removeScreenerFilter('${k}')">&times;</button></div>`;
+    const ek=escH(k);
+    h+=`<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600;color:var(--text2)">${escH(def.l)}</span><button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:0 2px" onclick="removeScreenerFilter('${ek}')">&times;</button></div>`;
     if(def.src==='select'){
-      h+=`<select onchange="updateScreenerFilter('${k}','select',this.value)" style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px">`;
+      h+=`<select onchange="updateScreenerFilter('${ek}','select',this.value)" style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px">`;
       h+=`<option value="">Any</option>`;
       def.options.forEach(o=>h+=`<option value="${o}" ${f.value===o?'selected':''}>${o}</option>`);
       h+=`</select>`;
     }else{
       h+=`<div style="display:flex;gap:4px;align-items:center">`;
-      h+=`<input type="number" placeholder="Min" value="${f.min??''}" oninput="updateScreenerFilter('${k}','min',this.value)" style="width:70px;padding:4px 6px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px">`;
+      h+=`<input type="number" placeholder="Min" value="${f.min??''}" oninput="updateScreenerFilter('${ek}','min',this.value)" style="width:70px;padding:4px 6px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px">`;
       h+=`<span style="color:var(--text2);font-size:11px">to</span>`;
-      h+=`<input type="number" placeholder="Max" value="${f.max??''}" oninput="updateScreenerFilter('${k}','max',this.value)" style="width:70px;padding:4px 6px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px">`;
+      h+=`<input type="number" placeholder="Max" value="${f.max??''}" oninput="updateScreenerFilter('${ek}','max',this.value)" style="width:70px;padding:4px 6px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px">`;
       h+=`</div>`;
     }
     h+=`</div>`;
@@ -9677,6 +9678,8 @@ function clearScreenerFilters(){
   renderTracker();
 }
 
+const _screenerScoreCache=new Map();
+function invalidateScreenerCache(){_screenerScoreCache.clear()}
 function applyScreenerFilters(stocks){
   const keys=Object.keys(screenerFilters);
   if(!keys.length)return stocks;
@@ -9687,7 +9690,10 @@ function applyScreenerFilters(stocks){
       const f=screenerFilters[k];
       if(!def||!f)return true;
       let val;
-      if(def.src==='score'){if(!sc)sc=calcStockScore(s);val=def.field==='total'?sc.total:sc[def.field]}
+      if(def.src==='score'){
+        if(!sc){sc=_screenerScoreCache.get(s.ticker);if(!sc){sc=calcStockScore(s);_screenerScoreCache.set(s.ticker,sc)}}
+        val=def.field==='total'?sc.total:sc[def.field];
+      }
       else if(def.src==='ratio'){if(!r)r=calcStockRatios(s);val=r[k]}
       else if(def.src==='stock')val=s[k];
       else if(def.src==='select'){
@@ -10266,7 +10272,7 @@ function getFwArr(type){
 function saveFwEntry(){
   if(saveFwEntry._lock)return;saveFwEntry._lock=true;setTimeout(()=>saveFwEntry._lock=false,500);
   const type=document.getElementById('fw-modal-type').value;
-  const editId=parseInt(document.getElementById('fw-modal-edit-id').value)||0;
+  const editId=parseInt(document.getElementById('fw-modal-edit-id',10).value)||0;
   const titleVal=document.getElementById('fw-modal-title-input').value.trim();
   const contentVal=document.getElementById('fw-modal-content-input').value.trim();
   const catVal=document.getElementById('fw-modal-category-input').value.trim();
@@ -10880,9 +10886,9 @@ function renderClSectionBody(ticker,sec){
       const checked=data[f.k]?'checked':'';
       h+=`<div class="cl-check-row"><input type="checkbox" id="cl-cb-${sec.key}-${f.k}" ${checked} onchange="saveClField('${escH(ticker)}','${sec.key}','${f.k}',this.checked)"><label for="cl-cb-${sec.key}-${f.k}">${escH(f.label)}</label></div>`;
     }else if(f.type==='rating'){
-      h+=`<div class="cl-field"><label>${f.label}</label><div class="cl-rating">${[1,2,3,4,5].map(n=>`<button class="${parseInt(val)===n?'active':''}" onclick="saveClField('${escH(ticker)}','${sec.key}','${f.k}','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('')}</div></div>`;
+      h+=`<div class="cl-field"><label>${f.label}</label><div class="cl-rating">${[1,2,3,4,5].map(n=>`<button class="${parseInt(val,10)===n?'active':''}" onclick="saveClField('${escH(ticker)}','${sec.key}','${f.k}','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('')}</div></div>`;
     }else if(f.type==='rating10'){
-      h+=`<div class="cl-field"><label>${f.label}</label><div class="cl-rating">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="${parseInt(val)===n?'active':''}" onclick="saveClField('${escH(ticker)}','${sec.key}','${f.k}','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('')}</div></div>`;
+      h+=`<div class="cl-field"><label>${f.label}</label><div class="cl-rating">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="${parseInt(val,10)===n?'active':''}" onclick="saveClField('${escH(ticker)}','${sec.key}','${f.k}','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('')}</div></div>`;
     }
   });
   return h;
@@ -11054,7 +11060,7 @@ function renderClQuarters(ticker,data){
     const t=escH(ticker);
     const sel=(field,val,opts)=>opts.map(o=>`<option value="${o[0]}"${val===o[0]?' selected':''}>${o[1]}</option>`).join('');
     const ta=(field,label,ph,rows)=>`<div class="cl-field"><label>${label}</label><textarea rows="${rows||2}" placeholder="${escH(ph||'')}" onchange="updateClQuarter('${t}',${i},'${field}',this.value)">${escH(e[field]||'')}</textarea></div>`;
-    const convBtns=[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="${parseInt(e.convictionLevel)===n?'active':''}" onclick="updateClQuarter('${t}',${i},'convictionLevel','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('');
+    const convBtns=[1,2,3,4,5,6,7,8,9,10].map(n=>`<button class="${parseInt(e.convictionLevel,10)===n?'active':''}" onclick="updateClQuarter('${t}',${i},'convictionLevel','${n}');this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${n}</button>`).join('');
     h+=`<div class="cl-qf-entry">
       <div class="cl-qf-header">
         <span class="cl-qf-quarter">${escH(e.quarter||'')}</span>
@@ -11522,7 +11528,7 @@ function saveReview(){
   const date=document.getElementById('rv-modal-date').value;
   const ticker=document.getElementById('rv-modal-ticker').value.trim().toUpperCase();
   const summary=document.getElementById('rv-modal-summary').value.trim();
-  const editId=parseInt(document.getElementById('rv-modal-edit-id').value)||0;
+  const editId=parseInt(document.getElementById('rv-modal-edit-id',10).value)||0;
 
   if(!date){showToast('Date is required','error');return}
 
@@ -11645,10 +11651,10 @@ async function startD1Migration(){
     localStorage.setItem('d1_migrated','1');
     d1Mode=true;
     const stats=result.stats||{};
-    const parts=Object.entries(stats).filter(([,v])=>v>0).map(([k,v])=>escH(k)+': '+parseInt(v));
+    const parts=Object.entries(stats).filter(([,v])=>v>0).map(([k,v])=>escH(k)+': '+parseInt(v,10));
     status.innerHTML='<span style="color:var(--green);font-weight:600">Migration complete!</span><br>'+parts.join(', ');
     if(result.errors&&result.errors.length){
-      status.innerHTML+='<br><span style="color:var(--orange)">Warnings: '+parseInt(result.errors.length)+'</span>';
+      status.innerHTML+='<br><span style="color:var(--orange)">Warnings: '+parseInt(result.errors.length,10)+'</span>';
       console.warn('Migration warnings:',result.errors);
     }
     btn.textContent='Migrated ✓';
@@ -11802,7 +11808,7 @@ async function cloudLoad(){
       if(!_encPass){console.warn('Cloud data encrypted but no password');return false}
       try{cloud=await decryptPayload(_encPass,cloud)}catch(e){console.warn('Decrypt failed',e);setStatus('sync-status','Decryption failed — wrong password?',false);showToast('Cloud sync decryption failed','error');return false}
     }
-    const localTs=parseInt(localStorage.getItem('sync_ts')||'0');
+    const localTs=parseInt(localStorage.getItem('sync_ts',10)||'0');
     if(cloud.ts&&cloud.ts>localTs){
       if(cloud.stocks){tStocks=cloud.stocks;saveTrackerStocks()}
       if(cloud.settings){

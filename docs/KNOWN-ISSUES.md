@@ -55,34 +55,32 @@ Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and cod
 
 ## Low Priority / Acceptable Risk
 
-### P.12 — Two Inconsistent `parseNum()` Functions
-- **Location:** `web/index.html` — lines ~4272 and ~6314
-- **Problem:** One returns 0 on failure, the other returns NaN. Different callers get different behavior.
-- **Impact:** Low — fallbacks handle both cases, but inconsistency could cause subtle bugs.
+### ~~P.12 — Two Inconsistent `parseNum()` Functions (FIXED 2026-07-01)~~
+- **Fix applied:** CSV-local version renamed to `csvNum()` (returns NaN for validation). Global `parseNum()` returns 0 for fallback. No more name collision.
 
-### P.15 — `accent-color` Needs Safari 15.4+
-- **Impact:** Checkboxes show system color instead of accent — cosmetic only, graceful degradation.
+### P.15 — `accent-color` Needs Safari 15.4+ (ACCEPTED)
+- **Status:** Won't fix — CSS spec limitation. Custom checkbox styling would be disproportionate effort for cosmetic-only issue.
 
-### P.16 — `fetch keepalive` Ignored in Firefox 90-99
-- **Impact:** Sync on page close may fail on 4+ year old Firefox. Negligible user base.
+### P.16 — `fetch keepalive` Ignored in Firefox 90-99 (ACCEPTED)
+- **Status:** Won't fix — browser limitation on 4+ year old Firefox. `sendBeacon()` fallback incompatible with JSON API. D1 mode uses `API.flushAll()`.
 
-### P.17 — `renderPositions` NaN Propagation
-- **Impact:** Shows 0 instead of NaN on malformed data. Has `||0` fallbacks — not ideal but non-crashing.
+### ~~P.17 — `renderPositions` NaN Propagation (FIXED 2026-07-01)~~
+- **Fix applied:** `totalPnlPct` guarded with `isFinite()` check, displays '—' instead of 'NaN'.
 
-### P.18 — Screener Filter Score Cache Missing
-- **Impact:** Recalculates scores on every filter. Unnoticeable at <50 stocks.
+### ~~P.18 — Screener Filter Score Cache Missing (FIXED 2026-07-01)~~
+- **Fix applied:** `_screenerScoreCache` Map caches scores per ticker. Invalidated on `saveTrackerStocks()`.
 
 ---
 
-## Deep Audit Findings (Low Risk)
+## ~~Deep Audit Findings~~ (ALL FIXED 2026-07-01)
 
-| ID | Problem | Risk | Notes |
-|----|---------|------|-------|
-| D.1 | Screener filter keys in onclick not escaped | Low | Keys from hardcoded SCREENER_DEFS constants |
-| D.2 | `md.label` in innerHTML without `escH()` | Low | Internal metric definitions only |
-| D.3 | `parseInt` without radix in 3 locations | Low | Modern browsers default to radix 10 |
-| D.4 | CSV number parsing regex has moderate backtracking | Low | Input is anchored and bounded |
-| D.5 | Portfolio grouping uses computed keys (prototype pollution risk) | Low | Ticker regex prevents `__proto__` in tracker; CSV import has no such restriction |
+| ID | Problem | Fix |
+|----|---------|-----|
+| ~~D.1~~ | Screener filter keys in onclick not escaped | All keys/labels escaped with `escH()` |
+| ~~D.2~~ | `md.label` in innerHTML without `escH()` | Fixed alongside D.1 — `def.l` → `escH(def.l)` |
+| ~~D.3~~ | `parseInt` without radix in 32 locations | Added `,10` radix to all 32 calls |
+| ~~D.4~~ | CSV number parsing regex backtracking | Length guard (`s.length>30`) before regex on both `csvNum` and `parseNum` |
+| ~~D.5~~ | Portfolio grouping prototype pollution risk | `Object.create(null)` for both grouping Maps |
 
 ---
 
@@ -124,8 +122,8 @@ Bundling too many tasks per session (e.g., 9 tasks, ~200 fields) compounds bugs 
 | ~~CRITICAL~~ | ~~1~~ | ~~P.4 — FIXED 2026-07-01~~ |
 | ~~HIGH~~ | ~~5~~ | ~~P.1/P.2/P.6/P.7/P.10 — ALL FIXED 2026-07-01~~ |
 | ~~MEDIUM~~ | ~~6/7~~ | ~~P.5/P.8/P.9/P.11/P.13/P.14 FIXED, P.3 accepted~~ |
-| LOW | 4 | Acceptable risk, cosmetic |
-| Deep Audit | 5 | Low risk, internal data only |
+| ~~LOW~~ | ~~3/5~~ | ~~P.12/P.17/P.18 FIXED, P.15/P.16 accepted~~ |
+| ~~Deep Audit~~ | ~~5~~ | ~~ALL FIXED 2026-07-01~~ |
 | Dev Gotchas | 6 | Process discipline, not code fixes |
 
 No active `TODO`, `FIXME`, or `HACK` comments found in the codebase — inline technical debt markers are clean.
