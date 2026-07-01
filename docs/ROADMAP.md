@@ -223,7 +223,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Archive system — soft delete with "Archived" pipeline stage, archive modal (Archive/Delete permanently/Cancel), tracker toggle, screener filter, D1 CHECK constraint migration
 - [x] Portfolio ↔ Pipeline auto-sync — buy triggers Companies "Owned", sell-all triggers "Watchlist", CSV import batch sync, real estate/bond/cash excluded, delete position/transaction triggers check
 - [x] Pipeline-based review reminders — 90-day threshold for Owned/Buy target companies, Dashboard widget, company profile badge, auto-refresh after review save
-- [ ] Company profile summary tab — aggregated positions, transactions, notes, reviews, sell triggers, TODOs
+- [x] Company profile summary tab — new default tab with positions, transactions, notes, reviews, sell triggers, TODOs, quick actions, cross-linking
 
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.

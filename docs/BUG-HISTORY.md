@@ -617,6 +617,16 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 | 25.14 | Light theme hover uses hardcoded dark color #252836 | Changed fallback to var(--border) | index.html:614 |
 | 25.15 | Null review date produces NaN daysSince, silently hides badge | Added last.date truthiness check before Date computation | index.html:6726 |
 
+### Summary Tab (Session 4)
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 25.16 | + Note button clicks Preview instead of New Entry | Changed to call openResearchEntryForTicker() directly | index.html:6745 |
+| 25.17 | Summary tab double-renders on every profile open | Removed redundant render in switchProfileTab | index.html:6214 |
+| 25.18 | Dashboard reviews-due navigates to Overview unnecessarily | Removed switchProfileTab('overview') from onclick | index.html:5448 |
+| 25.19 | P&L shows -100% when currentPrice is null | Fallback to avgCost when currentPrice missing | index.html:6761 |
+| 25.20 | rv.id used unescaped in onclick handler | Added parseInt(rv.id)||0 sanitization | index.html:6834 |
+| 25.21 | Hardcoded $ currency in positions/transactions | Use position/transaction currency field | index.html:6768 |
+
 ### Unfixed (0)
 
 ---

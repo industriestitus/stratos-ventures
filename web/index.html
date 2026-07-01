@@ -620,6 +620,17 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .cp-review-due{display:inline-block;font-size:11px;padding:3px 8px;border-radius:4px;font-weight:600;cursor:pointer}
 .cp-review-due.rv-warn{background:rgba(255,165,0,.15);color:var(--orange)}
 .cp-review-due.rv-danger{background:rgba(255,71,87,.15);color:var(--red)}
+.cp-sum-section{margin-bottom:16px}
+.cp-sum-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cp-sum-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.3px}
+.cp-sum-link{font-size:11px;color:var(--accent);cursor:pointer;text-decoration:none}
+.cp-sum-link:hover{text-decoration:underline}
+.cp-sum-empty{font-size:12px;color:var(--text2);padding:8px 0}
+.cp-sum-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+.cp-sum-row:last-child{border-bottom:none}
+.cp-sum-label{color:var(--text2);min-width:80px}
+.cp-sum-val{color:var(--text);font-weight:500}
+.cp-sum-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 @media(max-width:768px){
   .db-grid{grid-template-columns:1fr}
   .db-hero{padding:16px}
@@ -1526,7 +1537,8 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       <div id="cp-external-links" class="cp-ext-links"></div>
     </div>
     <div class="cp-tabs">
-      <button class="tab active" onclick="switchProfileTab('overview')">Overview</button>
+      <button class="tab active" onclick="switchProfileTab('summary')">Summary</button>
+      <button class="tab" onclick="switchProfileTab('overview')">Overview</button>
       <button class="tab" onclick="switchProfileTab('financials')">Financials</button>
       <button class="tab" onclick="switchProfileTab('valuation')">Valuation</button>
       <button class="tab" onclick="switchProfileTab('notes')">Notes</button>
@@ -1535,7 +1547,10 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       <button class="tab" onclick="switchProfileTab('scores')">Scores</button>
       <button class="tab" onclick="switchProfileTab('insider')">Insider</button>
     </div>
-    <div id="cp-panel-overview" class="cp-panel active">
+    <div id="cp-panel-summary" class="cp-panel active">
+      <div id="cp-summary-content"></div>
+    </div>
+    <div id="cp-panel-overview" class="cp-panel" style="display:none">
       <div id="cp-overview-content"></div>
     </div>
     <div id="cp-panel-financials" class="cp-panel" style="display:none">
@@ -5430,7 +5445,7 @@ function renderDbReviewsDue(){
   due.forEach(c=>{
     const cls=c.daysSince>=180?'rv-danger':'rv-warn';
     const label=c.daysSince===Infinity?'Never reviewed':c.daysSince+'d ago';
-    html+=`<div class="db-review-row ${cls}" onclick="showProfile('${escH(c.ticker)}');setTimeout(()=>{switchProfileTab('overview');openReview('quarterly',null,'${escH(c.ticker)}')},200)">
+    html+=`<div class="db-review-row ${cls}" onclick="showProfile('${escH(c.ticker)}');setTimeout(()=>openReview('quarterly',null,'${escH(c.ticker)}'),200)">
       <span class="rv-ticker">${escH(c.ticker)}</span>
       <span class="rv-name">${escH(c.name)}</span>
       <span class="rv-days">${label}</span>
@@ -6183,12 +6198,13 @@ function showProfile(ticker){
   renderValuation(ticker);
   renderNotes(ticker);
 
-  // Reset to overview tab
-  switchProfileTab('overview');
+  // Reset to summary tab
+  renderSummaryTab(ticker);
+  switchProfileTab('summary');
 }
 
 function switchProfileTab(name){
-  ['overview','financials','valuation','notes','checklist','dividends','scores','insider'].forEach(t=>{
+  ['summary','overview','financials','valuation','notes','checklist','dividends','scores','insider'].forEach(t=>{
     const el=document.getElementById('cp-panel-'+t);
     if(el){el.style.display=t===name?'':'none';el.classList.toggle('active',t===name)}
   });
@@ -6714,6 +6730,155 @@ function renderExternalLinks(ticker){
     {label:'Glassdoor',url:`https://www.glassdoor.com/Search/results.htm?keyword=${encodeURIComponent(tStocks[ticker]?.name||ticker)}`}
   ];
   el.innerHTML=links.map(l=>`<a href="${escH(l.url)}" target="_blank" rel="noopener noreferrer">${escH(l.label)} ↗</a>`).join('');
+}
+
+function renderSummaryTab(ticker){
+  const el=document.getElementById('cp-summary-content');
+  if(!el)return;
+  const s=tStocks[ticker];
+  if(!s){el.innerHTML='';return}
+  let h='';
+
+  // Quick actions
+  h+=`<div class="cp-sum-actions" style="margin-bottom:16px">
+    <button class="btn btn-primary" onclick="openResearchEntryForTicker('${escH(ticker)}')" style="font-size:11px;padding:5px 12px">+ Note</button>
+    <button class="btn btn-primary" onclick="showSection('reviews');setTimeout(()=>openReview('quarterly',null,'${escH(ticker)}'),100)" style="font-size:11px;padding:5px 12px">+ Review</button>
+    <button class="btn btn-secondary" onclick="switchProfileTab('checklist')" style="font-size:11px;padding:5px 12px">Checklist</button>
+  </div>`;
+
+  // 1. Positions
+  const positions=pfPositions.filter(p=>p.ticker===ticker&&parseFloat(p.shares)>0);
+  h+=`<div class="cp-sum-section"><div class="cp-sum-header"><span class="cp-sum-title">Positions (${positions.length})</span>`;
+  if(positions.length)h+=`<a class="cp-sum-link" onclick="showSection('portfolio');switchPortfolioTab('positions')">View all →</a>`;
+  h+=`</div>`;
+  if(!positions.length){
+    h+=`<div class="cp-sum-empty">No open positions.</div>`;
+  }else{
+    positions.forEach(p=>{
+      const acc=pfAccounts.find(a=>a.id===p.accountId);
+      const accName=acc?acc.name:'?';
+      const cur=p.currency||'USD';
+      const price=p.currentPrice||p.avgCost||0;
+      const mktVal=p.shares*price;
+      const cost=p.shares*p.avgCost;
+      const pnl=mktVal-cost;
+      const pnlPct=cost?((pnl/cost)*100).toFixed(1):'—';
+      const pnlCls=pnl>=0?'positive':'negative';
+      h+=`<div class="cp-sum-row">
+        <span class="cp-sum-label">${escH(accName)}</span>
+        <span class="cp-sum-val">${p.shares} × ${(p.avgCost||0).toFixed(2)} ${cur}</span>
+        <span style="flex:1"></span>
+        <span class="cp-sum-val">${fmt(mktVal)}</span>
+        <span class="${pnlCls}" style="font-size:11px;min-width:70px;text-align:right">${pnl>=0?'+':''}${fmt(pnl)} (${pnlPct}%)</span>
+      </div>`;
+    });
+  }
+  h+=`</div>`;
+
+  // 2. Recent transactions
+  const allTxns=pfTransactions.filter(t=>t.ticker===ticker);
+  const txns=allTxns.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10);
+  h+=`<div class="cp-sum-section"><div class="cp-sum-header"><span class="cp-sum-title">Transactions (${allTxns.length})</span>`;
+  if(txns.length)h+=`<a class="cp-sum-link" onclick="showSection('portfolio');switchPortfolioTab('transactions')">View all →</a>`;
+  h+=`</div>`;
+  if(!txns.length){
+    h+=`<div class="cp-sum-empty">No transactions recorded.</div>`;
+  }else{
+    txns.forEach(t=>{
+      const typeCls=t.type==='buy'?'positive':t.type==='sell'?'negative':'';
+      h+=`<div class="cp-sum-row">
+        <span class="cp-sum-label">${t.date||'—'}</span>
+        <span class="${typeCls}" style="font-weight:600;text-transform:uppercase;min-width:40px">${t.type}</span>
+        <span class="cp-sum-val">${t.shares||'—'} × ${(t.pricePerShare||0).toFixed(2)} ${t.currency||'USD'}</span>
+        <span style="flex:1"></span>
+        <span class="cp-sum-val">${fmt(t.totalAmount||0)}</span>
+      </div>`;
+    });
+  }
+  h+=`</div>`;
+
+  // 3. Research notes
+  const allNotes=[];
+  ['journal','news','market'].forEach(type=>{
+    (researchNotes[type]||[]).filter(n=>n.ticker===ticker).forEach(n=>allNotes.push({...n,noteType:type}));
+  });
+  allNotes.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const recentNotes=allNotes.slice(0,5);
+  h+=`<div class="cp-sum-section"><div class="cp-sum-header"><span class="cp-sum-title">Notes (${allNotes.length})</span>`;
+  if(allNotes.length)h+=`<a class="cp-sum-link" onclick="switchProfileTab('notes')">View all →</a>`;
+  h+=`</div>`;
+  if(!recentNotes.length){
+    h+=`<div class="cp-sum-empty">No research notes yet.</div>`;
+  }else{
+    recentNotes.forEach(n=>{
+      const preview=(n.title||n.content||'').substring(0,80);
+      h+=`<div class="cp-sum-row" style="cursor:pointer" onclick="switchProfileTab('notes')">
+        <span class="cp-sum-label">${n.date||'—'}</span>
+        <span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface2);color:var(--text2);text-transform:uppercase">${n.noteType}</span>
+        <span class="cp-sum-val" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(preview)}</span>
+      </div>`;
+    });
+  }
+  h+=`</div>`;
+
+  // 4. Reviews
+  const reviews=(rvData.entries||[]).filter(e=>e.companyTicker===ticker).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const recentReviews=reviews.slice(0,5);
+  h+=`<div class="cp-sum-section"><div class="cp-sum-header"><span class="cp-sum-title">Reviews (${reviews.length})</span>`;
+  if(reviews.length)h+=`<a class="cp-sum-link" onclick="showSection('reviews')">View all →</a>`;
+  h+=`</div>`;
+  if(!recentReviews.length){
+    h+=`<div class="cp-sum-empty">No reviews yet.</div>`;
+  }else{
+    recentReviews.forEach(rv=>{
+      const summary=(rv.summary||'').substring(0,80);
+      h+=`<div class="cp-sum-row" style="cursor:pointer" onclick="showSection('reviews');setTimeout(()=>openReview('${escH(rv.type)}',${parseInt(rv.id)||0}),100)">
+        <span class="cp-sum-label">${rv.date||'—'}</span>
+        <span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface2);color:var(--text2);text-transform:uppercase">${rv.type}</span>
+        <span class="cp-sum-val" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(summary)||'—'}</span>
+      </div>`;
+    });
+  }
+  h+=`</div>`;
+
+  // 5. Sell triggers (from checklist)
+  const bs=(s.checklist&&s.checklist.sections&&s.checklist.sections.buy_sell)||{};
+  const stAnswers=bs.answers||bs;
+  const triggers=[];
+  ['sellTrigger1','sellTrigger2','sellTrigger3'].forEach(k=>{
+    const text=stAnswers[k];
+    if(text&&text.trim())triggers.push(text.trim());
+  });
+  h+=`<div class="cp-sum-section"><div class="cp-sum-header"><span class="cp-sum-title">Sell Triggers (${triggers.length})</span>`;
+  if(!triggers.length)h+=`<a class="cp-sum-link" onclick="switchProfileTab('checklist')">Set up →</a>`;
+  h+=`</div>`;
+  if(!triggers.length){
+    h+=`<div class="cp-sum-empty">No sell triggers defined.</div>`;
+  }else{
+    triggers.forEach(t=>{
+      h+=`<div class="cp-sum-row"><span style="color:var(--orange);margin-right:4px">⚠</span><span class="cp-sum-val" style="flex:1">${escH(t)}</span></div>`;
+    });
+  }
+  h+=`</div>`;
+
+  // 6. TODOs
+  const todos=(s.todos||[]).filter(t=>!t.done);
+  h+=`<div class="cp-sum-section"><div class="cp-sum-header"><span class="cp-sum-title">TODOs (${todos.length} open)</span></div>`;
+  if(!todos.length){
+    h+=`<div class="cp-sum-empty">No open TODOs.</div>`;
+  }else{
+    const today=new Date().toISOString().split('T')[0];
+    todos.forEach(t=>{
+      const overdue=t.due&&t.due<today;
+      h+=`<div class="cp-sum-row">
+        <span class="cp-sum-val" style="flex:1">${escH(t.text)}</span>
+        ${t.due?`<span style="font-size:11px;${overdue?'color:var(--red)':'color:var(--text2)'}">${t.due}</span>`:''}
+      </div>`;
+    });
+  }
+  h+=`</div>`;
+
+  el.innerHTML=h;
 }
 
 function renderReviewDueBadge(ticker){
