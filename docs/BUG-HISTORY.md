@@ -34,7 +34,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 24 | KNOWN-ISSUES Bugfix Sweep | `bde6c93` | 2026-07-01 | 6 | 0 |
 | 25 | KNOWN-ISSUES Medium Sweep | `2dfccef` | 2026-07-01 | 6 | 1 |
 | 26 | LOW + Deep Audit Sweep | `5cadef9` | 2026-07-01 | 8 | 2 |
-| 27 | UX/UI Audit Fixes | *uncommitted* | 2026-07-01 | 5+3 QA | 0 |
+| 27 | UX/UI Audit Fixes | `ff47c3f` | 2026-07-01 | 5+3 QA | 0 |
 
 **Total: 229 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
