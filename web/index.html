@@ -2773,10 +2773,18 @@ function calcMoneyBack(){
 }
 
 function renderChart(cid,key,labels,datasets,opts={}){
-  if(charts[key])charts[key].destroy();
   const t2=cv('--text2'),grd=cv('--border')+'66';
+  const mapped=datasets.map(d=>({tension:0.2,pointRadius:3,borderWidth:2,...d}));
+  if(charts[key]){
+    const c=charts[key];
+    c.data.labels=labels;
+    mapped.forEach((d,i)=>{if(c.data.datasets[i]){Object.assign(c.data.datasets[i],d)}else{c.data.datasets[i]=d}});
+    c.data.datasets.length=mapped.length;
+    c.update('none');
+    return;
+  }
   charts[key]=new Chart(document.getElementById(cid).getContext('2d'),{
-    type:'line',data:{labels,datasets:datasets.map(d=>({tension:0.2,pointRadius:3,borderWidth:2,...d}))},
+    type:'line',data:{labels,datasets:mapped},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{labels:{color:t2,font:{size:10}}}},
       scales:{x:{ticks:{color:t2,font:{size:9}},grid:{color:grd}},
@@ -2785,7 +2793,8 @@ function renderChart(cid,key,labels,datasets,opts={}){
   });
 }
 
-function recalcAll(){calcDCFP();calcDCFE();calcReverseDCF();calcAria();calcMoneyBack()}
+let _recalcRAF=0;
+function recalcAll(){cancelAnimationFrame(_recalcRAF);_recalcRAF=requestAnimationFrame(()=>{calcDCFP();calcDCFE();calcReverseDCF();calcAria();calcMoneyBack()})}
 
 // Calculator save/load
 function getAllData(){

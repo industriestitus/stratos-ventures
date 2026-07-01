@@ -29,10 +29,10 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 19 | Data Persistence & Sync | `2c36bdc`+S4+S5 | 2026-07-01 | 8 | 3 |
 | 20 | Financial Calculation Accuracy | `ecdf115`+`6585785`+S5 | 2026-07-01 | 7 | 0 |
 | 21 | Cross-Module Integration | `6585785`+S4+S5 | 2026-07-01 | 3 | 2 |
-| 22 | Performance | — | 2026-07-01 | 0 | 3 |
+| 22 | Performance | S6 | 2026-07-01 | 3 | 0 |
 | 23 | Security & Code Quality | — | 2026-07-01 | 0 | 2 |
 
-**Total: 186 fixed, 31 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
+**Total: 189 fixed, 28 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
 
 ---
 
@@ -543,13 +543,15 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ## Category 22 — Performance (Full QA Audit 2026-07-01)
 
-### Unfixed (3)
+### Fixed (3) — Session 6
 
-| # | Bug | Impact | Reason |
-|---|-----|--------|--------|
-| 22.U1 | `recalcAll()` fires on every keystroke (40+ calculator inputs) with no debounce — runs 5 calculations + destroys/recreates 2 Chart.js instances per keypress | **MEDIUM** — visible flicker on mobile, GC pressure, wasted CPU | Debounce with `requestAnimationFrame` |
-| 22.U2 | Chart.js instances destroyed and recreated on every `recalcAll` call instead of using `chart.update()` — causes flicker and memory churn | **MEDIUM** — poor UX on slower devices | Store chart instances in map, call `chart.update()` on data change |
-| 22.U3 | Redundant `recalcAll()` calls — `loadData()` already calls it internally, but callers (import, password change) call it again | **LOW** — wasteful double calculation on import/restore | Remove redundant calls or debounce with RAF |
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 22.1 | `recalcAll()` fires on every keystroke with no debounce | Wrapped in `requestAnimationFrame` — multiple calls per frame coalesce into one | index.html:2796 |
+| 22.2 | Chart.js instances destroyed/recreated on every recalcAll | `renderChart()` now uses `chart.update('none')` when chart already exists | index.html:2775 |
+| 22.3 | Redundant `recalcAll()` calls from loadData + callers | Automatically coalesced by RAF debounce — no code removal needed | index.html:2797 |
+
+### Unfixed (0)
 
 ---
 
