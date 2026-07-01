@@ -32,7 +32,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 22 | Performance | S6 | 2026-07-01 | 3 | 0 |
 | 23 | Security & Code Quality | S7 | 2026-07-01 | 2 | 0 |
 | 24 | KNOWN-ISSUES Bugfix Sweep | `bde6c93` | 2026-07-01 | 6 | 0 |
-| 25 | KNOWN-ISSUES Medium Sweep | pending | 2026-07-01 | 6 | 1 |
+| 25 | KNOWN-ISSUES Medium Sweep | `2dfccef` | 2026-07-01 | 6 | 1 |
 
 **Total: 213 fixed, 22 potential (unfixed)** — P.3 accepted as API limitation
 
@@ -657,7 +657,7 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ---
 
-## Category 25 — KNOWN-ISSUES Medium Sweep (pending commit)
+## Category 25 — KNOWN-ISSUES Medium Sweep (`2dfccef`)
 
 ### Fixed (6)
 
@@ -680,7 +680,7 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ## Deployment Notes
 
-- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), and any future Worker changes:
+- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:
   ```bash
   cd web/cloudflare-worker && npx wrangler deploy
   ```
