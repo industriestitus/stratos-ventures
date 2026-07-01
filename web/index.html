@@ -511,6 +511,17 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .pf-tx-table td.num{text-align:right;font-variant-numeric:tabular-nums}
 .pf-tx-table tr:hover{background:var(--surface2)}
 .pf-tx-table tr:last-child td{border-bottom:none}
+.bulk-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--accent);border-radius:12px;padding:10px 20px;display:flex;align-items:center;gap:14px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.4);font-size:13px;animation:bulkSlideUp .2s ease-out}
+@keyframes bulkSlideUp{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.bulk-bar .bulk-count{font-weight:600;color:var(--accent);min-width:80px}
+.bulk-bar button{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.bulk-bar button:hover{background:var(--surface2)}
+.bulk-bar .bulk-del{color:var(--red);border-color:var(--red)}
+.bulk-bar .bulk-del:hover{background:rgba(255,59,48,.15)}
+.bulk-bar .bulk-close{background:none;border:none;color:var(--text2);font-size:16px;padding:4px 8px}
+.pf-pos-table .bulk-cb,.pf-tx-table .bulk-cb{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;margin:0}
+.pf-pos-table th:first-child,.pf-tx-table th:first-child{width:36px}
+.pf-pos-table tr.bulk-selected,.pf-tx-table tr.bulk-selected{background:rgba(108,92,231,.1)}
 .pf-summary-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
 .pf-summary-card-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text2)}
 .pf-summary-card-value{font-size:18px;font-weight:700}
@@ -3753,6 +3764,7 @@ function showSection(name){
   const currentSection=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
   if(currentSection)_scrollPositions[currentSection]=window.scrollY;
   if(currentSection==='companies'&&name!=='companies')resetCharts();
+  if(currentSection==='portfolio'&&name!=='portfolio'){_bulkPosIds.clear();_bulkTxIds.clear();_updateBulkBar()}
   _previousSection=name;
   SECTIONS.forEach(s=>{
     const el=document.getElementById('section-'+s);
@@ -3870,6 +3882,7 @@ function savePortfolioTransactions(){
 function pfNextId(arr){if(!arr.length)return 1;let mx=0;for(let i=0;i<arr.length;i++){const id=arr[i].id||0;if(id>mx)mx=id}return mx+1}
 
 function switchPortfolioTab(name){
+  _bulkPosIds.clear();_bulkTxIds.clear();_updateBulkBar();
   const tabs=['overview','accounts','positions','transactions','dividends'];
   tabs.forEach(t=>{
     const el=document.getElementById('pf-panel-'+t);
@@ -3985,6 +3998,142 @@ function getAccountName(id){
   return a?a.name:'?';
 }
 
+var _bulkPosIds=new Set();
+var _bulkTxIds=new Set();
+
+function _updateBulkBar(){
+  const posCount=_bulkPosIds.size;
+  const txCount=_bulkTxIds.size;
+  let bar=document.getElementById('bulk-action-bar');
+  if(!posCount&&!txCount){
+    if(bar)bar.remove();
+    return;
+  }
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='bulk-action-bar';
+    bar.className='bulk-bar';
+    document.body.appendChild(bar);
+  }
+  const isPosMode=posCount>0;
+  const count=isPosMode?posCount:txCount;
+  const label=isPosMode?'pozíció':'tranzakció';
+  bar.innerHTML=`<span class="bulk-count">${count} ${label}</span>
+    <button class="bulk-del" onclick="${isPosMode?'bulkDeletePositions()':'bulkDeleteTransactions()'}">Törlés</button>
+    <button onclick="${isPosMode?'bulkExportPositions()':'bulkExportTransactions()'}">Export CSV</button>
+    <button class="bulk-close" onclick="${isPosMode?'_bulkPosIds.clear();_updateBulkBar();renderPositions()':'_bulkTxIds.clear();_updateBulkBar();renderTransactions()'}" title="Mégse">✕</button>`;
+}
+
+function _toggleBulkPos(id,checked){
+  if(checked)_bulkPosIds.add(id);else _bulkPosIds.delete(id);
+  _updateBulkBar();
+  const row=document.querySelector(`tr[data-pos-id="${id}"]`);
+  if(row)row.classList.toggle('bulk-selected',checked);
+}
+
+function _toggleAllPos(checked){
+  document.querySelectorAll('.bulk-cb-pos').forEach(cb=>{
+    cb.checked=checked;
+    const id=parseInt(cb.dataset.id,10);
+    if(checked)_bulkPosIds.add(id);else _bulkPosIds.delete(id);
+    const row=cb.closest('tr');
+    if(row)row.classList.toggle('bulk-selected',checked);
+  });
+  _updateBulkBar();
+}
+
+function _toggleBulkTx(id,checked){
+  if(checked)_bulkTxIds.add(id);else _bulkTxIds.delete(id);
+  _updateBulkBar();
+  const row=document.querySelector(`tr[data-tx-id="${id}"]`);
+  if(row)row.classList.toggle('bulk-selected',checked);
+}
+
+function _toggleAllTx(checked){
+  document.querySelectorAll('.bulk-cb-tx').forEach(cb=>{
+    cb.checked=checked;
+    const id=parseInt(cb.dataset.id,10);
+    if(checked)_bulkTxIds.add(id);else _bulkTxIds.delete(id);
+    const row=cb.closest('tr');
+    if(row)row.classList.toggle('bulk-selected',checked);
+  });
+  _updateBulkBar();
+}
+
+function bulkDeletePositions(){
+  const ids=[..._bulkPosIds];
+  if(!ids.length)return;
+  const snapshots=ids.map(id=>({idx:pfPositions.findIndex(p=>p.id===id),data:JSON.parse(JSON.stringify(pfPositions.find(p=>p.id===id)))})).filter(s=>s.data);
+  const tickers=new Set(snapshots.map(s=>s.data.ticker));
+  undoableDelete(`${ids.length} pozíció törölve`,()=>{
+    pfPositions=pfPositions.filter(p=>!_bulkPosIds.has(p.id));
+    _bulkPosIds.clear();
+    savePortfolioPositions();
+    tickers.forEach(t=>_checkSellAllPositions(t));
+    _updateBulkBar();
+    renderPositions();
+  },()=>{
+    snapshots.sort((a,b)=>a.idx-b.idx).forEach(s=>pfPositions.splice(s.idx,0,s.data));
+    savePortfolioPositions();
+    renderPositions();
+  },()=>{
+    if(d1Mode){ids.forEach(id=>API.del('positions/'+id).catch(e=>console.error('D1 bulk del pos:',e)))}
+  });
+}
+
+function bulkDeleteTransactions(){
+  const ids=[..._bulkTxIds];
+  if(!ids.length)return;
+  const snapshots=ids.map(id=>({idx:pfTransactions.findIndex(t=>t.id===id),data:JSON.parse(JSON.stringify(pfTransactions.find(t=>t.id===id)))})).filter(s=>s.data);
+  const tickers=new Set(snapshots.map(s=>s.data.ticker));
+  undoableDelete(`${ids.length} tranzakció törölve`,()=>{
+    pfTransactions=pfTransactions.filter(t=>!_bulkTxIds.has(t.id));
+    _bulkTxIds.clear();
+    savePortfolioTransactions();
+    tickers.forEach(t=>_checkSellAllPositions(t));
+    _updateBulkBar();
+    renderTransactions();
+  },()=>{
+    snapshots.sort((a,b)=>a.idx-b.idx).forEach(s=>pfTransactions.splice(s.idx,0,s.data));
+    savePortfolioTransactions();
+    renderTransactions();
+  },()=>{
+    if(d1Mode){ids.forEach(id=>API.del('transactions/'+id).catch(e=>console.error('D1 bulk del tx:',e)))}
+  });
+}
+
+function bulkExportPositions(){
+  const ids=[..._bulkPosIds];
+  const list=pfPositions.filter(p=>ids.includes(p.id));
+  if(!list.length)return;
+  const headers=['Ticker','Name','Account','Type','Shares','Avg Cost','Currency','Notes'];
+  const rows=list.map(p=>[p.ticker||'',p.name||'',getAccountName(p.accountId),p.assetType||'stock',p.shares||'',p.avgCost||'',p.currency||'USD',p.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv=headers.join(',')+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`positions-export-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(`${list.length} pozíció exportálva`);
+}
+
+function bulkExportTransactions(){
+  const ids=[..._bulkTxIds];
+  const list=pfTransactions.filter(t=>ids.includes(t.id));
+  if(!list.length)return;
+  const headers=['Date','Type','Ticker','Account','Shares','Price','Total','Fees','Notes'];
+  const rows=list.map(t=>[t.date||'',t.type||'',t.ticker||'',getAccountName(t.accountId),t.shares||'',t.pricePerShare||'',t.totalAmount||'',t.fees||0,t.notes||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
+  const csv=headers.join(',')+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`transactions-export-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast(`${list.length} tranzakció exportálva`);
+}
+
 function populateAccountFilter(){
   const sel=document.getElementById('pf-pos-filter-account');
   if(!sel)return;
@@ -4038,7 +4187,8 @@ function renderPositions(){
     if(at==='real_estate'){sharesCol='1';avgCol=fmt(pos.rePurchasePrice||0,0);priceCol=fmt(pos.reCurrentValue||0,0)}
     else if(at==='cash'){sharesCol='—';avgCol='—';priceCol=fmt(pos.cashAmount||0,2)}
     else{sharesCol=fmt(shares,shares%1?4:0);avgCol=fmt(avg,2);priceCol=price!=null?fmt(price,2):'—'}
-    return`<tr>
+    return`<tr data-pos-id="${pos.id}"${_bulkPosIds.has(pos.id)?' class="bulk-selected"':''}>
+      <td><input type="checkbox" class="bulk-cb bulk-cb-pos" data-id="${pos.id}" onchange="_toggleBulkPos(${pos.id},this.checked)"${_bulkPosIds.has(pos.id)?' checked':''}></td>
       <td><span ${tickerLink}>${escH(pos.ticker||'—')}</span><div class="pf-pos-name">${escH(pos.name||'')}</div>${subInfo}</td>
       <td>${escH(getAccountName(pos.accountId))}</td>
       <td><span class="pf-badge pf-badge-${escH(at)}">${escH(badgeLabel)}</span></td>
@@ -4066,7 +4216,7 @@ function renderPositions(){
   </div>${hasMixedCurrency&&!hasRates?'<div style="color:var(--yellow);font-size:12px;padding:4px 8px">⚠ Exchange rates not loaded — totals may mix currencies. <button onclick="fetchExchangeRates()" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline">Fetch rates</button></div>':''}`;
 
   c.innerHTML=`<div style="overflow-x:auto"><table class="pf-pos-table"><thead><tr>
-    <th scope="col">Ticker</th><th scope="col">Account</th><th scope="col">Type</th><th scope="col" class="num">Shares</th><th scope="col" class="num">Avg Cost</th><th scope="col" class="num">Price</th><th scope="col" class="num">Value</th><th scope="col" class="num">P&L</th><th scope="col" class="num">P&L %</th><th></th>
+    <th><input type="checkbox" class="bulk-cb" onchange="_toggleAllPos(this.checked)"${_bulkPosIds.size&&list.every(p=>_bulkPosIds.has(p.id))?' checked':''} title="Select all"></th><th scope="col">Ticker</th><th scope="col">Account</th><th scope="col">Type</th><th scope="col" class="num">Shares</th><th scope="col" class="num">Avg Cost</th><th scope="col" class="num">Price</th><th scope="col" class="num">Value</th><th scope="col" class="num">P&L</th><th scope="col" class="num">P&L %</th><th></th>
   </tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
 }
 
@@ -4316,7 +4466,8 @@ function renderTransactions(){
   const rows=list.map(t=>{
     const shares=t.shares!=null?fmt(parseFloat(t.shares),t.shares%1?4:0):'—';
     const price=t.pricePerShare!=null?fmt(parseFloat(t.pricePerShare),2):'—';
-    return`<tr>
+    return`<tr data-tx-id="${t.id}"${_bulkTxIds.has(t.id)?' class="bulk-selected"':''}>
+      <td><input type="checkbox" class="bulk-cb bulk-cb-tx" data-id="${t.id}" onchange="_toggleBulkTx(${t.id},this.checked)"${_bulkTxIds.has(t.id)?' checked':''}></td>
       <td>${escH(t.date||'')}</td>
       <td><span class="pf-badge pf-badge-${escH(t.type)}">${escH(t.type)}</span></td>
       <td style="font-weight:600">${escH(t.ticker||'—')}</td>
@@ -4334,7 +4485,7 @@ function renderTransactions(){
   });
 
   c.innerHTML=`<div style="overflow-x:auto"><table class="pf-tx-table"><thead><tr>
-    <th scope="col">Date</th><th scope="col">Type</th><th scope="col">Ticker</th><th scope="col">Account</th><th scope="col" class="num">Shares</th><th scope="col" class="num">Price</th><th scope="col" class="num">Total</th><th scope="col" class="num">Fees</th><th scope="col">Notes</th><th></th>
+    <th><input type="checkbox" class="bulk-cb" onchange="_toggleAllTx(this.checked)"${_bulkTxIds.size&&list.every(t=>_bulkTxIds.has(t.id))?' checked':''} title="Select all"></th><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Ticker</th><th scope="col">Account</th><th scope="col" class="num">Shares</th><th scope="col" class="num">Price</th><th scope="col" class="num">Total</th><th scope="col" class="num">Fees</th><th scope="col">Notes</th><th></th>
   </tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
 }
 
