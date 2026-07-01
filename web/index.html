@@ -3199,6 +3199,8 @@ const API={
   _pendingFns:{},
   _retryCount:{},
   _dirty:{},
+  _inFlight:{},
+  _flushing:false,
   _markClean(key){delete this._dirty[key];try{localStorage.removeItem('d1_dirty_'+key)}catch(e){}},
   _markDirty(key){const ts=Date.now();this._dirty[key]=ts;try{localStorage.setItem('d1_dirty_'+key,String(ts))}catch(e){}},
   isDirty(key){return !!(this._dirty[key]||localStorage.getItem('d1_dirty_'+key))},
@@ -3207,21 +3209,36 @@ const API={
     if(this._timers[key])clearTimeout(this._timers[key]);
     this._pendingFns[key]=fn;
     this._markDirty(key);
-    this._timers[key]=setTimeout(()=>{this._timers[key]=null;delete this._pendingFns[key];fn().then(()=>{this._retryCount[key]=0;this._markClean(key)}).catch(e=>{console.error('D1 save error ('+key+'):',e);this._localFallback(key);const retries=(this._retryCount[key]||0)+1;this._retryCount[key]=retries;if(retries<=3){const backoff=Math.min(retries*2000,10000);showToast('Cloud save failed ('+key+') — retrying in '+Math.round(backoff/1000)+'s','warning',3000);this.scheduleSave(key,fn,backoff)}else{showToast('Cloud save failed ('+key+') — data kept locally. Will sync on next save.','error',8000);this._retryCount[key]=0}})},delay);
+    this._timers[key]=setTimeout(()=>{
+      this._timers[key]=null;delete this._pendingFns[key];
+      const run=()=>{
+        const p=fn().then(()=>{this._retryCount[key]=0;this._markClean(key)}).catch(e=>{console.error('D1 save error ('+key+'):',e);this._localFallback(key);const retries=(this._retryCount[key]||0)+1;this._retryCount[key]=retries;if(retries<=3){const backoff=Math.min(retries*2000,10000);showToast('Cloud save failed ('+key+') — retrying in '+Math.round(backoff/1000)+'s','warning',3000);this.scheduleSave(key,fn,backoff)}else{showToast('Cloud save failed ('+key+') — data kept locally. Will sync on next save.','error',8000);this._retryCount[key]=0}}).finally(()=>{delete this._inFlight[key]});
+        this._inFlight[key]=p;
+        return p;
+      };
+      if(this._inFlight[key]){this._inFlight[key].then(run,run)}else{run()}
+    },delay);
   },
-  flushAll(){
+  flushAll(useBeacon){
+    if(this._flushing)return;
+    this._flushing=true;
     this._keepalive=true;
-    const keys=Object.keys(this._timers);
+    const keys=Object.keys(this._timers).concat(Object.keys(this._pendingFns));
+    const seen=new Set();
     const promises=[];
     keys.forEach(k=>{
+      if(seen.has(k))return;seen.add(k);
       if(this._timers[k]){clearTimeout(this._timers[k]);this._timers[k]=null}
       if(this._pendingFns[k]){
         const fn=this._pendingFns[k];delete this._pendingFns[k];
         this._localFallback(k);
-        try{const p=fn().catch(e=>console.error('flushAll('+k+'):',e));promises.push(p)}catch(e){console.error('flushAll sync('+k+'):',e)}
+        if(!useBeacon){
+          try{const p=fn().catch(e=>console.error('flushAll('+k+'):',e));promises.push(p)}catch(e){console.error('flushAll sync('+k+'):',e)}
+        }
       }
     });
-    Promise.allSettled(promises).then(()=>{this._keepalive=false});
+    if(promises.length){Promise.allSettled(promises).then(()=>{this._keepalive=false;this._flushing=false})}
+    else{this._keepalive=false;this._flushing=false}
   },
   _localFallback(key){
     try{
@@ -11340,7 +11357,10 @@ async function cloudLoad(){
 }
 
 // Auto save/load
+let _autoLoadRunning=false;
 async function autoLoad(){
+  if(_autoLoadRunning)return;
+  _autoLoadRunning=true;
   if(typeof marked!=='undefined')marked.setOptions({breaks:true,gfm:true});
   runMigrations();
   loadTrackerSettings();
@@ -11419,6 +11439,7 @@ async function autoLoad(){
   document.querySelectorAll('input[type="number"]').forEach(el=>el.setAttribute('inputmode','decimal'));
   handleRoute();
   checkPriceAlerts();
+  _autoLoadRunning=false;
 }
 function autoSave(){
   try{
@@ -11433,7 +11454,7 @@ function autoSave(){
 document.addEventListener('input',e=>{if(e.target.matches('#section-calculators input,#section-calculators select'))setTimeout(autoSave,100)});
 window.addEventListener('beforeunload',()=>{
   autoSave();
-  if(d1Mode){API.flushAll()}
+  if(d1Mode){API.flushAll(true)}
 });
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){

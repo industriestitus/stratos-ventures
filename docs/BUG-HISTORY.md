@@ -26,13 +26,13 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 16 | Phase 15 Feature QA | `bc15b16`+`872b96b` | 2026-06-30 | 4 | 0 |
 | 17 | Phase 14 Asset Types QA | `5cd3a24` | 2026-07-01 | 6 | 0 |
 | 18 | Phase 15.4 Price Alerts QA | `631a3e2` | 2026-07-01 | 2 | 0 |
-| 19 | Data Persistence & Sync | `2c36bdc` | 2026-07-01 | 3 | 8 |
+| 19 | Data Persistence & Sync | `2c36bdc`+S4 | 2026-07-01 | 6 | 5 |
 | 20 | Financial Calculation Accuracy | `ecdf115`+`6585785` | 2026-07-01 | 5 | 2 |
-| 21 | Cross-Module Integration | `6585785` | 2026-07-01 | 1 | 4 |
+| 21 | Cross-Module Integration | `6585785`+S4 | 2026-07-01 | 2 | 3 |
 | 22 | Performance | — | 2026-07-01 | 0 | 3 |
 | 23 | Security & Code Quality | — | 2026-07-01 | 0 | 2 |
 
-**Total: 177 fixed, 40 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
+**Total: 181 fixed, 36 potential (unfixed)** — Categories 19-23 from full QA audit (7 parallel agents)
 
 ---
 
@@ -471,22 +471,22 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ## Category 19 — Data Persistence & Sync (Full QA Audit 2026-07-01)
 
-### Fixed (3) — `2c36bdc`
+### Fixed (6) — `2c36bdc` + Session 4
 
 | # | Bug | Fix | File:Line |
 |---|-----|-----|-----------|
-| 19.1 | `autoSave()` no try/catch — localStorage quota error kills flushAll | Wrapped in try/catch, shows toast on QuotaExceededError | index.html:11360 |
-| 19.2 | D1 save failure permanently loses data — no retry, D1 overwrites newer localStorage | Added retry with backoff (3 attempts), dirty-key tracking per key, reconcileDirtyKeys() on D1 load prefers localStorage when dirty | index.html:3200-3250 |
+| 19.1 | `autoSave()` no try/catch — quota error kills flushAll | Wrapped in try/catch, toast on QuotaExceededError | index.html:11423 |
+| 19.2 | D1 save failure loses data permanently | Added retry with backoff, dirty-key tracking, reconcileDirtyKeys on load | index.html:3199-3256 |
 | 19.3 | `refreshProfileData()` overwrites user-editable fields not in preserve list | Added 14 fields to preserve array: thesis, sortOrder, dcfMode, evaWacc, sellTriggers, priceAlerts, learningLog, convictionHistory, followSources, earningsCalendar, pipelineStatus, dateAdded, sbc, roic | index.html:8407 |
+| 19.4 | `scheduleSave` concurrent overlap — duplicate D1 writes for same key | Added `_inFlight` promise tracker, chains new saves after in-flight completes | index.html:3206 |
+| 19.5 | `flushAll()` no reentrance guard — double-flush from beforeunload+visibilitychange | Added `_flushing` boolean guard | index.html:3212 |
+| 19.7 | `flushAll` during `beforeunload` can't complete async saves | Added `useBeacon` parameter — beforeunload uses local fallback only, visibilitychange handles async flush | index.html:3212,11434 |
 
-### Unfixed (8)
+### Unfixed (5)
 
 | # | Bug | Impact | Reason |
 |---|-----|--------|--------|
-| 19.U4 | `scheduleSave` (line 3200) can overlap — timer callback and new scheduleSave fire the same key's async fn concurrently, causing duplicate D1 writes | **MEDIUM** — potential write conflicts on D1 | Needs in-flight promise tracking per key |
-| 19.U5 | `flushAll()` (line 3205) has no reentrance guard — `beforeunload` and `visibilitychange` can trigger concurrent flushes, breaking keepalive on in-flight requests | **MEDIUM** — data loss on mobile Safari app-switch | Add `_flushing` guard flag |
 | 19.U6 | `saveTrackerStocks` closure (line 7606) reads `tStocks` during multi-step async execution — mutations between steps cause companies/sub-entities to get out of sync | **MEDIUM** — inconsistent D1 state after concurrent edits + save | Snapshot tStocks at closure start |
-| 19.U7 | `flushAll` during `beforeunload` cannot complete multi-step async saves — only first fetch gets keepalive, sub-entities likely lost on page close | **MEDIUM** — sub-entity data (todos, earnings, checklist) lost on tab close | Use `navigator.sendBeacon()` or single-payload endpoint |
 | 19.U8 | Multi-tab conflicts — no data reload on `storage` event, D1 batch writes from different tabs overwrite each other with stale data | **MEDIUM** — last-tab-to-save wins, earlier tab's changes lost | Needs `storage` event listener + conflict resolution |
 | 19.U9 | Research notes not cleaned up on company delete — orphaned notes remain in `researchNotes` array and D1 | **MEDIUM** — data leaks, confusing stale notes appear | Add cascade delete in `deleteCompany()` |
 | 19.U10 | `_tickerToD1Id()` silently filters out null returns — if a company has no D1 ID, its sub-entities are silently skipped during save | **MEDIUM** — silent data loss for companies added while D1 is unreachable | Log warning when null D1 ID encountered |
@@ -517,17 +517,17 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ## Category 21 — Cross-Module Integration (Full QA Audit 2026-07-01)
 
-### Fixed (1) — `6585785`
+### Fixed (2) — `6585785` + Session 4
 
 | # | Bug | Fix | File:Line |
 |---|-----|-----|-----------|
 | 21.1 | CSV import doesn't update positions or portfolio metrics | Added position reconciliation: aggregates buy/sell per ticker into shares/avgCost, creates/updates positions, re-renders portfolio overview | index.html:4548-4570 |
+| 21.2 | No guard against concurrent `autoLoad()` — 4 call sites can race | Added `_autoLoadRunning` boolean guard at top/bottom of autoLoad() | index.html:11343 |
 
-### Unfixed (4)
+### Unfixed (3)
 
 | # | Bug | Impact | Reason |
 |---|-----|--------|--------|
-| 21.U2 | No guard against concurrent `autoLoad()` — 4 call sites with no re-entrancy flag, encryption setup + window.load can race causing duplicate API fetches and `_d1CompanyMap` corruption | **MEDIUM** — data corruption on startup in edge cases | Add `_autoLoadRan` boolean guard |
 | 21.U3 | Worker `/api/migrate` has no transaction wrapping — partial migration on failure leaves D1 in inconsistent state (some tables migrated, some not) | **MEDIUM** — broken D1 state requiring manual cleanup | Wrap migration in D1 transaction or add rollback mechanism |
 | 21.U4 | Finnhub rate-limit response `{rateLimited:true}` cached in D1 `api_cache` for 12 hours — blocks insider trading data until cache expires | **MEDIUM** — no insider data shown for half a day after rate limit hit | Check response before caching; skip cache on rate-limit |
 | 21.U5 | D1 mode offline at startup shows 'Loading from D1...' spinner for 15 seconds with no offline indicator or localStorage fallback | **LOW** — poor UX on startup without internet | Check `navigator.onLine` before D1 load; fall through to localStorage |
