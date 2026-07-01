@@ -8,6 +8,37 @@ let cachedCrumb = null;
 let cachedCookie = null;
 let crumbExpiry = 0;
 
+// --- Per-IP Rate Limiting ---
+const rateLimitMap = new Map();
+const RATE_LIMITS = {
+  yahoo: { max: 30, windowMs: 60_000 },
+  api:   { max: 120, windowMs: 60_000 },
+};
+
+function checkRateLimit(ip, bucket) {
+  const limit = RATE_LIMITS[bucket];
+  if (!limit) return null;
+  const key = `${ip}:${bucket}`;
+  const now = Date.now();
+  let entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + limit.windowMs };
+    rateLimitMap.set(key, entry);
+  }
+  entry.count++;
+  if (entry.count > limit.max) {
+    const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+    return retryAfter;
+  }
+  // Periodic cleanup: if map grows beyond 1000 entries, prune expired
+  if (rateLimitMap.size > 1000) {
+    for (const [k, v] of rateLimitMap) {
+      if (now > v.resetAt) rateLimitMap.delete(k);
+    }
+  }
+  return null;
+}
+
 const ALLOWED_ORIGINS = [
   'http://localhost:8765',
   'http://127.0.0.1:8765',
@@ -245,11 +276,14 @@ async function handleCrud(table, method, id, body, url, db, origin) {
   if (method === 'DELETE' && id) {
     const row = await db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).bind(id).first();
     if (!row) return jsonResp({ error: 'Not found' }, 404, origin);
-    // For companies: delete notes explicitly first so FTS triggers fire (CASCADE won't trigger them)
     if (table === 'companies') {
-      await db.prepare('DELETE FROM notes WHERE company_id = ?').bind(id).run();
+      await db.batch([
+        db.prepare('DELETE FROM notes WHERE company_id = ?').bind(id),
+        db.prepare(`DELETE FROM ${table} WHERE ${pk} = ?`).bind(id),
+      ]);
+    } else {
+      await db.prepare(`DELETE FROM ${table} WHERE ${pk} = ?`).bind(id).run();
     }
-    await db.prepare(`DELETE FROM ${table} WHERE ${pk} = ?`).bind(id).run();
     return jsonResp({ ok: true, deleted: row }, 200, origin);
   }
 
@@ -740,6 +774,29 @@ export default {
     }
 
     const path = url.pathname;
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+
+    // Rate limit Yahoo proxy endpoints
+    if (path.startsWith('/quote/') || path === '/batch' || path.startsWith('/chart/')) {
+      const retryAfter = checkRateLimit(clientIP, 'yahoo');
+      if (retryAfter) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+          status: 429,
+          headers: { ...cors(allowedOrigin), 'Retry-After': String(retryAfter) },
+        });
+      }
+    }
+
+    // Rate limit D1 API endpoints
+    if (path.startsWith('/api/')) {
+      const retryAfter = checkRateLimit(clientIP, 'api');
+      if (retryAfter) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+          status: 429,
+          headers: { ...cors(allowedOrigin), 'Retry-After': String(retryAfter) },
+        });
+      }
+    }
 
     // Health check
     if (path === '/' || path === '/health') {

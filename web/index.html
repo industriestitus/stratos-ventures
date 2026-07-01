@@ -2417,6 +2417,7 @@ function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)))}
 function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0)).buffer}
 
 async function deriveKey(pass,salt){
+  if(!window.isSecureContext||!crypto.subtle)throw new Error('Encryption requires HTTPS or localhost');
   const enc=new TextEncoder();
   const km=await crypto.subtle.importKey('raw',enc.encode(pass),{name:'PBKDF2'},false,['deriveKey']);
   return crypto.subtle.deriveKey({name:'PBKDF2',salt:new Uint8Array(salt),iterations:600000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
@@ -8225,29 +8226,30 @@ async function fetchAllDividendData(){
   _fetchingDivData=true;
   const btn=document.getElementById('div-fetch-btn');
   if(btn)btn.disabled=true;
-  const tickers=[...new Set(pfPositions.map(p=>p.ticker).filter(Boolean))];
-  const stale=tickers.filter(t=>{
-    const dh=divHistory[t];
-    return !dh||!dh.lastFetched||(Date.now()-new Date(dh.lastFetched).getTime()>86400000);
-  });
-  if(!stale.length){
-    showToast('Dividend data is up to date','success');
-    if(btn)btn.disabled=false;
+  try{
+    const tickers=[...new Set(pfPositions.map(p=>p.ticker).filter(Boolean))];
+    const stale=tickers.filter(t=>{
+      const dh=divHistory[t];
+      return !dh||!dh.lastFetched||(Date.now()-new Date(dh.lastFetched).getTime()>86400000);
+    });
+    if(!stale.length){
+      showToast('Dividend data is up to date','success');
+      return;
+    }
+    showToast(`Fetching dividends for ${stale.length} ticker(s)...`,'info');
+    let fetched=0;
+    for(const ticker of stale){
+      await fetchDividendHistory(ticker);
+      fetched++;
+      if(btn)btn.textContent=`${fetched}/${stale.length}...`;
+      if(fetched<stale.length)await new Promise(r=>setTimeout(r,350));
+    }
+    showToast(`Dividend data loaded for ${fetched} ticker(s)`,'success');
+    renderDividendsTab();
+  }finally{
+    if(btn){btn.textContent='Fetch Data';btn.disabled=false}
     _fetchingDivData=false;
-    return;
   }
-  showToast(`Fetching dividends for ${stale.length} ticker(s)...`,'info');
-  let fetched=0;
-  for(const ticker of stale){
-    await fetchDividendHistory(ticker);
-    fetched++;
-    if(btn)btn.textContent=`${fetched}/${stale.length}...`;
-    if(fetched<stale.length)await new Promise(r=>setTimeout(r,350));
-  }
-  if(btn){btn.textContent='Fetch Data';btn.disabled=false}
-  _fetchingDivData=false;
-  showToast(`Dividend data loaded for ${fetched} ticker(s)`,'success');
-  renderDividendsTab();
 }
 
 function calcPortfolioDividendIncome(){
@@ -8556,13 +8558,30 @@ async function fetchProfileDividends(ticker){
 }
 
 // FMP API
+const FMP_DAILY_LIMIT=250;
+function _fmpBudget(){
+  const today=new Date().toISOString().slice(0,10);
+  let b;try{b=JSON.parse(localStorage.getItem('fmp_budget')||'null')}catch(e){b=null}
+  if(!b||b.date!==today)b={date:today,count:0};
+  return b;
+}
+function _fmpBudgetInc(){
+  const b=_fmpBudget();b.count++;
+  localStorage.setItem('fmp_budget',JSON.stringify(b));
+  if(b.count===Math.floor(FMP_DAILY_LIMIT*0.8))showToast(`FMP API: ${b.count}/${FMP_DAILY_LIMIT} calls today (80%)`,'warning');
+  if(b.count>=FMP_DAILY_LIMIT)showToast(`FMP API daily limit reached (${FMP_DAILY_LIMIT})`,'error');
+  return b.count;
+}
 async function fmpFetch(endpoint,params){
   const s=stSettings();
   if(!s.apiKey){showToast('FMP API key not set — go to Settings','warning');return null}
+  const b=_fmpBudget();
+  if(b.count>=FMP_DAILY_LIMIT){showToast(`FMP API daily limit reached (${FMP_DAILY_LIMIT}) — try again tomorrow`,'error');return {rateLimited:true}}
   const url=`${FMP}/${endpoint}?${new URLSearchParams({...params,apikey:s.apiKey})}`;
   for(let attempt=0;attempt<2;attempt++){
     try{
       const r=await fetchWithTimeout(url);
+      _fmpBudgetInc();
       if(r.status===429){showToast('FMP rate limit — wait a moment','warning');return null}
       if(r.status===401||r.status===403){showToast('FMP API key invalid','error');return null}
       if(!r.ok){console.warn('FMP HTTP',r.status,'for',endpoint);return null}
@@ -8581,8 +8600,17 @@ const CACHE_TTLS={stock_data:1,historical_charts:24,dividend_history:24,insider_
 let _lastCacheAge=null;
 let _forceRefresh=false;
 
+const _memCache=new Map();
 async function cachedFetch(ticker,dataSource,fetchFn){
-  if(!d1Mode){return fetchFn()}
+  if(!d1Mode){
+    const mkey=ticker+':'+dataSource;
+    const mc=_memCache.get(mkey);
+    const ttl=(CACHE_TTLS[dataSource]||1)*3600000;
+    if(!_forceRefresh&&mc&&(Date.now()-mc.ts<ttl))return mc.data;
+    const fresh=await fetchFn();
+    if(fresh!=null)_memCache.set(mkey,{data:fresh,ts:Date.now()});
+    return fresh;
+  }
   const companyId=_tickerToD1Id(ticker);
   if(!companyId){return fetchFn()}
   const ttl=CACHE_TTLS[dataSource]||1;

@@ -8,36 +8,23 @@ Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and cod
 
 ## Critical / High Priority
 
-### P.4 — Worker: No Rate Limiting (CRITICAL)
-- **Location:** `web/cloudflare-worker/src/index.js`
-- **Problem:** No per-IP or per-key throttling. An attacker can exhaust API quotas via the unrestricted proxy.
-- **Impact:** Yahoo Finance, FMP, or Finnhub quotas could be exhausted, breaking the app for legitimate use.
-- **Fix:** Add per-IP or per-key throttling in the Worker (Cloudflare rate limiting or in-memory counter with TTL).
+### ~~P.4 — Worker: No Rate Limiting (FIXED 2026-07-01)~~
+- **Fix applied:** Per-IP rate limiting with in-memory sliding window. Yahoo proxy: 30 req/min, D1 API: 120 req/min. Returns 429 with `Retry-After` header. Auto-cleanup at 1000+ tracked IPs.
 
-### P.1 — No FMP API Call Budget Tracking (HIGH)
-- **Location:** `web/index.html`
-- **Problem:** No client-side tracking of FMP API calls (250/day free tier limit). User can silently exhaust daily quota.
-- **Fix:** Add localStorage-persisted call counter with daily reset and warning UI at 80%/100% thresholds.
+### ~~P.1 — No FMP API Call Budget Tracking (FIXED 2026-07-01)~~
+- **Fix applied:** localStorage-persisted daily call counter with auto-reset. Warning toast at 80% (200 calls), hard block at 250 with `rateLimited` return.
 
-### P.2 — No Client-Side Cache in Non-D1 Mode (HIGH)
-- **Location:** `web/index.html` — `cachedFetch()`
-- **Problem:** When D1 is off, `cachedFetch()` returns `fetchFn()` directly with no caching. Every company profile view re-fetches all API data.
-- **Fix:** Add sessionStorage or in-memory TTL cache for non-D1 mode.
+### ~~P.2 — No Client-Side Cache in Non-D1 Mode (FIXED 2026-07-01)~~
+- **Fix applied:** In-memory TTL cache (`_memCache` Map) for non-D1 mode using same `CACHE_TTLS` as D1 cache. Respects `_forceRefresh` flag.
 
-### P.6 — Worker: Company DELETE Not Transaction-Safe (HIGH)
-- **Location:** `web/cloudflare-worker/src/index.js`
-- **Problem:** Notes are deleted first, then company delete runs separately. If company delete fails, orphaned note deletions remain.
-- **Fix:** Wrap both DELETE statements in `db.batch()`.
+### ~~P.6 — Worker: Company DELETE Not Transaction-Safe (FIXED 2026-07-01)~~
+- **Fix applied:** Notes + company DELETE wrapped in `db.batch()` for atomic execution.
 
-### P.7 — Dividend Fetch Dedup Flag Not in `finally` Block (HIGH)
-- **Location:** `web/index.html` — line ~6575
-- **Problem:** `_fetchingDivData=false` not in finally block. An exception mid-fetch permanently locks the function until page reload.
-- **Fix:** Move flag reset into `finally` block (other dedup guards already use this pattern).
+### ~~P.7 — Dividend Fetch Dedup Flag Not in `finally` Block (FIXED 2026-07-01)~~
+- **Fix applied:** Entire `fetchAllDividendData` body wrapped in try/finally. Flag reset and button restore in `finally` block.
 
-### P.10 — Web Crypto Without Secure-Context Guard (HIGH)
-- **Location:** `web/index.html`
-- **Problem:** `crypto.subtle` is undefined over plain HTTP (non-localhost). Encryption setup crashes without a secure context.
-- **Fix:** Check `window.isSecureContext` before offering encryption features.
+### ~~P.10 — Web Crypto Without Secure-Context Guard (FIXED 2026-07-01)~~
+- **Fix applied:** `deriveKey()` checks `window.isSecureContext` and `crypto.subtle` before use, throws descriptive error.
 
 ---
 
@@ -149,8 +136,8 @@ Bundling too many tasks per session (e.g., 9 tasks, ~200 fields) compounds bugs 
 
 | Priority | Count | Top Action |
 |----------|-------|------------|
-| CRITICAL | 1 | P.4 — Add Worker rate limiting |
-| HIGH | 5 | P.1/P.2 — API caching & budget tracking |
+| ~~CRITICAL~~ | ~~1~~ | ~~P.4 — FIXED 2026-07-01~~ |
+| ~~HIGH~~ | ~~5~~ | ~~P.1/P.2/P.6/P.7/P.10 — ALL FIXED 2026-07-01~~ |
 | MEDIUM | 6 | Various — incremental fixes |
 | LOW | 4 | Acceptable risk, cosmetic |
 | Deep Audit | 5 | Low risk, internal data only |
