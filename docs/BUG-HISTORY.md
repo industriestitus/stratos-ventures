@@ -37,8 +37,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 27 | UX/UI Audit Fixes | `ff47c3f` | 2026-07-01 | 5+3 QA | 0 |
 | 28 | Keyboard Shortcuts + Empty States | `79f0927` | 2026-07-02 | 2 QA | 0 |
 | 29 | Bulk Operations | `11c3e3a` | 2026-07-02 | 2 QA | 0 |
+| 30 | Bulk Ops: Notes/Reviews/Stocks | `73e7dfb` | 2026-07-02 | 4 QA | 0 |
 
-**Total: 233 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 237 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -757,6 +758,21 @@ Features: multi-select checkboxes + floating action bar (delete/export CSV) for 
 |---|----------|-----|-----|
 | 1 | MED | Bulk bar persists when navigating away from portfolio to other sections | Clear `_bulkPosIds`/`_bulkTxIds` and remove bar in `showSection()` when leaving portfolio |
 | 2 | LOW | "Select all" header checkbox always unchecked on re-render even when all items selected | Added dynamic `checked` attribute based on Set vs filtered list comparison |
+
+---
+
+## Category 30 — Bulk Ops: Notes/Reviews/Stocks (`73e7dfb`)
+
+Extended bulk operations to research notes, reviews, and tracked stocks. Select all + per-item checkboxes, floating bulk bar, undoable batch delete, D1 sync on confirm.
+
+### QA Fixes (4)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | HIGH | `bulkDeleteNotes` splice corruption — iterating keys and splicing by re-finding index; after first splice, subsequent indices stale | Collect indices per type, sort descending, splice from end |
+| 2 | HIGH | Missing D1 delete for notes — `saveResearchNotes()` only upserts remaining, never deletes removed from D1 | Added `onConfirm` callback with `API.del('notes/'+id)` for each deleted note |
+| 3 | MED | Missing D1 delete for stocks — `_putSavedStocks` only batch-upserts remaining valuations | Added `onConfirm` with `API.del('valuations/'+id)` for deleted stocks |
+| 4 | MED | No cross-mode guard — selecting items in two sections simultaneously shows wrong bulk bar | Added `_clearOtherBulk(keep)` that clears all other Sets when a new one gains an entry |
 
 ---
 
