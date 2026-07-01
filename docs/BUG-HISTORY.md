@@ -627,6 +627,13 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 | 25.20 | rv.id used unescaped in onclick handler | Added parseInt(rv.id)||0 sanitization | index.html:6834 |
 | 25.21 | Hardcoded $ currency in positions/transactions | Use position/transaction currency field | index.html:6768 |
 
+### Final QA Pass (cross-session)
+| # | Bug | Fix | File:Line |
+|---|-----|-----|-----------|
+| 25.22 | doDeleteStock() crashes — researchNotes.filter() called on object not array | Iterate journal/news/market arrays, filter by .ticker not .companyTicker | index.html:8840 |
+| 25.23 | D1 round-trip breaks pipeline — lowercase snake_case not normalized back to title case | Added case normalization map in _d1CompanyToTStock | index.html:8060 |
+| 25.24 | deleteReview() doesn't refresh dashboard widget or profile badge | Added renderDbReviewsDue() and renderReviewDueBadge() after delete | index.html:11513 |
+
 ### Unfixed (0)
 
 ---

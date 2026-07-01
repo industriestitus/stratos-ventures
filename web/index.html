@@ -8057,7 +8057,7 @@ function saveTrackerStocks(){
 
 function _d1CompanyToTStock(c){
   const s={ticker:c.symbol,name:c.name||c.symbol,sector:c.sector||'',currency:c.currency||'USD',
-    exchange:c.exchange||'',companyType:c.company_type||'',pipeline:c.pipeline_status||'watchlist',
+    exchange:c.exchange||'',companyType:c.company_type||'',pipeline:({'watchlist':'Watchlist','under_review':'Under review','buy_target':'Buy target','owned':'Owned','archived':'Archived'}[c.pipeline_status])||c.pipeline_status||'Watchlist',
     pipelineStatus:c.pipeline_status||'watchlist',thesis:c.thesis||'',sortOrder:c.sort_order||0,
     _d1Id:c.id,todos:[],earnings:{},filings:{},overriddenData:{},_origData:{},notes:{thesis:c.thesis||'',research:'',earnings:{}},checklist:{sections:{}}};
   if(c.archived_at)s.archivedAt=c.archived_at;
@@ -8837,9 +8837,14 @@ function doDeleteStock(){
   if(d1Mode&&d1Id)API.del('companies/'+d1Id).catch(e=>console.error('D1 del company:',e));
   delete tStocks[ticker];
   if(divHistory[ticker]){delete divHistory[ticker];saveDividendHistory()}
-  const notesBefore=researchNotes.length;
-  researchNotes=researchNotes.filter(n=>n.companyTicker!==ticker);
-  if(researchNotes.length<notesBefore)saveResearchNotes();
+  let notesCleaned=false;
+  ['journal','news','market'].forEach(type=>{
+    if(!researchNotes[type])return;
+    const before=researchNotes[type].length;
+    researchNotes[type]=researchNotes[type].filter(n=>n.ticker!==ticker);
+    if(researchNotes[type].length<before)notesCleaned=true;
+  });
+  if(notesCleaned)saveResearchNotes();
   rvData.entries=rvData.entries.filter(e=>e.companyTicker!==ticker);
   saveReviews();
   pfPositions=pfPositions.filter(p=>p.ticker!==ticker);
@@ -11512,11 +11517,15 @@ function saveReview(){
 
 async function deleteReview(id){
   if(!confirm('Delete this review?'))return;
+  const delEntry=rvData.entries.find(e=>e.id===id);
+  const delTicker=delEntry?.companyTicker||'';
   if(d1Mode){try{await API.del('reviews/'+id)}catch(e){console.error('D1 del review:',e);showToast('Cloud delete failed — local only','warning')}}
   rvData.entries=rvData.entries.filter(e=>e.id!==id);
   saveReviews();
   const activeTab=document.querySelector('.rv-tabs .tab.active');
   renderRvFeed(activeTab?.dataset.rvtab||'all');
+  renderDbReviewsDue();
+  if(delTicker)renderReviewDueBadge(delTicker);
   showToast('Deleted','success');
 }
 
