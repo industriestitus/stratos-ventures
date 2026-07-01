@@ -3573,8 +3573,8 @@ function renderPositions(){
     const pnl=mktVal!=null?mktVal-cost:null;
     const pnlPct=cost>0&&pnl!=null?(pnl/cost*100):null;
     if(mktVal!=null&&!isNaN(mktVal)){
-      totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
-      if(!isNaN(cost))totalCost+=convertCurrency(cost,pos.currency||'USD',base)||cost;
+      const cvMkt=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cvMkt))totalValue+=cvMkt;else if(isFinite(mktVal))totalValue+=mktVal;
+      if(!isNaN(cost)){const cvCost=convertCurrency(cost,pos.currency||'USD',base);if(isFinite(cvCost))totalCost+=cvCost;else if(isFinite(cost))totalCost+=cost}
     }
     const pnlClass=pnl!=null?(pnl>=0?'pf-positive':'pf-negative'):'';
     const tickerLink=tStocks[pos.ticker]?`onclick="showProfile('${escH(pos.ticker)}')" class="pf-pos-ticker"`:'class="pf-pos-ticker"';
@@ -4025,7 +4025,7 @@ function takeSnapshot(){
     const mktVal=price!=null?shares*price:0;
     const converted=convertCurrency(mktVal,pos.currency||'USD',base);
     const valueInBase=converted!=null?converted:mktVal;
-    totalValue+=valueInBase;
+    if(isFinite(valueInBase))totalValue+=valueInBase;
     return{ticker:pos.ticker,accountId:pos.accountId,assetType:pos.assetType||'stock',shares,pricePerShare:price||0,marketValue:mktVal,currency:pos.currency||'USD',valueInBase};
   });
   pfSnapshots.push({id:pfNextId(pfSnapshots),date:today,totalValue,baseCurrency:base,notes:'',positions,createdAt:new Date().toISOString()});
@@ -4111,7 +4111,7 @@ function calcXIRR(){
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
-    totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+    const cv=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cv))totalValue+=cv;else if(isFinite(mktVal))totalValue+=mktVal;
   });
   if(totalValue>0)cfs.push({date:new Date(),amount:totalValue});
   if(cfs.length<2)return null;
@@ -4179,8 +4179,8 @@ function renderSummaryCards(){
     const cost=shares*avg;
     if(price!=null){
       const mktVal=shares*price;
-      totalCost+=convertCurrency(cost,pos.currency||'USD',base)||cost;
-      totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+      const cvC=convertCurrency(cost,pos.currency||'USD',base);if(isFinite(cvC))totalCost+=cvC;else if(isFinite(cost))totalCost+=cost;
+      const cvM=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cvM))totalValue+=cvM;else if(isFinite(mktVal))totalValue+=mktVal;
     }
   });
   pfTransactions.filter(t=>t.type==='dividend').forEach(t=>{
@@ -4310,8 +4310,8 @@ function renderReturnsGrid(){
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
     if(price!=null){
-      totalCost+=convertCurrency(shares*avg,pos.currency||'USD',base)||(shares*avg);
-      totalValue+=convertCurrency(shares*price,pos.currency||'USD',base)||(shares*price);
+      const cA=shares*avg,cvA=convertCurrency(cA,pos.currency||'USD',base);if(isFinite(cvA))totalCost+=cvA;else if(isFinite(cA))totalCost+=cA;
+      const cP=shares*price,cvP=convertCurrency(cP,pos.currency||'USD',base);if(isFinite(cvP))totalValue+=cvP;else if(isFinite(cP))totalValue+=cP;
     }
   });
   const simpleReturn=totalCost>0?((totalValue-totalCost)/totalCost*100):0;
@@ -4381,7 +4381,7 @@ async function fetchExchangeRates(){
 
 function convertCurrency(amount,from,to){
   if(amount===0||from===to)return amount;
-  if(!amount)return amount;
+  if(amount==null||!isFinite(amount))return null;
   const rates=pfExchangeRates.rates;
   if(!rates||!Object.keys(rates).length)return null;
   const direct=rates[from+'/'+to];
@@ -4622,9 +4622,9 @@ function renderDbPortfolioSummary(){
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
     if(price!=null){
-      totalCost+=convertCurrency(shares*avg,pos.currency||'USD',base)||(shares*avg);
+      const cst=shares*avg,cvCst=convertCurrency(cst,pos.currency||'USD',base);if(isFinite(cvCst))totalCost+=cvCst;else if(isFinite(cst))totalCost+=cst;
       const mktVal=shares*price;
-      totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+      const cvMv=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cvMv))totalValue+=cvMv;else if(isFinite(mktVal))totalValue+=mktVal;
     }
   });
   pfTransactions.filter(t=>t.type==='dividend').forEach(t=>{
@@ -4804,8 +4804,8 @@ function renderDbSmithMetrics(){
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
-    const valInBase=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
-    totalValue+=valInBase;
+    const cvVal=convertCurrency(mktVal,pos.currency||'USD',base);const valInBase=isFinite(cvVal)?cvVal:(isFinite(mktVal)?mktVal:0);
+    if(isFinite(valInBase))totalValue+=valInBase;
     const s=tStocks[pos.ticker];
     if(s&&valInBase>0){
       const r=calcStockRatios(s);
@@ -6388,7 +6388,7 @@ function calcPositionSizing(ticker){
       if(at==='cash')mv=parseFloat(p.cashAmount)||0;
       else if(at==='real_estate')mv=parseFloat(p.reCurrentValue)||0;
       else mv=(p.shares||0)*(p.currentPrice||p.avgCost||0);
-      totalVal+=convertCurrency(mv,p.currency||'USD',base)||mv;
+      const cvMv2=convertCurrency(mv,p.currency||'USD',base);if(isFinite(cvMv2))totalVal+=cvMv2;else if(isFinite(mv))totalVal+=mv;
     });
     if(totalVal>0){
       let tickerVal=0;
@@ -6466,7 +6466,7 @@ function getConvictionHistory(ticker){
   const s=tStocks[ticker];if(!s)return[];
   const points=[];
   const cl=s.checklist||{};
-  const psych=cl.psychology||{};
+  const psych=cl.psychology||cl.sections?.psychology||{};
   if(psych.convictionLevel){
     const lvl0=parseInt(psych.convictionLevel);
     if(lvl0>=1&&lvl0<=10){
@@ -7895,14 +7895,14 @@ function calcPortfolioDividendIncome(){
     const mktVal=shares*price;
     const currentYield=mktVal>0?(grossIncome/mktVal*100):0;
     const cur=pos.currency||'USD';
-    const grossConverted=convertCurrency(grossIncome,cur,base)||grossIncome;
-    const netConverted=convertCurrency(netIncome,cur,base)||netIncome;
-    const costConverted=convertCurrency(cost,cur,base)||cost;
-    const valConverted=convertCurrency(mktVal,cur,base)||mktVal;
-    totalAnnualGross+=grossConverted;
-    totalAnnualNet+=netConverted;
-    totalCost+=costConverted;
-    totalValue+=valConverted;
+    const grossConverted=convertCurrency(grossIncome,cur,base)??grossIncome;
+    const netConverted=convertCurrency(netIncome,cur,base)??netIncome;
+    const costConverted=convertCurrency(cost,cur,base)??cost;
+    const valConverted=convertCurrency(mktVal,cur,base)??mktVal;
+    if(isFinite(grossConverted))totalAnnualGross+=grossConverted;
+    if(isFinite(netConverted))totalAnnualNet+=netConverted;
+    if(isFinite(costConverted))totalCost+=costConverted;
+    if(isFinite(valConverted))totalValue+=valConverted;
     breakdown.push({
       ticker:pos.ticker,shares,annualDPS,frequency:dh?.frequency||'unknown',
       grossIncome:grossConverted,netIncome:netConverted,yieldOnCost,currentYield,
