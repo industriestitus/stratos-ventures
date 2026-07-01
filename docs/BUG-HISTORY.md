@@ -34,8 +34,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 24 | KNOWN-ISSUES Bugfix Sweep | `bde6c93` | 2026-07-01 | 6 | 0 |
 | 25 | KNOWN-ISSUES Medium Sweep | `2dfccef` | 2026-07-01 | 6 | 1 |
 | 26 | LOW + Deep Audit Sweep | `5cadef9` | 2026-07-01 | 8 | 2 |
+| 27 | UX/UI Audit Fixes | *uncommitted* | 2026-07-01 | 5+3 QA | 0 |
 
-**Total: 221 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 229 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -700,6 +701,34 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 |---|----------|-----|--------|
 | 1 | LOW | P.15: accent-color needs Safari 15.4+ | CSS spec limitation, cosmetic only |
 | 2 | LOW | P.16: fetch keepalive ignored in Firefox 90-99 | Browser limitation, negligible user base |
+
+---
+
+## Category 27 — UX/UI Audit Fixes (*uncommitted*)
+
+Full UX/UI audit of app workflows, touch targets, theming, and interaction patterns.
+
+### Fixed (5)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MED | Light theme loading overlay uses hardcoded dark rgba(15,17,23,.7) | Changed to `rgba(0,0,0,.5)` + `[data-theme="light"]` override with `.3` opacity |
+| 2 | LOW | Settings status colors hardcoded `#2ecc71`/`#e74c3c`/`#aaa` | Replaced with `var(--green)`/`var(--red)`/`var(--text2)` |
+| 3 | MED | Bottom nav z-index (100) above more-menu (99) and backdrop (98) | More-menu → 101, backdrop → 100 |
+| 4 | LOW | Touch targets under 44px on mobile (tabs 36px, delete/back buttons 32px) | Min-height/width 44px on `.tab`, `.st-del`, `.st-exp-btn`, `.cp-back`; `::before` pseudo for rating buttons |
+| 5 | FEATURE | Destructive deletes use `confirm()` with no undo | `undoableDelete()` system: 6s toast with "Visszavonás" button, JSON snapshot restore. Applied to positions, transactions, research entries, reviews, saved stocks |
+
+### QA Fixes (3)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 6 | MED | D1 `API.del()` fires immediately, cloud data deleted even if user clicks Undo | Moved API.del into `onConfirm` callback — only fires after 6s timer or manual close (positions, transactions, reviews) |
+| 7 | LOW | Single global `_undoTimer` — previous toasts lose auto-dismiss | Per-toast local `timer` variable instead of shared global |
+| 8 | TRIVIAL | Dead code: duplicate `onmouseenter` assignment | Removed first duplicate |
+
+### Audit Scope
+
+22 findings identified across 4 categories (Critical UX, Moderate, Minor Polish, Enhancements). 5 implemented + 3 QA fixes this session, onboarding + undo evolution saved to ROADMAP.md for later.
 
 ---
 

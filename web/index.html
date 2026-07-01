@@ -67,12 +67,12 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .placeholder-section svg{width:64px;height:64px;color:var(--text2);margin-bottom:16px;opacity:.5}
 .placeholder-section h2{font-size:20px;font-weight:600;color:var(--text);margin-bottom:8px}
 .placeholder-section p{color:var(--text2);font-size:14px;max-width:400px;margin:0 auto}
-.more-menu{display:none;position:fixed;bottom:calc(56px + env(safe-area-inset-bottom,4px));left:0;right:0;background:var(--surface);border-top:1px solid var(--border);border-radius:12px 12px 0 0;padding:8px;z-index:99;transform:translateY(100%);transition:transform .25s ease;pointer-events:none}
+.more-menu{display:none;position:fixed;bottom:calc(56px + env(safe-area-inset-bottom,4px));left:0;right:0;background:var(--surface);border-top:1px solid var(--border);border-radius:12px 12px 0 0;padding:8px;z-index:101;transform:translateY(100%);transition:transform .25s ease;pointer-events:none}
 .more-menu.open{transform:translateY(0);pointer-events:auto}
 .more-menu-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:14px;font-weight:500;cursor:pointer;width:100%;text-align:left;font-family:inherit;transition:all .2s}
 .more-menu-item:hover{background:var(--surface2);color:var(--text)}
 .more-menu-item svg{width:20px;height:20px}
-.more-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:98;display:none}
+.more-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:none}
 .more-backdrop.open{display:block}
 @media(max-width:768px){
 #sidebar{display:none}
@@ -662,7 +662,8 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .spinner--md{width:24px;height:24px}
 .spinner--lg{width:40px;height:40px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-overlay{position:absolute;inset:0;background:rgba(15,17,23,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:var(--radius);z-index:10}
+.loading-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:var(--radius);z-index:10}
+[data-theme="light"] .loading-overlay{background:rgba(0,0,0,.3)}
 .loading-overlay span{font-size:12px;color:var(--text2)}
 .btn-loading{pointer-events:none;opacity:.7}
 .btn-loading .spinner{display:inline-block;vertical-align:middle;margin-right:6px}
@@ -691,7 +692,7 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
   .bnav-item svg{width:24px;height:24px}
   .content{padding:12px}
   .card{padding:14px}
-  .tab{padding:8px 14px;font-size:13px;min-height:36px}
+  .tab{padding:8px 14px;font-size:13px;min-height:44px}
   .input-grid{grid-template-columns:repeat(2,1fr)}
   .summary-row{grid-template-columns:repeat(2,1fr)}
   .summary-card .sc-value{font-size:20px}
@@ -707,7 +708,7 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
   .st-table th{padding:8px 6px;font-size:10px}
   .st-table td{padding:6px 4px}
   .st-ticker{font-size:13px}
-  .st-del,.st-exp-btn{padding:8px;min-width:32px;min-height:32px}
+  .st-del,.st-exp-btn{padding:8px;min-width:44px;min-height:44px}
   .st-edit,.st-data{padding:4px;font-size:12px}
   .st-exp-grid{grid-template-columns:repeat(2,1fr)}
   .year-inputs table{min-width:600px}
@@ -728,7 +729,7 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
   .cp-metrics-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
   .cp-tabs{overflow-x:auto}
   .cp-assessment-grid{grid-template-columns:1fr 1fr}
-  .cp-back{padding:8px 14px;min-height:36px}
+  .cp-back{padding:8px 14px;min-height:44px}
   .cp-meta{font-size:11px;gap:8px}
   .cp-actions .btn{padding:8px 12px;font-size:12px}
   .cp-metric{padding:10px}
@@ -876,7 +877,8 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .cl-field textarea{resize:vertical;min-height:60px}
 .cl-field textarea:focus,.cl-field input:focus,.cl-field select:focus{border-color:var(--accent);outline:none}
 .cl-rating{display:flex;gap:4px;margin-top:4px}
-.cl-rating button{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.cl-rating button{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;position:relative}
+.cl-rating button::before{content:'';position:absolute;inset:-6px;border-radius:50%}
 .cl-rating button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .cl-rating button:hover{border-color:var(--accent)}
 .cl-check-row{display:flex;align-items:center;gap:8px;padding:6px 0}
@@ -2623,6 +2625,46 @@ function showToast(msg,type='info',duration){
   setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300)},duration);
 }
 
+// ====== UNDO DELETE ======
+function undoableDelete(msg,doDelete,doRestore,onConfirm){
+  const c=document.getElementById('toast-container');
+  if(!c){doDelete();if(onConfirm)onConfirm();return}
+  doDelete();
+  const t=document.createElement('div');
+  t.className='toast toast--warning';
+  t.setAttribute('role','alert');
+  t.style.display='flex';t.style.alignItems='center';t.style.gap='12px';
+  const txt=document.createElement('span');txt.textContent=msg;txt.style.flex='1';
+  const undo=document.createElement('button');
+  undo.textContent='Visszavonás';
+  undo.style.cssText='padding:4px 12px;border-radius:6px;border:1px solid var(--orange);background:transparent;color:var(--orange);cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;white-space:nowrap';
+  undo.onmouseenter=()=>{undo.style.background='var(--orange)';undo.style.color='var(--bg)'};
+  undo.onmouseleave=()=>{undo.style.background='transparent';undo.style.color='var(--orange)'};
+  const cl=document.createElement('button');cl.className='toast-close';cl.textContent='×';
+  let resolved=false;
+  let timer=setTimeout(()=>{
+    resolved=true;
+    t.classList.add('removing');setTimeout(()=>t.remove(),300);
+    if(onConfirm)onConfirm();
+  },6000);
+  undo.onclick=()=>{
+    if(resolved)return;resolved=true;
+    clearTimeout(timer);
+    t.classList.add('removing');setTimeout(()=>t.remove(),250);
+    doRestore();
+    showToast('Visszaállítva','success');
+  };
+  cl.onclick=()=>{
+    if(resolved)return;resolved=true;
+    clearTimeout(timer);
+    t.classList.add('removing');setTimeout(()=>t.remove(),250);
+    if(onConfirm)onConfirm();
+  };
+  t.appendChild(txt);t.appendChild(undo);t.appendChild(cl);
+  c.appendChild(t);
+  while(c.children.length>5)c.firstChild.remove();
+}
+
 function showSpinner(container,text){
   hideSpinner(container);
   container.style.position='relative';
@@ -2905,7 +2947,7 @@ function saveCurrentStock(){
   _putSavedStocks(saved);showToast(`"${name}" saved.`,'success');renderSavedStocks();
 }
 function loadStock(name){const saved=_getSavedStocks();if(saved[name]){loadData(saved[name]);switchTab('dcf-perpetuity')}}
-function deleteStock(name,e){e.stopPropagation();if(!confirm(`Delete "${name}"?`))return;const s=_getSavedStocks();delete s[name];_putSavedStocks(s);renderSavedStocks();showToast('Deleted','success')}
+function deleteStock(name,e){e.stopPropagation();const s=_getSavedStocks();const backup=s[name]?JSON.parse(JSON.stringify(s[name])):null;undoableDelete(`"${name}" törölve`,()=>{const s2=_getSavedStocks();delete s2[name];_putSavedStocks(s2);renderSavedStocks()},()=>{if(backup){const s2=_getSavedStocks();s2[name]=backup;_putSavedStocks(s2);renderSavedStocks()}})}
 function renderSavedStocks(){
   const c=document.getElementById('saved-stocks-list'),s=_getSavedStocks();
   if(!Object.keys(s).length){c.innerHTML='<p style="color:var(--text2);font-size:12px">No saved stocks yet.</p>';return}
@@ -3913,17 +3955,23 @@ function savePosition(){
   showToast(editId?'Position updated':'Position added','success');
 }
 
-async function deletePosition(id){
+function deletePosition(id){
   const p=pfPositions.find(x=>x.id===id);
   if(!p)return;
-  if(!confirm(`Delete position ${p.ticker}?`))return;
-  if(d1Mode){try{await API.del('positions/'+id)}catch(e){console.error('D1 del position:',e);showToast('Cloud delete failed — local only','warning')}}
-  const delTicker=p.ticker;
-  pfPositions=pfPositions.filter(x=>x.id!==id);
-  savePortfolioPositions();
-  _checkSellAllPositions(delTicker);
-  renderPositions();
-  showToast('Position deleted','success');
+  const idx=pfPositions.indexOf(p);
+  const snapshot=JSON.parse(JSON.stringify(p));
+  undoableDelete(`Pozíció törölve: ${p.ticker}`,()=>{
+    pfPositions=pfPositions.filter(x=>x.id!==id);
+    savePortfolioPositions();
+    _checkSellAllPositions(snapshot.ticker);
+    renderPositions();
+  },()=>{
+    pfPositions.splice(idx,0,snapshot);
+    savePortfolioPositions();
+    renderPositions();
+  },()=>{
+    if(d1Mode){API.del('positions/'+id).catch(e=>console.error('D1 del position:',e))}
+  });
 }
 
 // ---- Transactions ----
@@ -4093,17 +4141,23 @@ function saveTransaction(){
   showToast(editId?'Transaction updated':'Transaction logged','success');
 }
 
-async function deleteTransaction(id){
+function deleteTransaction(id){
   const t=pfTransactions.find(x=>x.id===id);
   if(!t)return;
-  if(!confirm(`Delete ${t.type} transaction for ${t.ticker}?`))return;
-  if(d1Mode){try{await API.del('transactions/'+id)}catch(e){console.error('D1 del tx:',e);showToast('Cloud delete failed — local only','warning')}}
-  const delTicker=t.ticker;
-  pfTransactions=pfTransactions.filter(x=>x.id!==id);
-  savePortfolioTransactions();
-  _checkSellAllPositions(delTicker);
-  renderTransactions();
-  showToast('Transaction deleted','success');
+  const idx=pfTransactions.indexOf(t);
+  const snapshot=JSON.parse(JSON.stringify(t));
+  undoableDelete(`Tranzakció törölve: ${t.type} ${t.ticker}`,()=>{
+    pfTransactions=pfTransactions.filter(x=>x.id!==id);
+    savePortfolioTransactions();
+    _checkSellAllPositions(snapshot.ticker);
+    renderTransactions();
+  },()=>{
+    pfTransactions.splice(idx,0,snapshot);
+    savePortfolioTransactions();
+    renderTransactions();
+  },()=>{
+    if(d1Mode){API.del('transactions/'+id).catch(e=>console.error('D1 del tx:',e))}
+  });
 }
 
 // ---- Snapshots ----
@@ -5914,15 +5968,20 @@ function saveResearchEntry(){
 }
 
 function deleteResearchEntry(type,id){
-  if(!confirm('Delete this entry?'))return;
   const list=researchNotes[type];
   if(!list)return;
   const idx=list.findIndex(e=>e.id===id);
   if(idx===-1)return;
-  list.splice(idx,1);
-  saveResearchNotes();
-  renderResearch();
-  showToast('Entry deleted','success');
+  const snapshot=JSON.parse(JSON.stringify(list[idx]));
+  undoableDelete('Jegyzet törölve',()=>{
+    list.splice(idx,1);
+    saveResearchNotes();
+    renderResearch();
+  },()=>{
+    list.splice(idx,0,snapshot);
+    saveResearchNotes();
+    renderResearch();
+  });
 }
 
 function togglePinEntry(type,id){
@@ -11561,18 +11620,29 @@ function saveReview(){
   showToast(editId?'Review updated':'Review added','success');
 }
 
-async function deleteReview(id){
-  if(!confirm('Delete this review?'))return;
+function deleteReview(id){
   const delEntry=rvData.entries.find(e=>e.id===id);
-  const delTicker=delEntry?.companyTicker||'';
-  if(d1Mode){try{await API.del('reviews/'+id)}catch(e){console.error('D1 del review:',e);showToast('Cloud delete failed — local only','warning')}}
-  rvData.entries=rvData.entries.filter(e=>e.id!==id);
-  saveReviews();
-  const activeTab=document.querySelector('.rv-tabs .tab.active');
-  renderRvFeed(activeTab?.dataset.rvtab||'all');
-  renderDbReviewsDue();
-  if(delTicker)renderReviewDueBadge(delTicker);
-  showToast('Deleted','success');
+  if(!delEntry)return;
+  const idx=rvData.entries.indexOf(delEntry);
+  const snapshot=JSON.parse(JSON.stringify(delEntry));
+  const delTicker=delEntry.companyTicker||'';
+  function rerender(){
+    const activeTab=document.querySelector('.rv-tabs .tab.active');
+    renderRvFeed(activeTab?.dataset.rvtab||'all');
+    renderDbReviewsDue();
+    if(delTicker)renderReviewDueBadge(delTicker);
+  }
+  undoableDelete('Review törölve',()=>{
+    rvData.entries=rvData.entries.filter(e=>e.id!==id);
+    saveReviews();
+    rerender();
+  },()=>{
+    rvData.entries.splice(idx,0,snapshot);
+    saveReviews();
+    rerender();
+  },()=>{
+    if(d1Mode){API.del('reviews/'+id).catch(e=>console.error('D1 del review:',e))}
+  });
 }
 
 // ====== CLOUD SYNC & CONNECTION TESTS ======
@@ -11591,7 +11661,7 @@ function setStatus(id,msg,ok){
   const el=document.getElementById(id);
   if(!el)return;
   el.textContent=msg;
-  el.style.color=ok===true?'#2ecc71':ok===false?'#e74c3c':'#aaa';
+  el.style.color=ok===true?'var(--green)':ok===false?'var(--red)':'var(--text2)';
 }
 
 function updateD1UI(){
