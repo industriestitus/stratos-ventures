@@ -218,6 +218,7 @@ Status: COMPLETE (2026-06-27)
 
 ### Standalone Features (post-expansion)
 - [x] PDF Export — per-company research report export (2026-07-01): section chooser dialog, jsPDF lazy-loaded, 10 exportable sections (profile, financials, checklist, valuations, notes, earnings, portfolio, dividends, reviews, todos), Stratos branding header/footer, continuous-flow layout
+- [x] Chart PNG Export — hover download button (⤓) on all charts (2026-07-02): canvas-to-PNG with Stratos Ventures logo watermark, MutationObserver auto-injects for dynamic charts, covers DCF projections, allocation pies, benchmark, historical, net worth, dividend forecast
 
 ### Cross-Module Integration (2026-07-01)
 - [x] Archive system — soft delete with "Archived" pipeline stage, archive modal (Archive/Delete permanently/Cancel), tracker toggle, screener filter, D1 CHECK constraint migration

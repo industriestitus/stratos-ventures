@@ -44,8 +44,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 35 | i18n Deep Pass | `c49f3ac` | 2026-07-02 | 5 | 0 |
 | 36 | Soft-Delete + Trash | `fe3b0c8` | 2026-07-02 | 5 | 0 |
 | 37 | UX Polish (padding/focus/collapsible) | `3d75f00` | 2026-07-02 | 1 QA | 0 |
+| 38 | Chart Export + Sort Indicator | `828efc4` | 2026-07-02 | 2 QA | 0 |
 
-**Total: 254 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 256 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -888,6 +889,21 @@ Three UX consistency fixes: card padding standardization, global input focus rin
 - Content card padding inconsistency (16px vs 20px) → standardized to 20px + mobile 14px override
 - Input elements missing focus ring → global `input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}`
 - Removed static `.collapsible.open{max-height:500px}` CSS rule → JS-driven dynamic height
+
+---
+
+## Category 38 — Chart Export + Sort Indicator (2026-07-02) — `828efc4`
+
+Chart PNG download with SV watermark on all charts; sort indicator font size fix.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | CRITICAL | `MutationObserver.observe(document.getElementById('app'))` ran at script parse time before `#app` existed — TypeError crash prevented all download buttons | Wrapped observer setup inside `DOMContentLoaded` listener |
+| 2 | LOW | Download icon `⭳` (U+2B73) renders as empty box on most systems — not in Arial or default fonts | Changed to `⤓` (U+2913) which has broader font support |
+
+**Also added (new features):**
+- Chart PNG export: hover download button (⤓) on all chart containers with SV logo watermark
+- Sort indicator readability: table header 9px→11px, sort arrow 8px→10px
 
 ---
 
