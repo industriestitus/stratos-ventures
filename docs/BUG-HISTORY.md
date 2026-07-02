@@ -988,6 +988,21 @@ Added user-defined tag system: add/remove tags on company profiles with datalist
 
 ---
 
+## Category 45 — Dashboard Widget Management (2026-07-03) — `bdab96f`
+
+Added dashboard widget hide/show and reorder: Manage Widgets panel with checkboxes and up/down arrows, per-widget Hide button on hover, localStorage persistence, empty-state message. QA found 6 issues; all 6 fixed.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | Manage panel stays open when navigating away from dashboard | Close panel in `showSection()` when leaving dashboard |
+| 2 | MEDIUM | `toggleDbWidgetVisibility` doesn't re-render manage panel | Added `renderManageWidgets()` call after save |
+| 3 | LOW | No empty-state message when all widgets hidden | Added `db-all-hidden-msg` element with i18n text |
+| 4 | LOW | Manage panel and toggle button lack ARIA attributes | Added `aria-expanded`, `aria-controls`, `role="region"` |
+| 5 | LOW | Reorder arrow buttons lack accessible labels | Changed `title` to `aria-label="Move up/down"` |
+| 6 | LOW | Silent failure when localStorage full during config save | Added `showToast(t('toast.storageFull'))` on catch |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:
