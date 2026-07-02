@@ -230,7 +230,7 @@ Status: COMPLETE (2026-06-27)
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 
-- [ ] Notifications (push notifications for price alerts — basic on-load alerts in Phase 15.4)
+- [ ] Notifications — Push notifications for price alerts and dividend dates via Service Worker + Cloudflare Worker cron trigger. Requires: Web Push API subscription management, Worker cron (free: 5/worker) for background price checks, VAPID keys. In-app alerts (toasts, dashboard widgets, red flags) already complete. ~2-3 sessions.
 - [ ] Google Drive migration tool (manual export/import sufficient for now)
 ### Maybe Later (Integrations)
 - [ ] Brokerage sync (SnapTrade or similar) — automatikus pozíció import brókerből. SnapTrade $100-500/hó (nincs free tier), Plaid/Finicity szintén fizetős és US-focused. CSV import (már kész) gyakorlatilag elég, kézi futtatás havonta egyszer.
