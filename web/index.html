@@ -5281,7 +5281,7 @@ let _csvParsed=null;
 let _csvMapping={};
 
 function parseCsv(text,delimiter){
-  if(!delimiter){delimiter=text.indexOf(';')!==-1&&text.indexOf(',')===-1?';':','}
+  if(!delimiter){const hdr=text.split(/\r?\n/)[0]||'';const sc=hdr.split(';').length;const cc=hdr.split(',').length;delimiter=sc>cc?';':','}
   const rows=[];let row=[];let field='';let inQuote=false;
   for(let i=0;i<text.length;i++){
     const c=text[i];
@@ -5306,9 +5306,49 @@ function parseCsv(text,delimiter){
   return{headers:rows[0],rows:rows.slice(1)};
 }
 
+let _csvNumLocale='auto';
+
+function _detectNumLocale(rows,mapping){
+  const numFields=['shares','price','total','fees'];
+  const inv={};Object.entries(mapping).forEach(([k,v])=>{if(numFields.includes(v))inv[v]=parseInt(k,10)});
+  const cols=numFields.map(f=>inv[f]).filter(i=>i!=null);
+  if(!cols.length)return'us';
+  let euScore=0,usScore=0;
+  rows.forEach(row=>{
+    cols.forEach(ci=>{
+      const v=(row[ci]||'').trim().replace(/\s/g,'');
+      if(!v||/^[a-zA-Z]/.test(v))return;
+      if(/^\d{1,3}(\.\d{3})+,\d{1,}$/.test(v))euScore+=10;
+      else if(/^\d{1,3}(,\d{3})+\.\d{1,}$/.test(v))usScore+=10;
+      else if(/^\d{1,3}(\.\d{3})+$/.test(v))euScore+=3;
+      else if(/^\d{1,3}(,\d{3})+$/.test(v))usScore+=3;
+      else if(/^\d+,\d{1,2}$/.test(v))euScore+=2;
+      else if(/^\d+\.\d+$/.test(v))usScore+=1;
+    });
+  });
+  if(euScore>usScore)return'eu';
+  if(usScore>euScore)return'us';
+  return'eu';
+}
+
+function _csvNumParse(s,locale){
+  if(!s||s.length>30)return NaN;
+  s=s.replace(/\s/g,'').replace(/^[^\d\-+.,]+|[^\d.,]+$/g,'');
+  if(!s)return NaN;
+  if(locale==='eu'){
+    if(/^\d{1,3}(\.\d{3})+,\d+$/.test(s))s=s.replace(/\./g,'').replace(',','.');
+    else if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');
+  }else{
+    if(/^\d{1,3}(,\d{3})+\.\d+$/.test(s))s=s.replace(/,/g,'');
+    else if(s.includes(',')&&!s.includes('.'))s=s.replace(',','.');
+    else s=s.replace(/,/g,'');
+  }
+  return parseFloat(s);
+}
+
 function openCsvImportModal(){
   if(!pfAccounts.length){showToast('Add a broker account first','error');return}
-  _csvParsed=null;_csvMapping={};
+  _csvParsed=null;_csvMapping={};_csvNumLocale='auto';
   document.getElementById('pf-csv-file').value='';
   document.getElementById('pf-csv-account').innerHTML=pfAccounts.map(a=>`<option value="${a.id}">${escH(a.name)} (${escH(a.currency)})</option>`).join('');
   document.getElementById('pf-csv-preview-area').innerHTML='<p style="color:var(--text2);text-align:center;padding:20px">Select a CSV file to preview</p>';
@@ -5357,8 +5397,19 @@ function renderCsvPreview(){
 
   const preview=_csvParsed.rows.slice(0,5).map(row=>'<tr>'+row.map(c=>`<td style="padding:4px 6px;font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(c)}</td>`).join('')+'</tr>').join('');
 
+  const detected=_csvNumLocale==='auto'?_detectNumLocale(_csvParsed.rows,_csvMapping):_csvNumLocale;
+  const localeLbl=detected==='eu'?'EU (1.234,56)':'US (1,234.56)';
   document.getElementById('pf-csv-preview-area').innerHTML=`
-    <p style="font-size:12px;color:var(--text2);margin-bottom:8px">${_csvParsed.rows.length} rows found. Map columns below, then import.</p>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap">
+      <p style="font-size:12px;color:var(--text2);margin:0">${_csvParsed.rows.length} rows found. Map columns below, then import.</p>
+      <label style="font-size:11px;color:var(--text2);display:flex;align-items:center;gap:4px;margin-left:auto">Number format:
+        <select onchange="_csvNumLocale=this.value;renderCsvPreview()" style="padding:3px 6px;font-size:11px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:4px">
+          <option value="auto" ${_csvNumLocale==='auto'?'selected':''}>Auto (${localeLbl})</option>
+          <option value="eu" ${_csvNumLocale==='eu'?'selected':''}>EU (1.234,56)</option>
+          <option value="us" ${_csvNumLocale==='us'?'selected':''}>US (1,234.56)</option>
+        </select>
+      </label>
+    </div>
     <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:6px">
       <thead><tr>${mapRow}</tr></thead>
       <tbody>${preview}</tbody>
@@ -5391,6 +5442,8 @@ function importCsvTransactions(){
     if(hasSecond13&&!hasFirst13)_dateFmt='dmy';
     else if(hasFirst13&&!hasSecond13)_dateFmt='mdy';
   }
+  const locale=_csvNumLocale==='auto'?_detectNumLocale(_csvParsed.rows,_csvMapping):_csvNumLocale;
+  const csvNum=(s)=>_csvNumParse(s,locale);
   _csvParsed.rows.forEach(row=>{
     const get=(field)=>mapping[field]!=null?row[mapping[field]]?.trim():'';
     const ticker=get('ticker').toUpperCase();
@@ -5405,7 +5458,6 @@ function importCsvTransactions(){
     let date=get('date')||now.split('T')[0];
     if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{4}$/.test(date)){const p=date.split(/[\/\-\.]/);if(_dateFmt==='mdy')date=p[2]+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0');else date=p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
     else if(/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2}$/.test(date)){const p=date.split(/[\/\-\.]/);if(_dateFmt==='mdy')date='20'+p[2]+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0');else date='20'+p[2]+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')}
-    const csvNum=(s)=>{if(!s||s.length>30)return NaN;s=s.replace(/\s/g,'');if(/^\d{1,3}(\.\d{3})+,\d+$/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(',')&&!s.includes('.'))s=s.replace(',','.');return parseFloat(s)};
     const sharesRaw=get('shares'),priceRaw=get('price');
     const shares=csvNum(sharesRaw);
     const price=csvNum(priceRaw);
