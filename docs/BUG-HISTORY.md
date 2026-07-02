@@ -954,6 +954,23 @@ Added sortable position table, pin-to-top for positions and tracked stocks, and 
 
 ---
 
+## Category 42 — Custom Tag System (2026-07-02) — `97a2496`
+
+Added user-defined tag system: add/remove tags on company profiles with datalist autocomplete, tag filter bar on tracker (multi-select OR logic), tag pills in Name column, screener Tag filter with dynamic options. QA found 8 issues; 6 fixed, 2 deferred.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | HIGH | XSS via single quotes in tag names — `escH()` HTML-encodes `'` to `&#39;` but browsers decode before executing onclick JS | Replaced `escH()` with `_tagEnc()`/`_tagDec()` using `encodeURIComponent` + `%27` for JS-context safety |
+| 2 | LOW | Tags not synced to D1 (tracked stocks) | Deferred — needs D1 schema migration (same as `pinned`) |
+| 3 | MEDIUM | Screener tag options not HTML-escaped — tag with `"` or `<` breaks select HTML | Wrapped option values and text with `escH()` |
+| 4 | LOW | No max tag length — could paste arbitrarily long strings | Added `tag.slice(0,30)` in `addTagToStock()` and `maxlength="30"` on input |
+| 5 | MEDIUM | Tag delete button was `<span>` not `<button>` — not keyboard accessible | Changed to `<button>` with `aria-label`, added `aria-pressed` to filter buttons |
+| 6 | LOW | "Any" option in screener hardcoded in English | Changed to `t('common.any')`, added EN/HU i18n keys |
+| 7 | MEDIUM | Stale tag filter entries remain after all stocks with that tag are untagged | Added pruning loop in `renderTagFilterBar()` to remove stale entries from `stTagFilter` |
+| 8 | LOW | Static datalist ID `tag-suggestions` — only one profile open at a time so no conflict | Accepted — single-profile SPA, no conflict possible |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:
