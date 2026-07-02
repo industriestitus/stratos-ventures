@@ -5340,7 +5340,7 @@ function _csvNumParse(s,locale){
     else if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');
   }else{
     if(/^\d{1,3}(,\d{3})+\.\d+$/.test(s))s=s.replace(/,/g,'');
-    else if(s.includes(',')&&!s.includes('.'))s=s.replace(',','.');
+    else if(s.includes(',')&&!s.includes('.'))s=s.replace(/,/g,'');
     else s=s.replace(/,/g,'');
   }
   return parseFloat(s);
@@ -5419,7 +5419,7 @@ function renderCsvPreview(){
 
 function importCsvTransactions(){
   if(!_csvParsed||!_csvParsed.rows.length)return;
-  const accountId=parseInt(document.getElementById('pf-csv-account',10).value);
+  const accountId=parseInt(document.getElementById('pf-csv-account').value,10);
   const acc=pfAccounts.find(a=>a.id===accountId);
   if(!acc){showToast('Select an account','error');return}
   const mapping={};

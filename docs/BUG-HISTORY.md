@@ -40,6 +40,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 30 | Bulk Ops: Notes/Reviews/Stocks | `73e7dfb` | 2026-07-02 | 4 QA | 0 |
 | 31 | Skeleton/Animation QA | `c7412e9` | 2026-07-02 | 3 QA | 0 |
 | 32 | Confirmation Dialogs | `a0362db` | 2026-07-02 | 3 QA | 0 |
+| 33 | CSV/Scroll/Lazy QA | TBD | 2026-07-02 | 2 QA | 0 |
 
 **Total: 243 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -818,6 +819,17 @@ Extended bulk operations to research notes, reviews, and tracked stocks. Select 
 | 2 | HIGH | No locale auto-detection — EU decimal commas silently misinterpreted | Added `_detectNumLocale()` scoring heuristic: scans numeric columns for format patterns (e.g. `\d.\d{3},\d` → EU) |
 | 3 | MED | CSV delimiter detection failed for EU files — semicolons not detected when data contains commas in numbers | Changed to header-line heuristic: count semicolons vs commas in first line, pick higher |
 | 4 | LOW | No user override for auto-detected locale | Added "Number format" dropdown in preview UI (Auto/EU/US) |
+
+---
+
+## Category 33 — CSV/Scroll/Lazy QA (2026-07-02)
+
+Post-implementation QA for CSV locale detection, scroll preservation, and lazy-load charts.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | HIGH | US locale `_csvNumParse`: `s.replace(',','.')` only replaces first comma, so `"1,000"` → `1.000` → parseFloat = 1.0 | Changed to `s.replace(/,/g,'')` to treat commas-without-dots as thousand separators |
+| 2 | LOW | `parseInt(document.getElementById('pf-csv-account',10).value)` — radix `10` passed to `getElementById` instead of `parseInt` | Fixed to `parseInt(document.getElementById('pf-csv-account').value, 10)` |
 
 ---
 
