@@ -9573,7 +9573,7 @@ async function fetchAllDividendData(){
   const btn=document.getElementById('div-fetch-btn');
   if(btn)btn.disabled=true;
   const divPanel=document.getElementById('pf-panel-dividends');
-  if(divPanel)showSkeleton(divPanel,'dashboard');
+  if(divPanel)showSpinner(divPanel);
   try{
     const tickers=[...new Set(getActivePositions().map(p=>p.ticker).filter(Boolean))];
     const stale=tickers.filter(t=>{
@@ -9595,7 +9595,7 @@ async function fetchAllDividendData(){
     renderDividendsTab();
   }finally{
     if(btn){btn.textContent='Fetch Data';btn.disabled=false}
-    if(divPanel)hideSkeleton(divPanel);
+    if(divPanel)hideSpinner(divPanel);
     _fetchingDivData=false;
   }
 }
