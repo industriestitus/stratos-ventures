@@ -41,6 +41,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 31 | Skeleton/Animation QA | `c7412e9` | 2026-07-02 | 3 QA | 0 |
 | 32 | Confirmation Dialogs | `a0362db` | 2026-07-02 | 3 QA | 0 |
 | 33 | CSV/Scroll/Lazy QA | `10edf61` | 2026-07-02 | 2 QA | 0 |
+| 35 | i18n Deep Pass | TBD | 2026-07-02 | 5 | 0 |
 
 **Total: 248 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -842,6 +843,20 @@ QA for full EN/HU internationalization implementation.
 | 1 | CRITICAL | `undoableDelete()`: local `const t=document.createElement('div')` shadows global `t()` i18n function — `t('common.undo')` and `t('common.restored')` crash with TypeError | Renamed local variable from `t` to `el` |
 | 2 | CRITICAL | `deleteTransaction()`: local `const t=pfTransactions.find(...)` shadows global `t()` — `t('toast.transactionDeleted',...)` crashes | Renamed local variable from `t` to `tx` |
 | 3 | CRITICAL | Global search `pfTransactions.forEach(t=>{...})`: iterator `t` shadows `t()` — `t('search.transactions')` crashes | Renamed iterator from `t` to `tx` |
+
+---
+
+## Category 35 — i18n Deep Pass (2026-07-02) — TBD
+
+Deep pass fixing remaining untranslated strings found during visual browser testing.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | Keyboard shortcut labels (⌘2-⌘7) hardcoded as English "Companies", "Portfolio", etc. | Added `data-i18n` spans reusing `nav.*` keys |
+| 2 | MEDIUM | "Select all" checkbox text hardcoded in 3 locations (stocks, notes, reviews) | Added `common.selectAll` key, wrapped with `t()` |
+| 3 | CRITICAL | `renderResearchEntry()`: `const t=e._type` shadows global `t()` i18n function — type badge translation calls would crash | Renamed variable from `t` to `nt`, updated all 16 references |
+| 4 | LOW | Research note type badges ("NEWS", "JOURNAL", "MARKET") not translated | Added `t('research.journal/news/market')` calls for badge labels |
+| 5 | LOW | Pin/Unpin, Source, Edit/Delete tooltips hardcoded in English in research entries | Added `common.pin/unpin/source` keys, wrapped with `t()` |
 
 ---
 
