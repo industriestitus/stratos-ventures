@@ -275,7 +275,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Soft-delete + trash view — `deleted_at` timestamp-based soft-delete for positions, transactions, notes, reviews. 30-day retention with auto-purge. Trash UI in Settings with restore/permanent delete/empty all. D1 schema + Worker updated. `getActivePositions()`/`getActiveTransactions()` helpers filter 30+ render/calc functions.
 - [ ] Undo system evolution — Current: 6s undo toast for positions, transactions, notes, reviews, saved stocks (local only). Future: D1 cloud undo (re-insert on undo instead of local-only restore), undo stack for Ctrl+Z support, batch undo for multi-item operations.
 - [x] Lazy-load charts (defer Chart.js rendering until canvas is visible)
-- [ ] Import merge strategy: Object.assign vs full replace — make consistent with cloud sync behavior
+- [x] Import merge strategy — reviews and framework now use `_mergeArrayById` (same ID = update, new ID = add) instead of full replace. Dividend history uses `Object.assign` merge by ticker key. No more silent data loss on import.
 - [x] CSV import locale detection (European vs US number formats, auto-detect with manual override)
 - [x] Toast hover pause — all toasts pause auto-dismiss on mouseenter, resume on mouseleave (min 1s). Recovery toast shows details (which data types were recovered).
 - [x] i18n localization — Full EN/HU translation system: 744 keys across 23 namespaces, `t(key, params)` function, `data-i18n` attributes, language switcher in sidebar + settings. English default, Hungarian available. Deep pass: all UI chrome translated (nav, buttons, labels, tooltips, badges, empty states, toasts, confirmations, modals). Financial terms (DCF, FCF, P/E) stay English by design.

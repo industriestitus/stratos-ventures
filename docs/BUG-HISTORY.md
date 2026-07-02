@@ -46,8 +46,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 37 | UX Polish (padding/focus/collapsible) | `3d75f00` | 2026-07-02 | 1 QA | 0 |
 | 38 | Chart Export + Sort Indicator | `828efc4` | 2026-07-02 | 2 QA | 0 |
 | 39 | XLSX Export + Portfolio PDF | `0d2895c` | 2026-07-02 | 4 QA | 0 |
+| 40 | Import Merge Strategy | `95ff2b0` | 2026-07-02 | 3 | 0 |
 
-**Total: 260 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 263 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -918,6 +919,18 @@ XLSX multi-sheet export and portfolio summary PDF report.
 | 2 | MEDIUM | Operator precedence in allocation calc: `(typeMap[tp]||0)+convertCurrency(v,...)||v` — `||` binds looser than `+`, NaN accumulation after first position | Added parentheses: `(typeMap[tp]||0)+(convertCurrency(...)||v)` |
 | 3 | MEDIUM | `fmt()` in PDF didn't handle negative values — `-1500` failed `>=1e3` check, showed raw number instead of `-1.5K` | Use `Math.abs(v)` for comparisons, prepend sign |
 | 4 | LOW | Allocation by Asset Type section hidden when only 1 type exists (`>1` check) | Changed to `>=1` |
+
+---
+
+## Category 40 — Import Merge Strategy (2026-07-02) — `95ff2b0`
+
+Fixed import to use merge instead of full replace for reviews, framework, and dividend history.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | HIGH | `doImport()` replaced all reviews on import (`rvData = d.reviewsData`) — existing reviews silently lost | Changed to `_mergeArrayById(rvData.entries, d.reviewsData.entries)` — same ID updates, new ID adds |
+| 2 | HIGH | `doImport()` replaced all framework data on import (`fwData = d.frameworkData`) — principles, rules, traits, avoid list silently lost | Changed to `_mergeArrayById` on all 4 framework arrays individually |
+| 3 | MEDIUM | `doImport()` replaced dividend history on import (`divHistory = d.dividendHistory`) — per-ticker history lost | Changed to `Object.assign(divHistory, d.dividendHistory)` — merge by ticker key |
 
 ---
 
