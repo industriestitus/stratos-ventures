@@ -47,6 +47,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 38 | Chart Export + Sort Indicator | `828efc4` | 2026-07-02 | 2 QA | 0 |
 | 39 | XLSX Export + Portfolio PDF | `0d2895c` | 2026-07-02 | 4 QA | 0 |
 | 40 | Import Merge Strategy | `95ff2b0` | 2026-07-02 | 3 | 0 |
+| 41 | Position Sort, Pin-to-Top, Pipeline Filter | `8bae88e` | 2026-07-02 | 4 | 8 |
 
 **Total: 263 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -931,6 +932,25 @@ Fixed import to use merge instead of full replace for reviews, framework, and di
 | 1 | HIGH | `doImport()` replaced all reviews on import (`rvData = d.reviewsData`) — existing reviews silently lost | Changed to `_mergeArrayById(rvData.entries, d.reviewsData.entries)` — same ID updates, new ID adds |
 | 2 | HIGH | `doImport()` replaced all framework data on import (`fwData = d.frameworkData`) — principles, rules, traits, avoid list silently lost | Changed to `_mergeArrayById` on all 4 framework arrays individually |
 | 3 | MEDIUM | `doImport()` replaced dividend history on import (`divHistory = d.dividendHistory`) — per-ticker history lost | Changed to `Object.assign(divHistory, d.dividendHistory)` — merge by ticker key |
+
+## Category 41 — Position Sort, Pin-to-Top, Pipeline Filter (2026-07-02) — `8bae88e`
+
+Added sortable position table, pin-to-top for positions and tracked stocks, and pipeline quick filter bar. QA found 12 issues; 4 fixed this session, 4 deferred (D1 schema needed), 4 accepted/pre-existing.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | — | pre-existing pipeline dropdown issue | Accepted — not introduced in this session |
+| 2 | MEDIUM | Pin button titles hardcoded "Unpin"/"Pin to top" instead of i18n | Changed to `t('common.unpin')` / `t('common.pin')` |
+| 3 | MEDIUM | P&L column headers hardcoded "P&L" / "P&L %" instead of i18n | Changed to `t('pf.plCol')` / `t('pf.plPct')` |
+| 4 | — | pre-existing score column display issue | Accepted — not related to this feature |
+| 5 | HIGH | Stocks with no pipeline stage vanished when any filter active | Added "—" button in filter bar for unassigned stocks with `stPipeFilter.has('')` |
+| 6 | LOW | CSV/XLSX export doesn't include pinned field | Deferred — D1 schema needs `pinned` column first |
+| 7 | LOW | Pin state not synced to D1 (positions) | Deferred — needs D1 schema migration |
+| 8 | LOW | Pin state not synced to D1 (tracked stocks) | Deferred — needs D1 schema migration |
+| 9 | MEDIUM | Pipeline bar border-radius broken — `:last-child:not(.st-pipe-arch)` never matched | Switched to inline `style="border-radius:..."` per button in renderPipelineBar() |
+| 10 | LOW | Sort arrow direction inconsistent UX convention | Accepted — minor preference, current behavior clear |
+| 11 | LOW | Pipeline filter not persisted across page reload | Accepted — ephemeral filter state, consistent with text filter behavior |
+| 12 | LOW | Pin star click propagates to row in some cases | Accepted — `event.stopPropagation()` already on tracker pin, positions pin is in separate actions cell |
 
 ---
 
