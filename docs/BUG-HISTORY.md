@@ -40,7 +40,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 30 | Bulk Ops: Notes/Reviews/Stocks | `73e7dfb` | 2026-07-02 | 4 QA | 0 |
 | 31 | Skeleton/Animation QA | `c7412e9` | 2026-07-02 | 3 QA | 0 |
 | 32 | Confirmation Dialogs | `a0362db` | 2026-07-02 | 3 QA | 0 |
-| 33 | CSV/Scroll/Lazy QA | TBD | 2026-07-02 | 2 QA | 0 |
+| 33 | CSV/Scroll/Lazy QA | `10edf61` | 2026-07-02 | 2 QA | 0 |
 
 **Total: 243 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
