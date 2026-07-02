@@ -1336,13 +1336,13 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
     <!-- Benchmark -->
     <div class="db-widget" id="db-benchmark-widget">
-      <div class="db-widget-title"><span data-i18n="db.benchmark">Benchmark (S&P 500)</span> <button onclick="fetchBenchmarkData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh">Refresh</button></div>
+      <div class="db-widget-title"><span data-i18n="db.benchmark">Benchmark (S&P 500)</span> <button onclick="fetchBenchmarkData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-bench-btn">Refresh</button></div>
       <div id="db-benchmark-content"></div>
     </div>
 
     <!-- Dip Finder -->
     <div class="db-widget" id="db-dip-widget">
-      <div class="db-widget-title"><span data-i18n="db.dipFinder">Dip Finder</span> <button onclick="fetchDipData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh">Refresh</button></div>
+      <div class="db-widget-title"><span data-i18n="db.dipFinder">Dip Finder</span> <button onclick="fetchDipData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-dip-btn">Refresh</button></div>
       <div id="db-dip-content"></div>
     </div>
 
@@ -1366,7 +1366,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
     <!-- Upcoming Earnings -->
     <div class="db-widget" id="db-earnings-widget">
-      <div class="db-widget-title"><span data-i18n="db.earnings">Upcoming Earnings</span> <button onclick="fetchEarningsCalendar()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh">Refresh</button></div>
+      <div class="db-widget-title"><span data-i18n="db.earnings">Upcoming Earnings</span> <button onclick="fetchEarningsCalendar()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-earn-btn">Refresh</button></div>
       <div id="db-earnings-content"></div>
     </div>
 
@@ -2134,7 +2134,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
         <label data-i18n="settings.exchangeRates">Exchange Rates</label>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="pf-rate-status" style="font-size:11px;color:var(--text2)" data-i18n="settings.notFetched">Not fetched</span>
-          <button class="btn btn-secondary" onclick="fetchExchangeRates()" style="padding:4px 12px;font-size:11px" data-i18n="settings.refreshRates">Refresh Rates</button>
+          <button class="btn btn-secondary" onclick="fetchExchangeRates()" style="padding:4px 12px;font-size:11px" data-i18n="settings.refreshRates" id="pf-rate-btn">Refresh Rates</button>
         </div>
       </div>
     </div>
@@ -5592,6 +5592,8 @@ function saveExchangeRates(){
 }
 
 async function fetchExchangeRates(){
+  const rateBtn=document.getElementById('pf-rate-btn');
+  if(rateBtn)setBtnLoading(rateBtn,true,'Refreshing...');
   try{
     const r=await fetchWithTimeout('https://api.exchangerate-api.com/v4/latest/USD');
     if(r.status===429){showToast(t('db.ratesLimited'),'warning');return}
@@ -5612,6 +5614,7 @@ async function fetchExchangeRates(){
       if(statusEl)statusEl.textContent='Updated '+new Date().toLocaleTimeString();
     }
   }catch(e){showToast(t('db.ratesFailed')+e.message,'error');console.warn('Exchange rate fetch failed',e)}
+  finally{if(rateBtn)setBtnLoading(rateBtn,false,'Refresh Rates')}
 }
 
 function convertCurrency(amount,from,to){
@@ -6264,18 +6267,21 @@ async function fetchBenchmarkData(){
   if(_fetchingBenchmark){showToast(t('db.benchmarkInProgress'),'warning');return}
   if(!pfSnapshots.length){showToast(t('db.benchmarkNeedSnapshots'),'warning');return}
   _fetchingBenchmark=true;
+  const el=document.getElementById('db-benchmark-content');
+  const benchBtn=document.getElementById('db-bench-btn');
+  if(benchBtn)setBtnLoading(benchBtn,true,'Refreshing...');
+  if(el)showSkeleton(el,'dashboard');
   try{
     const sorted=[...pfSnapshots].sort((a,b)=>a.date.localeCompare(b.date));
     const from=sorted[0].date;
     const to=sorted[sorted.length-1].date;
-    showToast(t('db.benchmarkProgress'),'success');
     const data=await fmpFetch('historical-price-full/SPY',{from,to});
     if(!data||!data.historical||!data.historical.length){showToast(t('db.benchmarkFailed'),'error');return}
     dbBenchmark={ticker:'SPY',prices:data.historical.map(d=>({date:d.date,close:d.close})).reverse(),fetchedAt:new Date().toISOString()};
     saveDashBenchmark();
     renderDbBenchmark();
     showToast(t('db.benchmarkUpdated'),'success');
-  }finally{_fetchingBenchmark=false}
+  }finally{_fetchingBenchmark=false;if(el)hideSkeleton(el);if(benchBtn)setBtnLoading(benchBtn,false,'Refresh')}
 }
 
 function renderDbBenchmark(){
@@ -6349,20 +6355,25 @@ function renderDbBenchmark(){
 async function fetchDipData(){
   const tickers=Object.keys(tStocks);
   if(!tickers.length){showToast(t('db.noTracked'),'warning');return}
-  showToast(t('db.fetch52w'),'success');
+  const el=document.getElementById('db-dip-content');
+  const dipBtn=document.getElementById('db-dip-btn');
+  if(dipBtn)setBtnLoading(dipBtn,true,'Refreshing...');
+  if(el)showSkeleton(el,'table');
   const batchSize=20;
-  for(let i=0;i<tickers.length;i+=batchSize){
-    const batch=tickers.slice(i,i+batchSize).join(',');
-    const data=await fmpFetch('quote/'+batch);
-    if(data&&Array.isArray(data)){
-      data.forEach(q=>{
-        if(q.symbol&&q.yearHigh)db52wHighs[q.symbol]={high52:q.yearHigh,fetchedAt:new Date().toISOString()};
-      });
+  try{
+    for(let i=0;i<tickers.length;i+=batchSize){
+      const batch=tickers.slice(i,i+batchSize).join(',');
+      const data=await fmpFetch('quote/'+batch);
+      if(data&&Array.isArray(data)){
+        data.forEach(q=>{
+          if(q.symbol&&q.yearHigh)db52wHighs[q.symbol]={high52:q.yearHigh,fetchedAt:new Date().toISOString()};
+        });
+      }
     }
-  }
-  saveDash52wHighs();
-  renderDbDipFinder();
-  showToast(t('db.updated52w'),'success');
+    saveDash52wHighs();
+    renderDbDipFinder();
+    showToast(t('db.updated52w'),'success');
+  }finally{if(el)hideSkeleton(el);if(dipBtn)setBtnLoading(dipBtn,false,'Refresh')}
 }
 
 function renderDbDipFinder(){
@@ -6529,39 +6540,44 @@ function renderDbEarnings(){
 async function fetchEarningsCalendar(){
   const s=stSettings();
   if(!s.apiKey){showToast(t('db.fmpKeyMissing'),'warning');return}
-  showToast(t('db.fetchingEarnings'),'info');
   const tickers=Object.entries(tStocks).filter(([,s])=>{const p=s.pipeline||'';return p==='Owned'||p==='Buy target';}).map(([t])=>t);
   if(!tickers.length){showToast(t('db.noOwnedCompanies'),'warning');return}
+  const el=document.getElementById('db-earnings-content');
+  const earnBtn=document.getElementById('db-earn-btn');
+  if(earnBtn)setBtnLoading(earnBtn,true,'Refreshing...');
+  if(el)showSkeleton(el,'table');
   let updated=0;
-  for(const ticker of tickers){
-    try{
-      const data=await fmpFetch('earning-calendar',{symbol:ticker});
-      if(data&&Array.isArray(data)&&data.length>0){
-        const today=new Date().toISOString().slice(0,10);
-        const upcoming=data.filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date))[0];
-        const recent=data.filter(e=>e.date<today).sort((a,b)=>b.date.localeCompare(a.date))[0];
-        const best=upcoming||recent;
-        if(best){
-          if(!tStocks[ticker].earningsCalendar)tStocks[ticker].earningsCalendar={};
-          const prev=tStocks[ticker].earningsCalendar;
-          tStocks[ticker].earningsCalendar={
-            date:best.date,
-            eps:best.eps,
-            epsEstimated:best.epsEstimated,
-            revenue:best.revenue,
-            revenueEstimated:best.revenueEstimated,
-            reviewed:prev.date===best.date?prev.reviewed:false,
-            listened:prev.date===best.date?prev.listened:false
-          };
-          updated++;
+  try{
+    for(const ticker of tickers){
+      try{
+        const data=await fmpFetch('earning-calendar',{symbol:ticker});
+        if(data&&Array.isArray(data)&&data.length>0){
+          const today=new Date().toISOString().slice(0,10);
+          const upcoming=data.filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date))[0];
+          const recent=data.filter(e=>e.date<today).sort((a,b)=>b.date.localeCompare(a.date))[0];
+          const best=upcoming||recent;
+          if(best){
+            if(!tStocks[ticker].earningsCalendar)tStocks[ticker].earningsCalendar={};
+            const prev=tStocks[ticker].earningsCalendar;
+            tStocks[ticker].earningsCalendar={
+              date:best.date,
+              eps:best.eps,
+              epsEstimated:best.epsEstimated,
+              revenue:best.revenue,
+              revenueEstimated:best.revenueEstimated,
+              reviewed:prev.date===best.date?prev.reviewed:false,
+              listened:prev.date===best.date?prev.listened:false
+            };
+            updated++;
+          }
         }
-      }
-    }catch(e){console.warn('Earnings fetch failed for',ticker,e)}
-    await new Promise(r=>setTimeout(r,300));
-  }
-  saveTrackerStocks();
-  renderDbEarnings();
-  showToast(t('db.earningsUpdated',{x:updated,y:tickers.length}),'success');
+      }catch(e){console.warn('Earnings fetch failed for',ticker,e)}
+      await new Promise(r=>setTimeout(r,300));
+    }
+    saveTrackerStocks();
+    renderDbEarnings();
+    showToast(t('db.earningsUpdated',{x:updated,y:tickers.length}),'success');
+  }finally{if(el)hideSkeleton(el);if(earnBtn)setBtnLoading(earnBtn,false,'Refresh')}
 }
 
 function toggleEarningsStatus(ticker,field){
@@ -9556,6 +9572,8 @@ async function fetchAllDividendData(){
   _fetchingDivData=true;
   const btn=document.getElementById('div-fetch-btn');
   if(btn)btn.disabled=true;
+  const divPanel=document.getElementById('pf-panel-dividends');
+  if(divPanel)showSkeleton(divPanel,'dashboard');
   try{
     const tickers=[...new Set(getActivePositions().map(p=>p.ticker).filter(Boolean))];
     const stale=tickers.filter(t=>{
@@ -9566,7 +9584,6 @@ async function fetchAllDividendData(){
       showToast(t('div.upToDate'),'success');
       return;
     }
-    showToast(`Fetching dividends for ${stale.length} ticker(s)...`,'info');
     let fetched=0;
     for(const ticker of stale){
       await fetchDividendHistory(ticker);
@@ -9578,6 +9595,7 @@ async function fetchAllDividendData(){
     renderDividendsTab();
   }finally{
     if(btn){btn.textContent='Fetch Data';btn.disabled=false}
+    if(divPanel)hideSkeleton(divPanel);
     _fetchingDivData=false;
   }
 }
@@ -9883,8 +9901,15 @@ function renderProfileDivChart(ticker,sorted){
 async function fetchProfileDividends(ticker){
   const btn=document.getElementById('cp-div-fetch-btn');
   if(btn){btn.disabled=true;btn.textContent='Loading...'}
-  await fetchDividendHistory(ticker);
-  renderProfileDividends(ticker);
+  const divEl=document.getElementById('cp-dividends-content');
+  if(divEl)showSkeleton(divEl,'table');
+  try{
+    await fetchDividendHistory(ticker);
+    renderProfileDividends(ticker);
+  }finally{
+    if(divEl)hideSkeleton(divEl);
+    if(btn){btn.disabled=false;btn.textContent='Fetch Dividend History'}
+  }
 }
 
 // FMP API
@@ -11382,21 +11407,23 @@ async function renderAllCharts(){
   const range=document.getElementById('ch-range')?.value||'1y';
   const prog=document.getElementById('ch-progress');
   const tickers=Object.keys(tStocks).filter(t=>t!=='ETH');
+  const chartWrap=document.getElementById('ch-grid');
 
   prog.textContent='Loading charts...';
   chData={};
+  if(chartWrap)showSkeleton(chartWrap,'dashboard');
 
-  // Fetch all in parallel (batches of 6)
-  for(let i=0;i<tickers.length;i+=6){
-    const batch=tickers.slice(i,i+6);
-    prog.textContent=`Loading ${i+1}-${Math.min(i+6,tickers.length)}/${tickers.length}...`;
-    const results=await Promise.all(batch.map(t=>fetchChartData(t,range)));
-    batch.forEach((t,j)=>{if(results[j])chData[t]=results[j]});
-  }
-
-  prog.textContent='';
-  renderMainChart();
-  renderMiniCharts();
+  try{
+    for(let i=0;i<tickers.length;i+=6){
+      const batch=tickers.slice(i,i+6);
+      prog.textContent=`Loading ${i+1}-${Math.min(i+6,tickers.length)}/${tickers.length}...`;
+      const results=await Promise.all(batch.map(t=>fetchChartData(t,range)));
+      batch.forEach((t,j)=>{if(results[j])chData[t]=results[j]});
+    }
+    prog.textContent='';
+    renderMainChart();
+    renderMiniCharts();
+  }finally{if(chartWrap)hideSkeleton(chartWrap)}
 }
 
 function renderMainChart(){
