@@ -3697,10 +3697,10 @@ function doImport(){
     if(d.dashboardFiSettings&&typeof d.dashboardFiSettings==='object'){Object.assign(dbFiSettings,d.dashboardFiSettings);saveDashFiSettings();count++}
     if(d.dashboardBenchmark&&typeof d.dashboardBenchmark==='object'){dbBenchmark=d.dashboardBenchmark;saveDashBenchmark();count++}
     if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs();count++}
-    if(d.dividendHistory&&typeof d.dividendHistory==='object'){divHistory=d.dividendHistory;saveDividendHistory();count++}
+    if(d.dividendHistory&&typeof d.dividendHistory==='object'){Object.assign(divHistory,d.dividendHistory);saveDividendHistory();count++}
     if(d.dividendSettings&&typeof d.dividendSettings==='object'){Object.assign(divSettings,d.dividendSettings);saveDivSettings();count++}
-    if(d.frameworkData&&typeof d.frameworkData==='object'){fwData=d.frameworkData;fwData._nextId=Math.max(fwData._nextId||0,...(fwData.principles||[]).map(x=>x.id||0),...(fwData.portfolioRules||[]).map(x=>x.id||0),...(fwData.idealTraits||[]).map(x=>x.id||0),...(fwData.avoidList||[]).map(x=>x.id||0),0)+1;saveFramework();count++}
-    if(d.reviewsData&&typeof d.reviewsData==='object'){rvData=d.reviewsData;rvData._nextId=Math.max(rvData._nextId||0,...(rvData.entries||[]).map(x=>x.id||0),0)+1;saveReviews();count++}
+    if(d.frameworkData&&typeof d.frameworkData==='object'){const fd=d.frameworkData;['principles','portfolioRules','idealTraits','avoidList'].forEach(k=>{if(Array.isArray(fd[k]))fwData[k]=_mergeArrayById(fwData[k]||[],fd[k])});fwData._nextId=Math.max(fwData._nextId||0,...(fwData.principles||[]).map(x=>x.id||0),...(fwData.portfolioRules||[]).map(x=>x.id||0),...(fwData.idealTraits||[]).map(x=>x.id||0),...(fwData.avoidList||[]).map(x=>x.id||0),0)+1;saveFramework();count++}
+    if(d.reviewsData&&typeof d.reviewsData==='object'){if(Array.isArray(d.reviewsData.entries))rvData.entries=_mergeArrayById(rvData.entries||[],d.reviewsData.entries);rvData._nextId=Math.max(rvData._nextId||0,...(rvData.entries||[]).map(x=>x.id||0),0)+1;saveReviews();count++}
     closeModals();showToast(t('toast.imported',{count:count}),'success');recalcAll();
     renderSavedStocks();renderTracker();renderResearch();
     const vis=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
