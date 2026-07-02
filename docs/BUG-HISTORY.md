@@ -798,6 +798,18 @@ Extended bulk operations to research notes, reviews, and tracked stocks. Select 
 
 ---
 
+## Category 33 — Scroll Position Preservation & Lazy-Load Charts (UX audit)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | HIGH | `history.scrollRestoration='auto'` — browser's built-in scroll restore interfered with manual scroll management | Added `history.scrollRestoration='manual'` to disable browser's default |
+| 2 | HIGH | `requestAnimationFrame` / `setTimeout` scroll restore never took effect — browser layout not settled when async callback fires | Changed all scroll restores to synchronous: `void document.body.offsetHeight; window.scrollTo(0, pos)` |
+| 3 | HIGH | `switchCompanyTab` called from `showSection` saved wrong scrollY (mid-transition value) and overrode section scroll restore | Added `skipScroll` parameter; `showSection` passes `true` to skip sub-tab scroll save/restore |
+| 4 | HIGH | `closeProfile()` scroll restore clobbered — `window.location.hash` change re-triggered `handleRoute` → `showSection` which overwrote saved scroll with 0 | Changed to `history.replaceState` to update hash without triggering hashchange |
+| 5 | LOW | Dashboard widgets rendered eagerly — all 13 widgets created on section load, causing unnecessary layout work | Added `lazyChart()` utility with IntersectionObserver (200px rootMargin); first 2 widgets eager, remaining 11 lazy |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:

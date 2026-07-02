@@ -3112,6 +3112,28 @@ function setBtnLoading(btn,loading,origText){
 const charts = {};
 function fmt(n,dec=0){if(n==null||!isFinite(n))return'-';if(Math.abs(n)>=1e12)return(n/1e12).toFixed(1)+'T';if(Math.abs(n)>=1e9)return(n/1e9).toFixed(1)+'B';if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e4)return(n/1e3).toFixed(1)+'K';return n.toFixed(dec).replace(/\B(?=(\d{3})+(?!\d))/g,',')}
 function cv(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim()}
+
+// ---- Lazy chart rendering (IntersectionObserver) ----
+const _lazyChartCallbacks=new Map();
+const _lazyChartObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(!entry.isIntersecting)return;
+    const el=entry.target;
+    const cb=_lazyChartCallbacks.get(el);
+    if(cb){_lazyChartObserver.unobserve(el);_lazyChartCallbacks.delete(el);cb()}
+  });
+},{rootMargin:'200px 0px',threshold:0});
+
+function lazyChart(elementOrId,renderFn){
+  const el=typeof elementOrId==='string'?document.getElementById(elementOrId):elementOrId;
+  if(!el){renderFn();return}
+  if(_lazyChartCallbacks.has(el)){_lazyChartObserver.unobserve(el);_lazyChartCallbacks.delete(el)}
+  const rect=el.getBoundingClientRect();
+  if(rect.top<window.innerHeight+200){renderFn();return}
+  _lazyChartCallbacks.set(el,renderFn);
+  _lazyChartObserver.observe(el);
+}
+
 function V(id){return parseFloat(document.getElementById(id)?.value)||0}
 function T(id,t){const e=document.getElementById(id);if(e)e.textContent=t}
 
@@ -3886,6 +3908,8 @@ const SECTIONS=['dashboard','companies','portfolio','research','framework','revi
 let _routingInProgress=false;
 let _previousSection='companies';
 const _scrollPositions={};
+const _subTabScrollPositions={};
+if('scrollRestoration' in history)history.scrollRestoration='manual';
 
 function showSection(name){
   if(!_routingInProgress&&SECTIONS.includes(name)){
@@ -3919,7 +3943,7 @@ function showSection(name){
   if(name==='companies'){
     if(profileTicker){closeProfile();return}
     const savedTab=sessionStorage.getItem('_activeCompanyTab');
-    if(savedTab&&['calculator','tracker','charts'].includes(savedTab))switchCompanyTab(savedTab);
+    if(savedTab&&['calculator','tracker','charts'].includes(savedTab))switchCompanyTab(savedTab,true);
     else{
       const active=document.querySelector('.company-panel.active');
       if(active&&active.id==='company-panel-tracker')renderTracker();
@@ -3931,7 +3955,8 @@ function showSection(name){
   if(name==='dashboard')renderDashboard();
   if(name==='framework')renderFramework();
   if(name==='reviews')renderReviews();
-  requestAnimationFrame(()=>window.scrollTo(0,_scrollPositions[name]||0));
+  void document.body.offsetHeight;
+  window.scrollTo(0,_scrollPositions[name]||0);
 }
 
 function handleRoute(){
@@ -3969,7 +3994,11 @@ function handleRoute(){
 
 window.addEventListener('hashchange',handleRoute);
 
-function switchCompanyTab(name){
+function switchCompanyTab(name,skipScroll){
+  if(!skipScroll){
+    const prev=['calculator','tracker','charts'].find(t=>{const el=document.getElementById('company-panel-'+t);return el&&el.style.display!=='none'});
+    if(prev)_subTabScrollPositions['co_'+prev]=window.scrollY;
+  }
   ['calculator','tracker','charts'].forEach(t=>{
     const el=document.getElementById('company-panel-'+t);
     if(el){el.style.display=t===name?'':'none';el.classList.toggle('active',t===name)}
@@ -3980,6 +4009,10 @@ function switchCompanyTab(name){
   try{sessionStorage.setItem('_activeCompanyTab',name)}catch(e){}
   if(name==='tracker')renderTracker();
   if(name==='charts')initCharts();
+  if(!skipScroll){
+    void document.body.offsetHeight;
+    window.scrollTo(0,_subTabScrollPositions['co_'+name]||0);
+  }
 }
 
 // ====== PORTFOLIO MODULE (Phase 4) ======
@@ -4020,6 +4053,8 @@ function pfNextId(arr){if(!arr.length)return 1;let mx=0;for(let i=0;i<arr.length
 function switchPortfolioTab(name){
   _bulkPosIds.clear();_bulkTxIds.clear();_updateBulkBar();
   const tabs=['overview','accounts','positions','transactions','dividends'];
+  const prev=tabs.find(t=>{const el=document.getElementById('pf-panel-'+t);return el&&el.style.display!=='none'});
+  if(prev)_subTabScrollPositions['pf_'+prev]=window.scrollY;
   tabs.forEach(t=>{
     const el=document.getElementById('pf-panel-'+t);
     if(el)el.style.display=t===name?'':'none';
@@ -4032,6 +4067,8 @@ function switchPortfolioTab(name){
   if(name==='positions')renderPositions();
   if(name==='transactions')renderTransactions();
   if(name==='dividends')renderDividendsTab();
+  void document.body.offsetHeight;
+  window.scrollTo(0,_subTabScrollPositions['pf_'+name]||0);
 }
 
 // ---- Accounts ----
@@ -5476,17 +5513,17 @@ function dbValClass(v,low,high,invert){
 function renderDashboard(){
   renderDbPortfolioSummary();
   renderDbAllocCharts();
-  renderDbNetWorth();
-  renderDbSmithMetrics();
-  renderDbAlerts();
-  renderDbSellTriggers();
-  renderDbBenchmark();
-  renderDbDipFinder();
-  renderDbFiTracker();
-  renderDbEarnings();
-  renderDbReviewsDue();
-  renderDbTodoSummary();
-  renderDbTodoList();
+  lazyChart('db-networth-widget',renderDbNetWorth);
+  lazyChart('db-smith-widget',renderDbSmithMetrics);
+  lazyChart('db-alerts-widget',renderDbAlerts);
+  lazyChart('db-sell-triggers-widget',renderDbSellTriggers);
+  lazyChart('db-benchmark-widget',renderDbBenchmark);
+  lazyChart('db-dip-widget',renderDbDipFinder);
+  lazyChart('db-fi-widget',renderDbFiTracker);
+  lazyChart('db-earnings-widget',renderDbEarnings);
+  lazyChart('db-reviews-due-widget',renderDbReviewsDue);
+  lazyChart('db-todo-summary-widget',renderDbTodoSummary);
+  lazyChart('db-todo-widget',renderDbTodoList);
 }
 
 // ---- 5A: Portfolio Summary ----
@@ -6779,10 +6816,12 @@ function showProfile(ticker){
     }
     return;
   }
+  _scrollPositions['companies']=window.scrollY;
   document.querySelector('.company-tabs').style.display='none';
   document.querySelectorAll('.company-panel').forEach(p=>p.style.display='none');
   const prof=document.getElementById('company-profile');
   prof.style.display='';
+  window.scrollTo(0,0);
 
   const r=calcStockRatios(s);
   const c=calcStockCalcs(s);
@@ -7128,8 +7167,10 @@ function closeProfile(){
   switchCompanyTab('tracker');
   if(!_routingInProgress){
     const back=_previousSection||'companies';
-    window.location.hash='#'+back;
+    history.replaceState(null,null,'#'+back);
   }
+  void document.body.offsetHeight;
+  window.scrollTo(0,_scrollPositions['companies']||0);
 }
 
 // Pipeline & Company Type
@@ -10830,11 +10871,15 @@ function saveFramework(){
 function fwNextId(){return fwData._nextId++}
 
 function switchFwTab(name){
+  const prevPanel=document.querySelector('.fw-panel.active');
+  if(prevPanel)_subTabScrollPositions['fw_'+prevPanel.id.replace('fw-panel-','')]=window.scrollY;
   document.querySelectorAll('.fw-panel').forEach(p=>p.classList.remove('active'));
   const panel=document.getElementById('fw-panel-'+name);
   if(panel)panel.classList.add('active');
   document.querySelectorAll('.fw-tabs .tab').forEach(b=>b.classList.toggle('active',b.dataset.fwtab===name));
   renderFwPanel(name);
+  void document.body.offsetHeight;
+  window.scrollTo(0,_subTabScrollPositions['fw_'+name]||0);
 }
 
 function renderFramework(){renderFwPanel('principles')}
