@@ -2734,7 +2734,7 @@ function updateEncStatus(){
 
 // ====== TOAST & LOADING ======
 const _toastDedup=new Map();
-function showToast(msg,type='info',duration){
+function showToast(msg,type='info',duration,opts){
   if(!duration)duration=type==='error'?6000:4000;
   const key=type+':'+msg;
   if(_toastDedup.has(key))return;
@@ -2745,12 +2745,26 @@ function showToast(msg,type='info',duration){
   t.className='toast toast--'+type;
   t.setAttribute('role','alert');
   t.textContent=msg;
+  if(opts&&opts.details){
+    const det=document.createElement('div');
+    det.style.cssText='font-size:11px;color:var(--text2);margin-top:4px';
+    det.textContent=opts.details;
+    det.className='toast-details';
+    t.appendChild(det);
+  }
+  if(opts&&opts.onClick){
+    t.style.cursor='pointer';
+    t.addEventListener('click',e=>{if(!e.target.closest('.toast-close'))opts.onClick()});
+  }
   const cl=document.createElement('button');cl.className='toast-close';cl.textContent='×';
   cl.onclick=()=>{t.classList.add('removing');setTimeout(()=>t.remove(),250)};
   t.appendChild(cl);
   c.appendChild(t);
   while(c.children.length>5)c.firstChild.remove();
-  setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300)},duration);
+  let remaining=duration;let started=Date.now();
+  let timer=setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300)},duration);
+  t.addEventListener('mouseenter',()=>{clearTimeout(timer);remaining-=Date.now()-started});
+  t.addEventListener('mouseleave',()=>{started=Date.now();timer=setTimeout(()=>{t.classList.add('removing');setTimeout(()=>t.remove(),300)},Math.max(remaining,1000))});
 }
 
 // ====== UNDO DELETE ======
@@ -3849,22 +3863,24 @@ const API={
     const lsKeyMap={trackerStocks:'tracker_stocks_v1',pfAccounts:'portfolio_accounts_v1',pfPositions:'portfolio_positions_v1',pfTransactions:'portfolio_transactions_v1',pfSnapshots:'portfolio_snapshots_v1',dashTodos:'dashboard_todos_v1',exRates:'portfolio_exchange_rates_v1',divHistory:'dividend_history_v1',reviews:'reviews_v1',researchNotes:'research_notes_v1',framework:'framework_v1',divSettings:'dividend_settings_v1',dashFi:'dashboard_fi_settings_v1',dashBench:'dashboard_benchmark_v1',dash52w:'dashboard_52w_highs_v1'};
     const targets={pfAccounts:v=>pfAccounts.splice(0,Infinity,...v),pfPositions:v=>pfPositions.splice(0,Infinity,...v),pfTransactions:v=>pfTransactions.splice(0,Infinity,...v),pfSnapshots:v=>pfSnapshots.splice(0,Infinity,...v),dashTodos:v=>{dbTodos.length=0;v.forEach(t=>dbTodos.push(t))},researchNotes:v=>researchNotes.splice(0,Infinity,...v)};
     let reconciled=0;
+    const recoveredNames=[];
+    const friendlyNames={trackerStocks:'Követett részvények',pfAccounts:'Számlák',pfPositions:'Pozíciók',pfTransactions:'Tranzakciók',pfSnapshots:'Pillanatképek',dashTodos:'Teendők',exRates:'Árfolyamok',divHistory:'Osztalék előzmények',reviews:'Értékelések',researchNotes:'Kutatási jegyzetek',framework:'Keretrendszer',divSettings:'Osztalék beállítások',dashFi:'FI beállítások',dashBench:'Benchmark',dash52w:'52 hetes csúcsok'};
     Object.entries(lsKeyMap).forEach(([key,lsKey])=>{
       if(this.isDirty(key)){
         try{
           const raw=localStorage.getItem(lsKey);
           if(raw){
             const data=JSON.parse(raw);
-            if(targets[key]&&Array.isArray(data)){targets[key](data);reconciled++}
-            else if(key==='trackerStocks'&&typeof data==='object'){Object.assign(tStocks,data);reconciled++}
-            else if(key==='exRates'&&typeof data==='object'){Object.assign(pfExchangeRates,data);reconciled++}
-            else if(key==='reviews'&&typeof data==='object'){Object.assign(rvData,data);reconciled++}
-            else if(key==='framework'&&typeof data==='object'){Object.assign(fwData,data);reconciled++}
+            if(targets[key]&&Array.isArray(data)){targets[key](data);reconciled++;recoveredNames.push(friendlyNames[key]||key)}
+            else if(key==='trackerStocks'&&typeof data==='object'){Object.assign(tStocks,data);reconciled++;recoveredNames.push(friendlyNames[key])}
+            else if(key==='exRates'&&typeof data==='object'){Object.assign(pfExchangeRates,data);reconciled++;recoveredNames.push(friendlyNames[key])}
+            else if(key==='reviews'&&typeof data==='object'){Object.assign(rvData,data);reconciled++;recoveredNames.push(friendlyNames[key])}
+            else if(key==='framework'&&typeof data==='object'){Object.assign(fwData,data);reconciled++;recoveredNames.push(friendlyNames[key])}
           }
         }catch(e){console.error('Reconcile dirty key '+key+':',e)}
       }
     });
-    if(reconciled)showToast('Recovered '+reconciled+' unsaved change(s) from local cache','info',5000);
+    if(reconciled)showToast(reconciled+' nem mentett változás visszaállítva','info',8000,{details:recoveredNames.join(', ')});
   },
   async postBatch(path,items,chunkSize=100){
     if(!items.length)return{results:[]};
