@@ -641,8 +641,23 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .db-hero-metric{text-align:center;min-width:90px}
 .db-hero-metric .hm-label{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px}
 .db-hero-metric .hm-value{font-size:18px;font-weight:700;margin-top:2px}
-.db-widget{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;min-width:0}
+.db-widget{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;min-width:0;position:relative}
 .db-widget-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.db-widget-hide{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:11px;padding:3px 8px;border-radius:6px;opacity:0;transition:opacity .15s;font-family:inherit}
+.db-widget:hover .db-widget-hide{opacity:.6}
+.db-widget-hide:hover{opacity:1!important;color:var(--red);background:rgba(255,71,87,.1)}
+.db-manage-bar{display:flex;justify-content:flex-end;grid-column:1/-1;margin-bottom:-8px}
+.db-manage-btn{font-size:12px;padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit;transition:all .15s}
+.db-manage-btn:hover{border-color:var(--accent);color:var(--text)}
+.db-manage-panel{grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:none}
+.db-manage-panel.open{display:block}
+.db-manage-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.db-manage-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;background:var(--surface2);font-size:12px;color:var(--text)}
+.db-manage-item label{flex:1;cursor:pointer;display:flex;align-items:center;gap:6px}
+.db-manage-arrows{display:flex;gap:2px}
+.db-manage-arrows button{background:none;border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px;font-family:inherit;line-height:1}
+.db-manage-arrows button:hover{border-color:var(--accent);color:var(--text)}
+.db-manage-arrows button:disabled{opacity:.3;cursor:default}
 .db-alloc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .db-alloc-item{text-align:center}
 .db-alloc-item .db-alloc-label{font-size:11px;color:var(--text2);margin-bottom:4px}
@@ -1070,7 +1085,7 @@ var I18N={en:{
 'checklist.marketMispricing':'What is the market mispricing?','checklist.consensusError':'Where is the consensus wrong?','checklist.kpiMisread':'Which KPI is being misread?','checklist.timeHorizonMismatch':'Time horizon mismatch? Short-term pain vs long-term value?',
 'lock.subtitle':'Encrypted investment platform','lock.password':'Encryption password','lock.unlock':'Unlock','lock.forgot':'Forgot password? Use recovery key','lock.setup':'Set up encryption to protect your data','lock.choosePassword':'Choose a password','lock.confirmPassword':'Confirm password','lock.enable':'Enable Encryption','lock.skip':'Skip for now','lock.enabled':'Encryption enabled!','lock.saveKey':'Save this recovery key somewhere safe. You\'ll need it if you forget your password.','lock.copyKey':'Copy Recovery Key','lock.keySaved':'I have saved my recovery key','lock.continue':'Continue to App','lock.enterKey':'Enter your recovery key to reset your password','lock.newPassword':'New password','lock.reset':'Reset Password','lock.backToLogin':'Back to password login',
 'lock.wrongPassword':'Wrong password','lock.minChars':'Password must be at least 6 characters','lock.noMatch':'Passwords do not match','lock.fillBoth':'Fill in both fields','lock.invalidKey':'Invalid recovery key','lock.newMinChars':'New password must be at least 6 characters','lock.currentWrong':'Current password is wrong','lock.passwordChanged':'Password changed! Cloud data re-encrypted.','lock.cloudFailed':'Cloud save failed — password NOT changed. Try again.','lock.sessionLocked':'Session locked due to inactivity',
-'db.portfolioValue':'Portfolio Value','db.allocation':'Allocation','db.byTicker':'By Ticker','db.byAccount':'By Account','db.byType':'By Type','db.byCurrency':'By Currency','db.netWorth':'Net Worth','db.qualityWeighted':'Portfolio Quality (Weighted)','db.redFlags':'Red Flag Alerts','db.sellTriggers':'Sell Triggers','db.benchmark':'Benchmark (S&P 500)','db.dipFinder':'Dip Finder','db.fi':'Financial Independence','db.reviewsDue':'Reviews Due','db.todoSummary':'TODO Summary','db.earnings':'Upcoming Earnings','db.generalTodo':'General TODO','db.refresh':'Refresh','db.newTask':'New task...','db.noPositions':'No positions yet','db.addPositionsMsg':'Add positions in the Portfolio tab to see your dashboard.','db.waitingPrice':'Waiting for price data...','db.noStockData':'No stock data available for owned positions.','db.noRedFlags':'No red flags detected','db.noSellTriggers':'No sell triggers set. Add them in each company\'s Checklist → Buy/Sell Decision.','db.benchmarkProgress':'Fetching S&P 500 data...','db.benchmarkFailed':'Could not fetch benchmark data','db.benchmarkUpdated':'Benchmark data updated','db.benchmarkNeedSnapshots':'Take portfolio snapshots first to compare with benchmark','db.benchmarkNeed2':'Need at least 2 portfolio snapshots to compare with benchmark.','db.benchmarkClickRefresh':'Click Refresh to fetch S&P 500 data for comparison.','db.benchmarkUnavailable':'Benchmark data unavailable','db.lastUpdated':'Last updated: ','db.fetch52w':'Fetching 52-week highs...','db.updated52w':'52-week highs updated','db.noTracked':'No tracked stocks.','db.click52wRefresh':'Click Refresh to fetch 52-week high data.','db.noDips':'No stocks down more than 10% from 52-week high.','db.enterTask':'Enter a task','db.deleted':'Deleted','db.noTasks':'No tasks yet.','db.allDone':'All done! No pending tasks.','db.allReviewsOk':'All reviews up to date.','db.dueForReview':'{count} company due for quarterly review','db.neverReviewed':'Never reviewed','db.pending':'Pending','db.overdue':'Overdue','db.thisWeek':'This week','db.noEarnings':'No earnings data. Click Refresh to fetch from FMP.','db.fmpKeyMissing':'FMP API key not set — go to Settings','db.noOwnedCompanies':'No Owned/Buy Target companies','db.earningsUpdated':'Updated earnings for {x}/{y} companies',
+'db.portfolioValue':'Portfolio Value','db.allocation':'Allocation','db.byTicker':'By Ticker','db.byAccount':'By Account','db.byType':'By Type','db.byCurrency':'By Currency','db.netWorth':'Net Worth','db.qualityWeighted':'Portfolio Quality (Weighted)','db.redFlags':'Red Flag Alerts','db.sellTriggers':'Sell Triggers','db.benchmark':'Benchmark (S&P 500)','db.dipFinder':'Dip Finder','db.fi':'Financial Independence','db.reviewsDue':'Reviews Due','db.todoSummary':'TODO Summary','db.earnings':'Upcoming Earnings','db.generalTodo':'General TODO','db.refresh':'Refresh','db.newTask':'New task...','db.noPositions':'No positions yet','db.addPositionsMsg':'Add positions in the Portfolio tab to see your dashboard.','db.waitingPrice':'Waiting for price data...','db.noStockData':'No stock data available for owned positions.','db.noRedFlags':'No red flags detected','db.noSellTriggers':'No sell triggers set. Add them in each company\'s Checklist → Buy/Sell Decision.','db.benchmarkProgress':'Fetching S&P 500 data...','db.benchmarkFailed':'Could not fetch benchmark data','db.benchmarkUpdated':'Benchmark data updated','db.benchmarkNeedSnapshots':'Take portfolio snapshots first to compare with benchmark','db.benchmarkNeed2':'Need at least 2 portfolio snapshots to compare with benchmark.','db.benchmarkClickRefresh':'Click Refresh to fetch S&P 500 data for comparison.','db.benchmarkUnavailable':'Benchmark data unavailable','db.lastUpdated':'Last updated: ','db.fetch52w':'Fetching 52-week highs...','db.updated52w':'52-week highs updated','db.noTracked':'No tracked stocks.','db.click52wRefresh':'Click Refresh to fetch 52-week high data.','db.noDips':'No stocks down more than 10% from 52-week high.','db.enterTask':'Enter a task','db.deleted':'Deleted','db.noTasks':'No tasks yet.','db.allDone':'All done! No pending tasks.','db.allReviewsOk':'All reviews up to date.','db.dueForReview':'{count} company due for quarterly review','db.neverReviewed':'Never reviewed','db.pending':'Pending','db.overdue':'Overdue','db.thisWeek':'This week','db.noEarnings':'No earnings data. Click Refresh to fetch from FMP.','db.fmpKeyMissing':'FMP API key not set — go to Settings','db.noOwnedCompanies':'No Owned/Buy Target companies','db.earningsUpdated':'Updated earnings for {x}/{y} companies','db.manageWidgets':'Manage Widgets','db.hideWidget':'Hide','db.widgetHidden':'Widget hidden — use Manage Widgets to restore','db.allWidgetsHidden':'All widgets are hidden. Use Manage Widgets to restore them.',
 'db.totalValue':'Total Value','db.totalPL':'Total P&L','db.dividends':'Dividends','db.positions':'Positions','db.totalReceived':'total received','db.annualized':'annualized','db.moneyWeighted':'money-weighted','db.snapshotHint':'Take snapshots to see value over time','db.portfolioValueLabel':'Portfolio Value','db.simpleReturn':'Simple Return','db.twrTotal':'TWR (Total)','db.twrAnnualized':'TWR (Annualized)','db.trackingPeriod':'Tracking Period','db.ratesLimited':'Exchange rate API rate limited — try later','db.ratesUpdated':'Exchange rates updated','db.ratesFailed':'Failed to fetch exchange rates: ','db.ratesUpdatedAt':'Updated ',
 'db.currentValue':'Current Value','db.target':'Target','db.rule4pct':'4% Rule FI Number','db.projectedFI':'Projected FI','db.coastFI':'Coast FI (25yr)','db.reached':'Reached!','db.years':'years','db.targetAmount':'Target Amount','db.monthlyExpenses':'Monthly Expenses','db.monthlySavings':'Monthly Savings','db.assumedReturn':'Assumed Return %',
 'comp.calculator':'Calculator','comp.tracker':'Tracker','comp.charts':'Charts','comp.saveStock':'Save Stock','comp.tickerPlaceholder':'Stock ticker / name','comp.millions':'Millions','comp.billions':'Billions','comp.thousands':'Thousands','comp.units':'Units','comp.sharedInputs':'Shared Inputs','comp.savedStocks':'Saved Stocks','comp.savedStocksHint':'Click to load. Data stored in localStorage.','comp.backToTracker':'Back to Tracker','comp.enterTicker':'Enter a stock name/ticker first.','comp.noSavedStocks':'No saved stocks yet.',
@@ -1136,7 +1151,7 @@ var I18N={en:{
 'checklist.marketMispricing':'Mi az, amit a piac rosszul áraz?','checklist.consensusError':'Miben téved a konszenzus?','checklist.kpiMisread':'Mi az a KPI, ami félre van értelmezve?','checklist.timeHorizonMismatch':'Időhorizont mismatch? Short-term pain vs long-term value?',
 'lock.subtitle':'Titkosított befektetési platform','lock.password':'Titkosítási jelszó','lock.unlock':'Feloldás','lock.forgot':'Elfelejtett jelszó? Használd a helyreállítási kulcsot','lock.setup':'Állítsd be a titkosítást az adataid védelméhez','lock.choosePassword':'Válassz jelszót','lock.confirmPassword':'Jelszó megerősítése','lock.enable':'Titkosítás engedélyezése','lock.skip':'Kihagyás','lock.enabled':'Titkosítás engedélyezve!','lock.saveKey':'Mentsd el ezt a helyreállítási kulcsot biztonságos helyre. Szükséged lesz rá, ha elfelejted a jelszavadat.','lock.copyKey':'Kulcs másolása','lock.keySaved':'Elmentettem a helyreállítási kulcsot','lock.continue':'Tovább az alkalmazáshoz','lock.enterKey':'Add meg a helyreállítási kulcsot a jelszó visszaállításához','lock.newPassword':'Új jelszó','lock.reset':'Jelszó visszaállítása','lock.backToLogin':'Vissza a bejelentkezéshez',
 'lock.wrongPassword':'Hibás jelszó','lock.minChars':'A jelszó legalább 6 karakter legyen','lock.noMatch':'A jelszavak nem egyeznek','lock.fillBoth':'Mindkét mezőt töltsd ki','lock.invalidKey':'Érvénytelen helyreállítási kulcs','lock.newMinChars':'Az új jelszó legalább 6 karakter legyen','lock.currentWrong':'A jelenlegi jelszó hibás','lock.passwordChanged':'Jelszó megváltoztatva! Felhő adatok újratitkosítva.','lock.cloudFailed':'Felhő mentés sikertelen — jelszó NEM változott. Próbáld újra.','lock.sessionLocked':'Munkamenet zárolva inaktivitás miatt',
-'db.portfolioValue':'Portfólió értéke','db.allocation':'Elosztás','db.byTicker':'Ticker szerint','db.byAccount':'Számla szerint','db.byType':'Típus szerint','db.byCurrency':'Pénznem szerint','db.netWorth':'Nettó vagyon','db.qualityWeighted':'Portfólió minőség (súlyozott)','db.redFlags':'Red Flag figyelmeztetések','db.sellTriggers':'Eladási triggerek','db.benchmark':'Benchmark (S&P 500)','db.dipFinder':'Esés kereső','db.fi':'Pénzügyi függetlenség','db.reviewsDue':'Esedékes értékelések','db.todoSummary':'TODO összefoglaló','db.earnings':'Közelgő eredmények','db.generalTodo':'Általános TODO','db.refresh':'Frissítés','db.newTask':'Új feladat...','db.noPositions':'Még nincs pozíció','db.addPositionsMsg':'Adj hozzá pozíciókat a Portfólió fülön a dashboard megtekintéséhez.','db.waitingPrice':'Várakozás árfolyam adatra...','db.noStockData':'Nincs elérhető részvényadat a birtokolt pozíciókhoz.','db.noRedFlags':'Nem észleltünk red flag-et','db.noSellTriggers':'Nincs eladási trigger beállítva. Add meg az egyes cégek Checklist → Vételi/Eladási döntésénél.','db.benchmarkProgress':'S&P 500 adatok lekérése...','db.benchmarkFailed':'Nem sikerült lekérni a benchmark adatokat','db.benchmarkUpdated':'Benchmark adatok frissítve','db.benchmarkNeedSnapshots':'Készíts portfólió pillanatfelvételeket a benchmark összehasonlításhoz','db.benchmarkNeed2':'Legalább 2 portfólió pillanatfelvétel szükséges a benchmark összehasonlításhoz.','db.benchmarkClickRefresh':'Kattints a Frissítés gombra az S&P 500 összehasonlító adatok lekéréséhez.','db.benchmarkUnavailable':'Benchmark adatok nem elérhetők','db.lastUpdated':'Utolsó frissítés: ','db.fetch52w':'52 hetes csúcsok lekérése...','db.updated52w':'52 hetes csúcsok frissítve','db.noTracked':'Nincs követett részvény.','db.click52wRefresh':'Kattints a Frissítés gombra az 52 hetes csúcs adatok lekéréséhez.','db.noDips':'Nincs 10%-nál nagyobb esés az 52 hetes csúcshoz képest.','db.enterTask':'Adj meg egy feladatot','db.deleted':'Törölve','db.noTasks':'Még nincs feladat.','db.allDone':'Minden kész! Nincs függő feladat.','db.allReviewsOk':'Minden értékelés naprakész.','db.dueForReview':'{count} cég esedékes negyedéves értékelésre','db.neverReviewed':'Soha nem értékelt','db.pending':'Függőben','db.overdue':'Lejárt','db.thisWeek':'Ezen a héten','db.noEarnings':'Nincs eredményadat. Kattints a Frissítés gombra az FMP-ből történő lekéréshez.','db.fmpKeyMissing':'FMP API kulcs nincs beállítva — menj a Beállításokba','db.noOwnedCompanies':'Nincs Birtokolt/Vételi célpont cég','db.earningsUpdated':'Eredmények frissítve: {x}/{y} cég',
+'db.portfolioValue':'Portfólió értéke','db.allocation':'Elosztás','db.byTicker':'Ticker szerint','db.byAccount':'Számla szerint','db.byType':'Típus szerint','db.byCurrency':'Pénznem szerint','db.netWorth':'Nettó vagyon','db.qualityWeighted':'Portfólió minőség (súlyozott)','db.redFlags':'Red Flag figyelmeztetések','db.sellTriggers':'Eladási triggerek','db.benchmark':'Benchmark (S&P 500)','db.dipFinder':'Esés kereső','db.fi':'Pénzügyi függetlenség','db.reviewsDue':'Esedékes értékelések','db.todoSummary':'TODO összefoglaló','db.earnings':'Közelgő eredmények','db.generalTodo':'Általános TODO','db.refresh':'Frissítés','db.newTask':'Új feladat...','db.noPositions':'Még nincs pozíció','db.addPositionsMsg':'Adj hozzá pozíciókat a Portfólió fülön a dashboard megtekintéséhez.','db.waitingPrice':'Várakozás árfolyam adatra...','db.noStockData':'Nincs elérhető részvényadat a birtokolt pozíciókhoz.','db.noRedFlags':'Nem észleltünk red flag-et','db.noSellTriggers':'Nincs eladási trigger beállítva. Add meg az egyes cégek Checklist → Vételi/Eladási döntésénél.','db.benchmarkProgress':'S&P 500 adatok lekérése...','db.benchmarkFailed':'Nem sikerült lekérni a benchmark adatokat','db.benchmarkUpdated':'Benchmark adatok frissítve','db.benchmarkNeedSnapshots':'Készíts portfólió pillanatfelvételeket a benchmark összehasonlításhoz','db.benchmarkNeed2':'Legalább 2 portfólió pillanatfelvétel szükséges a benchmark összehasonlításhoz.','db.benchmarkClickRefresh':'Kattints a Frissítés gombra az S&P 500 összehasonlító adatok lekéréséhez.','db.benchmarkUnavailable':'Benchmark adatok nem elérhetők','db.lastUpdated':'Utolsó frissítés: ','db.fetch52w':'52 hetes csúcsok lekérése...','db.updated52w':'52 hetes csúcsok frissítve','db.noTracked':'Nincs követett részvény.','db.click52wRefresh':'Kattints a Frissítés gombra az 52 hetes csúcs adatok lekéréséhez.','db.noDips':'Nincs 10%-nál nagyobb esés az 52 hetes csúcshoz képest.','db.enterTask':'Adj meg egy feladatot','db.deleted':'Törölve','db.noTasks':'Még nincs feladat.','db.allDone':'Minden kész! Nincs függő feladat.','db.allReviewsOk':'Minden értékelés naprakész.','db.dueForReview':'{count} cég esedékes negyedéves értékelésre','db.neverReviewed':'Soha nem értékelt','db.pending':'Függőben','db.overdue':'Lejárt','db.thisWeek':'Ezen a héten','db.noEarnings':'Nincs eredményadat. Kattints a Frissítés gombra az FMP-ből történő lekéréshez.','db.fmpKeyMissing':'FMP API kulcs nincs beállítva — menj a Beállításokba','db.noOwnedCompanies':'Nincs Birtokolt/Vételi célpont cég','db.earningsUpdated':'Eredmények frissítve: {x}/{y} cég','db.manageWidgets':'Widget kezelés','db.hideWidget':'Elrejtés','db.widgetHidden':'Widget elrejtve — használd a Widget kezelést a visszaállításhoz','db.allWidgetsHidden':'Minden widget el van rejtve. Használd a Widget kezelést a visszaállításhoz.',
 'db.totalValue':'Összérték','db.totalPL':'Összesített P&L','db.dividends':'Osztalékok','db.positions':'Pozíciók','db.totalReceived':'összesen kapott','db.annualized':'évesített','db.moneyWeighted':'pénzsúlyozott','db.snapshotHint':'Készíts pillanatfelvételt az érték időbeli változásának nyomon követéséhez','db.portfolioValueLabel':'Portfólió értéke','db.simpleReturn':'Egyszerű hozam','db.twrTotal':'TWR (összesen)','db.twrAnnualized':'TWR (évesített)','db.trackingPeriod':'Követési időszak','db.ratesLimited':'Árfolyam API korlát — próbáld később','db.ratesUpdated':'Árfolyamok frissítve','db.ratesFailed':'Árfolyamok lekérése sikertelen: ','db.ratesUpdatedAt':'Frissítve: ',
 'db.currentValue':'Jelenlegi érték','db.target':'Cél','db.rule4pct':'4%-os szabály FI szám','db.projectedFI':'Tervezett FI','db.coastFI':'Coast FI (25 év)','db.reached':'Elérve!','db.years':'év','db.targetAmount':'Célösszeg','db.monthlyExpenses':'Havi kiadások','db.monthlySavings':'Havi megtakarítás','db.assumedReturn':'Feltételezett hozam %',
 'comp.calculator':'Kalkulátor','comp.tracker':'Követő','comp.charts':'Grafikonok','comp.saveStock':'Mentés','comp.tickerPlaceholder':'Részvény ticker / név','comp.millions':'Millió','comp.billions':'Milliárd','comp.thousands':'Ezer','comp.units':'Egység','comp.sharedInputs':'Közös bemenetek','comp.savedStocks':'Mentett részvények','comp.savedStocksHint':'Kattints a betöltéshez. Adatok a localStorage-ban.','comp.backToTracker':'Vissza a követőhöz','comp.enterTicker':'Adj meg egy részvény nevet/tickert először.','comp.noSavedStocks':'Még nincs mentett részvény.',
@@ -1289,6 +1304,10 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 <!-- ====== SECTION: DASHBOARD (placeholder) ====== -->
 <div class="content" id="section-dashboard" style="display:none">
   <div class="db-grid">
+    <!-- Manage Widgets Bar -->
+    <div class="db-manage-bar"><button class="db-manage-btn" onclick="toggleManageWidgets()" id="db-manage-btn" data-i18n="db.manageWidgets" aria-expanded="false" aria-controls="db-manage-panel">Manage Widgets</button></div>
+    <div class="db-manage-panel" id="db-manage-panel" role="region" aria-label="Widget management"></div>
+
     <!-- Hero: Portfolio Summary -->
     <div class="db-hero" id="db-hero">
       <div class="db-hero-main">
@@ -4247,6 +4266,7 @@ function showSection(name){
   const currentSection=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
   if(currentSection)_scrollPositions[currentSection]=window.scrollY;
   if(currentSection==='companies'&&name!=='companies')resetCharts();
+  if(currentSection==='dashboard'&&name!=='dashboard'){const mp=document.getElementById('db-manage-panel');if(mp)mp.classList.remove('open')}
   if(currentSection==='portfolio'&&name!=='portfolio'){_bulkPosIds.clear();_bulkTxIds.clear();_updateBulkBar()}
   if(currentSection==='research'&&name!=='research'){_bulkNoteKeys.clear();_updateBulkBar()}
   if(currentSection==='reviews'&&name!=='reviews'){_bulkRvIds.clear();_updateBulkBar()}
@@ -5882,6 +5902,119 @@ function importCsvTransactions(){
 }
 
 // ====== DASHBOARD (Phase 5) ======
+const DB_WIDGETS=[
+  {id:'db-alloc-widget',labelKey:'db.allocation'},
+  {id:'db-networth-widget',labelKey:'db.netWorth'},
+  {id:'db-smith-widget',labelKey:'db.qualityWeighted'},
+  {id:'db-alerts-widget',labelKey:'db.redFlags'},
+  {id:'db-sell-triggers-widget',labelKey:'db.sellTriggers'},
+  {id:'db-benchmark-widget',labelKey:'db.benchmark'},
+  {id:'db-dip-widget',labelKey:'db.dipFinder'},
+  {id:'db-fi-widget',labelKey:'db.fi'},
+  {id:'db-reviews-due-widget',labelKey:'db.reviewsDue'},
+  {id:'db-todo-summary-widget',labelKey:'db.todoSummary'},
+  {id:'db-earnings-widget',labelKey:'db.earnings'},
+  {id:'db-todo-widget',labelKey:'db.generalTodo'}
+];
+let dbWidgetConfig=null;
+function loadDbWidgetConfig(){
+  if(dbWidgetConfig)return dbWidgetConfig;
+  try{const d=JSON.parse(localStorage.getItem('dashboard_widget_config_v1'));if(d&&Array.isArray(d.order))dbWidgetConfig=d}catch(e){}
+  if(!dbWidgetConfig)dbWidgetConfig={order:DB_WIDGETS.map(w=>w.id),hidden:[]};
+  const knownIds=new Set(DB_WIDGETS.map(w=>w.id));
+  dbWidgetConfig.order=dbWidgetConfig.order.filter(id=>knownIds.has(id));
+  DB_WIDGETS.forEach(w=>{if(!dbWidgetConfig.order.includes(w.id))dbWidgetConfig.order.push(w.id)});
+  dbWidgetConfig.hidden=(dbWidgetConfig.hidden||[]).filter(id=>knownIds.has(id));
+  return dbWidgetConfig;
+}
+function saveDbWidgetConfig(){
+  try{localStorage.setItem('dashboard_widget_config_v1',JSON.stringify(dbWidgetConfig))}catch(e){showToast(t('toast.storageFull'),'error')}
+}
+function applyDbWidgetOrder(){
+  const cfg=loadDbWidgetConfig();
+  const grid=document.querySelector('.db-grid');
+  if(!grid)return;
+  cfg.order.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      el.style.display=cfg.hidden.includes(id)?'none':'';
+      grid.appendChild(el);
+    }
+  });
+}
+function hideDbWidget(id){
+  const cfg=loadDbWidgetConfig();
+  if(!cfg.hidden.includes(id))cfg.hidden.push(id);
+  saveDbWidgetConfig();
+  const el=document.getElementById(id);
+  if(el)el.style.display='none';
+  showToast(t('db.widgetHidden'),'info',3000);
+  renderManageWidgets();
+}
+function toggleManageWidgets(){
+  const panel=document.getElementById('db-manage-panel');
+  if(!panel)return;
+  panel.classList.toggle('open');
+  const btn=document.getElementById('db-manage-btn');
+  if(btn)btn.setAttribute('aria-expanded',panel.classList.contains('open'));
+  if(panel.classList.contains('open'))renderManageWidgets();
+}
+function renderManageWidgets(){
+  const panel=document.getElementById('db-manage-panel');
+  if(!panel)return;
+  const cfg=loadDbWidgetConfig();
+  const widgetMap={};
+  DB_WIDGETS.forEach(w=>{widgetMap[w.id]=w});
+  let html='<div class="db-manage-list">';
+  cfg.order.forEach((id,idx)=>{
+    const w=widgetMap[id];
+    if(!w)return;
+    const checked=!cfg.hidden.includes(id);
+    html+='<div class="db-manage-item">';
+    html+='<label><input type="checkbox" '+(checked?'checked':'')+' onchange="toggleDbWidgetVisibility(\''+id+'\',this.checked)"> '+escH(t(w.labelKey))+'</label>';
+    html+='<div class="db-manage-arrows">';
+    html+='<button aria-label="Move up" '+(idx===0?'disabled':'')+' onclick="moveDbWidget(\''+id+'\',-1)">&#9650;</button>';
+    html+='<button aria-label="Move down" '+(idx===cfg.order.length-1?'disabled':'')+' onclick="moveDbWidget(\''+id+'\',1)">&#9660;</button>';
+    html+='</div></div>';
+  });
+  html+='</div>';
+  panel.innerHTML=html;
+}
+function toggleDbWidgetVisibility(id,visible){
+  const cfg=loadDbWidgetConfig();
+  if(visible){cfg.hidden=cfg.hidden.filter(h=>h!==id)}
+  else{if(!cfg.hidden.includes(id))cfg.hidden.push(id)}
+  saveDbWidgetConfig();
+  const el=document.getElementById(id);
+  if(el)el.style.display=visible?'':'none';
+  if(visible)renderDashboard();
+  renderManageWidgets();
+}
+function moveDbWidget(id,dir){
+  const cfg=loadDbWidgetConfig();
+  const idx=cfg.order.indexOf(id);
+  if(idx<0)return;
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=cfg.order.length)return;
+  cfg.order.splice(idx,1);
+  cfg.order.splice(newIdx,0,id);
+  saveDbWidgetConfig();
+  applyDbWidgetOrder();
+  renderManageWidgets();
+}
+function addDbWidgetHideButtons(){
+  DB_WIDGETS.forEach(w=>{
+    const el=document.getElementById(w.id);
+    if(!el||el.querySelector('.db-widget-hide'))return;
+    const btn=document.createElement('button');
+    btn.className='db-widget-hide';
+    btn.textContent=t('db.hideWidget');
+    btn.setAttribute('aria-label',t('db.hideWidget'));
+    btn.onclick=function(ev){ev.stopPropagation();hideDbWidget(w.id)};
+    el.appendChild(btn);
+  });
+}
+
 let _dbCharts={};
 let dbTodos=[];
 let dbFiSettings={targetAmount:500000,monthlyExpenses:2000,monthlySavings:1000,assumedReturnRate:8};
@@ -5933,19 +6066,36 @@ function dbValClass(v,low,high,invert){
 }
 
 function renderDashboard(){
+  const cfg=loadDbWidgetConfig();
+  applyDbWidgetOrder();
+  addDbWidgetHideButtons();
   renderDbPortfolioSummary();
-  renderDbAllocCharts();
-  lazyChart('db-networth-widget',renderDbNetWorth);
-  lazyChart('db-smith-widget',renderDbSmithMetrics);
-  lazyChart('db-alerts-widget',renderDbAlerts);
-  lazyChart('db-sell-triggers-widget',renderDbSellTriggers);
-  lazyChart('db-benchmark-widget',renderDbBenchmark);
-  lazyChart('db-dip-widget',renderDbDipFinder);
-  lazyChart('db-fi-widget',renderDbFiTracker);
-  lazyChart('db-earnings-widget',renderDbEarnings);
-  lazyChart('db-reviews-due-widget',renderDbReviewsDue);
-  lazyChart('db-todo-summary-widget',renderDbTodoSummary);
-  lazyChart('db-todo-widget',renderDbTodoList);
+  const renderers={
+    'db-alloc-widget':()=>renderDbAllocCharts(),
+    'db-networth-widget':renderDbNetWorth,
+    'db-smith-widget':renderDbSmithMetrics,
+    'db-alerts-widget':renderDbAlerts,
+    'db-sell-triggers-widget':renderDbSellTriggers,
+    'db-benchmark-widget':renderDbBenchmark,
+    'db-dip-widget':renderDbDipFinder,
+    'db-fi-widget':renderDbFiTracker,
+    'db-earnings-widget':renderDbEarnings,
+    'db-reviews-due-widget':renderDbReviewsDue,
+    'db-todo-summary-widget':renderDbTodoSummary,
+    'db-todo-widget':renderDbTodoList
+  };
+  cfg.order.forEach(id=>{
+    if(cfg.hidden.includes(id))return;
+    const fn=renderers[id];
+    if(!fn)return;
+    if(id==='db-alloc-widget')fn();
+    else lazyChart(id,fn);
+  });
+  let allHiddenEl=document.getElementById('db-all-hidden-msg');
+  if(cfg.hidden.length===DB_WIDGETS.length){
+    if(!allHiddenEl){allHiddenEl=document.createElement('div');allHiddenEl.id='db-all-hidden-msg';allHiddenEl.className='db-widget';allHiddenEl.style.gridColumn='1/-1';allHiddenEl.style.textAlign='center';allHiddenEl.style.color='var(--text2)';allHiddenEl.style.padding='40px 20px';document.querySelector('.db-grid').appendChild(allHiddenEl)}
+    allHiddenEl.textContent=t('db.allWidgetsHidden');allHiddenEl.style.display='';
+  } else if(allHiddenEl){allHiddenEl.style.display='none'}
 }
 
 // ---- 5A: Portfolio Summary ----
