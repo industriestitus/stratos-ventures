@@ -50,8 +50,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 41 | Position Sort, Pin-to-Top, Pipeline Filter | `8bae88e` | 2026-07-02 | 4 | 8 |
 | 42 | Custom Tag System | `97a2496` | 2026-07-02 | 8 | 0 |
 | 43 | Skeleton Loading States | `e1cfd66` | 2026-07-02 | 1 | 0 |
+| 44 | Missing CSS Variable | — | 2026-07-03 | 1 | 0 |
 
-**Total: 272 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 273 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -976,6 +977,14 @@ Added user-defined tag system: add/remove tags on company profiles with datalist
 | # | Severity | Issue | Fix |
 |---|----------|-------|-----|
 | 1 | MEDIUM | `fetchAllDividendData` skeleton appended to full panel container — invisible below existing content | Changed from `showSkeleton` to `showSpinner` overlay which covers entire panel |
+
+---
+
+## Category 44 — Missing CSS Variable (2026-07-03)
+
+| # | Severity | Issue | Fix |
+|---|----------|-------|-----|
+| 1 | MEDIUM | `--yellow` CSS variable used in 2 places (pin icon color, currency warning) but never defined in `:root` — rendered as inherited/transparent | Added `--yellow:#ffd93d` to dark theme `:root` and `--yellow:#e6a800` to light theme |
 
 ---
 

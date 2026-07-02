@@ -61,6 +61,12 @@ Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and cod
 ### P.15 — `accent-color` Needs Safari 15.4+ (ACCEPTED)
 - **Status:** Won't fix — CSS spec limitation. Custom checkbox styling would be disproportionate effort for cosmetic-only issue.
 
+### P.19 — Click-to-Edit Metrics Have Minimal Visual Affordance (DEFERRED)
+- **Where:** Company Profile > Key Metrics grid — `cp-overridable` cards are double-click editable
+- **Current state:** Has `cursor:pointer` and hover background change, plus "overridden" badge when active. Trigger is double-click (long-press on mobile).
+- **Possible improvement:** Add a subtle pencil icon on hover in the card corner. Not urgent — current state is acceptable.
+- **Decision:** Reviewed 2026-07-03 — user confirmed current behavior is fine. Tracker table inline edit is intentionally minimal. Revisit if user feedback suggests discoverability is a problem.
+
 ### P.16 — `fetch keepalive` Ignored in Firefox 90-99 (ACCEPTED)
 - **Status:** Won't fix — browser limitation on 4+ year old Firefox. `sendBeacon()` fallback incompatible with JSON API. D1 mode uses `API.flushAll()`.
 
