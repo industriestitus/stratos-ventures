@@ -860,6 +860,20 @@ Deep pass fixing remaining untranslated strings found during visual browser test
 
 ---
 
+## Category 36 — Soft-Delete + Trash (2026-07-02) — `fe3b0c8`
+
+Soft-delete with `deleted_at` timestamps for positions, transactions, notes, reviews. 30-day trash with restore/permanent delete in Settings.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | `pfPositions.length` used for empty-state checks in 5 locations (takeSnapshot, checkSnapshotReminder ×2, renderPortfolioOverview, renderDbAllocCharts) — soft-deleted items counted as active | Changed all 5 to `getActivePositions().length` |
+| 2 | MEDIUM | `deleteResearchEntry()` D1 sync used local `id` parameter instead of `entry._d1Id\|\|entry.id` — wrong D1 record targeted if IDs diverge after sync | Fixed to use `entry._d1Id\|\|entry.id` |
+| 3 | MEDIUM | `_toggleAllRv()` used `rvData.entries.slice()` — included soft-deleted reviews in toggle-all | Changed to `rvData.entries.filter(e=>!e.deleted_at)` |
+| 4 | LOW | `calcDividendSummary()` `totalPositions:pfPositions.length` counted soft-deleted positions | Changed to `getActivePositions().length` |
+| 5 | LOW | `bulkDeleteNotes()` used `const[t,idStr]=k.split(':')` — `t` variable shadows global i18n `t()` function | Renamed to `[tp,idStr]` |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:
