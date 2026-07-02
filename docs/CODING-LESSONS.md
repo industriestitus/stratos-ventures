@@ -143,6 +143,14 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 ---
 
+### 7. String.replace() Only Replaces First Match
+
+**What went wrong:** `s.replace(',','.')` in CSV number parsing only replaced the first comma, so `"1,000"` became `"1.000"` (parsed as 1.0 instead of 1000). EU numbers with multiple dots (`"1.234.567"`) had the same risk.
+
+**Rule:** Always use a regex with global flag for multi-character replacements: `s.replace(/,/g,'')`. The string overload of `.replace()` only affects the first occurrence — this is a JS footgun that silently corrupts data.
+
+---
+
 ## Data Safety
 
 ### 1. D1 Write-Through + Read-Fallback
@@ -358,7 +366,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Process | 4 | 15+ (Categories 19-23) |
 | AI Behavioral | 6 | 100+ (cross-cutting) |
 
-**Total:** 196+ bugs fixed, 31 lessons, 7 domains.
+**Total:** 198+ bugs fixed, 32 lessons, 7 domains.
 
 ## Related Documents
 
