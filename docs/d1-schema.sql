@@ -126,6 +126,7 @@ CREATE TABLE notes (
     source_name TEXT,
     source_url  TEXT,
     is_pinned   INTEGER NOT NULL DEFAULT 0,
+    deleted_at  TEXT DEFAULT NULL,
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -190,6 +191,7 @@ CREATE TABLE positions (
     account_id  INTEGER NOT NULL REFERENCES broker_accounts(id) ON DELETE CASCADE,
     shares      REAL NOT NULL DEFAULT 0,
     avg_cost    REAL NOT NULL DEFAULT 0,
+    deleted_at  TEXT DEFAULT NULL,
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(company_id, account_id)
@@ -210,6 +212,7 @@ CREATE TABLE transactions (
     fees             REAL NOT NULL DEFAULT 0,
     currency         TEXT NOT NULL DEFAULT 'USD',
     notes            TEXT NOT NULL DEFAULT '',
+    deleted_at       TEXT DEFAULT NULL,
     created_at       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -335,6 +338,7 @@ CREATE TABLE reviews (
     company_id    INTEGER REFERENCES companies(id) ON DELETE CASCADE,
     answers_json  TEXT NOT NULL DEFAULT '{}',
     summary       TEXT NOT NULL DEFAULT '',
+    deleted_at    TEXT DEFAULT NULL,
     created_at    TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );

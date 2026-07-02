@@ -271,6 +271,14 @@ button:focus:not(:focus-visible),select:focus:not(:focus-visible),textarea:focus
 .st-archived-row{opacity:.5}
 .st-archive-toggle{font-size:12px;padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer}
 .st-archive-toggle.active{background:var(--surface2);color:var(--text);border-color:var(--accent)}
+.trash-section{margin-bottom:16px}
+.trash-section-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.trash-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--surface)}
+.trash-item-info{flex:1;min-width:0}
+.trash-item-title{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trash-item-meta{font-size:11px;color:var(--text2)}
+.trash-item-actions{display:flex;gap:6px;flex-shrink:0}
+.trash-bulk-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 /* Company type tag */
 .cp-type-wrap{display:flex;gap:6px;flex-wrap:wrap}
 .cp-type-tag{padding:4px 10px;font-size:11px;font-weight:600;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .2s}
@@ -1023,7 +1031,8 @@ var I18N={en:{
 'validation.tickerRequired':'Ticker / identifier required','validation.accountRequired':'Select a valid account','validation.priceRequired':'Purchase price or current value required','validation.amountRequired':'Enter the amount','validation.sharesRequired':'Valid share count required','validation.avgCostRequired':'Valid average price required','validation.sharesOrAvgRequired':'Enter share count or average price','validation.dateRequired':'Date required','validation.dateFuture':'Cannot be a future date','validation.tickerRequiredTx':'Ticker required','validation.accountRequiredTx':'Select an account','validation.amountRequiredTx':'Valid amount required','validation.sharesRequiredTx':'Valid share count required',
 'search.placeholder':'Search everywhere...','search.startTyping':'Start typing to search...','search.minChars':'At least 2 characters...','search.noResults':'No results: "{q}"','search.companies':'Companies','search.positions':'Positions','search.transactions':'Transactions','search.companyNotes':'Company notes','search.journal':'Journal','search.news':'News','search.market':'Market',
 'empty.noPositions':'No positions yet','empty.noPositionsMsg':'Add your investments to track your portfolio.','empty.addPosition':'+ Add Position','empty.noTransactions':'No transactions yet','empty.noTransactionsMsg':'Record your first buy, sell, or dividend transaction.','empty.addTransaction':'+ Record Transaction','empty.noReviews':'No reviews yet','empty.noReviewsMsg':'Start your first {type}review to track your investment decisions.','empty.addReview':'+ New Review','empty.portfolioMetrics':'Add positions for portfolio metrics.','empty.priceAlerts':'Add positions for price alerts.','empty.sellTriggers':'Add positions for sell triggers.','empty.createAccount':'Create a broker account and add positions for portfolio overview.','empty.addAccount':'+ Add Account',
-'toast.positionsExported':'{count} positions exported','toast.transactionsExported':'{count} transactions exported','toast.positionDeleted':'Position deleted: {ticker}','toast.transactionDeleted':'Transaction deleted: {type} {ticker}','toast.noteDeleted':'Note deleted','toast.reviewDeleted':'Review deleted','toast.stockDeleted':'"{name}" deleted','toast.bulkPositionsDeleted':'{count} positions deleted','toast.bulkTransactionsDeleted':'{count} transactions deleted','toast.bulkNotesDeleted':'{count} notes deleted','toast.bulkReviewsDeleted':'{count} reviews deleted','toast.bulkStocksDeleted':'{count} stocks deleted','toast.recoveryMsg':'{count} unsaved change(s) recovered','toast.offlineCache':'Offline — loading from local cache','toast.storageFull':'Storage full — export your data to avoid data loss',
+'toast.positionsExported':'{count} positions exported','toast.transactionsExported':'{count} transactions exported','toast.positionDeleted':'Position deleted: {ticker}','toast.transactionDeleted':'Transaction deleted: {type} {ticker}','toast.noteDeleted':'Note deleted','toast.reviewDeleted':'Review deleted','toast.stockDeleted':'"{name}" deleted','toast.bulkPositionsDeleted':'{count} positions deleted','toast.bulkTransactionsDeleted':'{count} transactions deleted','toast.bulkNotesDeleted':'{count} notes deleted','toast.bulkReviewsDeleted':'{count} reviews deleted','toast.bulkStocksDeleted':'{count} stocks deleted','toast.recoveryMsg':'{count} unsaved change(s) recovered','toast.offlineCache':'Offline — loading from local cache','toast.storageFull':'Storage full — export your data to avoid data loss','toast.trashEmptied':'Trash emptied','toast.itemRestored':'Item restored','toast.itemPermanentlyDeleted':'Item permanently deleted','toast.trashPurged':'{count} expired item(s) auto-removed from trash',
+'trash.title':'Trash','trash.empty':'Trash is empty','trash.emptyMsg':'Deleted items appear here for 30 days before being permanently removed.','trash.positions':'Positions','trash.transactions':'Transactions','trash.notes':'Notes','trash.reviews':'Reviews','trash.restore':'Restore','trash.permanentDelete':'Permanently Delete','trash.emptyTrash':'Empty Trash','trash.restoreAll':'Restore All','trash.deletedOn':'Deleted {date}','trash.autoDelete':'{days}d left','trash.itemCount':'{count} item(s) in trash','trash.confirmEmpty':'Empty Trash','trash.confirmEmptyMsg':'All {count} items will be permanently deleted. This cannot be undone.','trash.confirmPermanent':'Permanent Delete','trash.confirmPermanentMsg':'This item will be permanently deleted. This cannot be undone.',
 'data.trackerStocks':'Tracked stocks','data.accounts':'Accounts','data.positions':'Positions','data.transactions':'Transactions','data.snapshots':'Snapshots','data.todos':'To-dos','data.exchangeRates':'Exchange rates','data.dividendHistory':'Dividend history','data.reviews':'Reviews','data.researchNotes':'Research notes','data.framework':'Framework','data.dividendSettings':'Dividend settings','data.fiSettings':'FI settings','data.benchmark':'Benchmark','data.52wHighs':'52-week highs',
 'settings.language':'Language','settings.languageHint':'App will reload on change','settings.connections':'Connections','settings.encryption':'Encryption','settings.portfolioSettings':'Portfolio Settings','settings.dataManagement':'Data Management','settings.keyboardShortcuts':'Keyboard Shortcuts',
 'shortcuts.search':'Search','shortcuts.shortcutGuide':'Shortcut guide','shortcuts.addNew':'Add new item','shortcuts.close':'Close','shortcuts.hint':'The N key opens a new item based on the current section: position/transaction (Portfolio), note (Research), review (Reviews), ticker input (Companies).',
@@ -1087,7 +1096,8 @@ var I18N={en:{
 'validation.tickerRequired':'Ticker / azonosító kötelező','validation.accountRequired':'Válassz egy érvényes számlát','validation.priceRequired':'Vételár vagy jelenlegi érték kötelező','validation.amountRequired':'Add meg az összeget','validation.sharesRequired':'Érvényes darabszám szükséges','validation.avgCostRequired':'Érvényes átlagár szükséges','validation.sharesOrAvgRequired':'Adj meg darabszámot vagy átlagárat','validation.dateRequired':'Dátum kötelező','validation.dateFuture':'Nem lehet jövőbeli dátum','validation.tickerRequiredTx':'Ticker kötelező','validation.accountRequiredTx':'Válassz egy számlát','validation.amountRequiredTx':'Érvényes összeg szükséges','validation.sharesRequiredTx':'Érvényes darabszám szükséges',
 'search.placeholder':'Keresés mindenhol...','search.startTyping':'Kezdj el gépelni a kereséshez...','search.minChars':'Legalább 2 karakter...','search.noResults':'Nincs találat: "{q}"','search.companies':'Cégek','search.positions':'Pozíciók','search.transactions':'Tranzakciók','search.companyNotes':'Cég jegyzetek','search.journal':'Napló','search.news':'Hír','search.market':'Piac',
 'empty.noPositions':'Még nincs pozíciód','empty.noPositionsMsg':'Add hozzá a befektetéseidet a portfólió követéséhez.','empty.addPosition':'+ Pozíció hozzáadása','empty.noTransactions':'Még nincs tranzakciód','empty.noTransactionsMsg':'Rögzítsd az első vételi, eladási vagy osztalék tranzakciódat.','empty.addTransaction':'+ Tranzakció rögzítése','empty.noReviews':'Még nincs review-d','empty.noReviewsMsg':'Kezdd el az első {type}review-dat a befektetési döntéseid nyomon követéséhez.','empty.addReview':'+ Új Review','empty.portfolioMetrics':'Adj hozzá pozíciókat a portfólió metrikákhoz.','empty.priceAlerts':'Adj hozzá pozíciókat az áralertekhez.','empty.sellTriggers':'Adj hozzá pozíciókat az eladási trigger-ekhez.','empty.createAccount':'Hozz létre egy brókert számlafiókot és adj hozzá pozíciókat a portfólió áttekintéshez.','empty.addAccount':'+ Számla hozzáadása',
-'toast.positionsExported':'{count} pozíció exportálva','toast.transactionsExported':'{count} tranzakció exportálva','toast.positionDeleted':'Pozíció törölve: {ticker}','toast.transactionDeleted':'Tranzakció törölve: {type} {ticker}','toast.noteDeleted':'Jegyzet törölve','toast.reviewDeleted':'Review törölve','toast.stockDeleted':'"{name}" törölve','toast.bulkPositionsDeleted':'{count} pozíció törölve','toast.bulkTransactionsDeleted':'{count} tranzakció törölve','toast.bulkNotesDeleted':'{count} jegyzet törölve','toast.bulkReviewsDeleted':'{count} review törölve','toast.bulkStocksDeleted':'{count} részvény törölve','toast.recoveryMsg':'{count} nem mentett változás visszaállítva','toast.offlineCache':'Offline — betöltés helyi gyorsítótárból','toast.storageFull':'Tárhely megtelt — exportáld az adataidat az adatvesztés elkerülése érdekében',
+'toast.positionsExported':'{count} pozíció exportálva','toast.transactionsExported':'{count} tranzakció exportálva','toast.positionDeleted':'Pozíció törölve: {ticker}','toast.transactionDeleted':'Tranzakció törölve: {type} {ticker}','toast.noteDeleted':'Jegyzet törölve','toast.reviewDeleted':'Review törölve','toast.stockDeleted':'"{name}" törölve','toast.bulkPositionsDeleted':'{count} pozíció törölve','toast.bulkTransactionsDeleted':'{count} tranzakció törölve','toast.bulkNotesDeleted':'{count} jegyzet törölve','toast.bulkReviewsDeleted':'{count} review törölve','toast.bulkStocksDeleted':'{count} részvény törölve','toast.recoveryMsg':'{count} nem mentett változás visszaállítva','toast.offlineCache':'Offline — betöltés helyi gyorsítótárból','toast.storageFull':'Tárhely megtelt — exportáld az adataidat az adatvesztés elkerülése érdekében','toast.trashEmptied':'Kuka kiürítve','toast.itemRestored':'Elem visszaállítva','toast.itemPermanentlyDeleted':'Elem véglegesen törölve','toast.trashPurged':'{count} lejárt elem automatikusan eltávolítva a kukából',
+'trash.title':'Kuka','trash.empty':'A kuka üres','trash.emptyMsg':'A törölt elemek 30 napig megmaradnak itt, mielőtt véglegesen törlődnének.','trash.positions':'Pozíciók','trash.transactions':'Tranzakciók','trash.notes':'Jegyzetek','trash.reviews':'Review-k','trash.restore':'Visszaállítás','trash.permanentDelete':'Végleges törlés','trash.emptyTrash':'Kuka kiürítése','trash.restoreAll':'Összes visszaállítása','trash.deletedOn':'Törölve: {date}','trash.autoDelete':'{days} nap van hátra','trash.itemCount':'{count} elem a kukában','trash.confirmEmpty':'Kuka kiürítése','trash.confirmEmptyMsg':'Mind a(z) {count} elem véglegesen törlődik. Ez nem vonható vissza.','trash.confirmPermanent':'Végleges törlés','trash.confirmPermanentMsg':'Az elem véglegesen törlődik. Ez nem vonható vissza.',
 'data.trackerStocks':'Követett részvények','data.accounts':'Számlák','data.positions':'Pozíciók','data.transactions':'Tranzakciók','data.snapshots':'Pillanatképek','data.todos':'Teendők','data.exchangeRates':'Árfolyamok','data.dividendHistory':'Osztalék előzmények','data.reviews':'Értékelések','data.researchNotes':'Kutatási jegyzetek','data.framework':'Keretrendszer','data.dividendSettings':'Osztalék beállítások','data.fiSettings':'FI beállítások','data.benchmark':'Benchmark','data.52wHighs':'52 hetes csúcsok',
 'settings.language':'Nyelv','settings.languageHint':'Az app újratöltődik váltáskor','settings.connections':'Kapcsolatok','settings.encryption':'Titkosítás','settings.portfolioSettings':'Portfólió beállítások','settings.dataManagement':'Adatkezelés','settings.keyboardShortcuts':'Billentyűparancsok',
 'shortcuts.search':'Keresés','shortcuts.shortcutGuide':'Parancsok','shortcuts.addNew':'Új elem hozzáadása','shortcuts.close':'Bezárás','shortcuts.hint':'Az N gomb az aktuális szekció alapján nyit új elemet: pozíció/tranzakció (Portfolio), jegyzet (Research), review (Reviews), ticker input (Companies).',
@@ -2140,6 +2150,14 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
   </div>
 </div>
 
+<div class="card" style="margin-top:16px">
+  <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+    <span data-i18n="trash.title">Trash</span>
+    <span id="trash-count" style="font-size:12px;color:var(--text2)"></span>
+  </div>
+  <div id="trash-container"></div>
+</div>
+
   <div class="card" style="margin-top:16px">
     <div class="card-title" data-i18n="settings.language">Language</div>
     <div style="display:flex;align-items:center;gap:12px">
@@ -3036,7 +3054,7 @@ function _gsSearch(q){
     }
   });
   // Positions
-  pfPositions.forEach(p=>{
+  getActivePositions().forEach(p=>{
     const name=p.name||p.ticker;
     if(p.ticker.toLowerCase().includes(ql)||name.toLowerCase().includes(ql)){
       const acc=pfAccounts.find(a=>a.id===p.accountId);
@@ -3044,7 +3062,7 @@ function _gsSearch(q){
     }
   });
   // Transactions
-  pfTransactions.forEach(tx=>{
+  getActiveTransactions().forEach(tx=>{
     const match=tx.ticker.toLowerCase().includes(ql)||(tx.notes||'').toLowerCase().includes(ql);
     if(match){
       results.push({group:t('search.transactions'),icon:'💱',title:`${tx.type.toUpperCase()} ${tx.ticker}`,sub:`${tx.date} · ${tx.totalAmount?tx.totalAmount.toLocaleString():''}`,action:()=>{showSection('portfolio');document.querySelector('[data-tab="pf-transactions"]')?.click()}});
@@ -3052,7 +3070,7 @@ function _gsSearch(q){
   });
   // Research notes
   ['journal','news','market'].forEach(type=>{
-    (researchNotes[type]||[]).forEach(n=>{
+    (researchNotes[type]||[]).filter(n=>!n.deleted_at).forEach(n=>{
       const title=n.title||n.source||n.topic||'';
       const content=n.content||n.excerpt||n.comment||'';
       const tags=(n.tags||[]).join(' ');
@@ -3785,7 +3803,7 @@ function _downloadCsv(filename,headers,rows){
 
 function exportCsvPositions(){
   const headers=['Ticker','Name','Account','Type','Shares','Avg Cost','Current Price','Currency','Notes','Created'];
-  const rows=pfPositions.map(p=>{
+  const rows=getActivePositions().map(p=>{
     const acc=pfAccounts.find(a=>a.id===p.accountId);
     const price=getPositionPrice(p);
     return[p.ticker,p.name||'',acc?acc.name:'',p.assetType||'stock',p.shares,p.avgCost,price!=null?price:'',acc?acc.currency:'',p.notes||'',p.createdAt||''];
@@ -3795,7 +3813,7 @@ function exportCsvPositions(){
 
 function exportCsvTransactions(){
   const headers=['Date','Ticker','Account','Type','Shares','Price/Share','Total','Fees','Currency','Notes'];
-  const rows=pfTransactions.map(t=>{
+  const rows=getActiveTransactions().map(t=>{
     const acc=pfAccounts.find(a=>a.id===t.accountId);
     return[t.date,t.ticker,acc?acc.name:'',t.type,t.shares,t.pricePerShare,t.totalAmount,t.fees||0,t.currency||'',t.notes||''];
   });
@@ -4118,6 +4136,7 @@ function showSection(name){
   if(name==='dashboard')renderDashboard();
   if(name==='framework')renderFramework();
   if(name==='reviews')renderReviews();
+  if(name==='settings')renderTrash();
   void document.body.offsetHeight;
   window.scrollTo(0,_scrollPositions[name]||0);
 }
@@ -4192,22 +4211,22 @@ function savePortfolioAccounts(){
   try{localStorage.setItem('portfolio_accounts_v1',JSON.stringify(pfAccounts))}catch(e){showToast(t('toast.storageSaveError',{type:'accounts'}),'error')}
 }
 async function loadPortfolioPositions(){
-  if(d1Mode){try{const r=await API.get('positions');const d1Pos=(r.data||[]).map(p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:p.shares,avgCost:p.avg_cost,currency:(s?s.currency:'')||'USD',companyId:p.company_id}});
+  if(d1Mode){try{const r=await API.get('positions');const d1Pos=(r.data||[]).map(p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:p.shares,avgCost:p.avg_cost,currency:(s?s.currency:'')||'USD',companyId:p.company_id,deleted_at:p.deleted_at||null}});
     let lsExtra={};try{const ls=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(ls))ls.forEach(p=>{if(p.id)lsExtra[p.id]=p})}catch(e){}
     pfPositions=d1Pos.map(p=>{const ex=lsExtra[p.id];if(ex)return{...ex,...p,assetType:ex.assetType||'stock',currentPrice:ex.currentPrice,notes:ex.notes,reLocation:ex.reLocation,rePurchaseDate:ex.rePurchaseDate,rePurchasePrice:ex.rePurchasePrice,reCurrentValue:ex.reCurrentValue,reMonthlyRental:ex.reMonthlyRental,reAnnualCosts:ex.reAnnualCosts,bondType:ex.bondType,bondFaceValue:ex.bondFaceValue,bondCouponRate:ex.bondCouponRate,bondMaturityDate:ex.bondMaturityDate,bondPaymentFreq:ex.bondPaymentFreq,cashAmount:ex.cashAmount};return p});
     try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){}return}catch(e){console.error('D1 load positions, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(d))pfPositions=d}catch(e){console.error('Corrupted portfolio_positions_v1:',e)}
 }
 function savePortfolioPositions(){
-  if(d1Mode){API.scheduleSave('pfPositions',async()=>{await API.post('positions/batch',{items:pfPositions.map(p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:p.shares,avg_cost:p.avgCost}))})})}
+  if(d1Mode){API.scheduleSave('pfPositions',async()=>{await API.post('positions/batch',{items:pfPositions.map(p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:p.shares,avg_cost:p.avgCost,deleted_at:p.deleted_at||null}))})})}
   try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){showToast(t('toast.storageSaveError',{type:'positions'}),'error')}
 }
 async function loadPortfolioTransactions(){
-  if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=(r.data||[]).map(t=>({id:t.id,ticker:_d1CompanyMap[t.company_id]||t.symbol||'',accountId:t.account_id,type:t.transaction_type,date:t.transaction_date,shares:t.shares,pricePerShare:t.price_per_share,totalAmount:t.total_amount,fees:t.fees,currency:t.currency,notes:t.notes,companyId:t.company_id}));return}catch(e){console.error('D1 load transactions, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=(r.data||[]).map(t=>({id:t.id,ticker:_d1CompanyMap[t.company_id]||t.symbol||'',accountId:t.account_id,type:t.transaction_type,date:t.transaction_date,shares:t.shares,pricePerShare:t.price_per_share,totalAmount:t.total_amount,fees:t.fees,currency:t.currency,notes:t.notes,companyId:t.company_id,deleted_at:t.deleted_at||null}));return}catch(e){console.error('D1 load transactions, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_transactions_v1'));if(Array.isArray(d))pfTransactions=d}catch(e){console.error('Corrupted portfolio_transactions_v1:',e)}
 }
 function savePortfolioTransactions(){
-  if(d1Mode){API.scheduleSave('pfTransactions',async()=>{await API.post('transactions/batch',{items:pfTransactions.map(t=>({id:t.id,company_id:t.companyId||_tickerToD1Id(t.ticker),account_id:t.accountId,transaction_type:t.type,transaction_date:t.date,shares:t.shares,price_per_share:t.pricePerShare,total_amount:t.totalAmount,fees:t.fees||0,currency:t.currency||'USD',notes:t.notes||''}))})})}
+  if(d1Mode){API.scheduleSave('pfTransactions',async()=>{await API.post('transactions/batch',{items:pfTransactions.map(t=>({id:t.id,company_id:t.companyId||_tickerToD1Id(t.ticker),account_id:t.accountId,transaction_type:t.type,transaction_date:t.date,shares:t.shares,price_per_share:t.pricePerShare,total_amount:t.totalAmount,fees:t.fees||0,currency:t.currency||'USD',notes:t.notes||'',deleted_at:t.deleted_at||null}))})})}
   try{localStorage.setItem('portfolio_transactions_v1',JSON.stringify(pfTransactions))}catch(e){showToast(t('toast.storageSaveError',{type:'transactions'}),'error')}
 }
 
@@ -4242,7 +4261,7 @@ function renderAccounts(){
     return;
   }
   c.innerHTML=pfAccounts.map(a=>{
-    const posCount=pfPositions.filter(p=>p.accountId===a.id).length;
+    const posCount=getActivePositions().filter(p=>p.accountId===a.id).length;
     const cls=a.isActive===false?'pf-account-card pf-inactive':'pf-account-card';
     return`<div class="${cls}">
       <div class="pf-account-info">
@@ -4300,7 +4319,7 @@ function saveAccount(){
 async function deleteAccount(id){
   const a=pfAccounts.find(x=>x.id===id);
   if(!a)return;
-  const posCount=pfPositions.filter(p=>p.accountId===id).length;
+  const posCount=getActivePositions().filter(p=>p.accountId===id).length;
   const msg=posCount?t('confirm.deleteAccountMsg',{name:a.name,count:posCount}):t('confirm.deleteAccountMsgSimple',{name:a.name});
   if(!await showConfirm(t('confirm.deleteAccount'),msg))return;
   if(d1Mode){
@@ -4399,21 +4418,22 @@ async function bulkDeletePositions(){
   const ids=[..._bulkPosIds];
   if(!ids.length)return;
   if(ids.length>=3&&!await showConfirm(t('confirm.bulkDelete'),t('confirm.bulkDeletePositions',{count:ids.length})))return;
-  const snapshots=ids.map(id=>({idx:pfPositions.findIndex(p=>p.id===id),data:JSON.parse(JSON.stringify(pfPositions.find(p=>p.id===id)))})).filter(s=>s.data);
-  const tickers=new Set(snapshots.map(s=>s.data.ticker));
+  const now=new Date().toISOString();
+  const tickers=new Set();
+  ids.forEach(id=>{const p=pfPositions.find(x=>x.id===id);if(p)tickers.add(p.ticker)});
   undoableDelete(t('toast.bulkPositionsDeleted',{count:ids.length}),()=>{
-    pfPositions=pfPositions.filter(p=>!_bulkPosIds.has(p.id));
+    ids.forEach(id=>{const p=pfPositions.find(x=>x.id===id);if(p)p.deleted_at=now});
     _bulkPosIds.clear();
     savePortfolioPositions();
-    tickers.forEach(t=>_checkSellAllPositions(t));
+    tickers.forEach(tk=>_checkSellAllPositions(tk));
     _updateBulkBar();
     renderPositions();
   },()=>{
-    snapshots.sort((a,b)=>a.idx-b.idx).forEach(s=>pfPositions.splice(s.idx,0,s.data));
+    ids.forEach(id=>{const p=pfPositions.find(x=>x.id===id);if(p)delete p.deleted_at});
     savePortfolioPositions();
     renderPositions();
   },()=>{
-    if(d1Mode){ids.forEach(id=>API.del('positions/'+id).catch(e=>console.error('D1 bulk del pos:',e)))}
+    if(d1Mode){ids.forEach(id=>API.put('positions/'+id,{deleted_at:now}).catch(e=>console.error('D1 bulk soft-del pos:',e)))}
   });
 }
 
@@ -4421,21 +4441,22 @@ async function bulkDeleteTransactions(){
   const ids=[..._bulkTxIds];
   if(!ids.length)return;
   if(ids.length>=3&&!await showConfirm(t('confirm.bulkDelete'),t('confirm.bulkDeleteTransactions',{count:ids.length})))return;
-  const snapshots=ids.map(id=>({idx:pfTransactions.findIndex(t=>t.id===id),data:JSON.parse(JSON.stringify(pfTransactions.find(t=>t.id===id)))})).filter(s=>s.data);
-  const tickers=new Set(snapshots.map(s=>s.data.ticker));
+  const now=new Date().toISOString();
+  const tickers=new Set();
+  ids.forEach(id=>{const tx=pfTransactions.find(x=>x.id===id);if(tx)tickers.add(tx.ticker)});
   undoableDelete(t('toast.bulkTransactionsDeleted',{count:ids.length}),()=>{
-    pfTransactions=pfTransactions.filter(t=>!_bulkTxIds.has(t.id));
+    ids.forEach(id=>{const tx=pfTransactions.find(x=>x.id===id);if(tx)tx.deleted_at=now});
     _bulkTxIds.clear();
     savePortfolioTransactions();
-    tickers.forEach(t=>_checkSellAllPositions(t));
+    tickers.forEach(tk=>_checkSellAllPositions(tk));
     _updateBulkBar();
     renderTransactions();
   },()=>{
-    snapshots.sort((a,b)=>a.idx-b.idx).forEach(s=>pfTransactions.splice(s.idx,0,s.data));
+    ids.forEach(id=>{const tx=pfTransactions.find(x=>x.id===id);if(tx)delete tx.deleted_at});
     savePortfolioTransactions();
     renderTransactions();
   },()=>{
-    if(d1Mode){ids.forEach(id=>API.del('transactions/'+id).catch(e=>console.error('D1 bulk del tx:',e)))}
+    if(d1Mode){ids.forEach(id=>API.put('transactions/'+id,{deleted_at:now}).catch(e=>console.error('D1 bulk soft-del tx:',e)))}
   });
 }
 
@@ -4482,18 +4503,17 @@ function _toggleAllNotes(checked){
 async function bulkDeleteNotes(){
   const keys=[..._bulkNoteKeys];if(!keys.length)return;
   if(keys.length>=3&&!await showConfirm(t('confirm.bulkDelete'),t('confirm.bulkDeleteNotes',{count:keys.length})))return;
-  const snapshots=[];
-  keys.forEach(k=>{const[tp,idStr]=k.split(':');const id=parseInt(idStr,10);const list=researchNotes[tp];if(!list)return;const idx=list.findIndex(e=>e.id===id);if(idx!==-1)snapshots.push({type:tp,idx,entry:JSON.parse(JSON.stringify(list[idx]))})});
+  const now=new Date().toISOString();
+  const entries=[];
+  keys.forEach(k=>{const[tp,idStr]=k.split(':');const id=parseInt(idStr,10);const list=researchNotes[tp];if(!list)return;const entry=list.find(e=>e.id===id);if(entry)entries.push({type:tp,entry})});
   undoableDelete(t('toast.bulkNotesDeleted',{count:keys.length}),()=>{
-    const byType={};
-    keys.forEach(k=>{const[t,idStr]=k.split(':');const id=parseInt(idStr,10);if(!byType[t])byType[t]=[];const list=researchNotes[t];if(list){const idx=list.findIndex(e=>e.id===id);if(idx!==-1)byType[t].push(idx)}});
-    Object.keys(byType).forEach(t=>{byType[t].sort((a,b)=>b-a).forEach(idx=>researchNotes[t].splice(idx,1))});
+    entries.forEach(s=>s.entry.deleted_at=now);
     _bulkNoteKeys.clear();saveResearchNotes();renderResearch();_updateBulkBar();
   },()=>{
-    snapshots.sort((a,b)=>a.idx-b.idx).forEach(s=>{researchNotes[s.type].splice(s.idx,0,s.entry)});
+    entries.forEach(s=>delete s.entry.deleted_at);
     saveResearchNotes();renderResearch();
   },()=>{
-    if(d1Mode){snapshots.forEach(s=>{if(s.entry._d1Id)API.del('notes/'+s.entry._d1Id).catch(e=>console.error('D1 del note:',e))})}
+    if(d1Mode){entries.forEach(s=>{const noteId=s.entry._d1Id||s.entry.id;API.put('notes/'+noteId,{deleted_at:now}).catch(e=>console.error('D1 soft-del note:',e))})}
   });
 }
 
@@ -4501,7 +4521,7 @@ function _toggleBulkRv(id,checked){if(checked){_clearOtherBulk(_bulkRvIds);_bulk
 function _toggleAllRv(checked){
   const tab=document.querySelector('.rv-tabs .tab.active');
   const type=tab?tab.dataset.rvtab:'all';
-  let entries=rvData.entries.slice();
+  let entries=rvData.entries.filter(e=>!e.deleted_at);
   if(type!=='all')entries=entries.filter(e=>e.type===type);
   entries.forEach(e=>{if(checked)_bulkRvIds.add(e.id);else _bulkRvIds.delete(e.id)});
   _updateBulkBar();renderRvFeed(type);
@@ -4509,15 +4529,16 @@ function _toggleAllRv(checked){
 async function bulkDeleteReviews(){
   const ids=[..._bulkRvIds];if(!ids.length)return;
   if(ids.length>=3&&!await showConfirm(t('confirm.bulkDelete'),t('confirm.bulkDeleteReviews',{count:ids.length})))return;
-  const snapshots=ids.map(id=>{const e=rvData.entries.find(x=>x.id===id);return e?{idx:rvData.entries.indexOf(e),entry:JSON.parse(JSON.stringify(e))}:null}).filter(Boolean);
+  const now=new Date().toISOString();
+  const entries=ids.map(id=>rvData.entries.find(x=>x.id===id)).filter(Boolean);
   undoableDelete(t('toast.bulkReviewsDeleted',{count:ids.length}),()=>{
-    rvData.entries=rvData.entries.filter(e=>!_bulkRvIds.has(e.id));
+    entries.forEach(e=>e.deleted_at=now);
     _bulkRvIds.clear();saveReviews();const at=document.querySelector('.rv-tabs .tab.active');renderRvFeed(at?.dataset.rvtab||'all');renderDbReviewsDue();_updateBulkBar();
   },()=>{
-    snapshots.sort((a,b)=>a.idx-b.idx).forEach(s=>{rvData.entries.splice(s.idx,0,s.entry)});
+    entries.forEach(e=>delete e.deleted_at);
     saveReviews();const at=document.querySelector('.rv-tabs .tab.active');renderRvFeed(at?.dataset.rvtab||'all');renderDbReviewsDue();
   },()=>{
-    if(d1Mode){ids.forEach(id=>API.del('reviews/'+id).catch(e=>console.error('D1 del review:',e)))}
+    if(d1Mode){entries.forEach(e=>{const rid=e._d1Id||e.id;API.put('reviews/'+rid,{deleted_at:now}).catch(err=>console.error('D1 soft-del review:',err))})}
   });
 }
 
@@ -4550,18 +4571,21 @@ function populateAccountFilter(){
   sel.value=val;
 }
 
+function getActivePositions(){return pfPositions.filter(p=>!p.deleted_at)}
+function getActiveTransactions(){return pfTransactions.filter(tx=>!tx.deleted_at)}
+
 function renderPositions(){
   populateAccountFilter();
   const filterAcc=document.getElementById('pf-pos-filter-account')?.value;
   const filterType=document.getElementById('pf-pos-filter-type')?.value;
-  let list=pfPositions.slice();
+  let list=getActivePositions();
   if(filterAcc)list=list.filter(p=>p.accountId===parseInt(filterAcc,10));
   if(filterType)list=list.filter(p=>p.assetType===filterType);
 
   const sumEl=document.getElementById('pf-positions-summary');
   const c=document.getElementById('pf-positions-list');
 
-  if(!pfPositions.length){
+  if(!list.length){
     sumEl.innerHTML='';
     c.innerHTML='<div class="pf-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">'+t('empty.noPositions')+'</p><p style="color:var(--text2);margin-bottom:16px">'+t('empty.noPositionsMsg')+'</p><button class="btn btn-primary" onclick="openPositionModal()">'+t('empty.addPosition')+'</button></div>';
     return;
@@ -4807,19 +4831,18 @@ function savePosition(){
 function deletePosition(id){
   const p=pfPositions.find(x=>x.id===id);
   if(!p)return;
-  const idx=pfPositions.indexOf(p);
-  const snapshot=JSON.parse(JSON.stringify(p));
+  const now=new Date().toISOString();
   undoableDelete(t('toast.positionDeleted',{ticker:p.ticker}),()=>{
-    pfPositions=pfPositions.filter(x=>x.id!==id);
+    p.deleted_at=now;
     savePortfolioPositions();
-    _checkSellAllPositions(snapshot.ticker);
+    _checkSellAllPositions(p.ticker);
     renderPositions();
   },()=>{
-    pfPositions.splice(idx,0,snapshot);
+    delete p.deleted_at;
     savePortfolioPositions();
     renderPositions();
   },()=>{
-    if(d1Mode){API.del('positions/'+id).catch(e=>console.error('D1 del position:',e))}
+    if(d1Mode){API.put('positions/'+id,{deleted_at:now}).catch(e=>console.error('D1 soft-del position:',e))}
   });
 }
 
@@ -4838,7 +4861,7 @@ function renderTransactions(){
   const filterType=document.getElementById('pf-tx-filter-type')?.value;
   const filterTicker=(document.getElementById('pf-tx-filter-ticker')?.value||'').toUpperCase().trim();
 
-  let list=pfTransactions.slice();
+  let list=getActiveTransactions();
   if(filterAcc)list=list.filter(t=>t.accountId===parseInt(filterAcc,10));
   if(filterType)list=list.filter(t=>t.type===filterType);
   if(filterTicker)list=list.filter(t=>(t.ticker||'').includes(filterTicker));
@@ -4847,7 +4870,7 @@ function renderTransactions(){
   const sumEl=document.getElementById('pf-tx-summary');
   const c=document.getElementById('pf-transactions-list');
 
-  if(!pfTransactions.length){
+  if(!list.length){
     sumEl.innerHTML='';
     c.innerHTML='<div class="pf-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><path d="M12 2v20M17 7l-5-5-5 5"/><path d="M3 12h18" stroke-dasharray="3 3"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">'+t('empty.noTransactions')+'</p><p style="color:var(--text2);margin-bottom:16px">'+t('empty.noTransactionsMsg')+'</p><button class="btn btn-primary" onclick="openTransactionModal()">'+t('empty.addTransaction')+'</button></div>';
     return;
@@ -4913,7 +4936,7 @@ function updateTxModalFields(){
   }
   const tickerList=document.getElementById('pf-tx-ticker-list');
   const allTickers=new Set(Object.keys(tStocks));
-  pfPositions.forEach(p=>{if(p.ticker)allTickers.add(p.ticker)});
+  getActivePositions().forEach(p=>{if(p.ticker)allTickers.add(p.ticker)});
   tickerList.innerHTML=[...allTickers].map(t=>`<option value="${escH(t)}">`).join('');
   const accSel=document.getElementById('pf-tx-account');
   accSel.innerHTML=pfAccounts.map(a=>`<option value="${a.id}">${escH(a.name)} (${escH(a.currency)})</option>`).join('');
@@ -4996,19 +5019,18 @@ function saveTransaction(){
 function deleteTransaction(id){
   const tx=pfTransactions.find(x=>x.id===id);
   if(!tx)return;
-  const idx=pfTransactions.indexOf(tx);
-  const snapshot=JSON.parse(JSON.stringify(tx));
+  const now=new Date().toISOString();
   undoableDelete(t('toast.transactionDeleted',{type:tx.type,ticker:tx.ticker}),()=>{
-    pfTransactions=pfTransactions.filter(x=>x.id!==id);
+    tx.deleted_at=now;
     savePortfolioTransactions();
-    _checkSellAllPositions(snapshot.ticker);
+    _checkSellAllPositions(tx.ticker);
     renderTransactions();
   },()=>{
-    pfTransactions.splice(idx,0,snapshot);
+    delete tx.deleted_at;
     savePortfolioTransactions();
     renderTransactions();
   },()=>{
-    if(d1Mode){API.del('transactions/'+id).catch(e=>console.error('D1 del tx:',e))}
+    if(d1Mode){API.put('transactions/'+id,{deleted_at:now}).catch(e=>console.error('D1 soft-del tx:',e))}
   });
 }
 
@@ -5042,7 +5064,7 @@ function savePortfolioSnapshots(){
 }
 
 async function takeSnapshot(){
-  if(!pfPositions.length){showToast(t('pf.noPositionsSnapshot'),'error');return}
+  if(!getActivePositions().length){showToast(t('pf.noPositionsSnapshot'),'error');return}
   const today=new Date().toISOString().split('T')[0];
   if(pfSnapshots.find(s=>s.date===today)){
     if(!await showConfirm(t('confirm.snapshotOverwrite'),t('confirm.snapshotOverwriteMsg'),{okLabel:t('confirm.overwrite'),danger:false}))return;
@@ -5050,7 +5072,7 @@ async function takeSnapshot(){
   }
   const base=getBaseCurrency();
   let totalValue=0;
-  const positions=pfPositions.map(pos=>{
+  const positions=getActivePositions().map(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
@@ -5079,8 +5101,8 @@ function checkSnapshotReminder(){
   const alertEl=document.getElementById('pf-snapshot-alert');
   if(!alertEl)return;
   if(!pfSnapshots.length){
-    if(pfPositions.length)alertEl.innerHTML=t('pf.noSnapshots');
-    alertEl.style.display=pfPositions.length?'':'none';
+    if(getActivePositions().length)alertEl.innerHTML=t('pf.noSnapshots');
+    alertEl.style.display=getActivePositions().length?'':'none';
     return;
   }
   const sorted=[...pfSnapshots].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
@@ -5102,7 +5124,7 @@ function calcTWR(){
     const vStart=sorted[i-1].totalValue;
     const startDate=new Date(sorted[i-1].date);
     const endDate=new Date(sorted[i].date);
-    const cashflows=pfTransactions.filter(t=>{
+    const cashflows=getActiveTransactions().filter(t=>{
       const td=new Date(t.date);
       return td>=startDate&&td<endDate;
     });
@@ -5128,17 +5150,18 @@ function calcTWR(){
 }
 
 function calcXIRR(){
-  if(!pfTransactions.length&&!pfPositions.length)return null;
+  const activeTx=getActiveTransactions(),activePos=getActivePositions();
+  if(!activeTx.length&&!activePos.length)return null;
   const cfs=[];
   const base=getBaseCurrency();
-  pfTransactions.forEach(t=>{
+  activeTx.forEach(t=>{
     const amt=parseFloat(t.totalAmount)||0;
     const converted=convertCurrency(amt,t.currency||'USD',base)||amt;
     if(t.type==='buy')cfs.push({date:new Date(t.date),amount:-converted});
     else if(t.type==='sell'||t.type==='dividend')cfs.push({date:new Date(t.date),amount:converted});
   });
   let totalValue=0;
-  pfPositions.forEach(pos=>{
+  activePos.forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
@@ -5185,7 +5208,7 @@ let _pfValueChart=null;
 let _pfAllocChart=null;
 
 function renderPortfolioOverview(){
-  if(!pfPositions.length){
+  if(!getActivePositions().length){
     document.getElementById('pf-overview-empty').style.display='';
     document.getElementById('pf-overview-content').style.display='none';
     return;
@@ -5203,7 +5226,7 @@ function renderPortfolioOverview(){
 function renderSummaryCards(){
   const base=getBaseCurrency();
   let totalCost=0,totalValue=0,totalDiv=0;
-  pfPositions.forEach(pos=>{
+  getActivePositions().forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
@@ -5214,7 +5237,7 @@ function renderSummaryCards(){
       const cvM=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cvM))totalValue+=cvM;else if(isFinite(mktVal))totalValue+=mktVal;
     }
   });
-  pfTransactions.filter(t=>t.type==='dividend').forEach(t=>{
+  getActiveTransactions().filter(t=>t.type==='dividend').forEach(t=>{
     const amt=parseFloat(t.totalAmount)||0;
     totalDiv+=convertCurrency(amt,t.currency||'USD',base)||amt;
   });
@@ -5277,7 +5300,7 @@ function switchAllocChart(groupBy){
 
   const base=getBaseCurrency();
   const groups=Object.create(null);
-  pfPositions.forEach(pos=>{
+  getActivePositions().forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
@@ -5285,7 +5308,7 @@ function switchAllocChart(groupBy){
     let key;
     if(groupBy==='ticker')key=pos.ticker||'Unknown';
     else if(groupBy==='account')key=getAccountName(pos.accountId);
-    else if(groupBy==='type'){const t=pos.assetType||'other';key=t==='real_estate'?'Real Estate':t.charAt(0).toUpperCase()+t.slice(1)}
+    else if(groupBy==='type'){const at=pos.assetType||'other';key=at==='real_estate'?'Real Estate':at.charAt(0).toUpperCase()+at.slice(1)}
     else key=pos.currency||'USD';
     groups[key]=(groups[key]||0)+valInBase;
   });
@@ -5336,7 +5359,7 @@ function renderReturnsGrid(){
   const xirr=calcXIRR();
   const base=getBaseCurrency();
   let totalCost=0,totalValue=0;
-  pfPositions.forEach(pos=>{
+  getActivePositions().forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
@@ -5745,7 +5768,8 @@ function renderDashboard(){
 function renderDbPortfolioSummary(){
   const base=getBaseCurrency();
   let totalCost=0,totalValue=0,totalDiv=0;
-  pfPositions.forEach(pos=>{
+  const activePos=getActivePositions();
+  activePos.forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
@@ -5755,7 +5779,7 @@ function renderDbPortfolioSummary(){
       const cvMv=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cvMv))totalValue+=cvMv;else if(isFinite(mktVal))totalValue+=mktVal;
     }
   });
-  pfTransactions.filter(t=>t.type==='dividend').forEach(t=>{
+  getActiveTransactions().filter(t=>t.type==='dividend').forEach(t=>{
     const amt=parseFloat(t.totalAmount)||0;
     totalDiv+=convertCurrency(amt,t.currency||'USD',base)||amt;
   });
@@ -5766,7 +5790,7 @@ function renderDbPortfolioSummary(){
 
   const valEl=document.getElementById('db-total-value');
   const subEl=document.getElementById('db-total-sub');
-  if(!pfPositions.length){
+  if(!activePos.length){
     valEl.textContent=t('db.noPositions');
     valEl.style.fontSize='18px';
     subEl.textContent=t('db.addPositionsMsg');
@@ -5789,7 +5813,7 @@ function renderDbPortfolioSummary(){
   metrics.push({label:'P&L',value:(pnl>=0?'+':'')+formatMoney(pnl,base),cls:pnl>=0?'positive':'negative'});
   metrics.push({label:'P&L %',value:(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%',cls:pnlPct>=0?'positive':'negative'});
   metrics.push({label:t('db.dividends'),value:formatMoney(totalDiv,base),cls:'positive'});
-  metrics.push({label:t('db.positions'),value:pfPositions.length,cls:''});
+  metrics.push({label:t('db.positions'),value:activePos.length,cls:''});
   if(twrData)metrics.push({label:'TWR',value:(twrData.annualized>=0?'+':'')+(twrData.annualized*100).toFixed(1)+'%',cls:twrData.annualized>=0?'positive':'negative'});
   if(xirr!=null)metrics.push({label:'XIRR',value:(xirr>=0?'+':'')+(xirr*100).toFixed(1)+'%',cls:xirr>=0?'positive':'negative'});
 
@@ -5798,7 +5822,7 @@ function renderDbPortfolioSummary(){
 
 // ---- 5A: Allocation Charts ----
 function renderDbAllocCharts(){
-  if(!pfPositions.length){
+  if(!getActivePositions().length){
     document.getElementById('db-alloc-widget').style.display='none';
     return;
   }
@@ -5810,7 +5834,7 @@ function renderDbAllocCharts(){
 
   groupKeys.forEach(groupBy=>{
     const groups=Object.create(null);
-    pfPositions.forEach(pos=>{
+    getActivePositions().forEach(pos=>{
       const price=getPositionPrice(pos);
       const shares=parseFloat(pos.shares)||0;
       const mktVal=price!=null?shares*price:0;
@@ -5841,7 +5865,8 @@ function renderDbAllocCharts(){
 // ---- 5A2: Net Worth ----
 function renderDbNetWorth(){
   const el=document.getElementById('db-networth-content');
-  if(!pfPositions.length){
+  const activePos=getActivePositions();
+  if(!activePos.length){
     document.getElementById('db-networth-widget').style.display='none';
     return;
   }
@@ -5851,7 +5876,7 @@ function renderDbNetWorth(){
 
   const groups={};
   let totalNW=0;
-  pfPositions.forEach(pos=>{
+  activePos.forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
@@ -5923,12 +5948,13 @@ function renderDbNetWorth(){
 // ---- 5B: Terry Smith Weighted Metrics ----
 function renderDbSmithMetrics(){
   const el=document.getElementById('db-smith-content');
-  if(!pfPositions.length){el.innerHTML='<div class="db-empty">'+t('empty.portfolioMetrics')+' <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';return}
+  const activePos=getActivePositions();
+  if(!activePos.length){el.innerHTML='<div class="db-empty">'+t('empty.portfolioMetrics')+' <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';return}
 
   const base=getBaseCurrency();
   let totalValue=0;
   const posData=[];
-  pfPositions.forEach(pos=>{
+  activePos.forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
@@ -5980,7 +6006,7 @@ function renderDbAlerts(){
   const countEl=document.getElementById('db-alerts-count');
   if(!pfPositions.length){el.innerHTML='<div class="db-empty">'+t('empty.priceAlerts')+' <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';countEl.textContent='';return}
 
-  const ownedTickers=new Set(pfPositions.map(p=>p.ticker));
+  const ownedTickers=new Set(getActivePositions().map(p=>p.ticker));
   const alerts=[];
   const checks=[
     {field:'grossMargin',op:'<',val:20,msg:'Low gross margin',sev:'warning',src:'s'},
@@ -6031,7 +6057,7 @@ function renderDbAlerts(){
 function renderDbSellTriggers(){
   const el=document.getElementById('db-sell-triggers-content');
   const countEl=document.getElementById('db-sell-triggers-count');
-  const ownedTickers=new Set(pfPositions.map(p=>p.ticker));
+  const ownedTickers=new Set(getActivePositions().map(p=>p.ticker));
   const triggers=[];
   ownedTickers.forEach(ticker=>{
     const s=tStocks[ticker];if(!s)return;
@@ -6192,7 +6218,7 @@ function renderDbFiTracker(){
   const el=document.getElementById('db-fi-content');
   const base=getBaseCurrency();
   let currentValue=0;
-  pfPositions.forEach(pos=>{
+  getActivePositions().forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
@@ -6478,7 +6504,7 @@ async function loadResearchNotes(){
     researchNotes={journal:[],news:[],market:[],_nextId:1};
     for(const noteType of ['journal','news','market']){
       const r=await API.get('notes?filter=note_type&filter_value='+noteType+'&limit=5000');
-      researchNotes[noteType]=(r.data||[]).map(n=>({id:n.id,title:n.title,content:n.content,date:n.note_date,ticker:_d1CompanyMap[n.company_id]||null,source:n.source_name,sourceName:n.source_name,sourceUrl:n.source_url,pinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[]}));
+      researchNotes[noteType]=(r.data||[]).map(n=>({id:n.id,title:n.title,content:n.content,date:n.note_date,ticker:_d1CompanyMap[n.company_id]||null,source:n.source_name,sourceName:n.source_name,sourceUrl:n.source_url,pinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[],deleted_at:n.deleted_at||null}));
       researchNotes[noteType].forEach(n=>{if(n.id>=researchNotes._nextId)researchNotes._nextId=n.id+1});
     }
     return;
@@ -6488,7 +6514,7 @@ async function loadResearchNotes(){
 function saveResearchNotes(){
   if(d1Mode){API.scheduleSave('researchNotes',async()=>{
     for(const noteType of ['journal','news','market']){
-      const items=(researchNotes[noteType]||[]).map(n=>({id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:n.title||'',content:n.content||n.excerpt||n.comment||'',note_date:n.date||new Date().toISOString().slice(0,10),source_name:n.sourceName||n.source||'',source_url:n.sourceUrl||'',is_pinned:n.pinned?1:0,quarter:n.quarter||null}));
+      const items=(researchNotes[noteType]||[]).map(n=>({id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:n.title||'',content:n.content||n.excerpt||n.comment||'',note_date:n.date||new Date().toISOString().slice(0,10),source_name:n.sourceName||n.source||'',source_url:n.sourceUrl||'',is_pinned:n.pinned?1:0,quarter:n.quarter||null,deleted_at:n.deleted_at||null}));
       if(items.length)await API.post('notes/batch',{items});
     }
   })}
@@ -6534,12 +6560,12 @@ function renderResearch(){
 function getAllResearchEntries(type){
   if(type==='all'){
     const all=[];
-    researchNotes.journal.forEach(n=>all.push({...n,_type:'journal'}));
-    researchNotes.news.forEach(n=>all.push({...n,_type:'news'}));
-    researchNotes.market.forEach(n=>all.push({...n,_type:'market'}));
+    researchNotes.journal.filter(n=>!n.deleted_at).forEach(n=>all.push({...n,_type:'journal'}));
+    researchNotes.news.filter(n=>!n.deleted_at).forEach(n=>all.push({...n,_type:'news'}));
+    researchNotes.market.filter(n=>!n.deleted_at).forEach(n=>all.push({...n,_type:'market'}));
     return all;
   }
-  return (researchNotes[type]||[]).map(n=>({...n,_type:type}));
+  return (researchNotes[type]||[]).filter(n=>!n.deleted_at).map(n=>({...n,_type:type}));
 }
 
 function renderResearchFeed(type){
@@ -6882,17 +6908,19 @@ function saveResearchEntry(){
 function deleteResearchEntry(type,id){
   const list=researchNotes[type];
   if(!list)return;
-  const idx=list.findIndex(e=>e.id===id);
-  if(idx===-1)return;
-  const snapshot=JSON.parse(JSON.stringify(list[idx]));
+  const entry=list.find(e=>e.id===id);
+  if(!entry)return;
+  const now=new Date().toISOString();
   undoableDelete(t('toast.noteDeleted'),()=>{
-    list.splice(idx,1);
+    entry.deleted_at=now;
     saveResearchNotes();
     renderResearch();
   },()=>{
-    list.splice(idx,0,snapshot);
+    delete entry.deleted_at;
     saveResearchNotes();
     renderResearch();
+  },()=>{
+    if(d1Mode){const nid=entry._d1Id||entry.id;API.put('notes/'+nid,{deleted_at:now}).catch(e=>console.error('D1 soft-del note:',e))}
   });
 }
 
@@ -7568,11 +7596,11 @@ function calcPositionSizing(ticker){
     }
   }
   let currentPct=null;
-  const pos=pfPositions.filter(p=>p.ticker===ticker);
+  const pos=getActivePositions().filter(p=>p.ticker===ticker);
   if(pos.length>0){
     const base=pfAccounts.length>0?(pfAccounts[0].currency||'USD'):'USD';
     let totalVal=0;
-    pfPositions.forEach(p=>{
+    getActivePositions().forEach(p=>{
       const at=p.assetType||'stock';
       let mv=0;
       if(at==='cash')mv=parseFloat(p.cashAmount)||0;
@@ -7728,7 +7756,7 @@ function renderSummaryTab(ticker){
   </div>`;
 
   // 1. Positions
-  const positions=pfPositions.filter(p=>p.ticker===ticker&&parseFloat(p.shares)>0);
+  const positions=getActivePositions().filter(p=>p.ticker===ticker&&parseFloat(p.shares)>0);
   h+=`<div class="cp-sum-section"><div class="cp-sum-header"><span class="cp-sum-title">Positions (${positions.length})</span>`;
   if(positions.length)h+=`<a class="cp-sum-link" onclick="showSection('portfolio');switchPortfolioTab('positions')">View all →</a>`;
   h+=`</div>`;
@@ -7757,7 +7785,7 @@ function renderSummaryTab(ticker){
   h+=`</div>`;
 
   // 2. Recent transactions
-  const allTxns=pfTransactions.filter(t=>t.ticker===ticker);
+  const allTxns=getActiveTransactions().filter(t=>t.ticker===ticker);
   const txns=allTxns.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,10);
   h+=`<div class="cp-sum-section"><div class="cp-sum-header"><span class="cp-sum-title">Transactions (${allTxns.length})</span>`;
   if(txns.length)h+=`<a class="cp-sum-link" onclick="showSection('portfolio');switchPortfolioTab('transactions')">View all →</a>`;
@@ -8943,6 +8971,131 @@ function loadTrackerSettings(){
   Object.keys(map).forEach(k=>{if(s[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=s[k]}});
 }
 
+function getTrashItems(){
+  const items=[];
+  const now=Date.now();
+  pfPositions.filter(p=>p.deleted_at).forEach(p=>{
+    const acc=pfAccounts.find(a=>a.id===p.accountId);
+    items.push({type:'positions',id:p.id,title:`${p.ticker} — ${acc?acc.name:''}`,sub:`${p.shares} shares @ ${p.avgCost}`,deleted_at:p.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(p.deleted_at).getTime())/86400000))});
+  });
+  pfTransactions.filter(tx=>tx.deleted_at).forEach(tx=>{
+    items.push({type:'transactions',id:tx.id,title:`${tx.type.toUpperCase()} ${tx.ticker}`,sub:`${tx.date} — ${tx.totalAmount||''}`,deleted_at:tx.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(tx.deleted_at).getTime())/86400000))});
+  });
+  ['journal','news','market'].forEach(nt=>{
+    (researchNotes[nt]||[]).filter(n=>n.deleted_at).forEach(n=>{
+      items.push({type:'notes',subtype:nt,id:n.id,title:n.title||n.source||'Untitled',sub:n.date||'',deleted_at:n.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(n.deleted_at).getTime())/86400000))});
+    });
+  });
+  rvData.entries.filter(e=>e.deleted_at).forEach(e=>{
+    items.push({type:'reviews',id:e.id,title:`${(e.type||'weekly').charAt(0).toUpperCase()+(e.type||'weekly').slice(1)} Review`,sub:e.date||'',deleted_at:e.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(e.deleted_at).getTime())/86400000))});
+  });
+  return items;
+}
+
+function renderTrash(){
+  const container=document.getElementById('trash-container');
+  const countEl=document.getElementById('trash-count');
+  if(!container)return;
+  const items=getTrashItems();
+  countEl.textContent=items.length?t('trash.itemCount',{count:items.length}):'';
+  if(!items.length){
+    container.innerHTML=`<div style="text-align:center;padding:20px;color:var(--text2);font-size:13px">${t('trash.emptyMsg')}</div>`;
+    return;
+  }
+  const groups={};
+  items.forEach(it=>{const g=it.type;if(!groups[g])groups[g]=[];groups[g].push(it)});
+  const labels={positions:t('trash.positions'),transactions:t('trash.transactions'),notes:t('trash.notes'),reviews:t('trash.reviews')};
+  let h=`<div class="trash-bulk-bar"><button class="btn btn-sm" onclick="restoreAllTrash()">${t('trash.restoreAll')}</button><button class="btn btn-sm btn-danger" onclick="emptyTrash()">${t('trash.emptyTrash')}</button></div>`;
+  Object.keys(groups).forEach(g=>{
+    h+=`<div class="trash-section"><div class="trash-section-title">${labels[g]||g} <span style="font-size:11px;color:var(--text2)">(${groups[g].length})</span></div>`;
+    groups[g].forEach(it=>{
+      h+=`<div class="trash-item"><div class="trash-item-info"><div class="trash-item-title">${escH(it.title)}</div><div class="trash-item-meta">${escH(it.sub)} · ${t('trash.autoDelete',{days:it.daysLeft})}</div></div><div class="trash-item-actions"><button class="btn btn-sm" onclick="restoreTrashItem('${it.type}','${it.subtype||''}',${it.id})">${t('trash.restore')}</button><button class="btn btn-sm btn-danger" onclick="permanentDeleteTrashItem('${it.type}','${it.subtype||''}',${it.id})">${t('trash.permanentDelete')}</button></div></div>`;
+    });
+    h+=`</div>`;
+  });
+  container.innerHTML=h;
+}
+
+function restoreTrashItem(type,subtype,id){
+  if(type==='positions'){const p=pfPositions.find(x=>x.id===id);if(p){delete p.deleted_at;savePortfolioPositions();if(d1Mode)API.put('positions/'+id,{deleted_at:null}).catch(e=>console.error('D1 restore pos:',e))}}
+  else if(type==='transactions'){const tx=pfTransactions.find(x=>x.id===id);if(tx){delete tx.deleted_at;savePortfolioTransactions();if(d1Mode)API.put('transactions/'+id,{deleted_at:null}).catch(e=>console.error('D1 restore tx:',e))}}
+  else if(type==='notes'){const list=researchNotes[subtype];if(list){const n=list.find(x=>x.id===id);if(n){delete n.deleted_at;saveResearchNotes();if(d1Mode){const nid=n._d1Id||n.id;API.put('notes/'+nid,{deleted_at:null}).catch(e=>console.error('D1 restore note:',e))}}}}
+  else if(type==='reviews'){const rv=rvData.entries.find(x=>x.id===id);if(rv){delete rv.deleted_at;saveReviews();if(d1Mode){const rid=rv._d1Id||rv.id;API.put('reviews/'+rid,{deleted_at:null}).catch(e=>console.error('D1 restore review:',e))}}}
+  showToast(t('toast.itemRestored'),'success');
+  renderTrash();
+}
+
+async function permanentDeleteTrashItem(type,subtype,id){
+  if(!await showConfirm(t('trash.confirmPermanent'),t('trash.confirmPermanentMsg'),{okLabel:t('trash.permanentDelete'),danger:true}))return;
+  if(type==='positions'){const idx=pfPositions.findIndex(x=>x.id===id);if(idx!==-1){pfPositions.splice(idx,1);savePortfolioPositions();if(d1Mode)API.del('positions/'+id).catch(e=>console.error('D1 perm del pos:',e))}}
+  else if(type==='transactions'){const idx=pfTransactions.findIndex(x=>x.id===id);if(idx!==-1){pfTransactions.splice(idx,1);savePortfolioTransactions();if(d1Mode)API.del('transactions/'+id).catch(e=>console.error('D1 perm del tx:',e))}}
+  else if(type==='notes'){const list=researchNotes[subtype];if(list){const idx=list.findIndex(x=>x.id===id);if(idx!==-1){const n=list[idx];list.splice(idx,1);saveResearchNotes();if(d1Mode){const nid=n._d1Id||n.id;API.del('notes/'+nid).catch(e=>console.error('D1 perm del note:',e))}}}}
+  else if(type==='reviews'){const idx=rvData.entries.findIndex(x=>x.id===id);if(idx!==-1){rvData.entries.splice(idx,1);saveReviews();if(d1Mode)API.del('reviews/'+id).catch(e=>console.error('D1 perm del review:',e))}}
+  showToast(t('toast.itemPermanentlyDeleted'),'success');
+  renderTrash();
+}
+
+async function emptyTrash(){
+  const items=getTrashItems();
+  if(!items.length)return;
+  if(!await showConfirm(t('trash.confirmEmpty'),t('trash.confirmEmptyMsg',{count:items.length}),{okLabel:t('trash.emptyTrash'),danger:true}))return;
+  items.forEach(it=>{
+    if(it.type==='positions'){const idx=pfPositions.findIndex(x=>x.id===it.id);if(idx!==-1){pfPositions.splice(idx,1);if(d1Mode)API.del('positions/'+it.id).catch(e=>console.error(e))}}
+    else if(it.type==='transactions'){const idx=pfTransactions.findIndex(x=>x.id===it.id);if(idx!==-1){pfTransactions.splice(idx,1);if(d1Mode)API.del('transactions/'+it.id).catch(e=>console.error(e))}}
+    else if(it.type==='notes'){const list=researchNotes[it.subtype];if(list){const idx=list.findIndex(x=>x.id===it.id);if(idx!==-1){const n=list[idx];list.splice(idx,1);if(d1Mode){const nid=n._d1Id||n.id;API.del('notes/'+nid).catch(e=>console.error(e))}}}}
+    else if(it.type==='reviews'){const idx=rvData.entries.findIndex(x=>x.id===it.id);if(idx!==-1){rvData.entries.splice(idx,1);if(d1Mode)API.del('reviews/'+it.id).catch(e=>console.error(e))}}
+  });
+  savePortfolioPositions();savePortfolioTransactions();saveResearchNotes();saveReviews();
+  showToast(t('toast.trashEmptied'),'success');
+  renderTrash();
+}
+
+function restoreAllTrash(){
+  const items=getTrashItems();
+  if(!items.length)return;
+  items.forEach(it=>{
+    if(it.type==='positions'){const p=pfPositions.find(x=>x.id===it.id);if(p){delete p.deleted_at;if(d1Mode)API.put('positions/'+it.id,{deleted_at:null}).catch(e=>console.error(e))}}
+    else if(it.type==='transactions'){const tx=pfTransactions.find(x=>x.id===it.id);if(tx){delete tx.deleted_at;if(d1Mode)API.put('transactions/'+it.id,{deleted_at:null}).catch(e=>console.error(e))}}
+    else if(it.type==='notes'){const list=researchNotes[it.subtype];if(list){const n=list.find(x=>x.id===it.id);if(n){delete n.deleted_at;if(d1Mode){const nid=n._d1Id||n.id;API.put('notes/'+nid,{deleted_at:null}).catch(e=>console.error(e))}}}}
+    else if(it.type==='reviews'){const rv=rvData.entries.find(x=>x.id===it.id);if(rv){delete rv.deleted_at;if(d1Mode){const rid=rv._d1Id||rv.id;API.put('reviews/'+rid,{deleted_at:null}).catch(e=>console.error(e))}}}
+  });
+  savePortfolioPositions();savePortfolioTransactions();saveResearchNotes();saveReviews();
+  showToast(t('toast.itemRestored'),'success');
+  renderTrash();
+}
+
+function purgeExpiredTrash(){
+  const cutoff=Date.now()-30*86400000;
+  let count=0;
+  [pfPositions,pfTransactions].forEach(arr=>{
+    for(let i=arr.length-1;i>=0;i--){
+      if(arr[i].deleted_at&&new Date(arr[i].deleted_at).getTime()<cutoff){
+        if(d1Mode)API.del((arr===pfPositions?'positions/':'transactions/')+arr[i].id).catch(e=>console.error(e));
+        arr.splice(i,1);count++;
+      }
+    }
+  });
+  ['journal','news','market'].forEach(nt=>{
+    const list=researchNotes[nt]||[];
+    for(let i=list.length-1;i>=0;i--){
+      if(list[i].deleted_at&&new Date(list[i].deleted_at).getTime()<cutoff){
+        if(d1Mode){const nid=list[i]._d1Id||list[i].id;API.del('notes/'+nid).catch(e=>console.error(e))}
+        list.splice(i,1);count++;
+      }
+    }
+  });
+  for(let i=rvData.entries.length-1;i>=0;i--){
+    if(rvData.entries[i].deleted_at&&new Date(rvData.entries[i].deleted_at).getTime()<cutoff){
+      if(d1Mode)API.del('reviews/'+rvData.entries[i].id).catch(e=>console.error(e));
+      rvData.entries.splice(i,1);count++;
+    }
+  }
+  if(count){
+    savePortfolioPositions();savePortfolioTransactions();saveResearchNotes();saveReviews();
+    console.log(`Purged ${count} expired trash items`);
+  }
+}
+
 function toggleTheme(){
   const cur=localStorage.getItem('app_theme')||'auto';
   const next=cur==='dark'?'light':cur==='light'?'auto':'dark';
@@ -9219,7 +9372,7 @@ async function fetchAllDividendData(){
   const btn=document.getElementById('div-fetch-btn');
   if(btn)btn.disabled=true;
   try{
-    const tickers=[...new Set(pfPositions.map(p=>p.ticker).filter(Boolean))];
+    const tickers=[...new Set(getActivePositions().map(p=>p.ticker).filter(Boolean))];
     const stale=tickers.filter(t=>{
       const dh=divHistory[t];
       return !dh||!dh.lastFetched||(Date.now()-new Date(dh.lastFetched).getTime()>86400000);
@@ -9248,7 +9401,7 @@ function calcPortfolioDividendIncome(){
   const base=getBaseCurrency();
   let totalAnnualGross=0,totalAnnualNet=0,totalCost=0,totalValue=0;
   const breakdown=[];
-  pfPositions.forEach(pos=>{
+  getActivePositions().forEach(pos=>{
     const dh=divHistory[pos.ticker];
     const shares=parseFloat(pos.shares)||0;
     const avgCost=parseFloat(pos.avgCost)||0;
@@ -9282,7 +9435,7 @@ function calcPortfolioDividendIncome(){
   const avgGrowth5y=breakdown.filter(b=>b.growth5y!=null);
   const weightedGrowth=avgGrowth5y.length?avgGrowth5y.reduce((s,b)=>s+b.growth5y*b.grossIncome,0)/avgGrowth5y.reduce((s,b)=>s+b.grossIncome,0):null;
   return{totalAnnualGross,totalAnnualNet,portfolioYieldOnCost,portfolioCurrentYield,
-    dividendPayers:breakdown.length,totalPositions:pfPositions.length,
+    dividendPayers:breakdown.length,totalPositions:getActivePositions().length,
     avgGrowth5y:weightedGrowth,breakdown};
 }
 
@@ -9294,7 +9447,7 @@ function calcDividendForecast(months){
     const m=new Date(now.getFullYear(),now.getMonth()+i,1);
     result.push({month:m.toISOString().slice(0,7),label:m.toLocaleDateString('en',{month:'short',year:'2-digit'}),income:0,byTicker:{}});
   }
-  pfPositions.forEach(pos=>{
+  getActivePositions().forEach(pos=>{
     const dh=divHistory[pos.ticker];
     if(!dh?.history?.length||!dh.annualDPS)return;
     const shares=parseFloat(pos.shares)||0;
@@ -9323,7 +9476,7 @@ function calcDividendForecast(months){
 function getPaymentsForMonth(year,month){
   const monthStr=`${year}-${String(month+1).padStart(2,'0')}`;
   const payments={};
-  pfPositions.forEach(pos=>{
+  getActivePositions().forEach(pos=>{
     const dh=divHistory[pos.ticker];
     if(!dh?.history)return;
     dh.history.forEach(d=>{
@@ -9942,7 +10095,7 @@ function _syncTickerToCompaniesBatch(tickers){
 
 function _checkSellAllPositions(ticker){
   if(!ticker||!tStocks[ticker])return;
-  const remaining=pfPositions.filter(p=>p.ticker===ticker&&parseFloat(p.shares)>0);
+  const remaining=getActivePositions().filter(p=>p.ticker===ticker&&parseFloat(p.shares)>0);
   if(!remaining.length&&tStocks[ticker].pipeline==='Owned'){
     tStocks[ticker].pipeline='Watchlist';
     saveTrackerStocks();
@@ -12410,14 +12563,14 @@ async function loadReviews(){
   if(d1Mode){try{
     const r=await API.get('reviews?limit=1000');
     rvData={entries:[],_nextId:1};
-    (r.data||[]).forEach(rv=>{rvData.entries.push({id:rv.id,type:rv.review_type,date:rv.review_date,companyTicker:_d1CompanyMap[rv.company_id]||null,companyId:rv.company_id,answers:JSON.parse(rv.answers_json||'{}'),summary:rv.summary||''});if(rv.id>=rvData._nextId)rvData._nextId=rv.id+1});
+    (r.data||[]).forEach(rv=>{rvData.entries.push({id:rv.id,type:rv.review_type,date:rv.review_date,companyTicker:_d1CompanyMap[rv.company_id]||null,companyId:rv.company_id,answers:JSON.parse(rv.answers_json||'{}'),summary:rv.summary||'',deleted_at:rv.deleted_at||null});if(rv.id>=rvData._nextId)rvData._nextId=rv.id+1});
     return;
   }catch(e){console.error('D1 load reviews, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('reviews_v1'));if(d&&typeof d==='object'){rvData=d;if(!rvData.entries)rvData.entries=[];if(!rvData._nextId)rvData._nextId=1}}catch(e){}
 }
 function saveReviews(){
   if(d1Mode){API.scheduleSave('reviews',async()=>{
-    const items=rvData.entries.map(e=>({id:e.id||undefined,review_type:e.type||'weekly',review_date:e.date||'',company_id:e.companyId||(e.companyTicker?_tickerToD1Id(e.companyTicker):null),answers_json:JSON.stringify(e.answers||{}),summary:e.summary||''}));
+    const items=rvData.entries.map(e=>({id:e.id||undefined,review_type:e.type||'weekly',review_date:e.date||'',company_id:e.companyId||(e.companyTicker?_tickerToD1Id(e.companyTicker):null),answers_json:JSON.stringify(e.answers||{}),summary:e.summary||'',deleted_at:e.deleted_at||null}));
     if(items.length)await API.post('reviews/batch',{items});
   })}
   try{localStorage.setItem('reviews_v1',JSON.stringify(rvData))}catch(e){showToast(t('toast.storageFull'),'error',8000)}
@@ -12439,7 +12592,7 @@ function renderReviews(){renderRvFeed('all')}
 function renderRvFeed(type){
   const panel=document.getElementById('rv-panel-'+type);
   if(!panel)return;
-  let entries=rvData.entries.slice();
+  let entries=rvData.entries.filter(e=>!e.deleted_at);
   if(type!=='all')entries=entries.filter(e=>e.type===type);
   entries.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
 
@@ -12565,9 +12718,8 @@ function saveReview(){
 function deleteReview(id){
   const delEntry=rvData.entries.find(e=>e.id===id);
   if(!delEntry)return;
-  const idx=rvData.entries.indexOf(delEntry);
-  const snapshot=JSON.parse(JSON.stringify(delEntry));
   const delTicker=delEntry.companyTicker||'';
+  const now=new Date().toISOString();
   function rerender(){
     const activeTab=document.querySelector('.rv-tabs .tab.active');
     renderRvFeed(activeTab?.dataset.rvtab||'all');
@@ -12575,15 +12727,15 @@ function deleteReview(id){
     if(delTicker)renderReviewDueBadge(delTicker);
   }
   undoableDelete(t('toast.reviewDeleted'),()=>{
-    rvData.entries=rvData.entries.filter(e=>e.id!==id);
+    delEntry.deleted_at=now;
     saveReviews();
     rerender();
   },()=>{
-    rvData.entries.splice(idx,0,snapshot);
+    delete delEntry.deleted_at;
     saveReviews();
     rerender();
   },()=>{
-    if(d1Mode){API.del('reviews/'+id).catch(e=>console.error('D1 del review:',e))}
+    if(d1Mode){API.put('reviews/'+id,{deleted_at:now}).catch(e=>console.error('D1 soft-del review:',e))}
   });
 }
 
@@ -12952,6 +13104,7 @@ async function autoLoad(){
   document.querySelectorAll('input[type="number"]').forEach(el=>el.setAttribute('inputmode','decimal'));
   handleRoute();
   checkPriceAlerts();
+  purgeExpiredTrash();
   }finally{_autoLoadRunning=false}
 }
 function autoSave(){
@@ -13567,7 +13720,7 @@ async function generatePdf(ticker){
     if(selected.has('portfolio')){
       sectionTitle('Portfolio');
 
-      const positions=pfPositions.filter(p=>p.ticker===ticker);
+      const positions=getActivePositions().filter(p=>p.ticker===ticker);
       if(positions.length){
         subTitle('Positions');
         const colW=[cw*0.25,cw*0.15,cw*0.2,cw*0.2,cw*0.2];
@@ -13580,7 +13733,7 @@ async function generatePdf(ticker){
         y+=6;
       }
 
-      const txns=pfTransactions.filter(t=>t.ticker===ticker);
+      const txns=getActiveTransactions().filter(t=>t.ticker===ticker);
       if(txns.length){
         subTitle('Transaction History');
         const colW=[cw*0.18,cw*0.12,cw*0.14,cw*0.18,cw*0.18,cw*0.2];
