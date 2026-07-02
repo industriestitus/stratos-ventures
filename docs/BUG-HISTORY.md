@@ -42,8 +42,10 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 32 | Confirmation Dialogs | `a0362db` | 2026-07-02 | 3 QA | 0 |
 | 33 | CSV/Scroll/Lazy QA | `10edf61` | 2026-07-02 | 2 QA | 0 |
 | 35 | i18n Deep Pass | `c49f3ac` | 2026-07-02 | 5 | 0 |
+| 36 | Soft-Delete + Trash | `fe3b0c8` | 2026-07-02 | 5 | 0 |
+| 37 | UX Polish (padding/focus/collapsible) | `3d75f00` | 2026-07-02 | 1 QA | 0 |
 
-**Total: 248 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 254 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -871,6 +873,21 @@ Soft-delete with `deleted_at` timestamps for positions, transactions, notes, rev
 | 3 | MEDIUM | `_toggleAllRv()` used `rvData.entries.slice()` — included soft-deleted reviews in toggle-all | Changed to `rvData.entries.filter(e=>!e.deleted_at)` |
 | 4 | LOW | `calcDividendSummary()` `totalPositions:pfPositions.length` counted soft-deleted positions | Changed to `getActivePositions().length` |
 | 5 | LOW | `bulkDeleteNotes()` used `const[t,idStr]=k.split(':')` — `t` variable shadows global i18n `t()` function | Renamed to `[tp,idStr]` |
+
+---
+
+## Category 37 — UX Polish: Padding, Focus Ring, Collapsible (2026-07-02) — `3d75f00`
+
+Three UX consistency fixes: card padding standardization, global input focus ring, dynamic collapsible height.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | LOW | `toggleYearlyGrowth()` scrollHeight returns 0 when element has `max-height:0` and `overflow:hidden` — collapsible opens with 0 height | Temporarily set `maxHeight='none'`, read scrollHeight, reset to 0, force reflow, then animate to measured height |
+
+**Also fixed (not bugs, design improvements):**
+- Content card padding inconsistency (16px vs 20px) → standardized to 20px + mobile 14px override
+- Input elements missing focus ring → global `input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}`
+- Removed static `.collapsible.open{max-height:500px}` CSS rule → JS-driven dynamic height
 
 ---
 
