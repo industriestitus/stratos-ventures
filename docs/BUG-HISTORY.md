@@ -833,7 +833,7 @@ Post-implementation QA for CSV locale detection, scroll preservation, and lazy-l
 
 ---
 
-## Category 34 — i18n Localization QA (2026-07-02)
+## Category 34 — i18n Localization QA (2026-07-02) — `e338abf`
 
 QA for full EN/HU internationalization implementation.
 
