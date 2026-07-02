@@ -143,7 +143,17 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 ---
 
-### 7. String.replace() Only Replaces First Match
+### 7. Never Shadow Global Utility Functions with Local Variables
+
+**Bugs found:** 3 (Category 34: 34.1, 34.2, 34.3 — all CRITICAL)
+
+**Pattern:** Global utility functions (like `t()` for i18n) get shadowed by local variables with the same name. `const t=document.createElement('div')` in `undoableDelete()`, `const t=pfTransactions.find(...)` in `deleteTransaction()`, and `pfTransactions.forEach(t=>{...})` all shadowed the global `t()` translation function, causing `TypeError: t is not a function` crashes.
+
+**Why repeatable:** Single-letter variable names (`t`, `e`, `n`) are common in minified-style code. When a global function uses a common letter, every closure that also uses that letter as a local variable creates a silent bomb.
+
+**Rule:** Never use `t` as a local variable name in this codebase — it's the i18n translation function. Use descriptive names: `el` for DOM elements, `tx` for transactions, `ev` for events. Before introducing any single-letter global function, grep for existing uses of that letter as a local variable.
+
+### 8. String.replace() Only Replaces First Match
 
 **What went wrong:** `s.replace(',','.')` in CSV number parsing only replaced the first comma, so `"1,000"` became `"1.000"` (parsed as 1.0 instead of 1000). EU numbers with multiple dots (`"1.234.567"`) had the same risk.
 
@@ -359,14 +369,14 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Domain | Lessons | Bugs Found |
 |--------|---------|-----------|
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
-| JavaScript | 6 | 50+ (Categories 5, 8, 9, 22) |
+| JavaScript | 7 | 53+ (Categories 5, 8, 9, 22, 34) |
 | Data Safety | 3 | 7 (Category 15) |
 | API & Caching | 4 | 30+ (Categories 5, 6, 21) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |
 | AI Behavioral | 6 | 100+ (cross-cutting) |
 
-**Total:** 198+ bugs fixed, 32 lessons, 7 domains.
+**Total:** 201+ bugs fixed, 33 lessons, 7 domains.
 
 ## Related Documents
 

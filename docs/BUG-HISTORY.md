@@ -42,7 +42,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 32 | Confirmation Dialogs | `a0362db` | 2026-07-02 | 3 QA | 0 |
 | 33 | CSV/Scroll/Lazy QA | `10edf61` | 2026-07-02 | 2 QA | 0 |
 
-**Total: 245 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 248 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -830,6 +830,18 @@ Post-implementation QA for CSV locale detection, scroll preservation, and lazy-l
 |---|----------|-----|-----|
 | 1 | HIGH | US locale `_csvNumParse`: `s.replace(',','.')` only replaces first comma, so `"1,000"` → `1.000` → parseFloat = 1.0 | Changed to `s.replace(/,/g,'')` to treat commas-without-dots as thousand separators |
 | 2 | LOW | `parseInt(document.getElementById('pf-csv-account',10).value)` — radix `10` passed to `getElementById` instead of `parseInt` | Fixed to `parseInt(document.getElementById('pf-csv-account').value, 10)` |
+
+---
+
+## Category 34 — i18n Localization QA (2026-07-02)
+
+QA for full EN/HU internationalization implementation.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | CRITICAL | `undoableDelete()`: local `const t=document.createElement('div')` shadows global `t()` i18n function — `t('common.undo')` and `t('common.restored')` crash with TypeError | Renamed local variable from `t` to `el` |
+| 2 | CRITICAL | `deleteTransaction()`: local `const t=pfTransactions.find(...)` shadows global `t()` — `t('toast.transactionDeleted',...)` crashes | Renamed local variable from `t` to `tx` |
+| 3 | CRITICAL | Global search `pfTransactions.forEach(t=>{...})`: iterator `t` shadows `t()` — `t('search.transactions')` crashes | Renamed iterator from `t` to `tx` |
 
 ---
 

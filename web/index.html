@@ -1015,6 +1015,39 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 <script>
 if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttribute('data-theme','light');
 (function(){var enc=localStorage.getItem('enc_salt'),skip=localStorage.getItem('enc_skipped');if(enc||!skip)document.documentElement.classList.add('app-locked')})();
+var _lang=localStorage.getItem('app_lang')||'en';
+var I18N={en:{
+'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
+'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry',
+'confirm.typePrefix':'Type: ','confirm.deleteAccount':'Delete broker','confirm.deleteAccountMsg':'{name} and {count} position(s) will be deleted.','confirm.deleteAccountMsgSimple':'Delete "{name}".','confirm.bulkDelete':'Bulk delete','confirm.bulkDeletePositions':'{count} positions will be deleted. Can be undone.','confirm.bulkDeleteTransactions':'{count} transactions will be deleted. Can be undone.','confirm.bulkDeleteNotes':'{count} notes will be deleted. Can be undone.','confirm.bulkDeleteReviews':'{count} reviews will be deleted. Can be undone.','confirm.bulkDeleteStocks':'{count} stocks will be deleted. Can be undone.','confirm.snapshotOverwrite':'Overwrite snapshot','confirm.snapshotOverwriteMsg':'A snapshot was already taken today. Overwrite?','confirm.overwrite':'Overwrite','confirm.snapshotDelete':'Delete snapshot','confirm.snapshotDeleteMsg':'Are you sure you want to delete this snapshot?','confirm.permanentDelete':'Permanent delete','confirm.permanentDeleteMsg':'{ticker} and all related data (notes, reviews, positions, transactions) will be permanently deleted.','confirm.permanentDeleteOk':'Delete permanently','confirm.deleteItem':'Delete item','confirm.deleteItemMsg':'Are you sure you want to delete this item?','confirm.deleteRisk':'Delete risk','confirm.deleteRiskMsg':'Are you sure you want to delete this risk?','confirm.deleteQuarter':'Delete quarter','confirm.deleteQuarterMsg':'Are you sure you want to delete this quarterly entry?','confirm.deleteLearning':'Delete learning','confirm.deleteLearningMsg':'Are you sure you want to delete this learning?','confirm.backupRestore':'Restore backup','confirm.backupRestoreMsg':'This will OVERWRITE all current data with the backup file contents. Current data will be lost.','confirm.backupRestoreOk':'Restore','confirm.migrationRetry':'Retry migration','confirm.migrationRetryMsg':'A previous migration did not complete. Retry? Cloud data will be overwritten.','confirm.migrationRetryOk':'Retry','confirm.d1Migration':'D1 migration','confirm.d1MigrationMsg':'This will upload all local data to the D1 cloud database. localStorage data will remain as backup.','confirm.d1MigrationOk':'Start migration',
+'validation.tickerRequired':'Ticker / identifier required','validation.accountRequired':'Select a valid account','validation.priceRequired':'Purchase price or current value required','validation.amountRequired':'Enter the amount','validation.sharesRequired':'Valid share count required','validation.avgCostRequired':'Valid average price required','validation.sharesOrAvgRequired':'Enter share count or average price','validation.dateRequired':'Date required','validation.dateFuture':'Cannot be a future date','validation.tickerRequiredTx':'Ticker required','validation.accountRequiredTx':'Select an account','validation.amountRequiredTx':'Valid amount required','validation.sharesRequiredTx':'Valid share count required',
+'search.placeholder':'Search everywhere...','search.startTyping':'Start typing to search...','search.minChars':'At least 2 characters...','search.noResults':'No results: "{q}"','search.companies':'Companies','search.positions':'Positions','search.transactions':'Transactions','search.companyNotes':'Company notes','search.journal':'Journal','search.news':'News','search.market':'Market',
+'empty.noPositions':'No positions yet','empty.noPositionsMsg':'Add your investments to track your portfolio.','empty.addPosition':'+ Add Position','empty.noTransactions':'No transactions yet','empty.noTransactionsMsg':'Record your first buy, sell, or dividend transaction.','empty.addTransaction':'+ Record Transaction','empty.noReviews':'No reviews yet','empty.noReviewsMsg':'Start your first {type}review to track your investment decisions.','empty.addReview':'+ New Review','empty.portfolioMetrics':'Add positions for portfolio metrics.','empty.priceAlerts':'Add positions for price alerts.','empty.sellTriggers':'Add positions for sell triggers.','empty.createAccount':'Create a broker account and add positions for portfolio overview.','empty.addAccount':'+ Add Account',
+'toast.positionsExported':'{count} positions exported','toast.transactionsExported':'{count} transactions exported','toast.positionDeleted':'Position deleted: {ticker}','toast.transactionDeleted':'Transaction deleted: {type} {ticker}','toast.noteDeleted':'Note deleted','toast.reviewDeleted':'Review deleted','toast.stockDeleted':'"{name}" deleted','toast.bulkPositionsDeleted':'{count} positions deleted','toast.bulkTransactionsDeleted':'{count} transactions deleted','toast.bulkNotesDeleted':'{count} notes deleted','toast.bulkReviewsDeleted':'{count} reviews deleted','toast.bulkStocksDeleted':'{count} stocks deleted','toast.recoveryMsg':'{count} unsaved change(s) recovered','toast.offlineCache':'Offline — loading from local cache','toast.storageFull':'Storage full — export your data to avoid data loss',
+'data.trackerStocks':'Tracked stocks','data.accounts':'Accounts','data.positions':'Positions','data.transactions':'Transactions','data.snapshots':'Snapshots','data.todos':'To-dos','data.exchangeRates':'Exchange rates','data.dividendHistory':'Dividend history','data.reviews':'Reviews','data.researchNotes':'Research notes','data.framework':'Framework','data.dividendSettings':'Dividend settings','data.fiSettings':'FI settings','data.benchmark':'Benchmark','data.52wHighs':'52-week highs',
+'settings.language':'Language','settings.languageHint':'App will reload on change','settings.connections':'Connections','settings.encryption':'Encryption','settings.portfolioSettings':'Portfolio Settings','settings.dataManagement':'Data Management','settings.keyboardShortcuts':'Keyboard Shortcuts',
+'shortcuts.search':'Search','shortcuts.shortcutGuide':'Shortcut guide','shortcuts.addNew':'Add new item','shortcuts.close':'Close','shortcuts.hint':'The N key opens a new item based on the current section: position/transaction (Portfolio), note (Research), review (Reviews), ticker input (Companies).',
+'portfolio.position':'position','portfolio.transaction':'transaction','portfolio.stock':'stock','portfolio.note':'note','portfolio.review':'review',
+'csv.date':'date','csv.type':'type','csv.quantity':'quantity','csv.amount':'amount','csv.fee':'fee',
+'checklist.marketMispricing':'What is the market mispricing?','checklist.consensusError':'Where is the consensus wrong?','checklist.kpiMisread':'Which KPI is being misread?','checklist.timeHorizonMismatch':'Time horizon mismatch? Short-term pain vs long-term value?'
+},hu:{
+'nav.dashboard':'Dashboard','nav.companies':'Cégek','nav.portfolio':'Portfólió','nav.research':'Kutatás','nav.framework':'Keretrendszer','nav.reviews':'Értékelések','nav.search':'Keresés','nav.settings':'Beállítások','nav.more':'Továbbiak',
+'common.cancel':'Mégsem','common.delete':'Törlés','common.save':'Mentés','common.close':'Bezárás','common.add':'Hozzáadás','common.edit':'Szerkesztés','common.export':'Exportálás','common.import':'Importálás','common.test':'Teszt','common.copy':'Másolás','common.loading':'Betöltés...','common.undo':'Visszavonás','common.restored':'Visszaállítva','common.back':'Vissza','common.none':'Nincs','common.yes':'Igen','common.no':'Nem','common.ok':'OK','common.retry':'Újra',
+'confirm.typePrefix':'Írd be: ','confirm.deleteAccount':'Bróker törlése','confirm.deleteAccountMsg':'"{name}" és {count} pozíció is törlődik.','confirm.deleteAccountMsgSimple':'"{name}" törlése.','confirm.bulkDelete':'Tömeges törlés','confirm.bulkDeletePositions':'{count} pozíció törlése. Visszavonható.','confirm.bulkDeleteTransactions':'{count} tranzakció törlése. Visszavonható.','confirm.bulkDeleteNotes':'{count} jegyzet törlése. Visszavonható.','confirm.bulkDeleteReviews':'{count} review törlése. Visszavonható.','confirm.bulkDeleteStocks':'{count} részvény törlése. Visszavonható.','confirm.snapshotOverwrite':'Snapshot felülírása','confirm.snapshotOverwriteMsg':'Ma már készült pillanatfelvétel. Felülírod?','confirm.overwrite':'Felülírás','confirm.snapshotDelete':'Snapshot törlése','confirm.snapshotDeleteMsg':'Biztosan törlöd ezt a pillanatfelvételt?','confirm.permanentDelete':'Végleges törlés','confirm.permanentDeleteMsg':'{ticker} és az összes kapcsolódó adat (jegyzet, review, pozíció, tranzakció) véglegesen törlődik.','confirm.permanentDeleteOk':'Véglegesen törlöm','confirm.deleteItem':'Elem törlése','confirm.deleteItemMsg':'Biztosan törlöd ezt az elemet?','confirm.deleteRisk':'Kockázat törlése','confirm.deleteRiskMsg':'Biztosan törlöd ezt a kockázatot?','confirm.deleteQuarter':'Negyedév törlése','confirm.deleteQuarterMsg':'Biztosan törlöd ezt a negyedéves bejegyzést?','confirm.deleteLearning':'Tanulság törlése','confirm.deleteLearningMsg':'Biztosan törlöd ezt a tanulságot?','confirm.backupRestore':'Backup visszaállítás','confirm.backupRestoreMsg':'Ez FELÜLÍRJA az összes jelenlegi adatot a backup fájl tartalmával. A jelenlegi adatok elvesznek.','confirm.backupRestoreOk':'Visszaállítás','confirm.migrationRetry':'Migráció újrapróbálása','confirm.migrationRetryMsg':'Egy korábbi migráció nem fejeződött be. Újrapróbálod? A felhő adatok felülíródnak.','confirm.migrationRetryOk':'Újrapróbálás','confirm.d1Migration':'D1 migráció','confirm.d1MigrationMsg':'Ez feltölti az összes helyi adatot a D1 felhő adatbázisba. A localStorage adatok megmaradnak backupként.','confirm.d1MigrationOk':'Migráció indítása',
+'validation.tickerRequired':'Ticker / azonosító kötelező','validation.accountRequired':'Válassz egy érvényes számlát','validation.priceRequired':'Vételár vagy jelenlegi érték kötelező','validation.amountRequired':'Add meg az összeget','validation.sharesRequired':'Érvényes darabszám szükséges','validation.avgCostRequired':'Érvényes átlagár szükséges','validation.sharesOrAvgRequired':'Adj meg darabszámot vagy átlagárat','validation.dateRequired':'Dátum kötelező','validation.dateFuture':'Nem lehet jövőbeli dátum','validation.tickerRequiredTx':'Ticker kötelező','validation.accountRequiredTx':'Válassz egy számlát','validation.amountRequiredTx':'Érvényes összeg szükséges','validation.sharesRequiredTx':'Érvényes darabszám szükséges',
+'search.placeholder':'Keresés mindenhol...','search.startTyping':'Kezdj el gépelni a kereséshez...','search.minChars':'Legalább 2 karakter...','search.noResults':'Nincs találat: "{q}"','search.companies':'Cégek','search.positions':'Pozíciók','search.transactions':'Tranzakciók','search.companyNotes':'Cég jegyzetek','search.journal':'Napló','search.news':'Hír','search.market':'Piac',
+'empty.noPositions':'Még nincs pozíciód','empty.noPositionsMsg':'Add hozzá a befektetéseidet a portfólió követéséhez.','empty.addPosition':'+ Pozíció hozzáadása','empty.noTransactions':'Még nincs tranzakciód','empty.noTransactionsMsg':'Rögzítsd az első vételi, eladási vagy osztalék tranzakciódat.','empty.addTransaction':'+ Tranzakció rögzítése','empty.noReviews':'Még nincs review-d','empty.noReviewsMsg':'Kezdd el az első {type}review-dat a befektetési döntéseid nyomon követéséhez.','empty.addReview':'+ Új Review','empty.portfolioMetrics':'Adj hozzá pozíciókat a portfólió metrikákhoz.','empty.priceAlerts':'Adj hozzá pozíciókat az áralertekhez.','empty.sellTriggers':'Adj hozzá pozíciókat az eladási trigger-ekhez.','empty.createAccount':'Hozz létre egy brókert számlafiókot és adj hozzá pozíciókat a portfólió áttekintéshez.','empty.addAccount':'+ Számla hozzáadása',
+'toast.positionsExported':'{count} pozíció exportálva','toast.transactionsExported':'{count} tranzakció exportálva','toast.positionDeleted':'Pozíció törölve: {ticker}','toast.transactionDeleted':'Tranzakció törölve: {type} {ticker}','toast.noteDeleted':'Jegyzet törölve','toast.reviewDeleted':'Review törölve','toast.stockDeleted':'"{name}" törölve','toast.bulkPositionsDeleted':'{count} pozíció törölve','toast.bulkTransactionsDeleted':'{count} tranzakció törölve','toast.bulkNotesDeleted':'{count} jegyzet törölve','toast.bulkReviewsDeleted':'{count} review törölve','toast.bulkStocksDeleted':'{count} részvény törölve','toast.recoveryMsg':'{count} nem mentett változás visszaállítva','toast.offlineCache':'Offline — betöltés helyi gyorsítótárból','toast.storageFull':'Tárhely megtelt — exportáld az adataidat az adatvesztés elkerülése érdekében',
+'data.trackerStocks':'Követett részvények','data.accounts':'Számlák','data.positions':'Pozíciók','data.transactions':'Tranzakciók','data.snapshots':'Pillanatképek','data.todos':'Teendők','data.exchangeRates':'Árfolyamok','data.dividendHistory':'Osztalék előzmények','data.reviews':'Értékelések','data.researchNotes':'Kutatási jegyzetek','data.framework':'Keretrendszer','data.dividendSettings':'Osztalék beállítások','data.fiSettings':'FI beállítások','data.benchmark':'Benchmark','data.52wHighs':'52 hetes csúcsok',
+'settings.language':'Nyelv','settings.languageHint':'Az app újratöltődik váltáskor','settings.connections':'Kapcsolatok','settings.encryption':'Titkosítás','settings.portfolioSettings':'Portfólió beállítások','settings.dataManagement':'Adatkezelés','settings.keyboardShortcuts':'Billentyűparancsok',
+'shortcuts.search':'Keresés','shortcuts.shortcutGuide':'Parancsok','shortcuts.addNew':'Új elem hozzáadása','shortcuts.close':'Bezárás','shortcuts.hint':'Az N gomb az aktuális szekció alapján nyit új elemet: pozíció/tranzakció (Portfolio), jegyzet (Research), review (Reviews), ticker input (Companies).',
+'portfolio.position':'pozíció','portfolio.transaction':'tranzakció','portfolio.stock':'részvény','portfolio.note':'jegyzet','portfolio.review':'review',
+'csv.date':'dátum','csv.type':'típus','csv.quantity':'mennyiség','csv.amount':'összeg','csv.fee':'jutalék',
+'checklist.marketMispricing':'Mi az, amit a piac rosszul áraz?','checklist.consensusError':'Miben téved a konszenzus?','checklist.kpiMisread':'Mi az a KPI, ami félre van értelmezve?','checklist.timeHorizonMismatch':'Időhorizont mismatch? Short-term pain vs long-term value?'
+}};
+function t(key,params){var s=(I18N[_lang]&&I18N[_lang][key])||I18N.en[key]||key;if(params)Object.keys(params).forEach(function(k){s=s.replace('{'+k+'}',params[k])});return s}
+function setLang(l){_lang=l;localStorage.setItem('app_lang',l);location.reload()}
+function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=t(el.getAttribute('data-i18n'))});document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){el.placeholder=t(el.getAttribute('data-i18n-placeholder'))});document.querySelectorAll('[data-i18n-title]').forEach(function(el){el.title=t(el.getAttribute('data-i18n-title'))})}
 </script>
 <style>html.app-locked #sidebar,html.app-locked #main-content,html.app-locked #bottom-nav{visibility:hidden}</style>
 
@@ -1066,7 +1099,8 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="6" fill="#0f1117"/><ellipse cx="16" cy="16" rx="13" ry="5" fill="none" stroke="#a29bfe" stroke-width="1.2" transform="rotate(-25 16 16)"/><text x="16" y="20" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="14" fill="#6c9bd1">SV</text></svg>
     <span>Stratos Ventures</span>
     <span id="d1-status-dot" title="D1 not connected" style="width:8px;height:8px;border-radius:50%;background:var(--text2);margin-left:auto;flex-shrink:0;display:none"></span>
-    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark/light theme" style="margin-left:auto;background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;transition:all .2s;flex-shrink:0" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">
+    <button onclick="setLang(_lang==='en'?'hu':'en')" title="Switch language" aria-label="Switch language" style="margin-left:auto;background:none;border:1px solid var(--border);cursor:pointer;padding:2px 6px;border-radius:4px;font-size:10px;color:var(--text2);font-family:inherit;flex-shrink:0;letter-spacing:.5px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'"><script>document.currentScript.parentElement.textContent=_lang==='hu'?'EN':'HU'</script></button>
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark/light theme" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;transition:all .2s;flex-shrink:0" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">
       <svg id="theme-icon-dark" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true" style="width:16px;height:16px;color:var(--accent2)"><path d="M15.3 11.8A7 7 0 016.2 2.7a7 7 0 109.1 9.1z"/></svg>
       <svg id="theme-icon-light" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" style="width:16px;height:16px;color:var(--orange);display:none"><circle cx="9" cy="9" r="3.5"/><line x1="9" y1="1" x2="9" y2="3"/><line x1="9" y1="15" x2="9" y2="17"/><line x1="1" y1="9" x2="3" y2="9"/><line x1="15" y1="9" x2="17" y2="9"/><line x1="3.3" y1="3.3" x2="4.7" y2="4.7"/><line x1="13.3" y1="13.3" x2="14.7" y2="14.7"/><line x1="3.3" y1="14.7" x2="4.7" y2="13.3"/><line x1="13.3" y1="4.7" x2="14.7" y2="3.3"/></svg>
     </button>
@@ -1074,36 +1108,36 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
   <div class="sidebar-nav">
     <button class="nav-item" onclick="showSection('dashboard')" data-section="dashboard">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
-      <span>Dashboard</span>
+      <span data-i18n="nav.dashboard">Dashboard</span>
     </button>
     <button class="nav-item active" onclick="showSection('companies')" data-section="companies">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="6" width="6" height="12" rx="1"/><rect x="11" y="2" width="6" height="16" rx="1"/><line x1="5" y1="9" x2="7" y2="9"/><line x1="5" y1="12" x2="7" y2="12"/><line x1="13" y1="5" x2="15" y2="5"/><line x1="13" y1="8" x2="15" y2="8"/><line x1="13" y1="11" x2="15" y2="11"/></svg>
-      <span>Companies</span>
+      <span data-i18n="nav.companies">Companies</span>
     </button>
     <button class="nav-item" onclick="showSection('portfolio')" data-section="portfolio">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 2.5V10h7.5"/></svg>
-      <span>Portfolio</span>
+      <span data-i18n="nav.portfolio">Portfolio</span>
     </button>
     <button class="nav-item" onclick="showSection('research')" data-section="research">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>
-      <span>Research</span>
+      <span data-i18n="nav.research">Research</span>
     </button>
     <button class="nav-item" onclick="showSection('framework')" data-section="framework">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="12" width="14" height="4" rx="1"/><rect x="5" y="6" width="10" height="4" rx="1"/><rect x="7" y="0" width="6" height="4" rx="1"/></svg>
-      <span>Framework</span>
+      <span data-i18n="nav.framework">Framework</span>
     </button>
     <button class="nav-item" onclick="showSection('reviews')" data-section="reviews">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4h12v14H4z"/><path d="M7 8h6M7 11h6M7 14h4"/></svg>
-      <span>Reviews</span>
+      <span data-i18n="nav.reviews">Reviews</span>
     </button>
     <button class="nav-item" onclick="openGlobalSearch()" title="Search (⌘K)">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17" y2="17"/></svg>
-      <span>Search</span>
+      <span data-i18n="nav.search">Search</span>
     </button>
     <div class="nav-spacer"></div>
     <button class="nav-item" onclick="showSection('settings')" data-section="settings">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="3"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M3.4 3.4l1.4 1.4M15.2 15.2l1.4 1.4M3.4 16.6l1.4-1.4M15.2 4.8l1.4-1.4"/></svg>
-      <span>Settings</span>
+      <span data-i18n="nav.settings">Settings</span>
     </button>
   </div>
 </nav>
@@ -1669,8 +1703,8 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
     <div id="pf-overview-empty" class="card placeholder-section" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:48px;height:48px;color:var(--accent);margin-bottom:12px"><circle cx="12" cy="12" r="9"/><path d="M12 3v9h9"/></svg>
       <h2 style="margin-bottom:6px">Portfolio Overview</h2>
-      <p style="color:var(--text2);margin-bottom:16px">Hozz létre egy brókert számlafiókot és adj hozzá pozíciókat a portfólió áttekintéshez.</p>
-      <button class="btn btn-primary" onclick="switchPortfolioTab('accounts')">+ Számla hozzáadása</button>
+      <p style="color:var(--text2);margin-bottom:16px" data-i18n="empty.createAccount">Create a broker account and add positions for portfolio overview.</p>
+      <button class="btn btn-primary" onclick="switchPortfolioTab('accounts')" data-i18n="empty.addAccount">+ Add Account</button>
     </div>
     <div id="pf-overview-content">
       <div id="pf-summary-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:16px"></div>
@@ -2005,11 +2039,22 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
   </div>
 </div>
 
+  <div class="card" style="margin-top:16px">
+    <div class="card-title" data-i18n="settings.language">Language</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <select id="lang-select" onchange="setLang(this.value)" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;cursor:pointer">
+        <option value="en">English</option>
+        <option value="hu">Magyar</option>
+      </select>
+      <span style="font-size:12px;color:var(--text2)" data-i18n="settings.languageHint">App will reload on change</span>
+    </div>
+  </div>
+
   <div class="card" id="shortcut-guide" style="margin-top:16px">
-    <h3 style="margin-bottom:14px;font-size:15px;font-weight:600">Keyboard Shortcuts</h3>
+    <h3 style="margin-bottom:14px;font-size:15px;font-weight:600" data-i18n="settings.keyboardShortcuts">Keyboard Shortcuts</h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px">
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘K</kbd> Keresés</div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">?</kbd> Shortcut guide</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘K</kbd> <span data-i18n="shortcuts.search">Search</span></div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">?</kbd> <span data-i18n="shortcuts.shortcutGuide">Shortcut guide</span></div>
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘1</kbd> Dashboard</div>
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘2</kbd> Companies</div>
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘3</kbd> Portfolio</div>
@@ -2017,10 +2062,10 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘5</kbd> Framework</div>
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘6</kbd> Reviews</div>
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘7</kbd> Settings</div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">N</kbd> Új elem hozzáadása</div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">Esc</kbd> Bezárás</div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">N</kbd> <span data-i18n="shortcuts.addNew">Add new item</span></div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">Esc</kbd> <span data-i18n="shortcuts.close">Close</span></div>
     </div>
-    <p style="margin-top:12px;font-size:11px;color:var(--text2)">Az N gomb az aktuális szekció alapján nyit új elemet: pozíció/tranzakció (Portfolio), jegyzet (Research), review (Reviews), ticker input (Companies).</p>
+    <p style="margin-top:12px;font-size:11px;color:var(--text2)" data-i18n="shortcuts.hint">The N key opens a new item based on the current section: position/transaction (Portfolio), note (Research), review (Reviews), ticker input (Companies).</p>
   </div>
 
 </div><!-- end section-settings -->
@@ -2030,23 +2075,23 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
 <nav id="bottom-nav">
   <button class="bnav-item" onclick="showSection('dashboard')" data-section="dashboard">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="7" height="7" rx="1.5"/><rect x="11" y="2" width="7" height="7" rx="1.5"/><rect x="2" y="11" width="7" height="7" rx="1.5"/><rect x="11" y="11" width="7" height="7" rx="1.5"/></svg>
-    <span>Dashboard</span>
+    <span data-i18n="nav.dashboard">Dashboard</span>
   </button>
   <button class="bnav-item active" onclick="showSection('companies')" data-section="companies">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="6" height="12" rx="1"/><rect x="11" y="2" width="6" height="16" rx="1"/><line x1="5" y1="9" x2="7" y2="9"/><line x1="5" y1="12" x2="7" y2="12"/><line x1="13" y1="5" x2="15" y2="5"/><line x1="13" y1="8" x2="15" y2="8"/><line x1="13" y1="11" x2="15" y2="11"/></svg>
-    <span>Companies</span>
+    <span data-i18n="nav.companies">Companies</span>
   </button>
   <button class="bnav-item" onclick="showSection('portfolio')" data-section="portfolio">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7.5"/><path d="M10 2.5V10h7.5"/></svg>
-    <span>Portfolio</span>
+    <span data-i18n="nav.portfolio">Portfolio</span>
   </button>
   <button class="bnav-item" onclick="showSection('research')" data-section="research">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17.5" y2="17.5"/></svg>
-    <span>Research</span>
+    <span data-i18n="nav.research">Research</span>
   </button>
   <button class="bnav-item" onclick="toggleMoreMenu()" data-section="more">
     <svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4" cy="10" r="2"/><circle cx="10" cy="10" r="2"/><circle cx="16" cy="10" r="2"/></svg>
-    <span>More</span>
+    <span data-i18n="nav.more">More</span>
   </button>
 </nav>
 
@@ -2054,11 +2099,11 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
 <div class="more-menu">
   <button class="more-menu-item" onclick="closeMoreMenu();showSection('framework')">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="12" width="14" height="4" rx="1"/><rect x="5" y="6" width="10" height="4" rx="1"/><rect x="7" y="0" width="6" height="4" rx="1"/></svg>
-    <span>Framework</span>
+    <span data-i18n="nav.framework">Framework</span>
   </button>
   <button class="more-menu-item" onclick="closeMoreMenu();showSection('reviews')">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 4h12v14H4z"/><path d="M7 8h6M7 11h6M7 14h4"/></svg>
-    <span>Reviews</span>
+    <span data-i18n="nav.reviews">Reviews</span>
   </button>
   <button class="more-menu-item" onclick="toggleTheme();closeMoreMenu()">
     <svg id="theme-icon-dark-mobile" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" style="color:var(--accent2)"><path d="M17.3 13.8A8 8 0 017.2 3.7a8 8 0 1010.1 10.1z"/></svg>
@@ -2067,11 +2112,11 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
   </button>
   <button class="more-menu-item" onclick="closeMoreMenu();openGlobalSearch()">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17" y2="17"/></svg>
-    <span>Search</span>
+    <span data-i18n="nav.search">Search</span>
   </button>
   <button class="more-menu-item" onclick="closeMoreMenu();showSection('settings')">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10" cy="10" r="3"/><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M3.4 3.4l1.4 1.4M15.2 15.2l1.4 1.4M3.4 16.6l1.4-1.4M15.2 4.8l1.4-1.4"/></svg>
-    <span>Settings</span>
+    <span data-i18n="nav.settings">Settings</span>
   </button>
 </div>
 
@@ -2087,8 +2132,8 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
       <input type="text" id="confirm-type-field" autocomplete="off" spellcheck="false">
     </div>
     <div class="confirm-actions">
-      <button class="btn btn-secondary" onclick="_confirmCancel()">Mégsem</button>
-      <button class="btn btn-danger" id="confirm-ok-btn" onclick="_confirmOk()">Törlés</button>
+      <button class="btn btn-secondary" onclick="_confirmCancel()" data-i18n="common.cancel">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn" onclick="_confirmOk()" data-i18n="common.delete">Delete</button>
     </div>
   </div>
 </div>
@@ -2098,11 +2143,11 @@ if(localStorage.getItem('app_theme')==='light')document.documentElement.setAttri
   <div class="gs-box">
     <div class="gs-input-wrap">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17" y2="17"/></svg>
-      <input class="gs-input" id="gs-input" type="text" placeholder="Keresés mindenhol..." autocomplete="off" spellcheck="false">
+      <input class="gs-input" id="gs-input" type="text" data-i18n-placeholder="search.placeholder" placeholder="Search everywhere..." autocomplete="off" spellcheck="false">
       <span class="gs-kbd">ESC</span>
     </div>
     <div class="gs-results" id="gs-results">
-      <div class="gs-empty">Kezdj el gépelni a kereséshez...</div>
+      <div class="gs-empty" data-i18n="search.startTyping">Start typing to search...</div>
     </div>
   </div>
 </div>
@@ -2772,13 +2817,13 @@ function undoableDelete(msg,doDelete,doRestore,onConfirm){
   const c=document.getElementById('toast-container');
   if(!c){doDelete();if(onConfirm)onConfirm();return}
   doDelete();
-  const t=document.createElement('div');
-  t.className='toast toast--warning';
-  t.setAttribute('role','alert');
-  t.style.display='flex';t.style.alignItems='center';t.style.gap='12px';
+  const el=document.createElement('div');
+  el.className='toast toast--warning';
+  el.setAttribute('role','alert');
+  el.style.display='flex';el.style.alignItems='center';el.style.gap='12px';
   const txt=document.createElement('span');txt.textContent=msg;txt.style.flex='1';
   const undo=document.createElement('button');
-  undo.textContent='Visszavonás';
+  undo.textContent=t('common.undo');
   undo.style.cssText='padding:4px 12px;border-radius:6px;border:1px solid var(--orange);background:transparent;color:var(--orange);cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;white-space:nowrap';
   undo.onmouseenter=()=>{undo.style.background='var(--orange)';undo.style.color='var(--bg)'};
   undo.onmouseleave=()=>{undo.style.background='transparent';undo.style.color='var(--orange)'};
@@ -2786,24 +2831,24 @@ function undoableDelete(msg,doDelete,doRestore,onConfirm){
   let resolved=false;
   let timer=setTimeout(()=>{
     resolved=true;
-    t.classList.add('removing');setTimeout(()=>t.remove(),300);
+    el.classList.add('removing');setTimeout(()=>el.remove(),300);
     if(onConfirm)onConfirm();
   },6000);
   undo.onclick=()=>{
     if(resolved)return;resolved=true;
     clearTimeout(timer);
-    t.classList.add('removing');setTimeout(()=>t.remove(),250);
+    el.classList.add('removing');setTimeout(()=>el.remove(),250);
     doRestore();
-    showToast('Visszaállítva','success');
+    showToast(t('common.restored'),'success');
   };
   cl.onclick=()=>{
     if(resolved)return;resolved=true;
     clearTimeout(timer);
-    t.classList.add('removing');setTimeout(()=>t.remove(),250);
+    el.classList.add('removing');setTimeout(()=>el.remove(),250);
     if(onConfirm)onConfirm();
   };
-  t.appendChild(txt);t.appendChild(undo);t.appendChild(cl);
-  c.appendChild(t);
+  el.appendChild(txt);el.appendChild(undo);el.appendChild(cl);
+  c.appendChild(el);
   while(c.children.length>5)c.firstChild.remove();
 }
 
@@ -2816,13 +2861,13 @@ function showConfirm(title,message,opts){
   document.getElementById('confirm-title').textContent=title;
   document.getElementById('confirm-message').textContent=message;
   const btn=document.getElementById('confirm-ok-btn');
-  btn.textContent=opts.okLabel||'Törlés';
+  btn.textContent=opts.okLabel||t('common.delete');
   btn.className=opts.danger===false?'btn btn-primary':'btn btn-danger';
   const tw=document.getElementById('confirm-type-wrap');
   const tf=document.getElementById('confirm-type-field');
   if(opts.typeToConfirm){
     tw.style.display='';
-    document.getElementById('confirm-type-label').textContent='Írd be: '+opts.typeToConfirm;
+    document.getElementById('confirm-type-label').textContent=t('confirm.typePrefix')+opts.typeToConfirm;
     tf.value='';
     btn.disabled=true;
     tf.oninput=()=>{btn.disabled=tf.value.trim()!==opts.typeToConfirm};
@@ -2864,7 +2909,7 @@ function openGlobalSearch(){
   ov.classList.add('active');_gsActive=true;
   const inp=document.getElementById('gs-input');
   inp.value='';inp.focus();
-  document.getElementById('gs-results').innerHTML='<div class="gs-empty">Kezdj el gépelni a kereséshez...</div>';
+  document.getElementById('gs-results').innerHTML='<div class="gs-empty">'+t('search.startTyping')+'</div>';
   _gsIdx=-1;_gsItems=[];
 }
 function closeGlobalSearch(){
@@ -2885,7 +2930,7 @@ function _gsSearch(q){
     const s=tStocks[ticker];
     const name=s.name||s.profile?.companyName||ticker;
     if(ticker.toLowerCase().includes(ql)||name.toLowerCase().includes(ql)){
-      results.push({group:'Cégek',icon:'📊',iconBg:'var(--accent)',title:name,sub:ticker+(s.profile?.sector?' · '+s.profile.sector:''),action:()=>{showSection('companies');showProfile(ticker)},ticker});
+      results.push({group:t('search.companies'),icon:'📊',iconBg:'var(--accent)',title:name,sub:ticker+(s.profile?.sector?' · '+s.profile.sector:''),action:()=>{showSection('companies');showProfile(ticker)},ticker});
     }
   });
   // Positions
@@ -2893,14 +2938,14 @@ function _gsSearch(q){
     const name=p.name||p.ticker;
     if(p.ticker.toLowerCase().includes(ql)||name.toLowerCase().includes(ql)){
       const acc=pfAccounts.find(a=>a.id===p.accountId);
-      results.push({group:'Pozíciók',icon:'💼',title:`${name} (${p.ticker})`,sub:`${p.shares} db · ${acc?acc.name:''}`,action:()=>{showSection('portfolio')}});
+      results.push({group:t('search.positions'),icon:'💼',title:`${name} (${p.ticker})`,sub:`${p.shares} db · ${acc?acc.name:''}`,action:()=>{showSection('portfolio')}});
     }
   });
   // Transactions
-  pfTransactions.forEach(t=>{
-    const match=t.ticker.toLowerCase().includes(ql)||(t.notes||'').toLowerCase().includes(ql);
+  pfTransactions.forEach(tx=>{
+    const match=tx.ticker.toLowerCase().includes(ql)||(tx.notes||'').toLowerCase().includes(ql);
     if(match){
-      results.push({group:'Tranzakciók',icon:'💱',title:`${t.type.toUpperCase()} ${t.ticker}`,sub:`${t.date} · ${t.totalAmount?t.totalAmount.toLocaleString():''}`,action:()=>{showSection('portfolio');document.querySelector('[data-tab="pf-transactions"]')?.click()}});
+      results.push({group:t('search.transactions'),icon:'💱',title:`${tx.type.toUpperCase()} ${tx.ticker}`,sub:`${tx.date} · ${tx.totalAmount?tx.totalAmount.toLocaleString():''}`,action:()=>{showSection('portfolio');document.querySelector('[data-tab="pf-transactions"]')?.click()}});
     }
   });
   // Research notes
@@ -2911,8 +2956,8 @@ function _gsSearch(q){
       const tags=(n.tags||[]).join(' ');
       const all=(title+' '+content+' '+tags+' '+(n.ticker||'')).toLowerCase();
       if(all.includes(ql)){
-        const label={journal:'Napló',news:'Hír',market:'Piac'}[type]||type;
-        results.push({group:'Jegyzetek',icon:'📝',title:title||content.slice(0,60),sub:`${label}`+(n.ticker?' · '+n.ticker:'')+(n.date?' · '+n.date:''),action:()=>{showSection('research');const inp=document.getElementById('research-search');if(inp){inp.value=q;debounceResearchSearch()}}});
+        const label={journal:t('search.journal'),news:t('search.news'),market:t('search.market')}[type]||type;
+        results.push({group:t('search.companyNotes'),icon:'📝',title:title||content.slice(0,60),sub:`${label}`+(n.ticker?' · '+n.ticker:'')+(n.date?' · '+n.date:''),action:()=>{showSection('research');const inp=document.getElementById('research-search');if(inp){inp.value=q;debounceResearchSearch()}}});
       }
     });
   });
@@ -2923,7 +2968,7 @@ function _gsSearch(q){
       ['thesis','risks','catalyst','moat','management'].forEach(key=>{
         const val=s.notes[key]||'';
         if(val.toLowerCase().includes(ql)){
-          results.push({group:'Cég jegyzetek',icon:'🏢',title:`${ticker} — ${key}`,sub:val.slice(0,80),action:()=>{showSection('companies');showProfile(ticker)}});
+          results.push({group:t('search.companyNotes'),icon:'🏢',title:`${ticker} — ${key}`,sub:val.slice(0,80),action:()=>{showSection('companies');showProfile(ticker)}});
         }
       });
     }
@@ -2944,10 +2989,10 @@ function onGlobalSearchInput(){
   _gsDebounce=setTimeout(()=>{
     const q=document.getElementById('gs-input').value.trim();
     const cont=document.getElementById('gs-results');
-    if(!q){cont.innerHTML='<div class="gs-empty">Kezdj el gépelni a kereséshez...</div>';_gsItems=[];_gsIdx=-1;return}
-    if(q.length<2){cont.innerHTML='<div class="gs-empty">Legalább 2 karakter...</div>';_gsItems=[];_gsIdx=-1;return}
+    if(!q){cont.innerHTML='<div class="gs-empty">'+t('search.startTyping')+'</div>';_gsItems=[];_gsIdx=-1;return}
+    if(q.length<2){cont.innerHTML='<div class="gs-empty">'+t('search.minChars')+'</div>';_gsItems=[];_gsIdx=-1;return}
     const results=_gsSearch(q);
-    if(!results.length){cont.innerHTML='<div class="gs-empty">Nincs találat: "'+escH(q)+'"</div>';_gsItems=[];_gsIdx=-1;return}
+    if(!results.length){cont.innerHTML='<div class="gs-empty">'+t('search.noResults',{q:escH(q)})+'</div>';_gsItems=[];_gsIdx=-1;return}
     const groups={};
     results.forEach(r=>{if(!groups[r.group])groups[r.group]=[];groups[r.group].push(r)});
     let html='';
@@ -3036,25 +3081,25 @@ function _validatePositionForm(){
   _clearFieldErrors(modal);
   let valid=true;
   const ticker=document.getElementById('pf-pos-ticker');
-  if(!ticker.value.trim()){_markFieldError(ticker,'Ticker / azonosító kötelező');valid=false}
+  if(!ticker.value.trim()){_markFieldError(ticker,t('validation.tickerRequired'));valid=false}
   const account=document.getElementById('pf-pos-account');
   const accId=parseInt(account.value,10);
-  if(!accId||!pfAccounts.find(a=>a.id===accId)){_markFieldError(account,'Válassz egy érvényes számlát');valid=false}
+  if(!accId||!pfAccounts.find(a=>a.id===accId)){_markFieldError(account,t('validation.accountRequired'));valid=false}
   const assetType=document.getElementById('pf-pos-type').value;
   if(assetType==='real_estate'){
     const rp=document.getElementById('pf-pos-re-purchase');
     const rv=document.getElementById('pf-pos-re-value');
-    if(!(parseFloat(rp.value)||0)&&!(parseFloat(rv.value)||0)){_markFieldError(rp,'Vételár vagy jelenlegi érték kötelező');valid=false}
+    if(!(parseFloat(rp.value)||0)&&!(parseFloat(rv.value)||0)){_markFieldError(rp,t('validation.priceRequired'));valid=false}
   }else if(assetType==='cash'){
     const ca=document.getElementById('pf-pos-cash-amount');
-    if(!(parseFloat(ca.value)||0)){_markFieldError(ca,'Add meg az összeget');valid=false}
+    if(!(parseFloat(ca.value)||0)){_markFieldError(ca,t('validation.amountRequired'));valid=false}
   }else{
     const shares=document.getElementById('pf-pos-shares');
     const avgCost=document.getElementById('pf-pos-avgcost');
     const sv=parseFloat(shares.value),av=parseFloat(avgCost.value);
-    if(!isFinite(sv)||sv<0){_markFieldError(shares,'Érvényes darabszám szükséges');valid=false}
-    if(!isFinite(av)||av<0){_markFieldError(avgCost,'Érvényes átlagár szükséges');valid=false}
-    if(sv===0&&av===0&&valid){_markFieldError(shares,'Adj meg darabszámot vagy átlagárat');valid=false}
+    if(!isFinite(sv)||sv<0){_markFieldError(shares,t('validation.sharesRequired'));valid=false}
+    if(!isFinite(av)||av<0){_markFieldError(avgCost,t('validation.avgCostRequired'));valid=false}
+    if(sv===0&&av===0&&valid){_markFieldError(shares,t('validation.sharesOrAvgRequired'));valid=false}
   }
   return valid;
 }
@@ -3064,19 +3109,19 @@ function _validateTransactionForm(){
   let valid=true;
   const type=document.getElementById('pf-tx-type').value;
   const date=document.getElementById('pf-tx-date');
-  if(!date.value){_markFieldError(date,'Dátum kötelező');valid=false}
-  else if(date.value>new Date().toISOString().slice(0,10)){_markFieldError(date,'Nem lehet jövőbeli dátum');valid=false}
+  if(!date.value){_markFieldError(date,t('validation.dateRequired'));valid=false}
+  else if(date.value>new Date().toISOString().slice(0,10)){_markFieldError(date,t('validation.dateFuture'));valid=false}
   const ticker=document.getElementById('pf-tx-ticker');
-  if(!ticker.value.trim()){_markFieldError(ticker,'Ticker kötelező');valid=false}
+  if(!ticker.value.trim()){_markFieldError(ticker,t('validation.tickerRequiredTx'));valid=false}
   const account=document.getElementById('pf-tx-account');
-  if(!parseInt(account.value,10)){_markFieldError(account,'Válassz egy számlát');valid=false}
+  if(!parseInt(account.value,10)){_markFieldError(account,t('validation.accountRequiredTx'));valid=false}
   const total=document.getElementById('pf-tx-total');
   const tv=parseFloat(total.value);
-  if(!isFinite(tv)||tv<=0){_markFieldError(total,'Érvényes összeg szükséges');valid=false}
+  if(!isFinite(tv)||tv<=0){_markFieldError(total,t('validation.amountRequiredTx'));valid=false}
   if(type!=='dividend'){
     const shares=document.getElementById('pf-tx-shares');
     const sv=parseFloat(shares.value);
-    if(!isFinite(sv)||sv<=0){_markFieldError(shares,'Érvényes darabszám szükséges');valid=false}
+    if(!isFinite(sv)||sv<=0){_markFieldError(shares,t('validation.sharesRequiredTx'));valid=false}
   }
   return valid;
 }
@@ -3408,7 +3453,7 @@ function saveCurrentStock(){
   _putSavedStocks(saved);showToast(`"${name}" saved.`,'success');renderSavedStocks();
 }
 function loadStock(name){const saved=_getSavedStocks();if(saved[name]){loadData(saved[name]);switchTab('dcf-perpetuity')}}
-function deleteStock(name,e){e.stopPropagation();const s=_getSavedStocks();const backup=s[name]?JSON.parse(JSON.stringify(s[name])):null;undoableDelete(`"${name}" törölve`,()=>{const s2=_getSavedStocks();delete s2[name];_putSavedStocks(s2);renderSavedStocks()},()=>{if(backup){const s2=_getSavedStocks();s2[name]=backup;_putSavedStocks(s2);renderSavedStocks()}})}
+function deleteStock(name,e){e.stopPropagation();const s=_getSavedStocks();const backup=s[name]?JSON.parse(JSON.stringify(s[name])):null;undoableDelete(t('toast.stockDeleted',{name}),()=>{const s2=_getSavedStocks();delete s2[name];_putSavedStocks(s2);renderSavedStocks()},()=>{if(backup){const s2=_getSavedStocks();s2[name]=backup;_putSavedStocks(s2);renderSavedStocks()}})}
 function renderSavedStocks(){
   const c=document.getElementById('saved-stocks-list'),s=_getSavedStocks();
   const keys=Object.keys(s);
@@ -3548,7 +3593,7 @@ function doRestore(){
         const d=JSON.parse(ev.target.result);
         if(!d.version){showToast('Invalid backup file — no version field','error');return}
         if(d.version>SCHEMA_VERSION){showToast('This backup was created by a newer app version (v'+d.version+'). Please update the app first.','error');return}
-        if(!await showConfirm('Backup visszaállítás','Ez FELÜLÍRJA az összes jelenlegi adatot a backup fájl tartalmával. A jelenlegi adatok elvesznek.',{okLabel:'Visszaállítás',typeToConfirm:'RESTORE'}))return;
+        if(!await showConfirm(t('confirm.backupRestore'),t('confirm.backupRestoreMsg'),{okLabel:t('confirm.backupRestoreOk'),typeToConfirm:'RESTORE'}))return;
         const keepKeys=['enc_salt','enc_verify','enc_recovery','enc_skipped','schema_version','tracker_settings'];
         const snapshot={};
         Object.keys(localStorage).forEach(k=>{snapshot[k]=localStorage.getItem(k)});
@@ -3864,7 +3909,7 @@ const API={
     const targets={pfAccounts:v=>pfAccounts.splice(0,Infinity,...v),pfPositions:v=>pfPositions.splice(0,Infinity,...v),pfTransactions:v=>pfTransactions.splice(0,Infinity,...v),pfSnapshots:v=>pfSnapshots.splice(0,Infinity,...v),dashTodos:v=>{dbTodos.length=0;v.forEach(t=>dbTodos.push(t))},researchNotes:v=>researchNotes.splice(0,Infinity,...v)};
     let reconciled=0;
     const recoveredNames=[];
-    const friendlyNames={trackerStocks:'Követett részvények',pfAccounts:'Számlák',pfPositions:'Pozíciók',pfTransactions:'Tranzakciók',pfSnapshots:'Pillanatképek',dashTodos:'Teendők',exRates:'Árfolyamok',divHistory:'Osztalék előzmények',reviews:'Értékelések',researchNotes:'Kutatási jegyzetek',framework:'Keretrendszer',divSettings:'Osztalék beállítások',dashFi:'FI beállítások',dashBench:'Benchmark',dash52w:'52 hetes csúcsok'};
+    const friendlyNames={trackerStocks:t('data.trackerStocks'),pfAccounts:t('data.accounts'),pfPositions:t('data.positions'),pfTransactions:t('data.transactions'),pfSnapshots:t('data.snapshots'),dashTodos:t('data.todos'),exRates:t('data.exchangeRates'),divHistory:t('data.dividendHistory'),reviews:t('data.reviews'),researchNotes:t('data.researchNotes'),framework:t('data.framework'),divSettings:t('data.dividendSettings'),dashFi:t('data.fiSettings'),dashBench:t('data.benchmark'),dash52w:t('data.52wHighs')};
     Object.entries(lsKeyMap).forEach(([key,lsKey])=>{
       if(this.isDirty(key)){
         try{
@@ -3880,7 +3925,7 @@ const API={
         }catch(e){console.error('Reconcile dirty key '+key+':',e)}
       }
     });
-    if(reconciled)showToast(reconciled+' nem mentett változás visszaállítva','info',8000,{details:recoveredNames.join(', ')});
+    if(reconciled)showToast(t('toast.recoveryMsg',{count:reconciled}),'info',8000,{details:recoveredNames.join(', ')});
   },
   async postBatch(path,items,chunkSize=100){
     if(!items.length)return{results:[]};
@@ -4154,8 +4199,8 @@ async function deleteAccount(id){
   const a=pfAccounts.find(x=>x.id===id);
   if(!a)return;
   const posCount=pfPositions.filter(p=>p.accountId===id).length;
-  const msg=posCount?`"${a.name}" és ${posCount} pozíció is törlődik.`:`"${a.name}" törlése.`;
-  if(!await showConfirm('Bróker törlése',msg))return;
+  const msg=posCount?t('confirm.deleteAccountMsg',{name:a.name,count:posCount}):t('confirm.deleteAccountMsgSimple',{name:a.name});
+  if(!await showConfirm(t('confirm.deleteAccount'),msg))return;
   if(d1Mode){
     try{
       const delOps=[...pfPositions.filter(p=>p.accountId===id).map(p=>API.del('positions/'+p.id)),...pfTransactions.filter(t=>t.accountId===id).map(t=>API.del('transactions/'+t.id))];
@@ -4195,11 +4240,11 @@ var _bulkStockNames=new Set();
 
 function _updateBulkBar(){
   const modes=[
-    {set:_bulkPosIds,label:'pozíció',del:'bulkDeletePositions()',exp:'bulkExportPositions()',clear:'_bulkPosIds.clear();_updateBulkBar();renderPositions()'},
-    {set:_bulkTxIds,label:'tranzakció',del:'bulkDeleteTransactions()',exp:'bulkExportTransactions()',clear:'_bulkTxIds.clear();_updateBulkBar();renderTransactions()'},
-    {set:_bulkNoteKeys,label:'jegyzet',del:'bulkDeleteNotes()',exp:null,clear:'_bulkNoteKeys.clear();_updateBulkBar();renderResearch()'},
-    {set:_bulkRvIds,label:'review',del:'bulkDeleteReviews()',exp:null,clear:'_bulkRvIds.clear();_updateBulkBar();renderRvFeed(document.querySelector(".rv-tabs .tab.active")?.dataset.rvtab||"all")'},
-    {set:_bulkStockNames,label:'részvény',del:'bulkDeleteStocks()',exp:null,clear:'_bulkStockNames.clear();_updateBulkBar();renderSavedStocks()'}
+    {set:_bulkPosIds,label:t('portfolio.position'),del:'bulkDeletePositions()',exp:'bulkExportPositions()',clear:'_bulkPosIds.clear();_updateBulkBar();renderPositions()'},
+    {set:_bulkTxIds,label:t('portfolio.transaction'),del:'bulkDeleteTransactions()',exp:'bulkExportTransactions()',clear:'_bulkTxIds.clear();_updateBulkBar();renderTransactions()'},
+    {set:_bulkNoteKeys,label:t('portfolio.note'),del:'bulkDeleteNotes()',exp:null,clear:'_bulkNoteKeys.clear();_updateBulkBar();renderResearch()'},
+    {set:_bulkRvIds,label:t('portfolio.review'),del:'bulkDeleteReviews()',exp:null,clear:'_bulkRvIds.clear();_updateBulkBar();renderRvFeed(document.querySelector(".rv-tabs .tab.active")?.dataset.rvtab||"all")'},
+    {set:_bulkStockNames,label:t('portfolio.stock'),del:'bulkDeleteStocks()',exp:null,clear:'_bulkStockNames.clear();_updateBulkBar();renderSavedStocks()'}
   ];
   const active=modes.find(m=>m.set.size>0);
   let bar=document.getElementById('bulk-action-bar');
@@ -4207,9 +4252,9 @@ function _updateBulkBar(){
   if(!bar){bar=document.createElement('div');bar.id='bulk-action-bar';bar.className='bulk-bar';document.body.appendChild(bar)}
   const count=active.set.size;
   bar.innerHTML=`<span class="bulk-count">${count} ${active.label}</span>
-    <button class="bulk-del" onclick="${active.del}">Törlés</button>
+    <button class="bulk-del" onclick="${active.del}">${t('common.delete')}</button>
     ${active.exp?`<button onclick="${active.exp}">Export CSV</button>`:''}
-    <button class="bulk-close" onclick="${active.clear}" title="Mégse">✕</button>`;
+    <button class="bulk-close" onclick="${active.clear}" title="${t('common.cancel')}">✕</button>`;
 }
 
 function _toggleBulkPos(id,checked){
@@ -4251,10 +4296,10 @@ function _toggleAllTx(checked){
 async function bulkDeletePositions(){
   const ids=[..._bulkPosIds];
   if(!ids.length)return;
-  if(ids.length>=3&&!await showConfirm('Tömeges törlés',`${ids.length} pozíció törlése. Visszavonható.`))return;
+  if(ids.length>=3&&!await showConfirm(t('confirm.bulkDelete'),t('confirm.bulkDeletePositions',{count:ids.length})))return;
   const snapshots=ids.map(id=>({idx:pfPositions.findIndex(p=>p.id===id),data:JSON.parse(JSON.stringify(pfPositions.find(p=>p.id===id)))})).filter(s=>s.data);
   const tickers=new Set(snapshots.map(s=>s.data.ticker));
-  undoableDelete(`${ids.length} pozíció törölve`,()=>{
+  undoableDelete(t('toast.bulkPositionsDeleted',{count:ids.length}),()=>{
     pfPositions=pfPositions.filter(p=>!_bulkPosIds.has(p.id));
     _bulkPosIds.clear();
     savePortfolioPositions();
@@ -4273,10 +4318,10 @@ async function bulkDeletePositions(){
 async function bulkDeleteTransactions(){
   const ids=[..._bulkTxIds];
   if(!ids.length)return;
-  if(ids.length>=3&&!await showConfirm('Tömeges törlés',`${ids.length} tranzakció törlése. Visszavonható.`))return;
+  if(ids.length>=3&&!await showConfirm(t('confirm.bulkDelete'),t('confirm.bulkDeleteTransactions',{count:ids.length})))return;
   const snapshots=ids.map(id=>({idx:pfTransactions.findIndex(t=>t.id===id),data:JSON.parse(JSON.stringify(pfTransactions.find(t=>t.id===id)))})).filter(s=>s.data);
   const tickers=new Set(snapshots.map(s=>s.data.ticker));
-  undoableDelete(`${ids.length} tranzakció törölve`,()=>{
+  undoableDelete(t('toast.bulkTransactionsDeleted',{count:ids.length}),()=>{
     pfTransactions=pfTransactions.filter(t=>!_bulkTxIds.has(t.id));
     _bulkTxIds.clear();
     savePortfolioTransactions();
@@ -4305,7 +4350,7 @@ function bulkExportPositions(){
   a.download=`positions-export-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
-  showToast(`${list.length} pozíció exportálva`);
+  showToast(t('toast.positionsExported',{count:list.length}));
 }
 
 function bulkExportTransactions(){
@@ -4321,7 +4366,7 @@ function bulkExportTransactions(){
   a.download=`transactions-export-${new Date().toISOString().split('T')[0]}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
-  showToast(`${list.length} tranzakció exportálva`);
+  showToast(t('toast.transactionsExported',{count:list.length}));
 }
 
 function _clearOtherBulk(keep){[_bulkPosIds,_bulkTxIds,_bulkNoteKeys,_bulkRvIds,_bulkStockNames].forEach(s=>{if(s!==keep)s.clear()})}
@@ -4334,10 +4379,10 @@ function _toggleAllNotes(checked){
 }
 async function bulkDeleteNotes(){
   const keys=[..._bulkNoteKeys];if(!keys.length)return;
-  if(keys.length>=3&&!await showConfirm('Tömeges törlés',`${keys.length} jegyzet törlése. Visszavonható.`))return;
+  if(keys.length>=3&&!await showConfirm(t('confirm.bulkDelete'),t('confirm.bulkDeleteNotes',{count:keys.length})))return;
   const snapshots=[];
-  keys.forEach(k=>{const[t,idStr]=k.split(':');const id=parseInt(idStr,10);const list=researchNotes[t];if(!list)return;const idx=list.findIndex(e=>e.id===id);if(idx!==-1)snapshots.push({type:t,idx,entry:JSON.parse(JSON.stringify(list[idx]))})});
-  undoableDelete(`${keys.length} jegyzet törölve`,()=>{
+  keys.forEach(k=>{const[tp,idStr]=k.split(':');const id=parseInt(idStr,10);const list=researchNotes[tp];if(!list)return;const idx=list.findIndex(e=>e.id===id);if(idx!==-1)snapshots.push({type:tp,idx,entry:JSON.parse(JSON.stringify(list[idx]))})});
+  undoableDelete(t('toast.bulkNotesDeleted',{count:keys.length}),()=>{
     const byType={};
     keys.forEach(k=>{const[t,idStr]=k.split(':');const id=parseInt(idStr,10);if(!byType[t])byType[t]=[];const list=researchNotes[t];if(list){const idx=list.findIndex(e=>e.id===id);if(idx!==-1)byType[t].push(idx)}});
     Object.keys(byType).forEach(t=>{byType[t].sort((a,b)=>b-a).forEach(idx=>researchNotes[t].splice(idx,1))});
@@ -4361,9 +4406,9 @@ function _toggleAllRv(checked){
 }
 async function bulkDeleteReviews(){
   const ids=[..._bulkRvIds];if(!ids.length)return;
-  if(ids.length>=3&&!await showConfirm('Tömeges törlés',`${ids.length} review törlése. Visszavonható.`))return;
+  if(ids.length>=3&&!await showConfirm(t('confirm.bulkDelete'),t('confirm.bulkDeleteReviews',{count:ids.length})))return;
   const snapshots=ids.map(id=>{const e=rvData.entries.find(x=>x.id===id);return e?{idx:rvData.entries.indexOf(e),entry:JSON.parse(JSON.stringify(e))}:null}).filter(Boolean);
-  undoableDelete(`${ids.length} review törölve`,()=>{
+  undoableDelete(t('toast.bulkReviewsDeleted',{count:ids.length}),()=>{
     rvData.entries=rvData.entries.filter(e=>!_bulkRvIds.has(e.id));
     _bulkRvIds.clear();saveReviews();const at=document.querySelector('.rv-tabs .tab.active');renderRvFeed(at?.dataset.rvtab||'all');renderDbReviewsDue();_updateBulkBar();
   },()=>{
@@ -4382,10 +4427,10 @@ function _toggleAllStocks(checked){
 }
 async function bulkDeleteStocks(){
   const names=[..._bulkStockNames];if(!names.length)return;
-  if(names.length>=3&&!await showConfirm('Tömeges törlés',`${names.length} részvény törlése. Visszavonható.`))return;
+  if(names.length>=3&&!await showConfirm(t('confirm.bulkDelete'),t('confirm.bulkDeleteStocks',{count:names.length})))return;
   const s=_getSavedStocks();const backups={};
   names.forEach(n=>{if(s[n])backups[n]=JSON.parse(JSON.stringify(s[n]))});
-  undoableDelete(`${names.length} részvény törölve`,()=>{
+  undoableDelete(t('toast.bulkStocksDeleted',{count:names.length}),()=>{
     const s2=_getSavedStocks();names.forEach(n=>delete s2[n]);_putSavedStocks(s2);
     _bulkStockNames.clear();renderSavedStocks();_updateBulkBar();
   },()=>{
@@ -4416,7 +4461,7 @@ function renderPositions(){
 
   if(!pfPositions.length){
     sumEl.innerHTML='';
-    c.innerHTML='<div class="pf-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">Még nincs pozíciód</p><p style="color:var(--text2);margin-bottom:16px">Add hozzá a befektetéseidet a portfólió követéséhez.</p><button class="btn btn-primary" onclick="openPositionModal()">+ Pozíció hozzáadása</button></div>';
+    c.innerHTML='<div class="pf-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M12 8v8M8 12h8"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">'+t('empty.noPositions')+'</p><p style="color:var(--text2);margin-bottom:16px">'+t('empty.noPositionsMsg')+'</p><button class="btn btn-primary" onclick="openPositionModal()">'+t('empty.addPosition')+'</button></div>';
     return;
   }
 
@@ -4662,7 +4707,7 @@ function deletePosition(id){
   if(!p)return;
   const idx=pfPositions.indexOf(p);
   const snapshot=JSON.parse(JSON.stringify(p));
-  undoableDelete(`Pozíció törölve: ${p.ticker}`,()=>{
+  undoableDelete(t('toast.positionDeleted',{ticker:p.ticker}),()=>{
     pfPositions=pfPositions.filter(x=>x.id!==id);
     savePortfolioPositions();
     _checkSellAllPositions(snapshot.ticker);
@@ -4702,7 +4747,7 @@ function renderTransactions(){
 
   if(!pfTransactions.length){
     sumEl.innerHTML='';
-    c.innerHTML='<div class="pf-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><path d="M12 2v20M17 7l-5-5-5 5"/><path d="M3 12h18" stroke-dasharray="3 3"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">Még nincs tranzakciód</p><p style="color:var(--text2);margin-bottom:16px">Rögzítsd az első vételi, eladási vagy osztalék tranzakciódat.</p><button class="btn btn-primary" onclick="openTransactionModal()">+ Tranzakció rögzítése</button></div>';
+    c.innerHTML='<div class="pf-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><path d="M12 2v20M17 7l-5-5-5 5"/><path d="M3 12h18" stroke-dasharray="3 3"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">'+t('empty.noTransactions')+'</p><p style="color:var(--text2);margin-bottom:16px">'+t('empty.noTransactionsMsg')+'</p><button class="btn btn-primary" onclick="openTransactionModal()">'+t('empty.addTransaction')+'</button></div>';
     return;
   }
 
@@ -4847,11 +4892,11 @@ function saveTransaction(){
 }
 
 function deleteTransaction(id){
-  const t=pfTransactions.find(x=>x.id===id);
-  if(!t)return;
-  const idx=pfTransactions.indexOf(t);
-  const snapshot=JSON.parse(JSON.stringify(t));
-  undoableDelete(`Tranzakció törölve: ${t.type} ${t.ticker}`,()=>{
+  const tx=pfTransactions.find(x=>x.id===id);
+  if(!tx)return;
+  const idx=pfTransactions.indexOf(tx);
+  const snapshot=JSON.parse(JSON.stringify(tx));
+  undoableDelete(t('toast.transactionDeleted',{type:tx.type,ticker:tx.ticker}),()=>{
     pfTransactions=pfTransactions.filter(x=>x.id!==id);
     savePortfolioTransactions();
     _checkSellAllPositions(snapshot.ticker);
@@ -4898,7 +4943,7 @@ async function takeSnapshot(){
   if(!pfPositions.length){showToast('No positions to snapshot','error');return}
   const today=new Date().toISOString().split('T')[0];
   if(pfSnapshots.find(s=>s.date===today)){
-    if(!await showConfirm('Snapshot felülírása','Ma már készült pillanatfelvétel. Felülírod?',{okLabel:'Felülírás',danger:false}))return;
+    if(!await showConfirm(t('confirm.snapshotOverwrite'),t('confirm.snapshotOverwriteMsg'),{okLabel:t('confirm.overwrite'),danger:false}))return;
     pfSnapshots=pfSnapshots.filter(s=>s.date!==today);
   }
   const base=getBaseCurrency();
@@ -4920,7 +4965,7 @@ async function takeSnapshot(){
 }
 
 async function deleteSnapshot(id){
-  if(!await showConfirm('Snapshot törlése','Biztosan törlöd ezt a pillanatfelvételt?'))return;
+  if(!await showConfirm(t('confirm.snapshotDelete'),t('confirm.snapshotDeleteMsg')))return;
   if(d1Mode)API.del('portfolio_snapshots/'+id).catch(e=>console.error('D1 del snapshot:',e));
   pfSnapshots=pfSnapshots.filter(s=>s.id!==id);
   savePortfolioSnapshots();
@@ -5776,7 +5821,7 @@ function renderDbNetWorth(){
 // ---- 5B: Terry Smith Weighted Metrics ----
 function renderDbSmithMetrics(){
   const el=document.getElementById('db-smith-content');
-  if(!pfPositions.length){el.innerHTML='<div class="db-empty">Adj hozzá pozíciókat a portfólió metrikákhoz. <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';return}
+  if(!pfPositions.length){el.innerHTML='<div class="db-empty">'+t('empty.portfolioMetrics')+' <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';return}
 
   const base=getBaseCurrency();
   let totalValue=0;
@@ -5831,7 +5876,7 @@ function renderDbSmithMetrics(){
 function renderDbAlerts(){
   const el=document.getElementById('db-alerts-content');
   const countEl=document.getElementById('db-alerts-count');
-  if(!pfPositions.length){el.innerHTML='<div class="db-empty">Adj hozzá pozíciókat az áralertekhez. <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';countEl.textContent='';return}
+  if(!pfPositions.length){el.innerHTML='<div class="db-empty">'+t('empty.priceAlerts')+' <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';countEl.textContent='';return}
 
   const ownedTickers=new Set(pfPositions.map(p=>p.ticker));
   const alerts=[];
@@ -5896,7 +5941,7 @@ function renderDbSellTriggers(){
     });
   });
   countEl.textContent=triggers.length?`(${triggers.length} across ${new Set(triggers.map(t=>t.ticker)).size} companies)`:'';
-  if(!ownedTickers.size){el.innerHTML='<div class="db-empty">Adj hozzá pozíciókat az eladási trigger-ekhez. <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';return}
+  if(!ownedTickers.size){el.innerHTML='<div class="db-empty">'+t('empty.sellTriggers')+' <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';return}
   if(!triggers.length){el.innerHTML='<div style="color:var(--text2);font-size:12px;padding:8px 0">No sell triggers set. Add them in each company\'s Checklist → Buy/Sell Decision.</div>';return}
   el.innerHTML=triggers.map(t=>`<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
     <span style="color:var(--accent);font-weight:600;font-size:12px;min-width:50px;cursor:pointer" onclick="showProfile('${escH(t.ticker)}')">${escH(t.ticker)}</span>
@@ -6736,7 +6781,7 @@ function deleteResearchEntry(type,id){
   const idx=list.findIndex(e=>e.id===id);
   if(idx===-1)return;
   const snapshot=JSON.parse(JSON.stringify(list[idx]));
-  undoableDelete('Jegyzet törölve',()=>{
+  undoableDelete(t('toast.noteDeleted'),()=>{
     list.splice(idx,1);
     saveResearchNotes();
     renderResearch();
@@ -9700,7 +9745,7 @@ function doArchiveStock(){
 }
 async function doDeleteStock(){
   const ticker=document.getElementById('archive-modal-ticker').value;
-  if(!await showConfirm('Végleges törlés',ticker+' és az összes kapcsolódó adat (jegyzet, review, pozíció, tranzakció) véglegesen törlődik.',{okLabel:'Véglegesen törlöm',typeToConfirm:ticker}))return;
+  if(!await showConfirm(t('confirm.permanentDelete'),t('confirm.permanentDeleteMsg',{ticker}),{okLabel:t('confirm.permanentDeleteOk'),typeToConfirm:ticker}))return;
   const d1Id=tStocks[ticker]&&tStocks[ticker]._d1Id;
   if(d1Mode&&d1Id)API.del('companies/'+d1Id).catch(e=>console.error('D1 del company:',e));
   delete tStocks[ticker];
@@ -11138,7 +11183,7 @@ function saveFwEntry(){
 }
 
 async function deleteFwEntry(type,id){
-  if(!await showConfirm('Elem törlése','Biztosan törlöd ezt az elemet?'))return;
+  if(!await showConfirm(t('confirm.deleteItem'),t('confirm.deleteItemMsg')))return;
   const arr=getFwArr(type);
   const idx=arr.findIndex(x=>x.id===id);
   if(idx>=0)arr.splice(idx,1);
@@ -11321,10 +11366,10 @@ const CL_SECTIONS=[
     {k:'returnCapitalReturn',label:'Capital Return %',type:'number',ph:'Dividend yield + buyback yield'},
     {k:'_g_edge',type:'group',label:'My Edge'},
     {k:'edge',label:'My Edge',type:'textarea',ph:'What do I know/believe that the market doesn\'t?'},
-    {k:'marketMispricing',label:'Market Mispricing',type:'textarea',ph:'Mi az, amit a piac rosszul áraz?'},
-    {k:'consensusError',label:'Consensus Error',type:'textarea',ph:'Miben téved a konszenzus?'},
-    {k:'kpiMisread',label:'Misread KPI',type:'textarea',ph:'Mi az a KPI, ami félre van értelmezve?'},
-    {k:'timeHorizonMismatch',label:'Time Horizon Mismatch',type:'textarea',ph:'Időhorizont mismatch? Short-term pain vs long-term value?'},
+    {k:'marketMispricing',label:'Market Mispricing',type:'textarea',ph:t('checklist.marketMispricing')},
+    {k:'consensusError',label:'Consensus Error',type:'textarea',ph:t('checklist.consensusError')},
+    {k:'kpiMisread',label:'Misread KPI',type:'textarea',ph:t('checklist.kpiMisread')},
+    {k:'timeHorizonMismatch',label:'Time Horizon Mismatch',type:'textarea',ph:t('checklist.timeHorizonMismatch')},
     {k:'whyOpportunityExists',label:'Why Does Opportunity Exist?',type:'textarea',ph:'Why is the market offering this? Most of the time the market is efficient.'},
     {k:'_g_sizing',type:'group',label:'Position Sizing & Timing'},
     {k:'riskLevel',label:'Risk Level',type:'select',opts:['','Very safe','Normal','Fragile','High risk']},
@@ -11772,7 +11817,7 @@ function updateClRisk(ticker,idx,field,value){
 }
 
 async function removeClRisk(ticker,idx){
-  if(!await showConfirm('Kockázat törlése','Biztosan törlöd ezt a kockázatot?'))return;
+  if(!await showConfirm(t('confirm.deleteRisk'),t('confirm.deleteRiskMsg')))return;
   const cl=ensureChecklist(ticker);
   if(!cl)return;
   const removed=cl.sections.risks.items.splice(idx,1)[0];
@@ -11968,7 +12013,7 @@ function updateClQuarter(ticker,idx,field,value){
 }
 
 async function removeClQuarter(ticker,idx){
-  if(!await showConfirm('Negyedév törlése','Biztosan törlöd ezt a negyedéves bejegyzést?'))return;
+  if(!await showConfirm(t('confirm.deleteQuarter'),t('confirm.deleteQuarterMsg')))return;
   const cl=ensureChecklist(ticker);
   if(!cl)return;
   cl.sections.quarterly_followup.entries.splice(idx,1);
@@ -12034,7 +12079,7 @@ function updateClLearning(ticker,idx,field,value){
 }
 
 async function removeClLearning(ticker,idx){
-  if(!await showConfirm('Tanulság törlése','Biztosan törlöd ezt a tanulságot?'))return;
+  if(!await showConfirm(t('confirm.deleteLearning'),t('confirm.deleteLearningMsg')))return;
   const cl=ensureChecklist(ticker);
   if(!cl)return;
   cl.sections.learning_log.entries.splice(idx,1);
@@ -12285,7 +12330,7 @@ function renderRvFeed(type){
   let h=`<div class="rv-header"><h3>${type==='all'?'All Reviews':type.charAt(0).toUpperCase()+type.slice(1)+' Reviews'}</h3><button class="btn btn-primary" onclick="openReview('${type==='all'?'weekly':type}')">+ New Review</button></div>`;
 
   if(!entries.length){
-    h+=`<div class="rv-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><path d="M4 4h16v18H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">Még nincs review-d</p><p style="color:var(--text2);margin-bottom:16px">Kezdd el az első ${type==='all'?'':type+' '}review-dat a befektetési döntéseid nyomon követéséhez.</p><button class="btn btn-primary" onclick="openReview('${type==='all'?'weekly':type}')">+ Új Review</button></div>`;
+    h+=`<div class="rv-empty" style="text-align:center;padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:40px;height:40px;color:var(--text2);margin-bottom:12px"><path d="M4 4h16v18H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg><p style="font-size:15px;font-weight:500;margin-bottom:4px">${t('empty.noReviews')}</p><p style="color:var(--text2);margin-bottom:16px">${t('empty.noReviewsMsg',{type:type==='all'?'':type+' '})}</p><button class="btn btn-primary" onclick="openReview('${type==='all'?'weekly':type}')">${t('empty.addReview')}</button></div>`;
     panel.innerHTML=h;return;
   }
 
@@ -12413,7 +12458,7 @@ function deleteReview(id){
     renderDbReviewsDue();
     if(delTicker)renderReviewDueBadge(delTicker);
   }
-  undoableDelete('Review törölve',()=>{
+  undoableDelete(t('toast.reviewDeleted'),()=>{
     rvData.entries=rvData.entries.filter(e=>e.id!==id);
     saveReviews();
     rerender();
@@ -12464,9 +12509,9 @@ function updateD1UI(){
 
 async function startD1Migration(){
   if(localStorage.getItem('d1_migrating')==='1'){
-    if(!await showConfirm('Migráció újrapróbálása','Egy korábbi migráció nem fejeződött be. Újrapróbálod? A felhő adatok felülíródnak.',{okLabel:'Újrapróbálás'}))return;
+    if(!await showConfirm(t('confirm.migrationRetry'),t('confirm.migrationRetryMsg'),{okLabel:t('confirm.migrationRetryOk')}))return;
   }else{
-    if(!await showConfirm('D1 migráció','Ez feltölti az összes helyi adatot a D1 felhő adatbázisba. A localStorage adatok megmaradnak backupként.',{okLabel:'Migráció indítása'}))return;
+    if(!await showConfirm(t('confirm.d1Migration'),t('confirm.d1MigrationMsg'),{okLabel:t('confirm.d1MigrationOk')}))return;
   }
   const btn=document.getElementById('d1-migrate-btn');
   const status=document.getElementById('d1-migrate-status');
@@ -12702,6 +12747,8 @@ async function autoLoad(){
   runMigrations();
   loadTrackerSettings();
   applyTheme(localStorage.getItem('app_theme')||'dark');
+  applyI18n();
+  var langSel=document.getElementById('lang-select');if(langSel)langSel.value=_lang;
 
   // Check if D1 mode should be active
   const hasD1=API.init();
@@ -12710,7 +12757,7 @@ async function autoLoad(){
     const dot=document.getElementById('d1-status-dot');
     if(dot)dot.style.display='';
     if(!navigator.onLine){
-      showToast('Offline — loading from local cache','warning',4000);
+      showToast(t('toast.offlineCache'),'warning',4000);
       d1Mode=false;
       loadTrackerStocks();loadResearchNotes();
       loadPortfolioAccounts();loadPortfolioPositions();loadPortfolioTransactions();

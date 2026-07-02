@@ -272,7 +272,8 @@ Status: COMPLETE (2026-06-27)
 - [x] Lazy-load charts (defer Chart.js rendering until canvas is visible)
 - [ ] Import merge strategy: Object.assign vs full replace — make consistent with cloud sync behavior
 - [x] CSV import locale detection (European vs US number formats, auto-detect with manual override)
-- [x] Toast hover pause — all toasts pause auto-dismiss on mouseenter, resume on mouseleave (min 1s). Recovery toast shows Hungarian details (which data types were recovered).
+- [x] Toast hover pause — all toasts pause auto-dismiss on mouseenter, resume on mouseleave (min 1s). Recovery toast shows details (which data types were recovered).
+- [x] i18n localization — Full EN/HU translation system: 157 translation keys, `t(key, params)` function, `data-i18n` attributes, language switcher in sidebar + settings, localStorage persistence. English default, Hungarian available. All confirmations, empty states, validation messages, toasts, bulk bar, search, navigation translated.
 
 ---
 
