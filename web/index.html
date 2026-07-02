@@ -496,7 +496,21 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .pf-summary-value{font-weight:600}
 .pf-pos-table{width:100%;border-collapse:collapse;font-size:13px}
 .pf-pos-table thead{position:sticky;top:0;z-index:1}
-.pf-pos-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text2);background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap}
+.pf-pos-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;color:var(--text2);background:var(--surface);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
+.pf-pos-table th.sortable:hover{color:var(--text)}
+.pf-pos-table th.sorted{color:var(--accent)}
+.pf-pos-table th .sa{font-size:10px;opacity:.4}
+.pf-pos-table th.sorted .sa{opacity:1}
+.pf-pin{background:none;border:none;cursor:pointer;padding:0 4px;font-size:14px;color:var(--text2);opacity:.3;transition:all .15s}
+.pf-pin:hover,.pf-pin.pinned{opacity:1;color:var(--yellow)}
+.st-pipe-bar{display:flex;gap:0;margin:8px 0 4px;flex-wrap:wrap}
+.st-pipe-btn{padding:5px 14px;font-size:11px;font-weight:600;color:var(--text2);background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:all .2s;white-space:nowrap}
+.st-pipe-btn:not(:first-child):not(.st-pipe-arch){border-left:none}
+.st-pipe-btn:hover{background:var(--surface2);color:var(--text)}
+.st-pipe-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.st-pipe-btn.active+.st-pipe-btn{border-left-color:var(--accent)}
+.st-pipe-arch{border-radius:6px!important;margin-left:8px;border:1px solid var(--border)!important;opacity:.7}
+.st-pipe-arch.active{background:var(--text2);color:var(--bg);border-color:var(--text2);opacity:1}
 .pf-pos-table th.num{text-align:right}
 .pf-pos-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
 .pf-pos-table td.num{text-align:right;font-variant-numeric:tabular-nums}
@@ -1677,6 +1691,8 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
   <button class="btn btn-primary" onclick="openComparison()" id="compare-open-btn" style="padding:6px 16px;font-size:12px" disabled data-i18n="comp.compareSelected">Compare Selected</button>
   <button class="btn btn-secondary" onclick="toggleCompareMode()" style="padding:6px 12px;font-size:12px">Cancel</button>
 </div>
+
+<div id="st-pipe-bar" class="st-pipe-bar"></div>
 
 <div class="st-wrap">
   <table class="st-table">
@@ -4710,7 +4726,7 @@ function renderPositions(){
   const base=getBaseCurrency();
   const hasRates=pfExchangeRates.rates&&Object.keys(pfExchangeRates.rates).length>0;
   const hasMixedCurrency=list.some(p=>(p.currency||'USD')!==base);
-  const rows=list.map(pos=>{
+  const enriched=list.map(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
@@ -4722,6 +4738,30 @@ function renderPositions(){
       const cvMkt=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cvMkt))totalValue+=cvMkt;else if(isFinite(mktVal))totalValue+=mktVal;
       if(!isNaN(cost)){const cvCost=convertCurrency(cost,pos.currency||'USD',base);if(isFinite(cvCost))totalCost+=cvCost;else if(isFinite(cost))totalCost+=cost}
     }
+    return{pos,price,shares,avg,cost,mktVal,pnl,pnlPct};
+  });
+  enriched.sort((a,b)=>{
+    if(a.pos.pinned&&!b.pos.pinned)return -1;
+    if(!a.pos.pinned&&b.pos.pinned)return 1;
+    const col=pfSort.col;
+    let va,vb;
+    if(col==='ticker'){va=a.pos.ticker||'';vb=b.pos.ticker||''}
+    else if(col==='account'){va=getAccountName(a.pos.accountId);vb=getAccountName(b.pos.accountId)}
+    else if(col==='type'){va=a.pos.assetType||'other';vb=b.pos.assetType||'other'}
+    else if(col==='shares'){va=a.shares;vb=b.shares}
+    else if(col==='avgCost'){va=a.avg;vb=b.avg}
+    else if(col==='price'){va=a.price;vb=b.price}
+    else if(col==='value'){va=a.mktVal;vb=b.mktVal}
+    else if(col==='pnl'){va=a.pnl;vb=b.pnl}
+    else if(col==='pnlPct'){va=a.pnlPct;vb=b.pnlPct}
+    else{va=a.mktVal;vb=b.mktVal}
+    if(va==null&&vb==null)return 0;
+    if(va==null)return 1;
+    if(vb==null)return -1;
+    if(typeof va==='string'&&typeof vb==='string')return pfSort.dir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    return pfSort.dir==='asc'?(va-vb):(vb-va);
+  });
+  const rows=enriched.map(({pos,price,shares,avg,cost,mktVal,pnl,pnlPct})=>{
     const pnlClass=pnl!=null?(pnl>=0?'pf-positive':'pf-negative'):'';
     const tickerLink=tStocks[pos.ticker]?`onclick="showProfile('${escH(pos.ticker)}')" class="pf-pos-ticker"`:'class="pf-pos-ticker"';
     const at=pos.assetType||'other';
@@ -4746,6 +4786,7 @@ function renderPositions(){
       <td class="num ${pnlClass}">${pnl!=null?(pnl>=0?'+':'')+fmt(pnl,2):'—'}</td>
       <td class="num ${pnlClass}">${pnlPct!=null?(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%':'—'}</td>
       <td><div class="pf-pos-actions">
+        <button class="pf-pin${pos.pinned?' pinned':''}" onclick="togglePinPosition(${pos.id})" title="${pos.pinned?t('common.unpin'):t('common.pin')}">★</button>
         <button onclick="openPositionModal(${pos.id})" title="Edit" aria-label="Edit position ${escH(pos.ticker||'')}">✏️</button>
         <button class="pf-del" onclick="deletePosition(${pos.id})" title="Delete" aria-label="Delete position ${escH(pos.ticker||'')}">🗑️</button>
       </div></td>
@@ -4762,8 +4803,17 @@ function renderPositions(){
     <div class="pf-summary-item"><span class="pf-summary-label">P&L</span><span class="pf-summary-value ${pClass}">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} (${isFinite(totalPnlPct)?(totalPnlPct>=0?'+':'')+totalPnlPct.toFixed(1)+'%':'—'})</span></div>
   </div>${hasMixedCurrency&&!hasRates?'<div style="color:var(--yellow);font-size:12px;padding:4px 8px">⚠ '+t('pf.ratesNotLoaded')+' <button onclick="fetchExchangeRates()" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline">'+t('pf.fetchRates')+'</button></div>':''}`;
 
+  function pfTh(col,label,cls){
+    const sorted=pfSort.col===col?' sorted':'';
+    const arrow=pfSort.col===col?(pfSort.dir==='asc'?'▲':'▼'):'▲';
+    return`<th scope="col" class="${cls||''}${sorted} sortable" onclick="sortPositions('${col}')">${label} <span class="sa">${arrow}</span></th>`;
+  }
   c.innerHTML=`<div style="overflow-x:auto"><table class="pf-pos-table"><thead><tr>
-    <th><input type="checkbox" class="bulk-cb" onchange="_toggleAllPos(this.checked)"${_bulkPosIds.size&&list.every(p=>_bulkPosIds.has(p.id))?' checked':''} title="Select all"></th><th scope="col">${t('pf.ticker')}</th><th scope="col">${t('pf.account')}</th><th scope="col">${t('pf.type')}</th><th scope="col" class="num">${t('pf.shares')}</th><th scope="col" class="num">${t('pf.avgCost')}</th><th scope="col" class="num">${t('pf.priceCol')}</th><th scope="col" class="num">${t('pf.value')}</th><th scope="col" class="num">P&L</th><th scope="col" class="num">P&L %</th><th></th>
+    <th style="cursor:default"><input type="checkbox" class="bulk-cb" onchange="_toggleAllPos(this.checked)"${_bulkPosIds.size&&enriched.every(r=>_bulkPosIds.has(r.pos.id))?' checked':''} title="Select all"></th>
+    ${pfTh('ticker',t('pf.ticker'))}${pfTh('account',t('pf.account'))}${pfTh('type',t('pf.type'))}
+    ${pfTh('shares',t('pf.shares'),'num')}${pfTh('avgCost',t('pf.avgCost'),'num')}${pfTh('price',t('pf.priceCol'),'num')}
+    ${pfTh('value',t('pf.value'),'num')}${pfTh('pnl',t('pf.plCol'),'num')}${pfTh('pnlPct',t('pf.plPct'),'num')}
+    <th style="cursor:default"></th>
   </tr></thead><tbody>${rows.join('')}</tbody></table></div>`;
 }
 
@@ -9053,6 +9103,8 @@ const TNAMES={AAPL:'Apple',AMZN:'Amazon',GOOGL:'Google',MSFT:'Microsoft',META:'M
 const DEFAULT_TICKERS=Object.keys(TNAMES);
 let tStocks={};
 let stSort={col:'ticker',dir:'asc'};
+let stPipeFilter=new Set();
+let pfSort={col:'value',dir:'desc'};
 let stExpanded={};
 
 function parseNum(s){s=String(s).trim().replace(/\s/g,'');if(s.length>30)return 0;if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))s=s.replace(/\./g,'').replace(',','.');else if(/^-?\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');s=s.replace(/,/g,'');const m=s.match(/^(-?[\d.]+)\s*([TtBbGgMmKk]?)$/);if(!m)return parseFloat(s)||0;let n=parseFloat(m[1]);const u=m[2].toUpperCase();if(u==='T')n*=1e12;else if(u==='B'||u==='G')n*=1e9;else if(u==='M')n*=1e6;else if(u==='K')n*=1e3;return n}
@@ -10472,6 +10524,25 @@ function sortTracker(col){
   else{stSort.col=col;stSort.dir='asc'}
   renderTracker();
 }
+function togglePinStock(ticker){
+  const s=tStocks[ticker];if(!s)return;
+  s.pinned=!s.pinned;
+  if(!s.pinned)delete s.pinned;
+  saveTrackerStocks();
+  renderTracker();
+}
+function togglePinPosition(id){
+  const pos=pfPositions.find(p=>p.id===id);if(!pos)return;
+  pos.pinned=!pos.pinned;
+  if(!pos.pinned)delete pos.pinned;
+  savePortfolioPositions();
+  renderPositions();
+}
+function sortPositions(col){
+  if(pfSort.col===col)pfSort.dir=pfSort.dir==='asc'?'desc':'asc';
+  else{pfSort.col=col;pfSort.dir=col==='ticker'||col==='account'||col==='type'?'asc':'desc'}
+  renderPositions();
+}
 
 let _showArchived=false;
 function toggleShowArchived(){
@@ -10623,14 +10694,48 @@ function renderScatterChart(){
   });
 }
 
+function renderPipelineBar(){
+  const bar=document.getElementById('st-pipe-bar');
+  if(!bar)return;
+  const allStocks=Object.values(tStocks);
+  const noStageCount=allStocks.filter(s=>!s.pipeline).length;
+  let html='';
+  if(noStageCount){
+    const active=stPipeFilter.has('')?' active':'';
+    html+=`<button class="st-pipe-btn${active}" onclick="togglePipeFilter('')" style="border-right:1px solid var(--border);margin-right:6px;border-radius:6px">— <span style="opacity:.6;font-weight:400">(${noStageCount})</span></button>`;
+  }
+  const nonArch=PIPE_STAGES.filter(s=>s!=='Archived');
+  html+=nonArch.map((st,i)=>{
+    const count=allStocks.filter(s=>(s.pipeline||'')===st).length;
+    const active=stPipeFilter.has(st)?' active':'';
+    let radius='';
+    if(i===0)radius='border-radius:6px 0 0 6px;';
+    if(i===nonArch.length-1)radius='border-radius:0 6px 6px 0;';
+    return`<button class="st-pipe-btn${active}" style="${radius}" onclick="togglePipeFilter('${escH(st)}')">${escH(st)} <span style="opacity:.6;font-weight:400">(${count})</span></button>`;
+  }).join('');
+  const archCount=allStocks.filter(s=>(s.pipeline||'')==='Archived').length;
+  const archActive=stPipeFilter.has('Archived')?' active':'';
+  html+=`<button class="st-pipe-btn st-pipe-arch${archActive}" onclick="togglePipeFilter('Archived')">Archived <span style="opacity:.6;font-weight:400">(${archCount})</span></button>`;
+  bar.innerHTML=html;
+}
+function togglePipeFilter(stage){
+  if(stPipeFilter.has(stage))stPipeFilter.delete(stage);
+  else stPipeFilter.add(stage);
+  renderTracker();
+}
 function renderTracker(){
+  renderPipelineBar();
   const filter=(document.getElementById('st-filter')?.value||'').toLowerCase();
   let stocks=Object.values(tStocks);
   const archivedCount=stocks.filter(s=>(s.pipeline||'')==='Archived').length;
   const archBtn=document.getElementById('show-archived-btn');
   if(archBtn){archBtn.textContent=archivedCount?(_showArchived?t('comp.hideArchived',{count:archivedCount}):t('comp.showArchived',{count:archivedCount})):t('comp.noArchived');archBtn.classList.toggle('active',_showArchived);archBtn.style.display=archivedCount?'':'none'}
   const screenerWantsArchived=screenerFilters.pipeline&&screenerFilters.pipeline.value==='Archived';
-  if(!_showArchived&&!screenerWantsArchived)stocks=stocks.filter(s=>(s.pipeline||'')!=='Archived');
+  if(stPipeFilter.size){
+    stocks=stocks.filter(s=>stPipeFilter.has(s.pipeline||''));
+  }else if(!_showArchived&&!screenerWantsArchived){
+    stocks=stocks.filter(s=>(s.pipeline||'')!=='Archived');
+  }
   if(filter)stocks=stocks.filter(s=>(s.ticker+' '+(s.name||'')+' '+(s.thesis||'')+' '+(s.moat||'')).toLowerCase().includes(filter));
   stocks=applyScreenerFilters(stocks);
   const scCountEl=document.getElementById('screener-count');
@@ -10644,6 +10749,8 @@ function renderTracker(){
   function getRatio(s){if(!_ratioCache.has(s.ticker))_ratioCache.set(s.ticker,calcStockRatios(s));return _ratioCache.get(s.ticker)}
 
   stocks.sort((a,b)=>{
+    if(a.pinned&&!b.pinned)return -1;
+    if(!a.pinned&&b.pinned)return 1;
     const col=stSort.col;
     let va,vb;
     if(['moneyBack','aria','dcf','reverseDcf'].includes(col)){
@@ -10713,7 +10820,7 @@ function renderTracker(){
           html+=`<td class="${fr}"${ls}><button class="st-exp-btn ${stExpanded[s.ticker]?'open':''}" onclick="toggleStockExpand('${escH(s.ticker)}')">&#9654;</button></td>`;
         }
       }else if(c.k==='_del'){
-        html+=`<td><button class="st-del" onclick="removeTrackerStock('${escH(s.ticker)}')">&#215;</button></td>`;
+        html+=`<td><button class="pf-pin${s.pinned?' pinned':''}" onclick="event.stopPropagation();togglePinStock('${escH(s.ticker)}')" title="${s.pinned?t('common.unpin'):t('common.pin')}">★</button><button class="st-del" onclick="removeTrackerStock('${escH(s.ticker)}')">&#215;</button></td>`;
       }else if(c.k==='ticker'){
         html+=`<td class="st-ticker${fr}"${ls} onclick="showProfile('${escH(s.ticker)}')" title="Click to view company profile">${escH(s.ticker)}</td>`;
       }else if(c.d){
