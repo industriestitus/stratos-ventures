@@ -126,6 +126,9 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .result-box .value{font-size:20px;font-weight:700}
 .chart-container{position:relative;height:280px;margin-top:12px;overflow:hidden}
 .chart-container canvas{max-width:100%}
+.chart-dl-btn{position:absolute;top:6px;right:6px;z-index:3;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;cursor:pointer;opacity:0;transition:opacity .2s;font-size:13px;color:var(--text2);line-height:1}
+.chart-container:hover .chart-dl-btn,.db-widget:hover .chart-dl-btn,.db-alloc-item:hover .chart-dl-btn,.cp-hist-chart:hover .chart-dl-btn,.db-bench-chart:hover .chart-dl-btn{opacity:1}
+.chart-dl-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 @media(max-width:1000px){.two-col,.three-col{grid-template-columns:1fr}}
@@ -199,9 +202,9 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .st-controls button:hover{border-color:var(--accent);color:var(--text)}
 .st-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
 .st-table{border-collapse:separate;border-spacing:0;font-size:11px;table-layout:fixed}
-.st-table th{position:sticky;top:0;background:var(--surface2);padding:6px 4px;text-align:left;font-size:9px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;cursor:pointer;white-space:nowrap;border-bottom:2px solid var(--border);-webkit-user-select:none;user-select:none;z-index:2}
+.st-table th{position:sticky;top:0;background:var(--surface2);padding:6px 4px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;cursor:pointer;white-space:nowrap;border-bottom:2px solid var(--border);-webkit-user-select:none;user-select:none;z-index:2}
 .st-table th:hover{color:var(--text)}
-.st-table th .sa{font-size:8px;margin-left:2px;opacity:.3}
+.st-table th .sa{font-size:10px;margin-left:2px;opacity:.3}
 .st-table th.sorted .sa{opacity:1;color:var(--accent)}
 .st-table td{padding:4px 4px;border-bottom:1px solid var(--border);white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;background:var(--surface)}
 .st-table tr:hover td{background:rgba(35,39,52,.6)}
@@ -3294,6 +3297,45 @@ function cv(name){return getComputedStyle(document.documentElement).getPropertyV
 
 // ---- Lazy chart rendering (IntersectionObserver) ----
 const _lazyChartCallbacks=new Map();
+function exportChartPng(canvas,title){
+  const src=canvas;
+  const pad=16,logoH=20;
+  const w=src.width,h=src.height;
+  const out=document.createElement('canvas');
+  out.width=w+pad*2;out.height=h+pad*2+logoH;
+  const ctx=out.getContext('2d');
+  const bg=getComputedStyle(document.documentElement).getPropertyValue('--surface').trim()||'#1a1d27';
+  ctx.fillStyle=bg;ctx.fillRect(0,0,out.width,out.height);
+  ctx.drawImage(src,pad,pad);
+  const lx=out.width-pad-8,ly=out.height-pad+2;
+  ctx.save();ctx.translate(lx,ly);ctx.rotate(-25*Math.PI/180);
+  ctx.beginPath();ctx.ellipse(0,0,10,4,0,0,Math.PI*2);
+  ctx.strokeStyle='#a29bfe';ctx.lineWidth=1;ctx.stroke();ctx.restore();
+  ctx.font='bold 11px Arial';ctx.fillStyle='#6c9bd1';ctx.textAlign='right';ctx.textBaseline='middle';
+  ctx.fillText('Stratos Ventures',lx-14,ly);
+  const link=document.createElement('a');
+  link.download=(title||'chart')+'.png';
+  link.href=out.toDataURL('image/png');
+  link.click();
+}
+function _initChartDlButtons(){
+  document.querySelectorAll('.chart-container canvas, .db-alloc-item canvas, .db-bench-chart canvas, .cp-hist-chart canvas').forEach(c=>{
+    const parent=c.closest('.chart-container')||c.closest('.db-alloc-item')||c.closest('.db-bench-chart')||c.closest('.cp-hist-chart');
+    if(!parent||parent.querySelector('.chart-dl-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='chart-dl-btn';btn.title='Download PNG';btn.textContent='⤓';
+    btn.onclick=e=>{e.stopPropagation();const title=parent.closest('.card,.db-widget,.db-alloc-item')?.querySelector('.card-title,.db-widget-title,.db-alloc-label')?.textContent?.trim()||c.id||'chart';exportChartPng(c,title.replace(/[^a-zA-Z0-9_-]/g,'_'))};
+    parent.style.position='relative';
+    parent.insertBefore(btn,parent.firstChild);
+  });
+}
+const _chartDlObserver=new MutationObserver(()=>_initChartDlButtons());
+document.addEventListener('DOMContentLoaded',()=>{
+  const appEl=document.getElementById('app');
+  if(appEl)_chartDlObserver.observe(appEl,{childList:true,subtree:true});
+  setTimeout(_initChartDlButtons,500);
+});
+
 const _lazyChartObserver=new IntersectionObserver((entries)=>{
   entries.forEach(entry=>{
     if(!entry.isIntersecting)return;
