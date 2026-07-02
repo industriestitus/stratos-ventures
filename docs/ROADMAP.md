@@ -267,7 +267,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Empty states — Icon + Hungarian heading + description + CTA button for Portfolio Overview, Positions, Transactions, Reviews, and Dashboard widgets
 - [x] Bulk operations — Multi-select checkboxes, floating action bar (delete + CSV export), undo support for all 5 sections (positions, transactions, notes, reviews, tracked stocks), cross-mode guard, D1 delete propagation
 - [x] Section fade transitions — 150ms fade-in animation on section switch (opacity + translateY)
-- [x] Skeleton loading screens — shimmer-animated placeholders for dashboard, profile, table, insider trading; light/dark theme support
+- [x] Skeleton loading screens — shimmer-animated placeholders for all API fetch operations: dashboard widgets (benchmark, dip finder, earnings), company profile, insider trading, dividends, charts, exchange rates; button loading states with spinner; light/dark theme support
 - [x] Confirmation dialogs — 3-tier system replacing native confirm(): simple confirm (cascade deletes), danger confirm with type-to-confirm (backup restore, permanent stock delete), bulk confirm (3+ items); focus trap, keyboard support, ARIA, re-entrancy guard, Hungarian UI
 - [x] Scroll position preservation — cross-section, profile open/close, sub-tab switching, history.scrollRestoration='manual'
 - [x] Dark/light/auto theme toggle — 3-state toggle (dark/light/auto), auto follows OS `prefers-color-scheme`, live update on OS change, half-circle icon

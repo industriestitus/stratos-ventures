@@ -48,8 +48,10 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 39 | XLSX Export + Portfolio PDF | `0d2895c` | 2026-07-02 | 4 QA | 0 |
 | 40 | Import Merge Strategy | `95ff2b0` | 2026-07-02 | 3 | 0 |
 | 41 | Position Sort, Pin-to-Top, Pipeline Filter | `8bae88e` | 2026-07-02 | 4 | 8 |
+| 42 | Custom Tag System | `97a2496` | 2026-07-02 | 8 | 0 |
+| 43 | Skeleton Loading States | `e1cfd66` | 2026-07-02 | 1 | 0 |
 
-**Total: 263 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 272 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -968,6 +970,12 @@ Added user-defined tag system: add/remove tags on company profiles with datalist
 | 6 | LOW | "Any" option in screener hardcoded in English | Changed to `t('common.any')`, added EN/HU i18n keys |
 | 7 | MEDIUM | Stale tag filter entries remain after all stocks with that tag are untagged | Added pruning loop in `renderTagFilterBar()` to remove stale entries from `stTagFilter` |
 | 8 | LOW | Static datalist ID `tag-suggestions` — only one profile open at a time so no conflict | Accepted — single-profile SPA, no conflict possible |
+
+## Category 43 — Skeleton Loading States (2026-07-02) — `e1cfd66`
+
+| # | Severity | Issue | Fix |
+|---|----------|-------|-----|
+| 1 | MEDIUM | `fetchAllDividendData` skeleton appended to full panel container — invisible below existing content | Changed from `showSkeleton` to `showSpinner` overlay which covers entire panel |
 
 ---
 
