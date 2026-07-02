@@ -273,7 +273,7 @@ Status: COMPLETE (2026-06-27)
 - [ ] Import merge strategy: Object.assign vs full replace — make consistent with cloud sync behavior
 - [x] CSV import locale detection (European vs US number formats, auto-detect with manual override)
 - [x] Toast hover pause — all toasts pause auto-dismiss on mouseenter, resume on mouseleave (min 1s). Recovery toast shows details (which data types were recovered).
-- [x] i18n localization — Full EN/HU translation system: 157 translation keys, `t(key, params)` function, `data-i18n` attributes, language switcher in sidebar + settings, localStorage persistence. English default, Hungarian available. All confirmations, empty states, validation messages, toasts, bulk bar, search, navigation translated.
+- [x] i18n localization — Full EN/HU translation system: 744 keys across 23 namespaces, `t(key, params)` function, `data-i18n` attributes, language switcher in sidebar + settings. English default, Hungarian available. Deep pass: all UI chrome translated (nav, buttons, labels, tooltips, badges, empty states, toasts, confirmations, modals). Financial terms (DCF, FCF, P/E) stay English by design.
 
 ---
 
