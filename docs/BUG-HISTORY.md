@@ -56,8 +56,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 48 | Settings Pill Navigation | — | 2026-07-03 | 3 | 0 |
 | 49 | Typography Scale | — | 2026-07-03 | 6 | 0 |
 | 50 | Card Style Consistency | — | 2026-07-03 | 2 | 0 |
+| 51 | Inline Hover Styles | — | 2026-07-03 | 5 | 0 |
 
-**Total: 289 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 294 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1064,6 +1065,20 @@ Unified card border-radius to var(--radius) and normalized db-hero padding.
 |---|----------|-----|-----|
 | 1 | LOW | 5 card classes used hardcoded border-radius (10px/8px) instead of var(--radius) | Changed pf-account-card, pf-summary-card, pf-summary-bar, cp-val-item, skel-card to var(--radius) |
 | 2 | LOW | db-hero padding 24px inconsistent with other full cards (20px) | Changed to 20px (mobile override 16px kept) |
+
+---
+
+## Category 51 — Inline Hover Styles (2026-07-03)
+
+Replaced 5 inline JS hover handlers with CSS :hover pseudo-classes.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | LOW | Language toggle uses onmouseover/onmouseout for hover background | Created `.sidebar-btn` CSS class with `:hover` rule |
+| 2 | LOW | Theme toggle uses onmouseover/onmouseout for hover background | Created `.sidebar-btn--theme` CSS class with `:hover` rule |
+| 3 | LOW | Toast undo button uses onmouseenter/onmouseleave + inline cssText | Created `.toast-undo` CSS class with `:hover` rule |
+| 4 | LOW | Dividend calendar tooltip show/hide via inline JS handlers | CSS `.div-cal-day:hover .div-cal-tooltip{display:block}` replaces JS |
+| 5 | LOW | External links use onmouseover/onmouseout for color swap | Created `.cp-ext-link` CSS class with `:hover` rule |
 
 ---
 

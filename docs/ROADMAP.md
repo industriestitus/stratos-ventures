@@ -291,6 +291,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Settings pill navigation — Sticky nav bar with 8 pills for quick section jumping, smooth scroll, active state highlight, overflow:visible fix for position:sticky
 - [x] Typography scale — 8-level CSS variable scale (--fs-xs:10px through --fs-3xl:20px), eliminated 9px/17px/22px, consolidated dialog headings to 16px, hero numbers to 20px, converted 285 CSS class declarations
 - [x] Card style consistency — Unified 5 card classes to var(--radius), normalized db-hero padding 24→20px
+- [x] Inline hover styles — Replaced 5 inline JS onmouseover/onmouseout handlers with CSS :hover classes (sidebar buttons, toast undo, dividend calendar tooltip, external links)
 - [ ] Error states polish — Chart container inline error placeholders ("Failed to load chart"), dashboard widget error states. Core API error handling (toasts, rate limit warnings, offline detection, retry logic) already complete.
 - [ ] Tooltips expansion — Dashboard widget tooltips, portfolio table column tooltips, screener metric tooltips. Company profile metric tooltips (definition, formula, benchmark) already complete.
 - [ ] Accessibility (ARIA) — `aria-live="polite"` on toast container (screen reader announces toasts), `aria-expanded` on collapsible toggles (yearly growth, checklist sections, More menu), hidden `aria-live` region for section switch announcements. Core ARIA already done: `aria-label` on buttons, `role="dialog"` on modals, focus trap, keyboard nav, skip link.
