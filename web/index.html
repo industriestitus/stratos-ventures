@@ -50,6 +50,16 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 .sidebar-logo{display:flex;align-items:center;gap:10px;padding:20px 20px 16px;border-bottom:1px solid var(--border)}
 .sidebar-logo svg{width:28px;height:28px;flex-shrink:0}
 .sidebar-logo span{font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+.sidebar-btn{margin-left:auto;background:none;border:1px solid var(--border);cursor:pointer;padding:2px 6px;border-radius:4px;font-size:10px;color:var(--text2);font-family:inherit;flex-shrink:0;letter-spacing:.5px;transition:background .2s}
+.sidebar-btn:hover{background:var(--surface2)}
+.sidebar-btn--theme{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;transition:all .2s;flex-shrink:0}
+.sidebar-btn--theme:hover{background:var(--surface2)}
+.toast-undo{padding:4px 12px;border-radius:6px;border:1px solid var(--orange);background:transparent;color:var(--orange);cursor:pointer;font-size:var(--fs-base);font-weight:600;font-family:inherit;white-space:nowrap;transition:all .2s}
+.toast-undo:hover{background:var(--orange);color:var(--bg)}
+.div-cal-day .div-cal-tooltip{display:none}
+.div-cal-day:hover .div-cal-tooltip{display:block}
+.cp-ext-link{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;background:var(--surface2);color:var(--accent);font-size:11px;font-weight:600;text-decoration:none;border:1px solid var(--border);transition:background .2s,color .2s}
+.cp-ext-link:hover{background:var(--accent);color:#fff}
 .sidebar-nav{display:flex;flex-direction:column;gap:2px;padding:12px 8px;flex:1}
 .nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;border:none;background:transparent;color:var(--text2);font-size:var(--fs-md);font-weight:500;cursor:pointer;transition:all .2s;text-align:left;font-family:inherit;width:100%}
 .nav-item:hover{background:var(--surface2);color:var(--text)}
@@ -1263,8 +1273,8 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="6" fill="#0f1117"/><ellipse cx="16" cy="16" rx="13" ry="5" fill="none" stroke="#a29bfe" stroke-width="1.2" transform="rotate(-25 16 16)"/><text x="16" y="20" text-anchor="middle" font-family="Arial,sans-serif" font-weight="bold" font-size="14" fill="#6c9bd1">SV</text></svg>
     <span>Stratos Ventures</span>
     <span id="d1-status-dot" title="D1 not connected" style="width:8px;height:8px;border-radius:50%;background:var(--text2);margin-left:auto;flex-shrink:0;display:none"></span>
-    <button onclick="setLang(_lang==='en'?'hu':'en')" title="Switch language" aria-label="Switch language" style="margin-left:auto;background:none;border:1px solid var(--border);cursor:pointer;padding:2px 6px;border-radius:4px;font-size:10px;color:var(--text2);font-family:inherit;flex-shrink:0;letter-spacing:.5px" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'"><script>document.currentScript.parentElement.textContent=_lang==='hu'?'EN':'HU'</script></button>
-    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark/light theme" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;transition:all .2s;flex-shrink:0" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='none'">
+    <button class="sidebar-btn" onclick="setLang(_lang==='en'?'hu':'en')" title="Switch language" aria-label="Switch language"><script>document.currentScript.parentElement.textContent=_lang==='hu'?'EN':'HU'</script></button>
+    <button id="theme-toggle" class="sidebar-btn--theme" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark/light theme">
       <svg id="theme-icon-dark" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true" style="width:16px;height:16px;color:var(--accent2);display:none"><path d="M15.3 11.8A7 7 0 016.2 2.7a7 7 0 109.1 9.1z"/></svg>
       <svg id="theme-icon-light" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" style="width:16px;height:16px;color:var(--orange);display:none"><circle cx="9" cy="9" r="3.5"/><line x1="9" y1="1" x2="9" y2="3"/><line x1="9" y1="15" x2="9" y2="17"/><line x1="1" y1="9" x2="3" y2="9"/><line x1="15" y1="9" x2="17" y2="9"/><line x1="3.3" y1="3.3" x2="4.7" y2="4.7"/><line x1="13.3" y1="13.3" x2="14.7" y2="14.7"/><line x1="3.3" y1="14.7" x2="4.7" y2="13.3"/><line x1="13.3" y1="4.7" x2="14.7" y2="3.3"/></svg>
       <svg id="theme-icon-auto" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" style="width:16px;height:16px;color:var(--text2)"><circle cx="9" cy="9" r="7"/><path d="M9 2a7 7 0 010 14" fill="currentColor"/></svg>
@@ -3024,9 +3034,7 @@ function undoableDelete(msg,doDelete,doRestore,onConfirm){
   const txt=document.createElement('span');txt.textContent=msg;txt.style.flex='1';
   const undo=document.createElement('button');
   undo.textContent=t('common.undo');
-  undo.style.cssText='padding:4px 12px;border-radius:6px;border:1px solid var(--orange);background:transparent;color:var(--orange);cursor:pointer;font-size:var(--fs-base);font-weight:600;font-family:inherit;white-space:nowrap';
-  undo.onmouseenter=()=>{undo.style.background='var(--orange)';undo.style.color='var(--bg)'};
-  undo.onmouseleave=()=>{undo.style.background='transparent';undo.style.color='var(--orange)'};
+  undo.className='toast-undo';
   const cl=document.createElement('button');cl.className='toast-close';cl.textContent='×';
   let resolved=false;
   let timer=setTimeout(()=>{
@@ -9998,9 +10006,9 @@ function renderDivCalendar(year,month){
     let tooltip='';
     if(pays){
       const details=pays.map(p=>`${p.ticker}: ${base} ${p.amount.toFixed(2)}`).join('<br>');
-      tooltip=`<div class="div-cal-tooltip" style="display:none">${details}</div>`;
+      tooltip=`<div class="div-cal-tooltip">${details}</div>`;
     }
-    html+=`<div class="${cls.join(' ')}" ${pays?`onmouseenter="this.querySelector('.div-cal-tooltip').style.display=''" onmouseleave="this.querySelector('.div-cal-tooltip').style.display='none'"`:''}>${d}${pays?'<div class="div-cal-dot"></div>':''}${tooltip}</div>`;
+    html+=`<div class="${cls.join(' ')}">${d}${pays?'<div class="div-cal-dot"></div>':''}${tooltip}</div>`;
   }
   html+='</div>';
   grid.innerHTML=html;
@@ -12743,7 +12751,7 @@ function renderClSources(ticker,data){
     {label:'Wisesheets',url:`https://wisesheets.io/quote/${encodeURIComponent(ticker)}`}
   ];
   links.forEach(l=>{
-    h+=`<a href="${escH(l.url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;background:var(--surface2);color:var(--accent);font-size:11px;font-weight:600;text-decoration:none;border:1px solid var(--border);transition:background .2s" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--surface2)';this.style.color='var(--accent)'">${escH(l.label)} ↗</a>`;
+    h+=`<a href="${escH(l.url)}" target="_blank" rel="noopener" class="cp-ext-link">${escH(l.label)} ↗</a>`;
   });
   h+=`</div>`;
   return h;
