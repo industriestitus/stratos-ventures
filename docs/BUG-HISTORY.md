@@ -52,8 +52,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 43 | Skeleton Loading States | `e1cfd66` | 2026-07-02 | 1 | 0 |
 | 44 | Missing CSS Variable | — | 2026-07-03 | 1 | 0 |
 | 45 | Screener/Compare Discoverability | — | 2026-07-03 | 3 | 0 |
+| 47 | Tracker Export/Import Cleanup + API Usage Widget | `9ec622e` | 2026-07-03 | 2 | 0 |
 
-**Total: 276 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 278 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1011,6 +1012,17 @@ Added dashboard widget hide/show and reorder: Manage Widgets panel with checkbox
 | 4 | LOW | Manage panel and toggle button lack ARIA attributes | Added `aria-expanded`, `aria-controls`, `role="region"` |
 | 5 | LOW | Reorder arrow buttons lack accessible labels | Changed `title` to `aria-label="Move up/down"` |
 | 6 | LOW | Silent failure when localStorage full during config save | Added `showToast(t('toast.storageFull'))` on catch |
+
+---
+
+## Category 47 — Tracker Export/Import Cleanup + API Usage Widget (2026-07-03) — `9ec622e`
+
+Removed redundant Export/Import buttons and functions from Tracker tab (Settings Data Management already covers this). Added API Usage widget to Settings showing FMP, Yahoo Finance, and Finnhub limits, usage tracking, data targets, and cache TTLs.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | LOW | Export/Import on Tracker redundant with Settings Data Management | Removed buttons + `exportTrackerData()`/`importTrackerFile()` functions |
+| 2 | LOW | `toast.importedShort` i18n key became dead code after function removal | Removed from both EN and HU i18n blocks |
 
 ---
 
