@@ -51,8 +51,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 42 | Custom Tag System | `97a2496` | 2026-07-02 | 8 | 0 |
 | 43 | Skeleton Loading States | `e1cfd66` | 2026-07-02 | 1 | 0 |
 | 44 | Missing CSS Variable | — | 2026-07-03 | 1 | 0 |
+| 45 | Screener/Compare Discoverability | — | 2026-07-03 | 3 | 0 |
 
-**Total: 273 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 276 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -988,7 +989,17 @@ Added user-defined tag system: add/remove tags on company profiles with datalist
 
 ---
 
-## Category 45 — Dashboard Widget Management (2026-07-03) — `bdab96f`
+## Category 45 — Screener/Compare Discoverability (2026-07-03)
+
+| # | Severity | Issue | Fix |
+|---|----------|-------|-----|
+| 1 | MEDIUM | Screener and Compare buttons visually identical to Export/Import — no indication they are power features | Added `.st-power-btn` CSS class with accent border/background, emoji icons (🔍/⚖), distinct active state |
+| 2 | LOW | No tooltip or description explaining what Screener and Compare do | Added `data-i18n-title` tooltips on buttons, description text inside both panels (EN+HU) |
+| 3 | LOW | Compare bar description could overflow on narrow screens | Hidden via `display:none` in 480px media query |
+
+---
+
+## Category 46 — Dashboard Widget Management (2026-07-03) — `bdab96f`
 
 Added dashboard widget hide/show and reorder: Manage Widgets panel with checkboxes and up/down arrows, per-widget Hide button on hover, localStorage persistence, empty-state message. QA found 6 issues; all 6 fixed.
 

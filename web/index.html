@@ -200,6 +200,9 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .st-controls input:focus{border-color:var(--accent)}
 .st-controls button{padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px;font-family:inherit;transition:all .2s}
 .st-controls button:hover{border-color:var(--accent);color:var(--text)}
+.st-controls .st-power-btn{border-color:var(--accent);color:var(--accent2);background:rgba(108,92,231,.08)}
+.st-controls .st-power-btn:hover{background:rgba(108,92,231,.18);color:var(--text)}
+.st-controls .st-power-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .st-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
 .st-table{border-collapse:separate;border-spacing:0;font-size:11px;table-layout:fixed}
 .st-table th{position:sticky;top:0;background:var(--surface2);padding:6px 4px;text-align:left;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;cursor:pointer;white-space:nowrap;border-bottom:2px solid var(--border);-webkit-user-select:none;user-select:none;z-index:2}
@@ -893,6 +896,7 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
   .st-controls{flex-direction:column}
   .st-controls input,.st-controls button{width:100%!important}
   .st-controls div[style*="flex:1"]{display:none}
+  #compare-bar [data-i18n="comp.compareDesc"]{display:none}
   .stock-header input{width:100%}
   .research-search{width:100%}
   .conn-row .input-group{min-width:0}
@@ -1089,7 +1093,7 @@ var I18N={en:{
 'db.totalValue':'Total Value','db.totalPL':'Total P&L','db.dividends':'Dividends','db.positions':'Positions','db.totalReceived':'total received','db.annualized':'annualized','db.moneyWeighted':'money-weighted','db.snapshotHint':'Take snapshots to see value over time','db.portfolioValueLabel':'Portfolio Value','db.simpleReturn':'Simple Return','db.twrTotal':'TWR (Total)','db.twrAnnualized':'TWR (Annualized)','db.trackingPeriod':'Tracking Period','db.ratesLimited':'Exchange rate API rate limited — try later','db.ratesUpdated':'Exchange rates updated','db.ratesFailed':'Failed to fetch exchange rates: ','db.ratesUpdatedAt':'Updated ',
 'db.currentValue':'Current Value','db.target':'Target','db.rule4pct':'4% Rule FI Number','db.projectedFI':'Projected FI','db.coastFI':'Coast FI (25yr)','db.reached':'Reached!','db.years':'years','db.targetAmount':'Target Amount','db.monthlyExpenses':'Monthly Expenses','db.monthlySavings':'Monthly Savings','db.assumedReturn':'Assumed Return %',
 'comp.calculator':'Calculator','comp.tracker':'Tracker','comp.charts':'Charts','comp.saveStock':'Save Stock','comp.tickerPlaceholder':'Stock ticker / name','comp.millions':'Millions','comp.billions':'Billions','comp.thousands':'Thousands','comp.units':'Units','comp.sharedInputs':'Shared Inputs','comp.savedStocks':'Saved Stocks','comp.savedStocksHint':'Click to load. Data stored in localStorage.','comp.backToTracker':'Back to Tracker','comp.enterTicker':'Enter a stock name/ticker first.','comp.noSavedStocks':'No saved stocks yet.',
-'comp.trackerDefaults':'Tracker Defaults','comp.addTicker':'+ Add','comp.refreshAll':'Refresh All','comp.filter':'Filter...','comp.screener':'Screener','comp.compare':'Compare','comp.screenerFilters':'Screener Filters','comp.clearAll':'Clear All','comp.addFilter':'+ Add filter...','comp.selectCompare':'Select companies to compare:','comp.selected':'0 selected','comp.compareSelected':'Compare Selected','comp.companyComparison':'Company Comparison',
+'comp.trackerDefaults':'Tracker Defaults','comp.addTicker':'+ Add','comp.refreshAll':'Refresh All','comp.filter':'Filter...','comp.screener':'🔍 Screener','comp.compare':'⚖ Compare','comp.screenerFilters':'Screener Filters','comp.screenerDesc':'Filter your tracked stocks by financial metrics, scores, and valuation ratios.','comp.screenerTip':'Filter stocks by P/E, margins, scores, and other financial metrics','comp.compareTip':'Select 2+ companies to compare their metrics side by side','comp.compareDesc':'Check 2+ companies below, then click Compare Selected.','comp.clearAll':'Clear All','comp.addFilter':'+ Add filter...','comp.selectCompare':'Select companies to compare:','comp.selected':'0 selected','comp.compareSelected':'Compare Selected','comp.companyComparison':'Company Comparison',
 'comp.priceCharts':'Price & Valuation Charts','comp.range':'Range','comp.6months':'6 Months','comp.1year':'1 Year','comp.2years':'2 Years','comp.chartType':'Type','comp.price':'Price','comp.priceNorm':'Price (Normalized %)','comp.peRatio':'P/E Ratio','comp.individualCharts':'Individual Stock Charts',
 'comp.summary':'Summary','comp.overview':'Overview','comp.financials':'Financials','comp.valuation':'Valuation','comp.notes':'Notes','comp.checklist':'Checklist','comp.dividendsTab':'Dividends','comp.scores':'Scores','comp.insider':'Insider',
 'comp.noHistorical':'No historical data available','comp.failedHistorical':'Failed to load historical data',
@@ -1155,7 +1159,7 @@ var I18N={en:{
 'db.totalValue':'Összérték','db.totalPL':'Összesített P&L','db.dividends':'Osztalékok','db.positions':'Pozíciók','db.totalReceived':'összesen kapott','db.annualized':'évesített','db.moneyWeighted':'pénzsúlyozott','db.snapshotHint':'Készíts pillanatfelvételt az érték időbeli változásának nyomon követéséhez','db.portfolioValueLabel':'Portfólió értéke','db.simpleReturn':'Egyszerű hozam','db.twrTotal':'TWR (összesen)','db.twrAnnualized':'TWR (évesített)','db.trackingPeriod':'Követési időszak','db.ratesLimited':'Árfolyam API korlát — próbáld később','db.ratesUpdated':'Árfolyamok frissítve','db.ratesFailed':'Árfolyamok lekérése sikertelen: ','db.ratesUpdatedAt':'Frissítve: ',
 'db.currentValue':'Jelenlegi érték','db.target':'Cél','db.rule4pct':'4%-os szabály FI szám','db.projectedFI':'Tervezett FI','db.coastFI':'Coast FI (25 év)','db.reached':'Elérve!','db.years':'év','db.targetAmount':'Célösszeg','db.monthlyExpenses':'Havi kiadások','db.monthlySavings':'Havi megtakarítás','db.assumedReturn':'Feltételezett hozam %',
 'comp.calculator':'Kalkulátor','comp.tracker':'Követő','comp.charts':'Grafikonok','comp.saveStock':'Mentés','comp.tickerPlaceholder':'Részvény ticker / név','comp.millions':'Millió','comp.billions':'Milliárd','comp.thousands':'Ezer','comp.units':'Egység','comp.sharedInputs':'Közös bemenetek','comp.savedStocks':'Mentett részvények','comp.savedStocksHint':'Kattints a betöltéshez. Adatok a localStorage-ban.','comp.backToTracker':'Vissza a követőhöz','comp.enterTicker':'Adj meg egy részvény nevet/tickert először.','comp.noSavedStocks':'Még nincs mentett részvény.',
-'comp.trackerDefaults':'Követő alapértékek','comp.addTicker':'+ Hozzáadás','comp.refreshAll':'Összes frissítése','comp.filter':'Szűrés...','comp.screener':'Szűrő','comp.compare':'Összehasonlítás','comp.screenerFilters':'Szűrő feltételek','comp.clearAll':'Összes törlése','comp.addFilter':'+ Szűrő hozzáadása...','comp.selectCompare':'Válassz cégeket az összehasonlításhoz:','comp.selected':'0 kiválasztva','comp.compareSelected':'Kiválasztottak összehasonlítása','comp.companyComparison':'Cég összehasonlítás',
+'comp.trackerDefaults':'Követő alapértékek','comp.addTicker':'+ Hozzáadás','comp.refreshAll':'Összes frissítése','comp.filter':'Szűrés...','comp.screener':'🔍 Szűrő','comp.compare':'⚖ Összehasonlítás','comp.screenerFilters':'Szűrő feltételek','comp.screenerDesc':'Szűrd a követett részvényeidet pénzügyi mutatók, pontszámok és értékeltségi ráták alapján.','comp.screenerTip':'Részvények szűrése P/E, margó, pontszám és egyéb pénzügyi mutatók alapján','comp.compareTip':'Válassz ki 2+ céget a mutatóik egymás melletti összehasonlításához','comp.compareDesc':'Jelölj be 2+ céget lent, majd kattints az Összehasonlításra.','comp.clearAll':'Összes törlése','comp.addFilter':'+ Szűrő hozzáadása...','comp.selectCompare':'Válassz cégeket az összehasonlításhoz:','comp.selected':'0 kiválasztva','comp.compareSelected':'Kiválasztottak összehasonlítása','comp.companyComparison':'Cég összehasonlítás',
 'comp.priceCharts':'Ár és értékelési grafikonok','comp.range':'Időszak','comp.6months':'6 hónap','comp.1year':'1 év','comp.2years':'2 év','comp.chartType':'Típus','comp.price':'Ár','comp.priceNorm':'Ár (normalizált %)','comp.peRatio':'P/E arány','comp.individualCharts':'Egyedi részvény grafikonok',
 'comp.summary':'Összefoglaló','comp.overview':'Áttekintés','comp.financials':'Pénzügyek','comp.valuation':'Értékelés','comp.notes':'Jegyzetek','comp.checklist':'Checklist','comp.dividendsTab':'Osztalékok','comp.scores':'Pontszámok','comp.insider':'Bennfentes',
 'comp.noHistorical':'Nincs elérhető historikus adat','comp.failedHistorical':'Historikus adatok betöltése sikertelen',
@@ -1666,8 +1670,8 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
   <span class="st-progress" id="st-progress"></span>
   <div style="flex:1"></div>
   <input type="text" id="st-filter" placeholder="Filter..." style="width:160px" oninput="renderTracker()" data-i18n-placeholder="comp.filter">
-  <button onclick="toggleScreener()" id="screener-toggle" title="Advanced filters" data-i18n="comp.screener">Screener</button>
-  <button onclick="toggleCompareMode()" id="compare-btn" title="Compare companies side-by-side" data-i18n="comp.compare">Compare</button>
+  <button onclick="toggleScreener()" id="screener-toggle" class="st-power-btn" data-i18n="comp.screener" data-i18n-title="comp.screenerTip">&#x1F50D; Screener</button>
+  <button onclick="toggleCompareMode()" id="compare-btn" class="st-power-btn" data-i18n="comp.compare" data-i18n-title="comp.compareTip">&#x2696; Compare</button>
   <button onclick="toggleShowArchived()" id="show-archived-btn" class="st-archive-toggle" title="Show/hide archived companies"></button>
   <button onclick="exportTrackerData()">Export</button>
   <label class="st-controls button" style="padding:7px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:12px">Import<input type="file" accept=".json" style="display:none" onchange="importTrackerFile(event)"></label>
@@ -1709,6 +1713,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
       <button class="btn btn-secondary" onclick="clearScreenerFilters()" style="font-size:11px;padding:4px 12px" data-i18n="comp.clearAll">Clear All</button>
     </div>
   </div>
+  <p style="font-size:12px;color:var(--text2);margin:0 0 12px" data-i18n="comp.screenerDesc">Filter your tracked stocks by financial metrics, scores, and valuation ratios.</p>
   <div id="screener-filters" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px"></div>
   <div style="margin-top:10px">
     <select id="screener-add" onchange="addScreenerFilter(this.value);this.value=''" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">
@@ -1719,6 +1724,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
 <div id="compare-bar" style="display:none;margin-bottom:12px;padding:10px 16px;background:var(--surface2);border-radius:8px;align-items:center;gap:12px">
   <span style="font-size:13px;color:var(--text2)" data-i18n="comp.selectCompare">Select companies to compare:</span>
+  <span style="font-size:11px;color:var(--text2);opacity:.7" data-i18n="comp.compareDesc">Check 2+ companies below, then click Compare Selected.</span>
   <span id="compare-count" style="font-size:13px;font-weight:600" data-i18n="comp.selected">0 selected</span>
   <div style="flex:1"></div>
   <button class="btn btn-primary" onclick="openComparison()" id="compare-open-btn" style="padding:6px 16px;font-size:12px" disabled data-i18n="comp.compareSelected">Compare Selected</button>

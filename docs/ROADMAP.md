@@ -285,6 +285,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Custom tag system — User-defined tags on company profiles with autocomplete, tag filter bar on tracker (multi-select OR logic), tag pills in Name column, screener Tag filter, XSS-safe encoding, 30-char limit
 - [x] Missing `--yellow` CSS variable — Added `--yellow:#ffd93d` (dark) and `--yellow:#e6a800` (light) to `:root`, fixing invisible pin star colors and currency warning text
 - [x] Dashboard widget hide/show — Hide button on hover, Manage Widgets panel with checkboxes and up/down reorder arrows, localStorage persistence, ARIA attributes, empty-state message
+- [x] Screener/Compare discoverability — Accent-styled power buttons with emoji icons, tooltips, panel descriptions (EN+HU), mobile-safe layout
 - [ ] Error states polish — Chart container inline error placeholders ("Failed to load chart"), dashboard widget error states. Core API error handling (toasts, rate limit warnings, offline detection, retry logic) already complete.
 - [ ] Tooltips expansion — Dashboard widget tooltips, portfolio table column tooltips, screener metric tooltips. Company profile metric tooltips (definition, formula, benchmark) already complete.
 - [ ] Accessibility (ARIA) — `aria-live="polite"` on toast container (screen reader announces toasts), `aria-expanded` on collapsible toggles (yearly growth, checklist sections, More menu), hidden `aria-live` region for section switch announcements. Core ARIA already done: `aria-label` on buttons, `role="dialog"` on modals, focus trap, keyboard nav, skip link.
