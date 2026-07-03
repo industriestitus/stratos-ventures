@@ -55,8 +55,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 47 | Tracker Export/Import Cleanup + API Usage Widget | `9ec622e` | 2026-07-03 | 2 | 0 |
 | 48 | Settings Pill Navigation | — | 2026-07-03 | 3 | 0 |
 | 49 | Typography Scale | — | 2026-07-03 | 6 | 0 |
+| 50 | Card Style Consistency | — | 2026-07-03 | 2 | 0 |
 
-**Total: 287 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 289 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1052,6 +1053,17 @@ Introduced 8-level typographic scale via CSS variables (--fs-xs through --fs-3xl
 | 4 | LOW | 22px/24px hero numbers inconsistent (same role as 20px) | Consolidated to var(--fs-3xl) = 20px |
 | 5 | LOW | Dialog headings split between 15px and 16px | Unified to var(--fs-xl) = 16px |
 | 6 | LOW | 285 CSS class font-sizes hardcoded as px values | Converted to CSS variable references |
+
+---
+
+## Category 50 — Card Style Consistency (2026-07-03)
+
+Unified card border-radius to var(--radius) and normalized db-hero padding.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | LOW | 5 card classes used hardcoded border-radius (10px/8px) instead of var(--radius) | Changed pf-account-card, pf-summary-card, pf-summary-bar, cp-val-item, skel-card to var(--radius) |
+| 2 | LOW | db-hero padding 24px inconsistent with other full cards (20px) | Changed to 20px (mobile override 16px kept) |
 
 ---
 
