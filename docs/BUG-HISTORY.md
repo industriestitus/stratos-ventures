@@ -54,8 +54,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 45 | Screener/Compare Discoverability | — | 2026-07-03 | 3 | 0 |
 | 47 | Tracker Export/Import Cleanup + API Usage Widget | `9ec622e` | 2026-07-03 | 2 | 0 |
 | 48 | Settings Pill Navigation | — | 2026-07-03 | 3 | 0 |
+| 49 | Typography Scale | — | 2026-07-03 | 6 | 0 |
 
-**Total: 281 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 287 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1036,6 +1037,21 @@ Added sticky pill navigation bar to Settings page for quick section jumping (8 p
 | 1 | MEDIUM | Settings page has 9 cards (~4 screens) with no navigation aid | Added sticky pill nav bar with 8 buttons, `scrollToCard()` function |
 | 2 | MEDIUM | `position:sticky` broken by `.content` having `overflow-x:hidden` | Added `#section-settings{overflow:visible}` override |
 | 3 | LOW | `scrollToCard()` had redundant `querySelectorAll` calls | Consolidated into single query with `classList.toggle()` |
+
+---
+
+## Category 49 — Typography Scale (2026-07-03)
+
+Introduced 8-level typographic scale via CSS variables (--fs-xs through --fs-3xl). Eliminated 3 redundant font sizes (9px, 17px, 22px), consolidated dialog headings to 16px, hero numbers to 20px. Converted 285 CSS class declarations to use variables.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | 16 different font sizes with no typographic scale | Added 8 CSS variables (--fs-xs:10px through --fs-3xl:20px) to :root |
+| 2 | MEDIUM | 9px text barely readable, same role as 10px badges | Eliminated 9px → 10px (7 places: badges, tags, chart labels) |
+| 3 | LOW | 17px Markdown h2 between 16px and 18px with no reason | Changed to var(--fs-xl) = 16px |
+| 4 | LOW | 22px/24px hero numbers inconsistent (same role as 20px) | Consolidated to var(--fs-3xl) = 20px |
+| 5 | LOW | Dialog headings split between 15px and 16px | Unified to var(--fs-xl) = 16px |
+| 6 | LOW | 285 CSS class font-sizes hardcoded as px values | Converted to CSS variable references |
 
 ---
 
