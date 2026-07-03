@@ -57,8 +57,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 49 | Typography Scale | — | 2026-07-03 | 6 | 0 |
 | 50 | Card Style Consistency | — | 2026-07-03 | 2 | 0 |
 | 51 | Inline Hover Styles | — | 2026-07-03 | 5 | 0 |
+| 52 | Accessibility (ARIA + Backdrop) | — | 2026-07-03 | 19 | 0 |
 
-**Total: 294 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 313 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1079,6 +1080,23 @@ Replaced 5 inline JS hover handlers with CSS :hover pseudo-classes.
 | 3 | LOW | Toast undo button uses onmouseenter/onmouseleave + inline cssText | Created `.toast-undo` CSS class with `:hover` rule |
 | 4 | LOW | Dividend calendar tooltip show/hide via inline JS handlers | CSS `.div-cal-day:hover .div-cal-tooltip{display:block}` replaces JS |
 | 5 | LOW | External links use onmouseover/onmouseout for color swap | Created `.cp-ext-link` CSS class with `:hover` rule |
+
+---
+
+## Category 52 — Accessibility (ARIA + Backdrop) (2026-07-03)
+
+Added ARIA dialog roles, unified backdrop click-to-close, and aria-labels on icon-only buttons.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | LOW | Global search overlay missing role="dialog" and aria-modal | Added `role="dialog" aria-modal="true" aria-label="Global search"` |
+| 2-12 | LOW | 11 modal-overlays missing role="dialog" and aria-modal | Added `role="dialog" aria-modal="true"` to all 11 modals |
+| 13-23 | LOW | 11 modal-overlays not closeable by backdrop click | Added `onclick="if(event.target===this)closeModals()"` to all 11 |
+| 24-25 | LOW | Toast close buttons (× symbol) missing aria-label | Added `aria-label="Close notification"` to both showToast and undoableDelete |
+| 26 | LOW | Chart download button (⤓ symbol) missing aria-label | Added `aria-label="Download chart as PNG"` |
+| 27 | LOW | Research image delete button (× symbol) missing aria-label | Added `aria-label="Remove image"` |
+| 28-29 | LOW | Todo delete buttons (× symbol) missing aria-label | Added `aria-label` to company profile and dashboard todo delete |
+| 30 | LOW | Valuation snapshot delete button (× symbol) missing aria-label | Added `aria-label="Delete snapshot"` |
 
 ---
 

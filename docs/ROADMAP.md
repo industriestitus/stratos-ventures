@@ -294,7 +294,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Inline hover styles — Replaced 5 inline JS onmouseover/onmouseout handlers with CSS :hover classes (sidebar buttons, toast undo, dividend calendar tooltip, external links)
 - [ ] Error states polish — Chart container inline error placeholders ("Failed to load chart"), dashboard widget error states. Core API error handling (toasts, rate limit warnings, offline detection, retry logic) already complete.
 - [ ] Tooltips expansion — Dashboard widget tooltips, portfolio table column tooltips, screener metric tooltips. Company profile metric tooltips (definition, formula, benchmark) already complete.
-- [ ] Accessibility (ARIA) — `aria-live="polite"` on toast container (screen reader announces toasts), `aria-expanded` on collapsible toggles (yearly growth, checklist sections, More menu), hidden `aria-live` region for section switch announcements. Core ARIA already done: `aria-label` on buttons, `role="dialog"` on modals, focus trap, keyboard nav, skip link.
+- [x] Accessibility (ARIA + Backdrop) — role="dialog" aria-modal on all 13 overlays, backdrop click-to-close on 11 modals, aria-label on 7 icon-only buttons. Remaining: aria-live on toast container, aria-expanded on collapsible toggles.
 - [ ] Mobile gestures — Pull-to-refresh on company profile and dashboard (vertical swipe down, no browser conflict). Long-press on table rows for context menu (edit/delete/archive, replaces tiny icon buttons). Swipe-to-dismiss on toasts (horizontal, no browser back/forward conflict). Note: horizontal swipe navigation deliberately excluded — conflicts with browser back/forward gesture and bottom nav already handles section switching.
 
 ---
