@@ -288,6 +288,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Screener/Compare discoverability — Accent-styled power buttons with emoji icons, tooltips, panel descriptions (EN+HU), mobile-safe layout
 - [x] Remove redundant Tracker Export/Import — Settings Data Management already covers backup/restore/export; removed buttons, functions, and dead i18n key
 - [x] API Usage widget in Settings — FMP (250/day with progress bar), Yahoo Finance (30/min), Finnhub (60/min); shows data targets, cache TTLs, configured status
+- [x] Settings pill navigation — Sticky nav bar with 8 pills for quick section jumping, smooth scroll, active state highlight, overflow:visible fix for position:sticky
 - [ ] Error states polish — Chart container inline error placeholders ("Failed to load chart"), dashboard widget error states. Core API error handling (toasts, rate limit warnings, offline detection, retry logic) already complete.
 - [ ] Tooltips expansion — Dashboard widget tooltips, portfolio table column tooltips, screener metric tooltips. Company profile metric tooltips (definition, formula, benchmark) already complete.
 - [ ] Accessibility (ARIA) — `aria-live="polite"` on toast container (screen reader announces toasts), `aria-expanded` on collapsible toggles (yearly growth, checklist sections, More menu), hidden `aria-live` region for section switch announcements. Core ARIA already done: `aria-label` on buttons, `role="dialog"` on modals, focus trap, keyboard nav, skip link.

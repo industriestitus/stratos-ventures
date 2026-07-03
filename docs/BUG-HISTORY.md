@@ -53,8 +53,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 44 | Missing CSS Variable | — | 2026-07-03 | 1 | 0 |
 | 45 | Screener/Compare Discoverability | — | 2026-07-03 | 3 | 0 |
 | 47 | Tracker Export/Import Cleanup + API Usage Widget | `9ec622e` | 2026-07-03 | 2 | 0 |
+| 48 | Settings Pill Navigation | — | 2026-07-03 | 3 | 0 |
 
-**Total: 278 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 281 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1023,6 +1024,18 @@ Removed redundant Export/Import buttons and functions from Tracker tab (Settings
 |---|----------|-----|-----|
 | 1 | LOW | Export/Import on Tracker redundant with Settings Data Management | Removed buttons + `exportTrackerData()`/`importTrackerFile()` functions |
 | 2 | LOW | `toast.importedShort` i18n key became dead code after function removal | Removed from both EN and HU i18n blocks |
+
+---
+
+## Category 48 — Settings Pill Navigation (2026-07-03)
+
+Added sticky pill navigation bar to Settings page for quick section jumping (8 pills for 8 cards). Fixed CSS `position:sticky` broken by parent `overflow-x:hidden`.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | Settings page has 9 cards (~4 screens) with no navigation aid | Added sticky pill nav bar with 8 buttons, `scrollToCard()` function |
+| 2 | MEDIUM | `position:sticky` broken by `.content` having `overflow-x:hidden` | Added `#section-settings{overflow:visible}` override |
+| 3 | LOW | `scrollToCard()` had redundant `querySelectorAll` calls | Consolidated into single query with `classList.toggle()` |
 
 ---
 
