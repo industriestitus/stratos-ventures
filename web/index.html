@@ -2349,7 +2349,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 
 <!-- Global Search Palette -->
-<div class="gs-overlay" id="gs-overlay" onclick="if(event.target===this)closeGlobalSearch()">
+<div class="gs-overlay" id="gs-overlay" role="dialog" aria-modal="true" aria-label="Global search" onclick="if(event.target===this)closeGlobalSearch()">
   <div class="gs-box">
     <div class="gs-input-wrap">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17" y2="17"/></svg>
@@ -2363,10 +2363,10 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 
 <!-- Modals -->
-<div class="modal-overlay" id="export-modal"><div class="modal"><h3 data-i18n="modal.exportData">Export Data</h3><textarea id="export-data" readonly></textarea><div class="modal-actions"><button class="btn btn-secondary" onclick="(async()=>{try{await navigator.clipboard.writeText(document.getElementById('export-data').value);showToast(t('toast.copied'),'success')}catch(e){showToast(t('toast.copyFailed'),'warning')}})()">Copy</button><button class="btn btn-secondary" onclick="downloadExport()" data-i18n="modal.downloadJSON">Download JSON</button><button class="btn btn-secondary" onclick="closeModals()" data-i18n="common.close">Close</button></div></div></div>
-<div class="modal-overlay" id="import-modal"><div class="modal"><h3 data-i18n="modal.importData">Import Data</h3><textarea id="import-data" data-i18n-placeholder="modal.pasteJSON" placeholder="Paste JSON data here..."></textarea><div class="modal-actions"><button class="btn btn-primary" onclick="doImport()" data-i18n="modal.importData">Import</button><label class="btn btn-secondary" style="cursor:pointer"><span data-i18n="modal.loadFile">Load File</span><input type="file" accept=".json" style="display:none" onchange="loadImportFile(event)"></label><button class="btn btn-secondary" onclick="closeModals()" data-i18n="common.cancel">Cancel</button></div></div></div>
+<div class="modal-overlay" id="export-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()"><div class="modal"><h3 data-i18n="modal.exportData">Export Data</h3><textarea id="export-data" readonly></textarea><div class="modal-actions"><button class="btn btn-secondary" onclick="(async()=>{try{await navigator.clipboard.writeText(document.getElementById('export-data').value);showToast(t('toast.copied'),'success')}catch(e){showToast(t('toast.copyFailed'),'warning')}})()">Copy</button><button class="btn btn-secondary" onclick="downloadExport()" data-i18n="modal.downloadJSON">Download JSON</button><button class="btn btn-secondary" onclick="closeModals()" data-i18n="common.close">Close</button></div></div></div>
+<div class="modal-overlay" id="import-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()"><div class="modal"><h3 data-i18n="modal.importData">Import Data</h3><textarea id="import-data" data-i18n-placeholder="modal.pasteJSON" placeholder="Paste JSON data here..."></textarea><div class="modal-actions"><button class="btn btn-primary" onclick="doImport()" data-i18n="modal.importData">Import</button><label class="btn btn-secondary" style="cursor:pointer"><span data-i18n="modal.loadFile">Load File</span><input type="file" accept=".json" style="display:none" onchange="loadImportFile(event)"></label><button class="btn btn-secondary" onclick="closeModals()" data-i18n="common.cancel">Cancel</button></div></div></div>
 
-<div class="modal-overlay" id="research-entry-modal">
+<div class="modal-overlay" id="research-entry-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()">
 <div class="modal research-modal">
   <h3 id="research-modal-title" data-i18n="research.newEntryTitle">New Entry</h3>
   <div class="research-modal-fields">
@@ -2466,7 +2466,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 
 <!-- Portfolio: Account Modal -->
-<div class="modal-overlay" id="pf-account-modal">
+<div class="modal-overlay" id="pf-account-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()">
 <div class="modal pf-modal">
   <h3 id="pf-account-modal-title" data-i18n="pf.addAccountTitle">Add Account</h3>
   <div class="pf-modal-fields">
@@ -2497,7 +2497,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 
 <!-- Portfolio: CSV Import Modal -->
-<div class="modal-overlay" id="pf-csv-import-modal">
+<div class="modal-overlay" id="pf-csv-import-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()">
 <div class="modal" style="max-width:850px!important">
   <h3 data-i18n="pf.csvTitle">Import Transactions from CSV</h3>
   <div class="pf-modal-fields">
@@ -2521,7 +2521,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 
 <!-- Portfolio: Transaction Modal -->
-<div class="modal-overlay" id="pf-transaction-modal">
+<div class="modal-overlay" id="pf-transaction-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()">
 <div class="modal pf-modal">
   <h3 id="pf-tx-modal-title" data-i18n="pf.logTransactionTitle">Log Transaction</h3>
   <div class="pf-modal-fields">
@@ -2586,7 +2586,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 
 <!-- Portfolio: Position Modal -->
-<div class="modal-overlay" id="pf-position-modal">
+<div class="modal-overlay" id="pf-position-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()">
 <div class="modal pf-modal">
   <h3 id="pf-position-modal-title" data-i18n="pf.addPositionTitle">Add Position</h3>
   <div class="pf-modal-fields">
@@ -2699,7 +2699,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 
 <!-- Framework Modal -->
-<div class="modal-overlay" id="fw-modal">
+<div class="modal-overlay" id="fw-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()">
 <div class="modal">
   <h3 id="fw-modal-title" data-i18n="fw.addPrinciple">Add Principle</h3>
   <div class="fw-modal-form">
@@ -2720,7 +2720,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 
 <!-- Comparison Modal -->
-<div class="modal-overlay" id="compare-modal">
+<div class="modal-overlay" id="compare-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()">
 <div class="modal" style="max-width:95vw;max-height:90vh;overflow:auto">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
     <h3 style="margin:0" data-i18n="comp.companyComparison">Company Comparison</h3>
@@ -2731,7 +2731,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 
 <!-- Reviews Modal -->
-<div class="modal-overlay" id="rv-entry-modal">
+<div class="modal-overlay" id="rv-entry-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()">
 <div class="modal" style="max-width:640px">
   <h3 id="rv-modal-title" data-i18n="rv.newReview">New Review</h3>
   <div class="rv-modal-form">
@@ -2765,7 +2765,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div>
 </div>
 
-<div class="modal-overlay" id="archive-modal">
+<div class="modal-overlay" id="archive-modal" role="dialog" aria-modal="true" onclick="if(event.target===this)closeModals()">
 <div class="modal" style="max-width:420px">
   <h3 id="archive-modal-title" data-i18n="modal.removeCompany">Remove Company</h3>
   <p id="archive-modal-text" style="color:var(--text2);font-size:14px;line-height:1.6;margin:12px 0 20px"></p>
@@ -3011,7 +3011,7 @@ function showToast(msg,type='info',duration,opts){
     t.style.cursor='pointer';
     t.addEventListener('click',e=>{if(!e.target.closest('.toast-close'))opts.onClick()});
   }
-  const cl=document.createElement('button');cl.className='toast-close';cl.textContent='×';
+  const cl=document.createElement('button');cl.className='toast-close';cl.textContent='×';cl.setAttribute('aria-label','Close notification');
   cl.onclick=()=>{t.classList.add('removing');setTimeout(()=>t.remove(),250)};
   t.appendChild(cl);
   c.appendChild(t);
@@ -3035,7 +3035,7 @@ function undoableDelete(msg,doDelete,doRestore,onConfirm){
   const undo=document.createElement('button');
   undo.textContent=t('common.undo');
   undo.className='toast-undo';
-  const cl=document.createElement('button');cl.className='toast-close';cl.textContent='×';
+  const cl=document.createElement('button');cl.className='toast-close';cl.textContent='×';cl.setAttribute('aria-label','Close notification');
   let resolved=false;
   let timer=setTimeout(()=>{
     resolved=true;
@@ -3408,7 +3408,7 @@ function _initChartDlButtons(){
     const parent=c.closest('.chart-container')||c.closest('.db-alloc-item')||c.closest('.db-bench-chart')||c.closest('.cp-hist-chart');
     if(!parent||parent.querySelector('.chart-dl-btn'))return;
     const btn=document.createElement('button');
-    btn.className='chart-dl-btn';btn.title='Download PNG';btn.textContent='⤓';
+    btn.className='chart-dl-btn';btn.title='Download PNG';btn.setAttribute('aria-label','Download chart as PNG');btn.textContent='⤓';
     btn.onclick=e=>{e.stopPropagation();const title=parent.closest('.card,.db-widget,.db-alloc-item')?.querySelector('.card-title,.db-widget-title,.db-alloc-label')?.textContent?.trim()||c.id||'chart';exportChartPng(c,title.replace(/[^a-zA-Z0-9_-]/g,'_'))};
     parent.style.position='relative';
     parent.insertBefore(btn,parent.firstChild);
@@ -6784,7 +6784,7 @@ function renderDbTodoList(){
       <input type="checkbox" ${t.done?'checked':''} onchange="toggleDashTodo(${t.id})">
       <span class="cp-todo-text ${t.done?'todo-done':''}">${escH(t.text)}</span>
       ${t.due?`<span class="cp-todo-due ${overdue?'todo-overdue':''}">${t.due}</span>`:''}
-      <button class="cp-todo-del" onclick="deleteDashTodo(${t.id})" title="Delete">&times;</button>
+      <button class="cp-todo-del" onclick="deleteDashTodo(${t.id})" title="Delete" aria-label="Delete">&times;</button>
     </div>`;
   }).join('');
 }
@@ -7135,7 +7135,7 @@ function updateImagesGrid(){
   if(!wrap||!grid)return;
   if(!_reImages.length){wrap.style.display='none';return}
   wrap.style.display='';
-  grid.innerHTML=_reImages.filter(img=>img.data&&/^data:image\//.test(img.data)).map((img,i)=>`<div style="position:relative"><img src="${escH(img.data)}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"><button onclick="removeReImage(${i})" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1">×</button></div>`).join('');
+  grid.innerHTML=_reImages.filter(img=>img.data&&/^data:image\//.test(img.data)).map((img,i)=>`<div style="position:relative"><img src="${escH(img.data)}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border)"><button onclick="removeReImage(${i})" aria-label="Remove image" style="position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1">×</button></div>`).join('');
 }
 
 function removeReImage(idx){
@@ -8857,7 +8857,7 @@ function renderValuation(ticker){
       h+=`<td style="padding:6px 8px" class="${snap.eva!=null?(snap.eva>0?'positive':'negative'):''}">${snap.eva!=null?fmt(snap.eva):'-'}</td>`;
       h+=`<td style="padding:6px 8px">${snap.weightedFV!=null?fmt(snap.weightedFV):'-'}</td>`;
       h+=`<td style="padding:6px 8px">$${snap.price?snap.price.toFixed(2):'-'}</td>`;
-      h+=`<td style="padding:6px 4px"><button onclick="deleteValSnapshot('${escH(ticker)}',${i})" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px" title="Delete">×</button></td>`;
+      h+=`<td style="padding:6px 4px"><button onclick="deleteValSnapshot('${escH(ticker)}',${i})" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px" title="Delete" aria-label="Delete snapshot">×</button></td>`;
       h+=`</tr>`;
     });
     h+='</table></div>';
@@ -9112,7 +9112,7 @@ function renderTodos(ticker){
     h+=`<input type="checkbox" ${td.done?'checked':''} aria-label="Mark complete: ${escH(td.text)}" onchange="toggleTodo('${escH(ticker)}',${td.id},this.checked)">`;
     h+=`<span class="cp-todo-text${td.done?' todo-done':''}">${escH(td.text)}</span>`;
     if(td.due)h+=`<span class="cp-todo-due${overdue?' todo-overdue':''}">${escH(td.due)}</span>`;
-    h+=`<button class="cp-todo-del" onclick="deleteTodo('${escH(ticker)}',${td.id})" title="${delTitle}">&times;</button>`;
+    h+=`<button class="cp-todo-del" onclick="deleteTodo('${escH(ticker)}',${td.id})" title="${delTitle}" aria-label="${delTitle}">&times;</button>`;
     h+=`</div>`;
   });
   const doneCount=todos.filter(t=>t.done).length;
