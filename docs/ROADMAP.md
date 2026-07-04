@@ -231,6 +231,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Transaction price auto-fill — ticker selection auto-fills current market price with "Current price: X" hint, user can override
 - [x] Detailed partial-add toast — shows exactly which data is missing (price/financials/growth) with guidance to add manually in Overview tab
 - [x] Transaction ticker cross-link — ticker column in transaction table is now clickable to open company profile (tracker stocks only)
+- [x] Screener filter presets — filters persist to localStorage, 4 built-in presets (Quality Growth, Undervalued, Dividend Safe, High Score), user save/load/delete custom presets
 
 ### Cross-Module Integration (2026-07-01)
 - [x] Archive system — soft delete with "Archived" pipeline stage, archive modal (Archive/Delete permanently/Cancel), tracker toggle, screener filter, D1 CHECK constraint migration

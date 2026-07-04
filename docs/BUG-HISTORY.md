@@ -1177,6 +1177,19 @@ Transaction table ticker column is now clickable to open the company profile.
 
 ---
 
+## Category 60 — UX — Screener Filter Presets (2026-07-04) — `3f81b2d`
+
+Screener filters now persist to localStorage and support preset system (built-in + user-saved).
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | Screener filters lost on page reload — `screenerFilters` was only in memory | Auto-persist to `screener_filters_v1` localStorage key on every filter change |
+| 2 | LOW | No way to save/reuse common filter combinations | Added preset bar: 4 built-in presets (Quality Growth, Undervalued, Dividend Safe, High Score) + user save/load/delete |
+| 3 | MEDIUM | `innerHTML +=` with `<optgroup>` breaks DOM — browser auto-closes tag | Build full HTML string first, then assign to `innerHTML` once |
+| 4 | LOW | Missing `escH()` on i18n strings in optgroup label attributes | Wrapped `t()` output with `escH()` for XSS consistency |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:
