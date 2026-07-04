@@ -62,8 +62,13 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 53 | UX Review — Default Tab Fix | e45cba3 | 2026-07-04 | 1 | 0 |
 | 54 | UX — Back Navigation | d3260d0 | 2026-07-04 | 1 | 0 |
 | 55 | UX — Dashboard Hub Links | 3ec4467 | 2026-07-04 | 1 | 0 |
+| 56 | UX — Transaction Ticker Link | fe3cbd6 | 2026-07-04 | 1 | 0 |
+| 57 | UX — Accessibility Overlay Fix | f17d2c7 | 2026-07-04 | 1 | 0 |
+| 58 | UX — TEST-PLAN.md + Data Structures | 68604b1 | 2026-07-04 | 0 | 0 |
+| 59 | UX — Screener Filter Presets | 3f81b2d | 2026-07-04 | 4 | 0 |
+| 60 | Keyboard Shortcut + TEST-PLAN Accuracy | c4427e0 | 2026-07-04 | 1 | 0 |
 
-**Total: 355 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 356 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1187,6 +1192,16 @@ Screener filters now persist to localStorage and support preset system (built-in
 | 2 | LOW | No way to save/reuse common filter combinations | Added preset bar: 4 built-in presets (Quality Growth, Undervalued, Dividend Safe, High Score) + user save/load/delete |
 | 3 | MEDIUM | `innerHTML +=` with `<optgroup>` breaks DOM — browser auto-closes tag | Build full HTML string first, then assign to `innerHTML` once |
 | 4 | LOW | Missing `escH()` on i18n strings in optgroup label attributes | Wrapped `t()` output with `escH()` for XSS consistency |
+
+---
+
+## Category 61 — Keyboard Shortcut + TEST-PLAN Accuracy (2026-07-04) — `c4427e0`
+
+Verified TEST-PLAN.md against codebase with 3 parallel agents; found 27 inaccuracies. Also discovered real code bug: "N" shortcut silently failed in Companies section.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | "N" keyboard shortcut in Companies references `st-input` (doesn't exist) instead of `st-add-input` — shortcut silently fails | Changed `getElementById('st-input')` → `getElementById('st-add-input')` at line 3277 |
 
 ---
 
