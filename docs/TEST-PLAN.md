@@ -57,8 +57,8 @@
 - [ ] Pie chart: ticker szerinti megoszlás
 - [ ] Pie chart: account szerinti megoszlás
 - [ ] Pie chart: deviza szerinti megoszlás
-- [ ] Pie chart: asset class szerinti megoszlás
-- [ ] Pie chart: szektor szerinti megoszlás
+- [ ] Pie chart: asset type szerinti megoszlás
+- [ ] Grouping váltás gombok (4 lehetőség: ticker, account, type, currency)
 - [ ] Hover: tooltip-ban ticker neve + érték + %
 - [ ] Chart PNG export gomb (⤓) megjelenik hover-re
 
@@ -72,10 +72,12 @@
 - [ ] TWR és XIRR értékek megjelennek
 - [ ] Snapshot nélkül → üres state
 
-### 1.5 Red Flag Alerts widget
+### 1.5 Red Flag Alerts widget (includes Price Alerts)
 - [ ] Ha van alert (margin drop, debt rise) → piros/sárga figyelmeztetés
-- [ ] Ha nincs alert → "No alerts" üzenet
+- [ ] Ha nincs alert → "No alerts" üzenet (✓ jelölés)
 - [ ] Alert-re kattintva a céges profilra navigál
+- [ ] Price alert integráció: cél ár elérése → "info" szintű alert a listában
+- [ ] Alert count badge frissül (pl. "(3)")
 
 ### 1.6 Dip Finder widget
 - [ ] 52-hetes csúcshoz képest esés mutatása
@@ -87,38 +89,41 @@
 - [ ] Progressz bar és becsült FI dátum
 - [ ] Beállítások mentődnek
 
-### 1.8 TODO widget
+### 1.8 TODO Summary widget
 - [ ] "X open tasks across Y companies" összesítő
+- [ ] General + company-specifikus TODO-k együtt
 - [ ] Kattintásra átvezet a megfelelő céghez/szekcióhoz
 
 ### 1.9 Sell Trigger widget
 - [ ] Aktív sell trigger-ek megjelennek
 - [ ] Csak "Owned" cégek trigger-jei
-- [ ] Link: kattintás → cég Buy/Sell Decision szekció
+- [ ] Link: kattintás → cég profilra navigál
 
-### 1.10 Price Alerts widget
-- [ ] Aktív price alert-ek listája: cég, cél ár, jelenlegi ár
-- [ ] Alert kiváltásakor toast notification
-
-### 1.11 Earnings Calendar widget
+### 1.10 Earnings Calendar widget
 - [ ] Közelgő earnings dátumok
 - [ ] Rendezés: legközelebbi először
 - [ ] Csak Owned/Buy Target cégek
 
-### 1.12 Net Worth widget
+### 1.11 Net Worth widget
 - [ ] Pie chart: asset class megoszlás
 - [ ] Összérték megjelenik
 - [ ] YoY változás (ha van snapshot)
 
-### 1.13 Widget kezelés
-- [ ] Widget hide: hover-re megjelenik a hide gomb, kattintásra eltűnik a widget
-- [ ] Manage Widgets panel: checkboxokkal ki/be kapcsolható minden widget
-- [ ] Widget sorrend: fel/le nyíl gombok működnek
-- [ ] Beállítás megmarad reload után
+### 1.12 General TODO widget
+- [ ] TODO hozzáadás (szöveg + dátum)
+- [ ] Kész jelölés (checkbox)
+- [ ] Törlés
+- [ ] Rendezés: open first
 
-### 1.14 Review Reminders widget
+### 1.13 Review Reminders widget
 - [ ] 90+ napos review-nélküli Owned/Buy Target cégek megjelennek
 - [ ] Badge szám helyes
+
+### 1.14 Widget kezelés
+- [ ] Widget hide: hover-re megjelenik a hide gomb, kattintásra eltűnik a widget
+- [ ] Manage Widgets panel: checkboxokkal ki/be kapcsolható mind a 12 widget
+- [ ] Widget sorrend: fel/le nyíl gombok működnek
+- [ ] Beállítás megmarad reload után
 
 ---
 
@@ -163,90 +168,99 @@
 - [ ] Horizontális scroll ha sok cég van kijelölve
 - [ ] Zöld/piros szín jelzi a jobb/rosszabb értéket
 
-### 2.5 Company Profile — Summary tab
-- [ ] Cég neve, ára, pipeline badge megjelenik
-- [ ] External research linkek (Finviz, Yahoo, SEC, stb.) → új tab-ban nyílnak
-- [ ] Tag-ek megjelennek, tag hozzáadás/törlés működik
-- [ ] Összefoglaló: pozíciók, tranzakciók, notes, reviews, TODOs áttekintés
-- [ ] Quick action gombok működnek
+### 2.5 Company Profile — Header & közös elemek
+- [ ] Cég neve, ticker, ára, market cap megjelenik
+- [ ] Pipeline dropdown: "Owned"/"Watchlist"/"Under Review"/"Buy Target"/"Archived"
+- [ ] Company type tag (slow/medium/fast/cyclical/turnaround/asset)
+- [ ] External research linkek (Finviz, Yahoo, SEC, SeekingAlpha, Macrotrends, TickerTrends, Glassdoor) → új tab-ban nyílnak
+- [ ] Tag-ek megjelennek, tag hozzáadás (autocomplete) / törlés működik
+- [ ] Review due badge (ha 90+ nap óta nincs review)
+- [ ] 9 sub-tab: Summary, Overview, Financials, Valuation, Notes, Checklist, Dividends, Scores, Insider
 
-### 2.6 Company Profile — Financials tab
-- [ ] Key Metrics grid betölt (P/E, P/S, ROE, ROIC, margin-ok)
+### 2.6 Company Profile — Summary tab (alapértelmezett)
+- [ ] Pozíciók összefoglaló (ha van)
+- [ ] Recent transactions lista
+- [ ] Notes preview
+- [ ] Reviews preview
+- [ ] Sell triggers
+- [ ] TODOs lista: hozzáadás, kész jelölés, törlés
+- [ ] Quick action gombok: "Open Checklist", stb.
+- [ ] Cross-linking: kattintás → megfelelő tab-ra navigál
+
+### 2.7 Company Profile — Overview tab
+- [ ] Key Metrics grid (P/E, P/S, ROE, ROIC, margin-ok, Debt/Equity, stb.)
+- [ ] Moat, Risk, Uncertainty, Conviction, Expected Return kézi mezők
+- [ ] Thesis megjelenítés
+- [ ] Price Alerts: above/below ár beállítás, current price összehasonlítás
+- [ ] Expected Return breakdown: stacked bar chart
+- [ ] Position Sizing: score + Kelly Criterion + ajánlott méret
+- [ ] Conviction Tracker: line chart 1-10 skálán, current conviction badge
+
+### 2.8 Company Profile — Financials tab
 - [ ] Tooltip: metrikára hover → definíció, képlet, benchmark
 - [ ] Data override: dupla kattintás → szerkeszthető, "overridden" badge megjelenik
 - [ ] Overridden érték megmarad reload után, original érték megtekinthető
-- [ ] Auto-fill thresholds: zöld ✓ / piros ✗ / szürke —
+- [ ] Auto-fill thresholds (22 db): zöld ✓ / piros ✗ / szürke —
 - [ ] Yellow Flags panel: auto-detected figyelmeztetések (ha van)
 - [ ] Cash Flow deep dive: 10 metrika + tooltip-ok
 - [ ] Balance Sheet deep dive: 11 metrika + tooltip-ok
 - [ ] Cache age indicator ("Data: X hr ago")
 - [ ] Refresh gomb: újratölti az API adatokat
 
-### 2.7 Company Profile — Charts tab
-- [ ] Historical chart betölt (revenue, FCF, EPS, margins)
-- [ ] Chart range választás (5Y, 10Y, 20Y, 30Y)
-- [ ] Mini chart-ok: Revenue, Net Income, FCF, Gross Margin
-- [ ] Chart PNG export (⤓) gomb működik
+### 2.9 Company Profile — Valuation tab
+- [ ] DCF Perpetuity / Exit: pre-filled az API adatokkal
+- [ ] Reverse DCF: implied growth rate
+- [ ] ARIA: multiples, fair value range
+- [ ] Money Back: FCF-based payback
+- [ ] FCFF toggle: FCF to Equity ↔ FCFF to Firm
+- [ ] Scenario Builder: Bear/Base/Bull, probability validation (sum=100%)
+- [ ] 10cap: Net Income + D&A + CAPEX → MOS price
+- [ ] EVA: "Creating/Destroying Value" badge
+- [ ] Valuation History: "Save Snapshot" → tábla bővül, reload után is megvan
 
-### 2.8 Company Profile — Checklist tab
+### 2.10 Company Profile — Notes tab
+- [ ] Thesis: Markdown szerkesztő + preview
+- [ ] Earnings grid: Q1-Q4 évenként, "Done"/"Call Listened" checkboxok, notes per quarter
+- [ ] Filings tracking: 10K/10Q checkboxok évenként
+- [ ] TODOs: hozzáadás (szöveg + dátum), kész jelölés, törlés
+- [ ] Follow Sources: IR page, SeekingAlpha, Twitter, YouTube, Substack URL-ek mentése
+- [ ] Kép beillesztés (paste/upload, max 2MB)
+- [ ] Mentés automatikus
+
+### 2.11 Company Profile — Checklist tab
 - [ ] 14 szekció accordion megjelenik
 - [ ] Company Details: ~30+ kérdés, mix of textarea/select/text
 - [ ] Moat Analysis: moat típusok (12+), rating, fake moat check
 - [ ] SWOT/SPLEEN szekció: 10 textarea
 - [ ] Management, Industry, Risks szekciók kitölthetők
 - [ ] Financial Analysis: auto-fill thresholds
-- [ ] Valuation, Buy/Sell Decision, Research Sources szekciók
-- [ ] Psychology Check: 9+ kérdés
-- [ ] Quarterly Follow-up: quarter hozzáadás, 14 strukturált mező
+- [ ] Valuation, Buy/Sell Decision (+ Edge Analysis, Anti-Thesis), Research Sources
+- [ ] Psychology Check: 14 kérdés
+- [ ] Quarterly Follow-up: quarter hozzáadás, 14 strukturált mező, auto-carry "watchNextQuarter"
 - [ ] Learning Log: entry hozzáadás (date, category, description)
 - [ ] Change Tracking: automatikus naplózás (timestamp, quarter)
 - [ ] Progress bar: kitöltöttség % frissül valós időben
-- [ ] Mentés automatikus (onChange/onBlur)
+- [ ] Mentés automatikus (onChange/onBlur, 500ms debounce)
 
-### 2.9 Company Profile — Valuation tab
-- [ ] DCF, Reverse DCF, ARIA, Money Back: pre-filled az API adatokkal
-- [ ] Scenario Builder: 3-oszlop, probability validation
-- [ ] 10cap, EVA: auto-prefill
-- [ ] Expected Return breakdown: stacked bar chart
-- [ ] Position Sizing: score + Kelly Criterion
-- [ ] Valuation History: snapshot lista
+### 2.12 Company Profile — Dividends tab
+- [ ] Dividend history lista (FMP + Yahoo)
+- [ ] Yield, payout ratio, growth rate (1y/3y/5y/10y)
+- [ ] Dividend chart
+- [ ] Payment frequency detection
 
-### 2.10 Company Profile — Insider tab
+### 2.13 Company Profile — Scores tab
+- [ ] 4-pillar stock score (Valuation, Growth, Profitability, Health) 0-25 each
+- [ ] Composite score 0-100
+- [ ] Historical charts: revenue, FCF, EPS, margins
+- [ ] Chart range választás (5Y, 10Y, 20Y, 30Y)
+- [ ] Mini chart-ok: Revenue, Net Income, FCF, Gross Margin
+- [ ] Chart PNG export (⤓) gomb működik
+
+### 2.14 Company Profile — Insider tab
 - [ ] Insider summary (top insiders, total buy/sell)
 - [ ] Transaction history tábla (dátum, név, pozíció, shares, value)
 - [ ] Pagination működik (sok tranzakciónál)
 - [ ] Finnhub API key szükséges (Settings-ben beállítva)
-
-### 2.11 Company Profile — Dividends tab
-- [ ] Dividend history lista
-- [ ] Yield, payout ratio, growth rate
-- [ ] Dividend chart
-
-### 2.12 Company Profile — Earnings tab
-- [ ] Earnings grid: Q1-Q4, évenként
-- [ ] "Done" checkbox per quarter
-- [ ] "Call Listened" checkbox
-- [ ] Notes per quarter
-- [ ] Earnings calendar dates (FMP-ből)
-
-### 2.13 Company Profile — Notes tab
-- [ ] Thesis notes: Markdown szerkesztő
-- [ ] Kép beillesztés (paste/upload)
-- [ ] Mentés automatikus
-
-### 2.14 Company Profile — TODOs tab
-- [ ] TODO hozzáadás (szöveg + dátum)
-- [ ] Kész jelölés (checkbox)
-- [ ] Törlés
-- [ ] Lista rendezés: open first, then completed
-
-### 2.15 Company Profile — Other
-- [ ] Company type tag (slow/medium/fast/cyclical/turnaround/asset)
-- [ ] Pipeline change: dropdown → "Owned"/"Watchlist"/stb.
-- [ ] Conviction badge megjelenik (ha van conviction history)
-- [ ] Conviction chart: line chart 1-10 skálán
-- [ ] Follow Sources: external URL-ek mentése
-- [ ] Price Alerts: above/below ár beállítás
 
 ### 2.16 Archive & Delete
 - [ ] Archive: cég → "Archived" pipeline stage, eltűnik a fő listából
@@ -270,6 +284,7 @@
 - [ ] Pozíció hozzáadás (Bond type): face value, coupon rate, maturity date, payment frequency, bond type extra mezők
 - [ ] Pozíció hozzáadás (Real Estate): purchase price, current value, monthly rental, location, annual costs
 - [ ] Pozíció hozzáadás (Cash): amount, currency — nincs ticker/shares
+- [ ] Pozíció hozzáadás (Savings): amount, interest rate, currency
 - [ ] Pozíció hozzáadás (Crypto, Other): alap mezők
 - [ ] Pozíció szerkesztés: mezők pre-filled, mentés frissíti a listát
 - [ ] Pozíció törlés: undo toast (6s), soft-delete
@@ -286,9 +301,12 @@
 - [ ] Transaction hozzáadás (Buy): ticker, account, shares, price, total, date
 - [ ] Transaction hozzáadás (Sell): ugyanaz, ellentétes irány
 - [ ] Transaction hozzáadás (Dividend): amount, date
+- [ ] Transaction hozzáadás (Split): split ratio
+- [ ] Transaction hozzáadás (Transfer): account-ok között
 - [ ] Transaction szerkesztés
 - [ ] Transaction törlés: undo toast
-- [ ] Form validation: hiányzó mező → piros border + hibaüzenet
+- [ ] Form validation (transaction): hiányzó mező → piros border + hibaüzenet
+- [ ] Form validation (position): hiányzó mező → piros border + hibaüzenet
 - [ ] Auto-calculate: shares × price = total (vagy total → price)
 - [ ] Üres state + CTA
 
@@ -301,14 +319,16 @@
 - [ ] Manual snapshot: "Take Snapshot" gomb → dátum + total value rögzítve
 - [ ] Snapshot lista megjelenik
 - [ ] Snapshot törlése
-- [ ] Legalább 2 snapshot kell a TWR/XIRR-hez
+- [ ] Napi max 1 snapshot, ismétlés → "Overwrite?" megerősítő dialog
+- [ ] Legalább 2 snapshot kell a TWR-hez
 
 ### 3.6 Returns
-- [ ] TWR (Time-Weighted Return): megjelenik % + annualizált
-- [ ] XIRR (Money-Weighted Return): megjelenik %
+- [ ] TWR (Time-Weighted Return): megjelenik % + annualizált (2+ snapshot kell)
+- [ ] XIRR (Money-Weighted Return): megjelenik % (2+ cash flow kell: legalább 1 tranzakció + current value)
 - [ ] Simple P&L: absolute + percentage
 - [ ] Returns grid: összes metrika egy helyen
-- [ ] 0 vagy 1 snapshot → "Not enough data" üzenet (nem NaN/error)
+- [ ] 0 vagy 1 snapshot → TWR "Not enough data" üzenet (nem NaN/error)
+- [ ] 0 tranzakció → XIRR "Not enough data" üzenet
 
 ### 3.7 CSV Import
 - [ ] CSV fájl kiválasztás → preview tábla
@@ -322,7 +342,7 @@
 - [ ] Minimum 2 pont kell
 
 ### 3.9 Allocation Charts
-- [ ] By ticker, by account, by currency, by asset type, by sector
+- [ ] 4 nézet: by ticker, by account, by currency, by asset type
 - [ ] Pie chart értékek összege = total portfolio value
 
 ---
@@ -356,13 +376,14 @@
 ### 5.1 Principles & Rules
 - [ ] Investment principles: hozzáadás (cím + leírás)
 - [ ] Portfolio rules: hozzáadás
-- [ ] Ideal company traits: checkbox lista (30+ elem)
-- [ ] What I avoid / red flags: checkbox lista
+- [ ] Ideal company traits: user-managed lista (hozzáadás/szerkesztés/törlés, üres induláskor)
+- [ ] What I avoid / red flags: user-managed lista (hozzáadás/szerkesztés/törlés)
 - [ ] Szerkesztés, törlés működik
 - [ ] Mentés automatikus
 
 ### 5.2 Position Scoring
-- [ ] CAGR multiplier × Conviction × Risk → score megjelenik
+- [ ] Framework scoring: `cagr * conv * risk / 10` → score megjelenik
+- [ ] Company Profile scoring: step-function multipliers (CAGR 0.8-2.0, Conviction 0.5-2.0, Risk 0.5-1.3)
 - [ ] Score range: szín és méret ajánlás (1-2% → 8-12%)
 
 ---
@@ -402,21 +423,21 @@
 - [ ] JSON backup export: letölti a teljes adatbázist
 - [ ] JSON restore: fájl kiválasztás → overwrite (type-to-confirm)
 - [ ] JSON import: fájl kiválasztás → merge (nem töröl meglévőt)
-- [ ] CSV export: 5 fájl (positions, transactions, notes, reviews, framework)
+- [ ] CSV export: dropdown menü → 5 egyedi letöltés (positions, transactions, notes, reviews, framework)
 - [ ] XLSX export: 5-sheet workbook letöltődik
-- [ ] Markdown export: notes + framework letöltődik
+- [ ] Markdown export: dropdown → "Notes" és "Framework" külön-külön letöltés
 
 ### 7.3 D1 Cloud Sync
 - [ ] Test Connection → "Connected" / "Failed"
 - [ ] Migrate to Cloud: progress overlay, sikeres migráció
-- [ ] D1 mode aktív → autoSave debounced (1500ms)
+- [ ] D1 mode aktív → autoSave debounced (1500ms alap, 500ms checklist, 300ms valuation)
 - [ ] Page close → flushAll (keepalive/sendBeacon)
 - [ ] Reload → D1-ből tölti az adatot (nem localStorage)
 
 ### 7.4 PDF Export
 - [ ] Per-company PDF: section chooser dialog, 10 szekció
 - [ ] PDF generálás: Stratos Ventures branding, header/footer
-- [ ] Portfolio Summary PDF: overview, accounts, positions, allocation
+- [ ] Portfolio Summary PDF: 6 szekció (overview, accounts, positions, allocation by type, recent transactions, dividend income)
 
 ### 7.5 Trash (Soft Delete)
 - [ ] Trash view: törölt elemek listája (positions, transactions, notes, reviews)
@@ -466,6 +487,9 @@
 - [ ] parseNum("10B") → 10,000,000,000
 - [ ] parseNum("2.5M") → 2,500,000
 - [ ] parseNum("1.5K") → 1,500
+- [ ] parseNum nagyon hosszú string (30+ karakter) → 0 (length guard)
+- [ ] parseNum("abc") → 0 (nem szám)
+- [ ] parseNum(null) / parseNum(undefined) → 0
 - [ ] P&L: (currentPrice - avgCost) × shares → helyes előjel
 - [ ] Currency conversion: 100 EUR → USD a mai árfolyamon
 - [ ] Stock Score: 4 pillar (0-25 each) → composite 0-100
@@ -474,11 +498,11 @@
 - [ ] Cmd+K → Global Search
 - [ ] Cmd+1-7 → section navigation
 - [ ] N → new item (context-aware: note, position, review)
-- [ ] ? → shortcut guide
+- [ ] ? → Settings-re navigál (shortcut guide)
 - [ ] Esc → modal/overlay bezárása
 
 ### 8.6 Toast & Confirmation
-- [ ] Toast megjelenik és auto-eltűnik (6s)
+- [ ] Toast megjelenik és auto-eltűnik (4s info/success/warning, 6s error/undo)
 - [ ] Toast hover → pause (nem tűnik el)
 - [ ] Undo toast: "Undo" gomb → visszaállítás működik
 - [ ] Danger confirm: type-to-confirm (pl. "TÖRLÉS" beírása)
@@ -489,7 +513,7 @@
 ## 9. Mobile Responsiveness
 
 ### 9.1 Layout (≤768px)
-- [ ] Bottom nav megjelenik (5 menüpont + More)
+- [ ] Bottom nav megjelenik (4 menüpont + More)
 - [ ] Sidebar elrejtve
 - [ ] More menu: téma toggle + nyelv + extra menüpontok
 - [ ] Tartalom teljes szélességben
@@ -515,6 +539,7 @@
 - [ ] Első betöltés: <3s (lassú hálózaton is)
 - [ ] Reload (cached): <1s
 - [ ] Service Worker cache működik (offline fallback)
+- [ ] Service Worker update: új verzió → "Update available" toast → kattintás → reload
 - [ ] Lazy-loaded: jsPDF, SheetJS (csak használatkor tölt be)
 - [ ] Lazy-loaded charts: Chart.js canvas csak ha látható
 
@@ -533,6 +558,7 @@
 ### 10.4 Biztonság
 - [ ] escH() véd XSS ellen: próbálj `<script>alert(1)</script>` tickert hozzáadni → escaped
 - [ ] File import size limit: >10MB → error toast
+- [ ] Image upload size limit: >2MB → error toast (company notes képbeillesztés)
 - [ ] Worker rate limit: 30 req/min Yahoo, 120 req/min D1
 - [ ] API key nem jelenik meg a HTML source-ban
 - [ ] Encryption (ha aktív): AES-256-GCM, PBKDF2
