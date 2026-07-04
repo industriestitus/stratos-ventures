@@ -1443,7 +1443,8 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     <div id="section-calculators">
 
 <div class="stock-header">
-  <input type="text" id="stockName" placeholder="Stock ticker / name" data-i18n-placeholder="comp.tickerPlaceholder">
+  <input type="text" id="stockName" placeholder="Stock ticker / name" data-i18n-placeholder="comp.tickerPlaceholder" list="calc-ticker-list" onfocus="populateCalcTickerList()">
+  <datalist id="calc-ticker-list"></datalist>
   <select id="currencyUnit"><option value="$">$ USD</option><option value="€">€ EUR</option><option value="£">£ GBP</option><option value="Ft">Ft HUF</option></select>
   <select id="scaleUnit"><option value="M" data-i18n="comp.millions">Millions</option><option value="B" data-i18n="comp.billions">Billions</option><option value="K" data-i18n="comp.thousands">Thousands</option><option value="" data-i18n="comp.units">Units</option></select>
 </div>
@@ -2753,7 +2754,8 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
       </div>
       <div style="flex:1;min-width:120px;display:none" id="rv-modal-ticker-wrap">
         <label data-i18n="rv.reviewCompany">Company (optional)</label>
-        <input type="text" id="rv-modal-ticker" placeholder="e.g. AAPL">
+        <input type="text" id="rv-modal-ticker" placeholder="e.g. AAPL" list="rv-ticker-list">
+        <datalist id="rv-ticker-list"></datalist>
       </div>
     </div>
     <div id="rv-modal-questions" class="rv-questions"></div>
@@ -3706,6 +3708,7 @@ function saveCurrentStock(){
 }
 function loadStock(name){const saved=_getSavedStocks();if(saved[name]){loadData(saved[name]);switchTab('dcf-perpetuity')}}
 function deleteStock(name,e){e.stopPropagation();const s=_getSavedStocks();const backup=s[name]?JSON.parse(JSON.stringify(s[name])):null;undoableDelete(t('toast.stockDeleted',{name}),()=>{const s2=_getSavedStocks();delete s2[name];_putSavedStocks(s2);renderSavedStocks()},()=>{if(backup){const s2=_getSavedStocks();s2[name]=backup;_putSavedStocks(s2);renderSavedStocks()}})}
+function populateCalcTickerList(){const dl=document.getElementById('calc-ticker-list');if(dl){const allTk=new Set([...Object.keys(_getSavedStocks()),...Object.keys(tStocks)]);dl.innerHTML=[...allTk].map(tk=>`<option value="${escH(tk)}">`).join('')}}
 function renderSavedStocks(){
   const c=document.getElementById('saved-stocks-list'),s=_getSavedStocks();
   const keys=Object.keys(s);
@@ -13213,6 +13216,7 @@ function openReview(type,editId,prefillTicker){
   const dateInput=document.getElementById('rv-modal-date');
   const tickerInput=document.getElementById('rv-modal-ticker');
   const summaryInput=document.getElementById('rv-modal-summary');
+  document.getElementById('rv-ticker-list').innerHTML=Object.keys(tStocks).map(tk=>`<option value="${escH(tk)}">`).join('');
   document.getElementById('rv-modal-edit-id').value=editId||'';
 
   if(editId){
