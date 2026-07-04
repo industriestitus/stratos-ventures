@@ -61,6 +61,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 52 | Accessibility (ARIA + Backdrop) | `2a26e9c` | 2026-07-03 | 30 | 0 |
 | 53 | UX Review — Default Tab Fix | e45cba3 | 2026-07-04 | 1 | 0 |
 | 54 | UX — Back Navigation | d3260d0 | 2026-07-04 | 1 | 0 |
+| 55 | UX — Dashboard Hub Links | TBD | 2026-07-04 | 1 | 0 |
 
 **Total: 355 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -1110,6 +1111,16 @@ Companies section default tab changed from Calculator to Tracker for better new-
 | # | Severity | Bug | Fix |
 |---|----------|-----|-----|
 | 1 | LOW | Companies section opens on Calculator tab (8+ input fields) — unintuitive for new users who want to add their first company | Default tab changed to Tracker; sessionStorage still preserves last-used tab for returning users |
+
+---
+
+## Category 55 — UX — Dashboard Hub Links (2026-07-04) — `TBD`
+
+Dashboard widget titles now link to their detail sections, making the dashboard a navigation hub.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | Dashboard widget titles are static text — no way to navigate from widget to its detail section | Added clickable title links with → arrow and hover effect to 8 widgets: Allocation/Net Worth/Smith → Portfolio, Red Flags/Sell Triggers/Dip Finder/Earnings → Companies/Tracker, Reviews Due → Reviews. Allocation chart ticker segments also clickable → showProfile |
 
 ---
 

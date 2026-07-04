@@ -660,6 +660,9 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .db-hero-metric .hm-value{font-size:var(--fs-2xl);font-weight:700;margin-top:2px}
 .db-widget{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;min-width:0;position:relative}
 .db-widget-title{font-size:var(--fs-md);font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.db-widget-link{cursor:pointer;transition:color .15s}.db-widget-link:hover{color:var(--accent)}
+.db-widget-link::after{content:'→';margin-left:6px;font-size:11px;opacity:.4;transition:opacity .15s}
+.db-widget-link:hover::after{opacity:1}
 .db-widget-hide{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:var(--fs-sm);padding:3px 8px;border-radius:6px;opacity:0;transition:opacity .15s;font-family:inherit}
 .db-widget:hover .db-widget-hide{opacity:.6}
 .db-widget-hide:hover{opacity:1!important;color:var(--red);background:rgba(255,71,87,.1)}
@@ -1338,7 +1341,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
     <!-- Allocation Charts -->
     <div class="db-widget" id="db-alloc-widget">
-      <div class="db-widget-title" data-i18n="db.allocation">Allocation</div>
+      <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('portfolio')" data-i18n="db.allocation">Allocation</span></div>
       <div class="db-alloc-grid">
         <div class="db-alloc-item"><div class="db-alloc-label" data-i18n="db.byTicker">By Ticker</div><canvas id="db-alloc-ticker"></canvas></div>
         <div class="db-alloc-item"><div class="db-alloc-label" data-i18n="db.byAccount">By Account</div><canvas id="db-alloc-account"></canvas></div>
@@ -1349,25 +1352,25 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
     <!-- Net Worth -->
     <div class="db-widget" id="db-networth-widget">
-      <div class="db-widget-title" data-i18n="db.netWorth">Net Worth</div>
+      <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('portfolio')" data-i18n="db.netWorth">Net Worth</span></div>
       <div id="db-networth-content"></div>
     </div>
 
     <!-- Terry Smith Metrics -->
     <div class="db-widget" id="db-smith-widget">
-      <div class="db-widget-title" data-i18n="db.qualityWeighted">Portfolio Quality (Weighted)</div>
+      <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('portfolio')" data-i18n="db.qualityWeighted">Portfolio Quality (Weighted)</span></div>
       <div id="db-smith-content"></div>
     </div>
 
     <!-- Red Flag Alerts -->
     <div class="db-widget" id="db-alerts-widget">
-      <div class="db-widget-title"><span data-i18n="db.redFlags">Red Flag Alerts</span> <span id="db-alerts-count" style="font-size:11px;color:var(--text2);font-weight:400"></span></div>
+      <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('companies');switchCompanyTab('tracker')" data-i18n="db.redFlags">Red Flag Alerts</span> <span id="db-alerts-count" style="font-size:11px;color:var(--text2);font-weight:400"></span></div>
       <div id="db-alerts-content"></div>
     </div>
 
     <!-- Sell Triggers -->
     <div class="db-widget" id="db-sell-triggers-widget">
-      <div class="db-widget-title"><span data-i18n="db.sellTriggers">Sell Triggers</span> <span id="db-sell-triggers-count" style="font-size:11px;color:var(--text2);font-weight:400"></span></div>
+      <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('companies');switchCompanyTab('tracker')" data-i18n="db.sellTriggers">Sell Triggers</span> <span id="db-sell-triggers-count" style="font-size:11px;color:var(--text2);font-weight:400"></span></div>
       <div id="db-sell-triggers-content"></div>
     </div>
 
@@ -1379,7 +1382,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
     <!-- Dip Finder -->
     <div class="db-widget" id="db-dip-widget">
-      <div class="db-widget-title"><span data-i18n="db.dipFinder">Dip Finder</span> <button onclick="fetchDipData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-dip-btn">Refresh</button></div>
+      <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('companies');switchCompanyTab('tracker')" data-i18n="db.dipFinder">Dip Finder</span> <button onclick="fetchDipData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-dip-btn">Refresh</button></div>
       <div id="db-dip-content"></div>
     </div>
 
@@ -1391,7 +1394,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
     <!-- Reviews Due -->
     <div class="db-widget" id="db-reviews-due-widget">
-      <div class="db-widget-title" data-i18n="db.reviewsDue">Reviews Due</div>
+      <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('reviews')" data-i18n="db.reviewsDue">Reviews Due</span></div>
       <div id="db-reviews-due-content"></div>
     </div>
 
@@ -1403,7 +1406,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
     <!-- Upcoming Earnings -->
     <div class="db-widget" id="db-earnings-widget">
-      <div class="db-widget-title"><span data-i18n="db.earnings">Upcoming Earnings</span> <button onclick="fetchEarningsCalendar()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-earn-btn">Refresh</button></div>
+      <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('companies');switchCompanyTab('tracker')" data-i18n="db.earnings">Upcoming Earnings</span> <button onclick="fetchEarningsCalendar()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-earn-btn">Refresh</button></div>
       <div id="db-earnings-content"></div>
     </div>
 
@@ -6224,7 +6227,7 @@ function renderDbAllocCharts(){
     _dbCharts[canvasId]=new Chart(document.getElementById(canvasId),{
       type:'doughnut',
       data:{labels,datasets:[{data,backgroundColor:colors.slice(0,data.length),borderWidth:0}]},
-      options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${formatMoney(ctx.parsed,base)}`}}},cutout:'60%'}
+      options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${formatMoney(ctx.parsed,base)}`}}},cutout:'60%',onClick:(evt,elements)=>{if(elements.length&&groupBy==='ticker'){const idx=elements[0].index;const ticker=labels[idx];if(tStocks[ticker])showProfile(ticker)}}}
     });
   });
 }
