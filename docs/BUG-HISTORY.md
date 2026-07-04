@@ -1145,6 +1145,18 @@ Review modal and Calculator ticker inputs now have datalist autocomplete, matchi
 
 ---
 
+## Category 57 — UX — Transaction Price Auto-fill (2026-07-04) — `6edec93`
+
+Transaction modal now auto-fills price from tracker data when a known ticker is entered.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | Transaction price field empty even when ticker is in tracker with known price — user must manually look up and type the current price | Added `onTxTickerChange()`: auto-fills `tStocks[ticker].price` when price field is empty, shows "Current price: X" hint below field |
+| 2 | LOW | Price hint not reset when transaction modal reopened after previous use | Added `pf-tx-price-hint` display reset in `openTransactionModal()` before `_openModal()` |
+| 3 | LOW | Pre-existing `t` variable shadowing in position/transaction datalist `.map(t=>)` callbacks | Renamed map parameter from `t` to `tk` in `updatePositionModalFields()` and `updateTxModalFields()` |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:

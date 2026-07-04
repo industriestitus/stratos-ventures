@@ -228,6 +228,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Back navigation — profile "Back" button returns to originating section (Dashboard/Portfolio/Research/Reviews/Tracker) with i18n labels (EN+HU)
 - [x] Dashboard hub links — widget titles link to detail sections (→ arrow, hover effect), allocation chart ticker segments clickable
 - [x] Ticker autocomplete — datalist added to Review modal and Calculator ticker inputs for consistent autocomplete across all ticker fields
+- [x] Transaction price auto-fill — ticker selection auto-fills current market price with "Current price: X" hint, user can override
 
 ### Cross-Module Integration (2026-07-01)
 - [x] Archive system — soft delete with "Archived" pipeline stage, archive modal (Archive/Delete permanently/Cancel), tracker toggle, screener filter, D1 CHECK constraint migration
