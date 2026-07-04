@@ -1167,6 +1167,16 @@ Stock add with incomplete API data now shows exactly what's missing instead of a
 
 ---
 
+## Category 59 — UX — Transaction Ticker Cross-link (2026-07-04) — `f616215`
+
+Transaction table ticker column is now clickable to open the company profile.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | LOW | Transaction table shows ticker as plain text — no way to quickly navigate to the company profile from a transaction | Ticker cell now renders as accent-colored clickable link calling `showProfile()` for tickers in `tStocks`; unknown tickers remain plain text |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:
