@@ -1140,7 +1140,7 @@ var I18N={en:{
 'comp.todoList':'TODO List','comp.earningsTimeline':'Earnings Timeline','comp.year':'Year','comp.tenKTracking':'10-K / 10-Q Tracking',
 'comp.upside':'upside','comp.downside':'downside','comp.impliedGrowthPerp':'implied growth (perp.)','comp.impliedGrowthExit':'implied growth (exit {m}x)','comp.yrs':'yrs','comp.coverage':'coverage {c}x','comp.enterMcFcf':'enter Market Cap & FCF',
 'pf.deleteTitle':'Delete','pf.reportRead':'Report Read','pf.callListened':'Call Listened',
-'comp.invalidTicker':'Invalid ticker format','comp.alreadyTracked':'{ticker} already tracked','comp.addedPartial':'{ticker} added but some data unavailable — check API settings','comp.added':'{ticker} added','comp.fetchFailed':'Failed to fetch {ticker}','comp.adding':'Adding...','comp.archived':'{ticker} archived','comp.permDeleted':'{ticker} permanently deleted','comp.restoredWatchlist':'{ticker} restored to Watchlist','comp.addedOwned':'{ticker} added to Companies as Owned','comp.removeTicker':'Remove {ticker}',
+'comp.invalidTicker':'Invalid ticker format','comp.alreadyTracked':'{ticker} already tracked','comp.addedPartial':'{ticker} added but some data unavailable — check API settings','comp.partialPrice':'price','comp.partialFinancials':'financials','comp.partialGrowth':'growth','comp.partialMissing':'missing: {missing} — add manually in Overview tab','comp.added':'{ticker} added','comp.fetchFailed':'Failed to fetch {ticker}','comp.adding':'Adding...','comp.archived':'{ticker} archived','comp.permDeleted':'{ticker} permanently deleted','comp.restoredWatchlist':'{ticker} restored to Watchlist','comp.addedOwned':'{ticker} added to Companies as Owned','comp.removeTicker':'Remove {ticker}',
 'comp.refreshInProgress':'Refresh already in progress','comp.noStocksRefresh':'No stocks to refresh','comp.refreshingProgress':'Refreshing {i}/{n}: {ticker}...','comp.allRefreshed':'All {count} stocks refreshed','comp.refreshedPartial':'{ok}/{total} refreshed. Failed: {failed}','comp.refreshing':'Refreshing...',
 'comp.hideArchived':'Hide archived ({count})','comp.showArchived':'Show archived ({count})','comp.noArchived':'No archived','comp.matchCount':'{count} match','comp.matchCountPlural':'{count} matches','comp.noFilterMatch':'No stocks match filter.','comp.noTrackedYet':'No stocks tracked yet','comp.typeTickerHint':'Type a ticker above and click + Add to start tracking companies.',
 'comp.tags':'Tags','comp.tag':'Tag','comp.addTag':'Add tag','comp.tagPlaceholder':'New tag...','comp.removeTag':'Remove tag {tag}','common.any':'Any',
@@ -1206,7 +1206,7 @@ var I18N={en:{
 'comp.todoList':'TODO lista','comp.earningsTimeline':'Eredmény időszak','comp.year':'Év','comp.tenKTracking':'10-K / 10-Q követés',
 'comp.upside':'felfelé','comp.downside':'lefelé','comp.impliedGrowthPerp':'implicit növekedés (perp.)','comp.impliedGrowthExit':'implicit növekedés (exit {m}x)','comp.yrs':'év','comp.coverage':'fedezet {c}x','comp.enterMcFcf':'add meg a Market Cap és FCF értékeket',
 'pf.deleteTitle':'Törlés','pf.reportRead':'Jelentés olvasva','pf.callListened':'Hívás meghallgatva',
-'comp.invalidTicker':'Érvénytelen ticker formátum','comp.alreadyTracked':'{ticker} már követve','comp.addedPartial':'{ticker} hozzáadva, de egyes adatok nem elérhetők — ellenőrizd az API beállításokat','comp.added':'{ticker} hozzáadva','comp.fetchFailed':'{ticker} lekérése sikertelen','comp.adding':'Hozzáadás...','comp.archived':'{ticker} archiválva','comp.permDeleted':'{ticker} véglegesen törölve','comp.restoredWatchlist':'{ticker} visszaállítva a Figyelőlistára','comp.addedOwned':'{ticker} hozzáadva a Cégekhez mint Birtokolt','comp.removeTicker':'{ticker} eltávolítása',
+'comp.invalidTicker':'Érvénytelen ticker formátum','comp.alreadyTracked':'{ticker} már követve','comp.addedPartial':'{ticker} hozzáadva, de egyes adatok nem elérhetők — ellenőrizd az API beállításokat','comp.partialPrice':'ár','comp.partialFinancials':'pénzügyi adatok','comp.partialGrowth':'növekedés','comp.partialMissing':'hiányzik: {missing} — pótold kézzel az Overview tabon','comp.added':'{ticker} hozzáadva','comp.fetchFailed':'{ticker} lekérése sikertelen','comp.adding':'Hozzáadás...','comp.archived':'{ticker} archiválva','comp.permDeleted':'{ticker} véglegesen törölve','comp.restoredWatchlist':'{ticker} visszaállítva a Figyelőlistára','comp.addedOwned':'{ticker} hozzáadva a Cégekhez mint Birtokolt','comp.removeTicker':'{ticker} eltávolítása',
 'comp.refreshInProgress':'Frissítés már folyamatban','comp.noStocksRefresh':'Nincs frissítendő részvény','comp.refreshingProgress':'{i}/{n} frissítése: {ticker}...','comp.allRefreshed':'Mind a {count} részvény frissítve','comp.refreshedPartial':'{ok}/{total} frissítve. Sikertelen: {failed}','comp.refreshing':'Frissítés...',
 'comp.hideArchived':'Archivált elrejtése ({count})','comp.showArchived':'Archivált mutatása ({count})','comp.noArchived':'Nincs archivált','comp.matchCount':'{count} találat','comp.matchCountPlural':'{count} találat','comp.noFilterMatch':'Nincs a szűrőnek megfelelő részvény.','comp.noTrackedYet':'Még nincs követett részvény','comp.typeTickerHint':'Adj meg egy tickert fent és kattints a + Hozzáadás gombra a cégek követéséhez.',
 'comp.tags':'Címkék','comp.tag':'Címke','comp.addTag':'Címke hozzáadása','comp.tagPlaceholder':'Új címke...','comp.removeTag':'{tag} címke eltávolítása','common.any':'Bármely',
@@ -10466,8 +10466,14 @@ async function addTrackerStock(){
   setBtnLoading(addBtn,true,t('comp.adding'));
   try{
     const result=await fetchStockData(ticker);
-    if(!result||!result.marketCap)showToast(t('comp.addedPartial',{ticker}),'warning');
-    else showToast(t('comp.added',{ticker}),'success',2000);
+    if(!result||!result.marketCap){
+      const miss=[];
+      if(!result?.price)miss.push(t('comp.partialPrice'));
+      if(!result?.revenue)miss.push(t('comp.partialFinancials'));
+      if(result?.revenueGrowth==null)miss.push(t('comp.partialGrowth'));
+      const detail=miss.length?t('comp.partialMissing',{missing:miss.join(', ')}):t('comp.addedPartial',{ticker});
+      showToast(t('comp.added',{ticker})+' — '+detail,'warning',5000);
+    }else showToast(t('comp.added',{ticker}),'success',2000);
   }catch(e){showToast(t('comp.fetchFailed',{ticker}),'error')}
   finally{inp.disabled=false;setBtnLoading(addBtn,false,t('comp.addTicker'))}
   saveTrackerStocks();
