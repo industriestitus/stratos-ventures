@@ -5142,7 +5142,7 @@ function renderTransactions(){
       <td><input type="checkbox" class="bulk-cb bulk-cb-tx" data-id="${t.id}" onchange="_toggleBulkTx(${t.id},this.checked)"${_bulkTxIds.has(t.id)?' checked':''}></td>
       <td>${escH(t.date||'')}</td>
       <td><span class="pf-badge pf-badge-${escH(t.type)}">${escH(t.type)}</span></td>
-      <td style="font-weight:600">${escH(t.ticker||'—')}</td>
+      <td style="font-weight:600">${t.ticker&&tStocks[t.ticker]?`<a onclick="showProfile('${escH(t.ticker)}')" style="color:var(--accent);cursor:pointer;text-decoration:none">${escH(t.ticker)}</a>`:escH(t.ticker||'—')}</td>
       <td>${escH(getAccountName(t.accountId))}</td>
       <td class="num">${shares}</td>
       <td class="num">${price}</td>
