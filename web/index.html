@@ -1144,6 +1144,7 @@ var I18N={en:{
 'comp.refreshInProgress':'Refresh already in progress','comp.noStocksRefresh':'No stocks to refresh','comp.refreshingProgress':'Refreshing {i}/{n}: {ticker}...','comp.allRefreshed':'All {count} stocks refreshed','comp.refreshedPartial':'{ok}/{total} refreshed. Failed: {failed}','comp.refreshing':'Refreshing...',
 'comp.hideArchived':'Hide archived ({count})','comp.showArchived':'Show archived ({count})','comp.noArchived':'No archived','comp.matchCount':'{count} match','comp.matchCountPlural':'{count} matches','comp.noFilterMatch':'No stocks match filter.','comp.noTrackedYet':'No stocks tracked yet','comp.typeTickerHint':'Type a ticker above and click + Add to start tracking companies.',
 'comp.tags':'Tags','comp.tag':'Tag','comp.addTag':'Add tag','comp.tagPlaceholder':'New tag...','comp.removeTag':'Remove tag {tag}','common.any':'Any',
+'comp.presets':'Presets','comp.savePreset':'Save preset','comp.presetName':'Preset name','comp.deletePreset':'Delete preset','comp.builtIn':'Built-in','comp.loadPreset':'Load preset','comp.presetSaved':'Preset "{name}" saved','comp.presetDeleted':'Preset deleted','comp.presetNameRequired':'Enter a preset name',
 'sync.httpWarning':'Sync URL uses HTTP — data sent unencrypted. Use HTTPS.','sync.preparing':'Preparing data...','sync.uploading':'Uploading to D1...','sync.migrationComplete':'Migration complete! Reloading...','sync.migrating':'Migrating...','sync.migrated':'Migrated ✓','sync.retryMigration':'Retry migration','sync.enterUrlFirst':'Enter URL first','sync.testing':'Testing...','sync.connected':'Connected ✓','sync.enterKeyFirst':'Enter key first','sync.noData':'No data (check key)','sync.invalidKey':'Invalid key','sync.connectionFailed':'Connection failed','sync.workerMissing':'Worker URL missing','sync.syncKeyMissing':'Sync Key missing','sync.syncing':'Syncing...','sync.wrongKey':'Wrong sync key','sync.serverError':'Server error ({status})','sync.synced':'Synced ✓ ({when})','sync.noDataSaved':'No data yet — saved!','sync.saved':'Saved ✓ {time}','sync.saveFailed':'Save failed','sync.decryptionFailed':'Cloud sync decryption failed','sync.loadingD1':'Loading from D1...','sync.partialLoadFailed':'Some data failed to load from D1','sync.backOnline':'Back online','sync.backOnlineSyncing':'Back online — syncing {n} pending change(s)...','sync.offline':'You are offline — some features may be unavailable','sync.otherTabUpdate':'Data updated from another tab','sync.incognitoWarning':'Private/Incognito mode detected — your data will not persist after closing the window. Use Export to save your work.','sync.appInstalled':'App installed successfully!','sync.installing':'Installing...','sync.newVersion':'New version available — reload now','sync.syncNow':'Sync Now','sync.testD1':'Test D1','sync.d1Connected':'D1 Connected ✓','sync.storageFull':'Storage full — some data may not be saved locally','sync.decryptFailed':'Decryption failed — wrong password?','sync.test':'Test',
 'toast.copyFailed':'Copy failed — select and copy manually','toast.copied':'Copied to clipboard','toast.copiedShort':'Copied!','toast.fileTooLarge':'File too large (max 10MB)',
 'toast.cloudSaveRetry':'Cloud save failed ({key}) — retrying in {sec}s','toast.cloudSaveFailed':'Cloud save failed ({key}) — data kept locally. Will sync on next save.','toast.migrationFailed':'Data migration failed','toast.cloudDeleteFailed':'Cloud delete failed — local only',
@@ -1210,6 +1211,7 @@ var I18N={en:{
 'comp.refreshInProgress':'Frissítés már folyamatban','comp.noStocksRefresh':'Nincs frissítendő részvény','comp.refreshingProgress':'{i}/{n} frissítése: {ticker}...','comp.allRefreshed':'Mind a {count} részvény frissítve','comp.refreshedPartial':'{ok}/{total} frissítve. Sikertelen: {failed}','comp.refreshing':'Frissítés...',
 'comp.hideArchived':'Archivált elrejtése ({count})','comp.showArchived':'Archivált mutatása ({count})','comp.noArchived':'Nincs archivált','comp.matchCount':'{count} találat','comp.matchCountPlural':'{count} találat','comp.noFilterMatch':'Nincs a szűrőnek megfelelő részvény.','comp.noTrackedYet':'Még nincs követett részvény','comp.typeTickerHint':'Adj meg egy tickert fent és kattints a + Hozzáadás gombra a cégek követéséhez.',
 'comp.tags':'Címkék','comp.tag':'Címke','comp.addTag':'Címke hozzáadása','comp.tagPlaceholder':'Új címke...','comp.removeTag':'{tag} címke eltávolítása','common.any':'Bármely',
+'comp.presets':'Sablonok','comp.savePreset':'Sablon mentése','comp.presetName':'Sablon neve','comp.deletePreset':'Sablon törlése','comp.builtIn':'Beépített','comp.loadPreset':'Sablon betöltése','comp.presetSaved':'„{name}" sablon mentve','comp.presetDeleted':'Sablon törölve','comp.presetNameRequired':'Add meg a sablon nevét',
 'sync.httpWarning':'A szinkronizáló URL HTTP-t használ — az adatok titkosítatlanul küldve. Használj HTTPS-t.','sync.preparing':'Adatok előkészítése...','sync.uploading':'Feltöltés D1-be...','sync.migrationComplete':'Migráció kész! Újratöltés...','sync.migrating':'Migrálás...','sync.migrated':'Migrálva ✓','sync.retryMigration':'Migráció újrapróbálása','sync.enterUrlFirst':'Adj meg URL-t először','sync.testing':'Tesztelés...','sync.connected':'Csatlakozva ✓','sync.enterKeyFirst':'Adj meg kulcsot először','sync.noData':'Nincs adat (ellenőrizd a kulcsot)','sync.invalidKey':'Érvénytelen kulcs','sync.connectionFailed':'Csatlakozás sikertelen','sync.workerMissing':'Worker URL hiányzik','sync.syncKeyMissing':'Szinkronizálási kulcs hiányzik','sync.syncing':'Szinkronizálás...','sync.wrongKey':'Hibás szinkronizálási kulcs','sync.serverError':'Szerverhiba ({status})','sync.synced':'Szinkronizálva ✓ ({when})','sync.noDataSaved':'Még nincs adat — mentve!','sync.saved':'Mentve ✓ {time}','sync.saveFailed':'Mentés sikertelen','sync.decryptionFailed':'Felhő szinkronizáció visszafejtés sikertelen','sync.loadingD1':'Betöltés D1-ből...','sync.partialLoadFailed':'Néhány adat nem töltődött be a D1-ből','sync.backOnline':'Újra online','sync.backOnlineSyncing':'Újra online — {n} függő változás szinkronizálása...','sync.offline':'Offline vagy — egyes funkciók nem elérhetők','sync.otherTabUpdate':'Adatok frissítve másik fülről','sync.incognitoWarning':'Privát/Inkognitó mód észlelve — az adataid nem maradnak meg az ablak bezárása után. Használd az Exportálást a munkád mentéséhez.','sync.appInstalled':'Alkalmazás sikeresen telepítve!','sync.installing':'Telepítés...','sync.newVersion':'Új verzió elérhető — töltsd újra most','sync.syncNow':'Szinkronizálás','sync.testD1':'D1 teszt','sync.d1Connected':'D1 csatlakozva ✓','sync.storageFull':'Tárhely megtelt — egyes adatok nem menthetők helyileg','sync.decryptFailed':'Visszafejtés sikertelen — hibás jelszó?','sync.test':'Teszt',
 'toast.copyFailed':'Másolás sikertelen — jelöld ki és másold manuálisan','toast.copied':'Vágólapra másolva','toast.copiedShort':'Másolva!','toast.fileTooLarge':'Fájl túl nagy (max 10MB)',
 'toast.cloudSaveRetry':'Felhő mentés sikertelen ({key}) — újrapróbálás {sec} mp múlva','toast.cloudSaveFailed':'Felhő mentés sikertelen ({key}) — adatok helyben tárolva. Következő mentésnél szinkronizál.','toast.migrationFailed':'Adatmigráció sikertelen','toast.cloudDeleteFailed':'Felhő törlés sikertelen — csak helyben',
@@ -1730,6 +1732,13 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     </div>
   </div>
   <p style="font-size:12px;color:var(--text2);margin:0 0 12px" data-i18n="comp.screenerDesc">Filter your tracked stocks by financial metrics, scores, and valuation ratios.</p>
+  <div id="screener-preset-bar" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+    <select id="screener-preset-select" onchange="loadScreenerPreset(this.value);this.value=''" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer;min-width:160px">
+      <option value="" data-i18n="comp.loadPreset">Load preset</option>
+    </select>
+    <button class="btn btn-secondary" onclick="saveScreenerPresetPrompt()" style="font-size:11px;padding:4px 10px" data-i18n="comp.savePreset">Save preset</button>
+    <button id="screener-preset-del" class="btn btn-secondary" onclick="deleteScreenerPresetPrompt()" style="font-size:11px;padding:4px 10px;display:none;color:var(--red,#e74c3c)" data-i18n="comp.deletePreset">Delete preset</button>
+  </div>
   <div id="screener-filters" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px"></div>
   <div style="margin-top:10px">
     <select id="screener-add" onchange="addScreenerFilter(this.value);this.value=''" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">
@@ -11385,6 +11394,10 @@ let screenerVisible=false;
 
 function toggleScreener(){
   screenerVisible=!screenerVisible;
+  _showScreener(screenerVisible);
+}
+function _showScreener(show){
+  screenerVisible=show;
   const card=document.getElementById('screener-card');
   card.style.display=screenerVisible?'':'none';
   document.getElementById('screener-toggle').classList.toggle('active',screenerVisible);
@@ -11392,6 +11405,7 @@ function toggleScreener(){
 }
 
 function renderScreenerUI(){
+  renderPresetSelect();
   const sel=document.getElementById('screener-add');
   sel.innerHTML='<option value="">+ Add filter...</option>';
   SCREENER_DEFS.forEach(d=>{
@@ -11427,11 +11441,13 @@ function renderScreenerUI(){
 function addScreenerFilter(k){
   if(!k)return;
   screenerFilters[k]={};
+  _saveScreenerState();
   renderScreenerUI();
 }
 
 function removeScreenerFilter(k){
   delete screenerFilters[k];
+  _saveScreenerState();
   renderScreenerUI();
   renderTracker();
 }
@@ -11441,14 +11457,94 @@ function updateScreenerFilter(k,type,val){
   if(type==='select')screenerFilters[k].value=val||undefined;
   else if(type==='min')screenerFilters[k].min=val!==''?parseFloat(val):undefined;
   else if(type==='max')screenerFilters[k].max=val!==''?parseFloat(val):undefined;
+  _saveScreenerState();
   renderTracker();
 }
 
 function clearScreenerFilters(){
   screenerFilters={};
+  _saveScreenerState();
   renderScreenerUI();
   renderTracker();
 }
+
+// ====== SCREENER PRESETS ======
+const SCREENER_BUILT_IN_PRESETS=[
+  {name:'Quality Growth',filters:{grossMargin:{min:30},roic:{min:12},revenueGrowth:{min:10}}},
+  {name:'Undervalued',filters:{pe:{max:15},pfcf:{max:12},_score:{min:60}}},
+  {name:'Dividend Safe',filters:{grossMargin:{min:25},debtEquity:{max:1.5},roe:{min:12},netMargin:{min:10}}},
+  {name:'High Score',filters:{_score:{min:75}}}
+];
+function _loadScreenerState(){
+  try{const d=localStorage.getItem('screener_filters_v1');if(d)screenerFilters=JSON.parse(d)}catch(e){}
+}
+function _saveScreenerState(){
+  localStorage.setItem('screener_filters_v1',JSON.stringify(screenerFilters));
+}
+function _getScreenerPresets(){
+  try{return JSON.parse(localStorage.getItem('screener_presets_v1')||'[]')}catch(e){return[]}
+}
+function _saveScreenerPresets(presets){
+  localStorage.setItem('screener_presets_v1',JSON.stringify(presets));
+}
+function renderPresetSelect(){
+  const sel=document.getElementById('screener-preset-select');if(!sel)return;
+  let h=`<option value="">${t('comp.loadPreset')}</option>`;
+  h+=`<optgroup label="${escH(t('comp.builtIn'))}">`;
+  SCREENER_BUILT_IN_PRESETS.forEach((p,i)=>h+=`<option value="b:${i}">${escH(p.name)}</option>`);
+  h+=`</optgroup>`;
+  const user=_getScreenerPresets();
+  if(user.length){
+    h+=`<optgroup label="${escH(t('comp.presets'))}">`;
+    user.forEach((p,i)=>h+=`<option value="u:${i}">${escH(p.name)}</option>`);
+    h+=`</optgroup>`;
+  }
+  sel.innerHTML=h;
+  const delBtn=document.getElementById('screener-preset-del');
+  if(delBtn)delBtn.style.display=user.length?'':'none';
+}
+function loadScreenerPreset(val){
+  if(!val)return;
+  const[type,idx]=val.split(':');
+  const i=parseInt(idx);
+  let preset;
+  if(type==='b')preset=SCREENER_BUILT_IN_PRESETS[i];
+  else{const user=_getScreenerPresets();preset=user[i]}
+  if(!preset)return;
+  screenerFilters=JSON.parse(JSON.stringify(preset.filters));
+  _saveScreenerState();
+  renderScreenerUI();
+  renderTracker();
+}
+function saveScreenerPresetPrompt(){
+  const keys=Object.keys(screenerFilters);
+  if(!keys.length){showToast(t('comp.addFilter'),'warning');return}
+  const name=prompt(t('comp.presetName'));
+  if(!name||!name.trim()){if(name!==null)showToast(t('comp.presetNameRequired'),'warning');return}
+  const presets=_getScreenerPresets();
+  const existing=presets.findIndex(p=>p.name===name.trim());
+  if(existing>=0)presets[existing].filters=JSON.parse(JSON.stringify(screenerFilters));
+  else presets.push({name:name.trim(),filters:JSON.parse(JSON.stringify(screenerFilters))});
+  _saveScreenerPresets(presets);
+  renderPresetSelect();
+  showToast(t('comp.presetSaved',{name:name.trim()}),'success');
+}
+function deleteScreenerPresetPrompt(){
+  const presets=_getScreenerPresets();
+  if(!presets.length)return;
+  const names=presets.map((p,i)=>`${i+1}. ${p.name}`).join('\n');
+  const choice=prompt(t('comp.deletePreset')+':\n'+names);
+  if(!choice)return;
+  const idx=parseInt(choice)-1;
+  if(isNaN(idx)||idx<0||idx>=presets.length)return;
+  presets.splice(idx,1);
+  _saveScreenerPresets(presets);
+  renderPresetSelect();
+  showToast(t('comp.presetDeleted'),'info');
+}
+
+_loadScreenerState();
+if(Object.keys(screenerFilters).length)_showScreener(true);
 
 const _screenerScoreCache=new Map();
 function invalidateScreenerCache(){_screenerScoreCache.clear()}
