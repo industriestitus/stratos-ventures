@@ -225,6 +225,7 @@ Status: COMPLETE (2026-06-27)
 ### UX Review & Default Tab Fix (2026-07-04)
 - [x] UX/investor workflow review — comprehensive audit of user and investor workflows, scored 7.5/10 UX, 8.5/10 investor workflow, 9.5/10 feature completeness
 - [x] Companies default tab changed from Calculator to Tracker — more intuitive entry point for new users, sessionStorage preserves last-used tab for returning users
+- [x] Back navigation — profile "Back" button returns to originating section (Dashboard/Portfolio/Research/Reviews/Tracker) with i18n labels (EN+HU)
 
 ### Cross-Module Integration (2026-07-01)
 - [x] Archive system — soft delete with "Archived" pipeline stage, archive modal (Archive/Delete permanently/Cancel), tracker toggle, screener filter, D1 CHECK constraint migration

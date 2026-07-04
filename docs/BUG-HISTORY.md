@@ -60,6 +60,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 51 | Inline Hover Styles | `1bea6c9` | 2026-07-03 | 5 | 0 |
 | 52 | Accessibility (ARIA + Backdrop) | `2a26e9c` | 2026-07-03 | 30 | 0 |
 | 53 | UX Review — Default Tab Fix | e45cba3 | 2026-07-04 | 1 | 0 |
+| 54 | UX — Back Navigation | TBD | 2026-07-04 | 1 | 0 |
 
 **Total: 355 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -1109,6 +1110,16 @@ Companies section default tab changed from Calculator to Tracker for better new-
 | # | Severity | Bug | Fix |
 |---|----------|-----|-----|
 | 1 | LOW | Companies section opens on Calculator tab (8+ input fields) — unintuitive for new users who want to add their first company | Default tab changed to Tracker; sessionStorage still preserves last-used tab for returning users |
+
+---
+
+## Category 54 — UX — Back Navigation (2026-07-04) — `TBD`
+
+Company profile "Back" button now returns to the originating section instead of always going to Tracker.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | HIGH | Profile "Back" button always returns to Tracker regardless of origin section (Dashboard, Portfolio, Research, Reviews) — user loses navigation context | Added `_profileOrigin` state tracking; `showProfile()` captures current section before hash change; `closeProfile()` navigates back to origin with correct i18n label (EN+HU) |
 
 ---
 
