@@ -1134,6 +1134,17 @@ Company profile "Back" button now returns to the originating section instead of 
 
 ---
 
+## Category 56 — UX — Ticker Autocomplete (2026-07-04) — `1fea9e8`
+
+Review modal and Calculator ticker inputs now have datalist autocomplete, matching existing behavior in Research/Transaction/Position modals.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | MEDIUM | Review modal ticker input (`rv-modal-ticker`) has no autocomplete — user must type full ticker manually unlike Research/Transaction modals | Added `<datalist id="rv-ticker-list">` populated from `tStocks` keys in `openReview()` |
+| 2 | MEDIUM | Calculator ticker input (`stockName`) has no autocomplete — user must remember exact ticker names | Added `<datalist id="calc-ticker-list">` populated on focus from `tStocks` + saved valuations via `populateCalcTickerList()` |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:

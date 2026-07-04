@@ -227,6 +227,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Companies default tab changed from Calculator to Tracker — more intuitive entry point for new users, sessionStorage preserves last-used tab for returning users
 - [x] Back navigation — profile "Back" button returns to originating section (Dashboard/Portfolio/Research/Reviews/Tracker) with i18n labels (EN+HU)
 - [x] Dashboard hub links — widget titles link to detail sections (→ arrow, hover effect), allocation chart ticker segments clickable
+- [x] Ticker autocomplete — datalist added to Review modal and Calculator ticker inputs for consistent autocomplete across all ticker fields
 
 ### Cross-Module Integration (2026-07-01)
 - [x] Archive system — soft delete with "Archived" pipeline stage, archive modal (Archive/Delete permanently/Cancel), tracker toggle, screener filter, D1 CHECK constraint migration
