@@ -61,7 +61,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 52 | Accessibility (ARIA + Backdrop) | `2a26e9c` | 2026-07-03 | 30 | 0 |
 | 53 | UX Review — Default Tab Fix | e45cba3 | 2026-07-04 | 1 | 0 |
 | 54 | UX — Back Navigation | d3260d0 | 2026-07-04 | 1 | 0 |
-| 55 | UX — Dashboard Hub Links | TBD | 2026-07-04 | 1 | 0 |
+| 55 | UX — Dashboard Hub Links | 3ec4467 | 2026-07-04 | 1 | 0 |
 
 **Total: 355 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -1114,7 +1114,7 @@ Companies section default tab changed from Calculator to Tracker for better new-
 
 ---
 
-## Category 55 — UX — Dashboard Hub Links (2026-07-04) — `TBD`
+## Category 55 — UX — Dashboard Hub Links (2026-07-04) — `3ec4467`
 
 Dashboard widget titles now link to their detail sections, making the dashboard a navigation hub.
 
