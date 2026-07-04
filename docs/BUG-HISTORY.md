@@ -1157,6 +1157,16 @@ Transaction modal now auto-fills price from tracker data when a known ticker is 
 
 ---
 
+## Category 58 — UX — Partial Add Toast (2026-07-04) — `14e92e5`
+
+Stock add with incomplete API data now shows exactly what's missing instead of a generic warning.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | LOW | Partial add toast says generic "some data unavailable — check API settings" without specifying what's missing or how to fix it | Toast now lists missing items (price/financials/growth) and says "add manually in Overview tab"; 5s duration instead of default |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:

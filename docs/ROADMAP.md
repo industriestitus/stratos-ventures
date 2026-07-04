@@ -229,6 +229,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Dashboard hub links — widget titles link to detail sections (→ arrow, hover effect), allocation chart ticker segments clickable
 - [x] Ticker autocomplete — datalist added to Review modal and Calculator ticker inputs for consistent autocomplete across all ticker fields
 - [x] Transaction price auto-fill — ticker selection auto-fills current market price with "Current price: X" hint, user can override
+- [x] Detailed partial-add toast — shows exactly which data is missing (price/financials/growth) with guidance to add manually in Overview tab
 
 ### Cross-Module Integration (2026-07-01)
 - [x] Archive system — soft delete with "Archived" pipeline stage, archive modal (Archive/Delete permanently/Cancel), tracker toggle, screener filter, D1 CHECK constraint migration
