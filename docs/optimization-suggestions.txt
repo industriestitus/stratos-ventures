@@ -1,0 +1,110 @@
+Stratos Ventures — Optimalizálási és fejlesztési javaslatok
+============================================================
+Dátum: 2026-07-03
+
+Prioritás jelölés:
+  [!!!] Magas hatás
+  [!!]  Közepes
+  [!]   Alacsony
+
+============================================================
+I. TELJESÍTMÉNY (PERFORMANCE) — Kritikus
+============================================================
+
+1. [!!!] index.html felbontása modulokra (~4-5 session)
+   14.600 sor / 896 KB egyetlen fájlban — 544 függvény. ES module-okra
+   bontás (pl. portfolio.js, dashboard.js, checklist.js) javítaná a
+   betöltési időt, karbantarthatóságot és a Service Worker cache
+   hatékonyságát. Csak a változott modul töltődne újra.
+
+2. [!!!] CSS kiemelése külön fájlba (~1 session)
+   A <style> blokk az index.html-ben ~3000+ sor. Külön .css fájl →
+   böngésző cache-eli külön, kisebb HTML parse time, párhuzamos letöltés.
+
+3. [!!] DOM renderelés virtualizálása (~2 session)
+   Nagy tracker tábla (50+ cég) vagy tranzakció lista lassulhat.
+   Virtual scroll: csak a látható sorok renderelése. Különösen a
+   screener és a pozíció tábla profitálna belőle.
+
+4. [!] Chart.js tree-shaking / lightweight alternatíva (~2 session)
+   A teljes Chart.js könyvtár töltődik be (~200KB gzip). Csak
+   line/bar/pie/doughnut kell — custom bundle vagy uPlot (~35KB)
+   alternatíva 80%-kal kisebb lenne.
+
+============================================================
+II. KÓDMINŐSÉG & KARBANTARTHATÓSÁG — Fontos
+============================================================
+
+5. [!!!] Globális változók csökkentése (~3 session)
+   Sok globális változó és függvény (tStocks, pfPositions, stb.) —
+   névütközés és memória-szivárgás kockázata. Module pattern vagy
+   ES modules + explicit import/export.
+
+6. [!!] innerHTML → template literal + DOM API (~2-3 session)
+   Sok helyen innerHTML-lel épül a UI (escH() véd XSS ellen, de
+   lassabb és törékenyebb). Nagyobb renderelő függvényeknél
+   (renderPositions, renderChecklist) DocumentFragment vagy template
+   clone gyorsabb és biztonságosabb.
+
+7. [!!] Egységtesztek (unit tests) (~2 session)
+   Jelenleg nincs tesztkörnyezet — csak manuális QA. A számítási
+   logika (DCF, XIRR, TWR, scoring, thresholds, yellow flags)
+   könnyen tesztelhető lenne Vitest-tel. Pure function-ök kiemelése
+   → tesztelhetőség.
+
+8. [!] TypeScript típusdefiníciók (JSDoc) (~1 session)
+   A fő adatstruktúrák (tStocks, pfPositions, pfAccounts) nincsenek
+   típusosan dokumentálva. JSDoc típusok (TS nélkül is) javítanák az
+   IDE autocompletion-t és a hibamegelőzést.
+
+============================================================
+III. UX & FELHASZNÁLÓI ÉLMÉNY — Ajánlott
+============================================================
+
+9. [!!!] Onboarding flow új felhasználóknak (~1-2 session)
+   Jelenleg üres app → DCF kalkulátor. 3-4 lépéses wizard: "Add első
+   cég → Portfolio beállítás → Dashboard felfedezés". Minta adattal is
+   jó lenne, hogy lássák milyen a kitöltött app.
+
+10. [!!] Mobile gestures (~1 session)
+    Pull-to-refresh (dashboard, company profile), long-press context
+    menu (tábla sorokon edit/delete/archive), swipe-to-dismiss (toast
+    üzenetek). Natívabb mobil élmény.
+
+11. [!!] Error states a chart konténerekre (~0.5 session)
+    Ha egy chart betöltése sikertelen, üres hely marad. Inline error
+    placeholder ("Nem sikerült betölteni a grafikont") + retry gomb
+    javítaná az élményt.
+
+12. [!] Tooltip bővítés (dashboard, screener) (~0.5 session)
+    Company profile metrikus tooltip-ok már kész és jók. Dashboard
+    widget-ekre és screener oszlopokra is hasonló "mi ez?" tooltip-okat
+    lehetne tenni.
+
+============================================================
+IV. ÚJ FEATURE ÖTLETEK — Opcionális
+============================================================
+
+13. [!!!] Push notifications (price alerts + earnings) (~2-3 session)
+    Cloudflare Worker cron (ingyenes) + Web Push API. Értesítés ha egy
+    részvény eléri a célárfolyamot vagy earnings jön. A PWA Service
+    Worker már megvan, csak a push subscription kell.
+
+14. [!!] AI elemzés Claude API-val (~2 session)
+    Haiku 4.5 ($1/$5M token) company summary, thesis review, kockázat
+    elemzés. CF Worker proxy-n keresztül. Havi ~$5-15 költség 10-20
+    query/nap mellett. "Elemezd ezt a céget" gomb a profile-on.
+
+15. [!!] Szezonalitás elemzés (~2 session)
+    30 éves historikus adatok alapján szezonális minták, win rate
+    hónapokra bontva. Value investing timing segítség: melyik hónapban
+    érdemes venni? FMP historical price data-ból számolható.
+
+16. [!] Cloudflare Zero Trust login (~1 session)
+    Site-szintű hozzáférés-védelem (email + PIN auth). Custom domain
+    kell (~$10/év). Ingyenes tier elegendő. Az egész site védett lenne
+    illetéktelen hozzáféréstől.
+
+============================================================
+Összesítés: 16 javaslat, becsült ~28-33 session összesen
+============================================================

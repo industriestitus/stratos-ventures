@@ -58,7 +58,7 @@ Stratos Ventures is a single-page investment management app with a **local-first
 ## 1. Components
 
 ### 1.1 Frontend — web/index.html
-Single monolithic HTML file (11,602 lines) containing all HTML, CSS, and JavaScript.
+Single monolithic HTML file (14,634 lines) containing all HTML, CSS, and JavaScript.
 No build process, no frameworks, no npm — vanilla JS with CDN libraries.
 
 **CDN Dependencies:**
@@ -241,6 +241,361 @@ All tables have `id` (auto-increment) and most have `updated_at` (auto-updated).
 
 Full schema: `docs/d1-schema.sql`
 
+### 5.1 Client-Side Data Structures
+
+The app uses global JavaScript variables as its primary data store. Each variable maps to a localStorage key (local mode) or D1 table (cloud mode).
+
+#### tStocks[ticker] — Company/Stock Object
+
+Map of ticker strings to company data objects. This is the central data structure — almost every module reads from it.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ticker` | string | Symbol (e.g. "AAPL") |
+| `name` | string | Company name |
+| `price` | number\|null | Current stock price |
+| `marketCap` | number\|null | Market capitalization |
+| `currency` | string | Trading currency |
+| `exchange` | string | Stock exchange |
+| `sector` | string | GICS sector |
+| `pipeline` | string | Stage: watchlist / review / buy_target / owned / archived |
+| `companyType` | string | slow / medium / fast / cyclical / turnaround / asset |
+| `dateAdded` | string | ISO date when first tracked |
+| `archivedAt` | string\|null | ISO timestamp if archived |
+| `sortOrder` | number | Display order in tracker |
+| `pinned` | boolean | Pinned to top of tracker |
+| `tags` | string[] | User-defined tags |
+| **Financial Data (from API)** | | |
+| `revenue` | number | Total revenue |
+| `revenueGrowth` | number | YoY revenue growth % |
+| `revCAGR` | number | 3-year revenue CAGR |
+| `revGrowthY` | number | Revenue growth YoY |
+| `epsDiluted` | number | Diluted EPS |
+| `epsGrowth` | number | EPS growth % |
+| `grossMargin` | number | Gross margin % |
+| `operatingMargin` | number | Operating margin % |
+| `netMargin` | number | Net margin % |
+| `roe` | number | Return on equity % |
+| `roic` | number | Return on invested capital % |
+| `roa` | number | Return on assets % |
+| `debtEquity` | number | Debt/equity ratio |
+| `currentRatio` | number | Current ratio |
+| `totalDebt` | number | Total debt |
+| `totalCash` | number | Total cash & equivalents |
+| `dividendYield` | number | Dividend yield % |
+| `ebit` | number | EBIT |
+| `ebitda` | number | EBITDA |
+| `fcf` | number | Free cash flow |
+| `ocf` | number | Operating cash flow |
+| `sbc` | number | Stock-based compensation |
+| `fcfSbc` | number | FCF minus SBC |
+| `ocfSbc` | number | OCF minus SBC |
+| **Preserved Fields (not overwritten by API refresh)** | | |
+| `overrides` | object | Manual metric overrides {field: value} |
+| `overriddenData` | object | Applied override values |
+| `checklist` | object | 14-section analysis checklist data |
+| `todos` | object[] | Per-company TODO items |
+| `valuations` | object[] | Saved valuation snapshots |
+| `valuationHistory` | object[] | Historical valuation snapshots |
+| `scenarios` | object | Bear/Base/Bull scenario builder data |
+| `thesis` | string | Investment thesis text |
+| `notes` | string | Company notes |
+| `earnings` | object | Per-quarter earnings grid data |
+| `earningsCalendar` | object[] | Upcoming earnings dates |
+| `filings` | object | 10K/10Q filing tracking |
+| `sellTriggers` | object | Sell trigger conditions |
+| `priceAlerts` | object | {above: number, below: number} |
+| `dcfMode` | string | "fcf" or "fcff" DCF mode |
+| `evaWacc` | number | WACC for EVA calculation |
+| `expectedReturn` | object | Expected return breakdown data |
+| `conviction` | number | Current conviction level (1-10) |
+| `convictionHistory` | object[] | [{date, level, notes}] timeline |
+| `learningLog` | object[] | "Where I was wrong" entries |
+| `followSources` | object | External URL links |
+| `pipelineStatus` | string | Pipeline sub-status |
+| **Transient Fields (not persisted)** | | |
+| `_d` | object | Raw FMP profile data |
+| `_cfData` | object[] | Cash flow statement data (3yr) |
+| `_bsData` | object[] | Balance sheet data (3yr) |
+| `_isData` | object[] | Income statement data (3yr) |
+| `_origData` | object | Original API data before overrides |
+| `_source` | string | Data source ("fmp" or "yahoo") |
+| `_d1Id` | number | D1 database row ID |
+
+**localStorage key:** `tracker_stocks_v1`
+**D1 table:** `companies` + child tables
+
+---
+
+#### pfPositions[] — Portfolio Position
+
+Array of position objects. Supports multiple asset types with type-specific extra fields.
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Unique ID (auto-generated) |
+| `ticker` | string | Ticker symbol or identifier |
+| `name` | string | Display name |
+| `accountId` | number | FK to pfAccounts[].id |
+| `assetType` | string | stock / etf / bond / real_estate / cash / crypto / other |
+| `shares` | number | Number of shares/units |
+| `avgCost` | number | Average cost per share |
+| `currentPrice` | number\|null | Manual price override (null = auto-fetch) |
+| `currency` | string | Position currency (e.g. "USD") |
+| `notes` | string | Free-text notes |
+| `pinned` | boolean | Pinned to top of list |
+| `companyId` | string | D1 company ID (cloud sync) |
+| `deleted_at` | string\|null | Soft-delete timestamp |
+| `createdAt` | string | ISO creation timestamp |
+| `updatedAt` | string | ISO last update timestamp |
+
+**Real Estate extra fields** (`assetType === "real_estate"`):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `reLocation` | string | Property location/address |
+| `rePurchaseDate` | string | Purchase date (YYYY-MM-DD) |
+| `rePurchasePrice` | number | Original purchase price |
+| `reCurrentValue` | number | Current estimated value |
+| `reMonthlyRental` | number | Monthly rental income |
+| `reAnnualCosts` | number | Annual costs (tax/maintenance) |
+
+**Bond extra fields** (`assetType === "bond"`):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `bondType` | string | E.g. "MÁP+", "US Treasury" |
+| `bondFaceValue` | number | Face/par value |
+| `bondCouponRate` | number | Annual coupon rate % |
+| `bondMaturityDate` | string | Maturity date (YYYY-MM-DD) |
+| `bondPaymentFreq` | string | annual / semi-annual / quarterly / monthly |
+
+**Cash extra fields** (`assetType === "cash"`):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `cashAmount` | number | Cash amount held |
+
+**localStorage key:** `portfolio_positions_v1`
+**D1 table:** `positions`
+
+---
+
+#### pfAccounts[] — Broker Account
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Unique ID |
+| `name` | string | Account name (e.g. "IBKR", "Revolut") |
+| `currency` | string | Base currency for the account |
+| `isActive` | boolean | Whether account is active |
+| `createdAt` | string | ISO creation timestamp |
+
+**localStorage key:** `portfolio_accounts_v1`
+**D1 table:** `broker_accounts`
+
+---
+
+#### pfTransactions[] — Transaction
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Unique ID |
+| `type` | string | buy / sell / dividend |
+| `date` | string | Transaction date (YYYY-MM-DD) |
+| `ticker` | string | Stock ticker symbol |
+| `accountId` | number | FK to pfAccounts[].id |
+| `shares` | number | Number of shares |
+| `pricePerShare` | number | Price per share |
+| `totalAmount` | number | Total transaction amount |
+| `fees` | number | Transaction fees (default 0) |
+| `currency` | string | Inherited from linked account |
+| `notes` | string | Free-text notes |
+| `companyId` | number | D1 company ID |
+| `deleted_at` | string\|null | Soft-delete timestamp |
+| `createdAt` | string | ISO creation timestamp |
+
+**localStorage key:** `portfolio_transactions_v1`
+**D1 table:** `transactions`
+
+---
+
+#### pfSnapshots[] — Portfolio Snapshot
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Unique ID |
+| `date` | string | Snapshot date (YYYY-MM-DD, one per day) |
+| `totalValue` | number | Total portfolio value in base currency |
+| `baseCurrency` | string | Base currency at time of snapshot |
+| `notes` | string | Free-text notes |
+| `positions` | object[] | Array of position snapshots (see below) |
+| `createdAt` | string | ISO creation timestamp |
+
+**Snapshot position fields** (each element in `positions[]`):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ticker` | string | Stock ticker |
+| `accountId` | number | FK to pfAccounts[].id |
+| `assetType` | string | Asset type at snapshot time |
+| `shares` | number | Shares held |
+| `pricePerShare` | number | Price at snapshot time |
+| `marketValue` | number | shares × price in position currency |
+| `currency` | string | Position currency |
+| `valueInBase` | number | Converted to base currency (local only, not persisted to D1) |
+
+**localStorage key:** `portfolio_snapshots_v1`
+**D1 tables:** `portfolio_snapshots` + `snapshot_positions`
+
+---
+
+#### researchNotes — Research Notes
+
+Object with three note arrays plus an ID counter.
+
+```
+{journal: NoteEntry[], news: NoteEntry[], market: NoteEntry[], _nextId: number}
+```
+
+**NoteEntry fields** (shared base, type-specific extras):
+
+| Field | Type | Used by | Description |
+|-------|------|---------|-------------|
+| `id` | number | all | Unique ID |
+| `date` | string | all | Note date (YYYY-MM-DD) |
+| `pinned` | boolean | all | Pinned to top |
+| `content` | string | journal, market | Body text (Markdown) |
+| `comment` | string | news | Body text for news entries |
+| `ticker` | string | journal, news | Associated company ticker |
+| `action` | string | journal | note / buy / sell / add / trim |
+| `title` | string | market | Entry title |
+| `tags` | string[] | market | Category tags |
+| `source` | string | news | Source name |
+| `sourceUrl` | string | news | Source URL |
+| `excerpt` | string | news | Key excerpt |
+| `quarter` | string\|null | all | Associated quarter (e.g. "Q1 2026") |
+| `images` | object[] | all | [{data: base64, name: filename}] |
+| `deleted_at` | string\|null | all | Soft-delete timestamp |
+| `createdAt` | string | all | ISO creation timestamp |
+
+**localStorage key:** `research_notes_v1`
+**D1 table:** `notes` + `note_images`
+
+---
+
+#### rvData — Reviews
+
+```
+{entries: ReviewEntry[], _nextId: number}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Unique ID |
+| `type` | string | weekly / monthly / quarterly |
+| `date` | string | Review date (YYYY-MM-DD) |
+| `companyTicker` | string | Associated ticker (quarterly reviews) |
+| `companyId` | number\|null | D1 company FK |
+| `answers` | object | {questionId: answerText} map (e.g. {w1:"...", m3:"..."}) |
+| `summary` | string | Free-text summary |
+| `deleted_at` | string\|null | Soft-delete timestamp |
+| `createdAt` | string | ISO creation timestamp |
+
+**Answer keys:** Weekly w1-w9, Monthly m1-m11, Quarterly q1-q13 (from `RV_QUESTIONS`).
+
+**localStorage key:** `reviews_v1`
+**D1 table:** `reviews`
+
+---
+
+#### fwData — Framework
+
+```
+{principles: FwCard[], portfolioRules: FwCard[], idealTraits: FwItem[], avoidList: FwItem[],
+ scoringWeights: {cagr, conviction, risk}, _nextId: number}
+```
+
+**FwCard fields** (principles, portfolioRules):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Unique ID |
+| `title` | string | Card heading |
+| `content` | string | Body text (Markdown) |
+| `sortOrder` | number | Display order |
+
+**FwItem fields** (idealTraits, avoidList):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Unique ID |
+| `label` | string | Display label |
+| `category` | string | Grouping category |
+| `sortOrder` | number | Display order |
+
+**localStorage key:** `framework_v1`
+**D1 table:** `framework_entries` + `app_settings` (scoring weights)
+
+---
+
+#### dbTodos[] — Dashboard TODOs
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Unique ID |
+| `text` | string | Task description |
+| `due` | string | Due date (YYYY-MM-DD or "") |
+| `done` | boolean | Completion status |
+| `createdAt` | string | ISO creation timestamp |
+
+**localStorage key:** `dashboard_todos_v1`
+**D1 table:** `general_todos`
+
+---
+
+#### divHistory — Dividend History
+
+Object keyed by ticker. Each `divHistory[ticker]` contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `history` | object[] | Individual payment records (see below) |
+| `lastFetched` | string | ISO timestamp of last API fetch |
+| `yield` | number\|null | TTM dividend yield % |
+| `payoutRatio` | number\|null | Payout ratio % |
+| `annualDPS` | number | Trailing-twelve-month dividends per share |
+| `frequency` | string | Detected payment frequency |
+| `growthRate1y` | number\|null | 1-year dividend growth CAGR |
+| `growthRate3y` | number\|null | 3-year dividend growth CAGR |
+| `growthRate5y` | number\|null | 5-year dividend growth CAGR |
+| `growthRate10y` | number\|null | 10-year dividend growth CAGR |
+
+**Dividend payment record** (each element in `history[]`):
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `date` | string | Ex-dividend date |
+| `paymentDate` | string | Payment date |
+| `adjDividend` | number | Adjusted dividend amount |
+| `dividend` | number | Raw dividend amount |
+
+**localStorage key:** `dividend_history_v1`
+**D1 table:** `dividend_history`
+
+---
+
+#### pfExchangeRates — Exchange Rates
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `baseCurrency` | string | User's base currency (default "HUF") |
+| `rates` | object | Currency pair rates — D1: "FROM/TO" keys (e.g. "USD/EUR"), local: currency code keys |
+| `lastFetched` | string\|null | ISO timestamp of last fetch |
+
+**localStorage key:** `portfolio_exchange_rates_v1`
+**D1 tables:** `exchange_rates` (rates) + `app_settings` key `exchange_rates_config`
+
 ---
 
 ## 6. Sync & Migration
@@ -347,7 +702,7 @@ See `docs/DECISIONS.md` (planned) for detailed ADRs.
 stratos-ventures/
 ├── CLAUDE.md                          — Dev guide (tech stack, commands, rules)
 ├── web/
-│   ├── index.html                     — Main app (11,602 lines, all-in-one)
+│   ├── index.html                     — Main app (14,634 lines, all-in-one)
 │   ├── sw.js                          — Service worker (caching)
 │   ├── manifest.json                  — PWA manifest
 │   ├── icon-192.png, icon-512.png     — App icons
