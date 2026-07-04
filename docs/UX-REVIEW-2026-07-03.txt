@@ -1,0 +1,116 @@
+Stratos Ventures — UX Felülvizsgálat
+Felhasználói és befektetői workflow elemzés
+Dátum: 2026-07-03
+Pontszámok: Felhasználói élmény 7.5/10, Befektetői workflow 8.5/10, Feature telítettség 9.5/10
+
+================================================================================
+I. FEJLESZTENDŐ TERÜLETEK (9 pont)
+================================================================================
+
+--- A) Új felhasználó onboarding [KRITIKUS] ---
+
+1. Nincs guided setup / wizard
+   Egy új felhasználó a Dashboard-ra érkezik: "No positions yet", "Add positions
+   for portfolio metrics", "Add positions for price alerts". Teljesen magára van
+   hagyva. Nem világos, hogy hol kezdje — Companies-nél? Portfolio-nál?
+   Settings-nél az API kulcsokhoz? A legtöbb widget üres és félrevezető.
+   Súlyosság: KRITIKUS
+
+2. Companies nyitólap a Calculator
+   A Companies szekció a Calculator tab-ra nyílik 8+ input mezővel — ez
+   elriasztja az új felhasználót. A Tracker (részvények listája) lenne az
+   ideális nyitólap, nem a számológép. Egy új felhasználó nem DCF-et akar
+   kalkulálni először — hozzá akarja adni az első cégét.
+   Súlyosság: KRITIKUS
+
+--- B) Workflow súrlódás [JAVÍTANDÓ] ---
+
+3. Pozíció hozzáadás 3 lépéses
+   Account létrehozás → Position hozzáadás → Transaction rögzítés. Nincs
+   wizard, ami végigvezetne. Ideális: egy "Quick add position" gomb, ami
+   egyszerre kér broker/ticker/darabszám/ár adatokat, és ha kell,
+   automatikusan létrehozza az account-ot is.
+   Súlyosság: KÖZEPES
+
+4. Cég mélyanalízis szétszórt
+   Egy cég teljes elemzéséhez navigálni kell: Companies (adatok) → checklist →
+   Research (jegyzetek) → Portfolio (pozíció) → Reviews. A company summary tab
+   segít, de a tényleges szerkesztés továbbra is ugráltatja a modulokat.
+   Súlyosság: KÖZEPES
+
+5. Empty state-ek nem útbaigazítóak
+   "No entries yet" + "Create First Entry" gomb nem elég. Nem mondja el, miért
+   lenne jó jegyzetet írni, hogyan kapcsolódik a többi modulhoz, vagy milyen
+   típust válasszon az ember.
+   Súlyosság: KÖZEPES
+
+--- C) Információs sűrűség [JAVÍTANDÓ] ---
+
+6. Dashboard túlterheltsége
+   9 widget egy oldalon — Portfolio Value, Quality, Red Flags, Sell Triggers,
+   Dip Finder, Benchmark, FI Tracker, Reviews Due, TODO, Upcoming Earnings,
+   General TODO. Nehéz megtalálni, ami fontos. A "Manage Widgets" segít, de az
+   alapértelmezés túl sok.
+   Súlyosság: KÖZEPES
+
+7. Checklist 100+ kérdés
+   A 12 szekciós checklist rendkívül alapos, de 100+ kérdéssel nyomasztó
+   lehet. Nincs progress indicator — nem látja a felhasználó, hogy "30%-nál
+   tartasz az AAPL elemzésében". Nincs priorizálás sem — melyik kérdés a
+   legfontosabb?
+   Súlyosság: KÖZEPES
+
+--- D) Befektetői workflow hiányok [JAVÍTANDÓ] ---
+
+8. Nincs "investment pipeline" vizualizáció
+   A pipeline (Watchlist → Under review → Buy target → Owned) szöveges. Egy
+   kanban-szerű drag-and-drop board vagy vizuális funnel view sokkal gyorsabb
+   áttekintést adna a research pipeline állapotáról.
+   Súlyosság: KÖZEPES
+
+9. Nincs "heti teendő" automatizáció
+   A rendszer figyelmeztet review-kra, de nincs "ezen a héten ezekkel a
+   cégekkel foglalkozz" prioritizált lista. Egy weekly focus view, ami mutatja:
+   2 earnings jövő héten, 1 review esedékes, 3 price alert trigger — nagyon
+   hasznos lenne.
+   Súlyosság: KÖZEPES
+
+================================================================================
+II. FEJLESZTÉSI JAVASLATOK (5 pont, prioritás szerint)
+================================================================================
+
+1. Welcome wizard / guided setup
+   Prioritás: MAGAS | Becsült idő: ~2-3 óra
+   3-4 lépés: API kulcsok beállítás → első cég hozzáadása → első pozíció
+   rögzítés → dashboard áttekintés. Csak az első alkalommal jelenik meg, utána
+   soha. Ez a legnagyobb ROI fejlesztés, mert jelenleg a legtöbb új
+   felhasználó elveszne.
+
+2. Companies alapértelmezés: Tracker, nem Calculator
+   Prioritás: MAGAS | Becsült idő: ~10 perc
+   A Tracker tab legyen az alapértelmezett nyitólap a Companies szekcióban. A
+   Calculator azoké, akik már tudják mit csinálnak. Új felhasználónak a Tracker
+   mutatja a mentett cégeket és a "+ Add" gombot — ez az intuitív belépési
+   pont.
+
+3. Checklist progress bar
+   Prioritás: KÖZEPES | Becsült idő: ~2 óra
+   Minden cég kártyáján (tracker-ben) egy vizuális progress bar: "AAPL — 65%
+   elemezve". A checklist tetején szekciónkénti kitöltöttség. Nem kell minden
+   kérdést megválaszolni, de látszódjon, mennyire alapos az elemzés.
+
+4. Weekly focus dashboard widget
+   Prioritás: KÖZEPES | Becsült idő: ~3 óra
+   Egyetlen widget, ami összefoglalja a heti teendőket: esedékes earnings,
+   review-k, lejáró price alert-ek, elmaradt negyedéves follow-up-ok. Nem kell
+   minden widgetet átnézni — ez az "okos titkár" view, ami megmondja, mivel
+   foglalkozz ma.
+
+5. Quick add position (all-in-one modal)
+   Prioritás: KÖZEPES | Becsült idő: ~2 óra
+   Egy gomb: "Pozíció hozzáadás" → ticker, broker (dropdown vagy "új broker"
+   inline), darabszám, ár, dátum — egy modal, egy mentés. Ha a broker nem
+   létezik, automatikusan létrehozza. Ezzel a 3-lépéses workflow 1 lépésre
+   csökken.
+
+================================================================================

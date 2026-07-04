@@ -222,6 +222,10 @@ Status: COMPLETE (2026-06-27)
 - [x] XLSX Export — SheetJS lazy-loaded, 5-sheet workbook (2026-07-02): Positions (with market value, P&L, P&L%), Transactions, Notes, Reviews, Framework. Auto-sized columns, async with error handling.
 - [x] Portfolio Summary PDF — jsPDF portfolio overview report (2026-07-02): Stratos branding, Portfolio Overview (value/cost/P&L/TWR/XIRR), Broker Accounts, Positions table (sorted by value), Allocation by Asset Type, Recent Transactions (last 20), Dividend Income breakdown with per-ticker stats.
 
+### UX Review & Default Tab Fix (2026-07-04)
+- [x] UX/investor workflow review — comprehensive audit of user and investor workflows, scored 7.5/10 UX, 8.5/10 investor workflow, 9.5/10 feature completeness
+- [x] Companies default tab changed from Calculator to Tracker — more intuitive entry point for new users, sessionStorage preserves last-used tab for returning users
+
 ### Cross-Module Integration (2026-07-01)
 - [x] Archive system — soft delete with "Archived" pipeline stage, archive modal (Archive/Delete permanently/Cancel), tracker toggle, screener filter, D1 CHECK constraint migration
 - [x] Portfolio ↔ Pipeline auto-sync — buy triggers Companies "Owned", sell-all triggers "Watchlist", CSV import batch sync, real estate/bond/cash excluded, delete position/transaction triggers check
@@ -243,6 +247,10 @@ Status: COMPLETE (2026-06-27)
 - [ ] localStorage encryption at rest (AES-256 for local data, not just cloud sync)
 - [ ] Cloud sync conflict resolution (merge strategy instead of last-write-wins)
 - [ ] Multi-tab localStorage sync (StorageEvent listener to prevent stale reads)
+
+### Maybe Later (UX)
+- [ ] Welcome wizard / guided setup — 3-4 lépéses onboarding új felhasználóknak (API kulcsok → első cég → első pozíció → dashboard). Csak első alkalommal jelenik meg. ~2-3 óra.
+- [ ] Weekly focus dashboard widget — összevont heti teendő widget (earnings, review-k, TODO-k, price alert-ek egy helyen). Kényelmi feature, az adatok már most is elérhetők külön widgetekben.
 
 ### Maybe Later (Market & Timing Tools — Forecaster.biz inspiráció)
 - [ ] Seasonality elemzés — 30 évre visszamenő szezonális minták, win rate, átlagos hozam hónapokra bontva. Forecaster fő USP-je. Value investinghez is hasznos (mikor érdemes pozíciót nyitni).

@@ -50,16 +50,18 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 41 | Position Sort, Pin-to-Top, Pipeline Filter | `8bae88e` | 2026-07-02 | 4 | 8 |
 | 42 | Custom Tag System | `97a2496` | 2026-07-02 | 8 | 0 |
 | 43 | Skeleton Loading States | `e1cfd66` | 2026-07-02 | 1 | 0 |
-| 44 | Missing CSS Variable | — | 2026-07-03 | 1 | 0 |
-| 45 | Screener/Compare Discoverability | — | 2026-07-03 | 3 | 0 |
+| 44 | Missing CSS Variable | `7946c25` | 2026-07-03 | 1 | 0 |
+| 45 | Screener/Compare Discoverability | `74fa17c` | 2026-07-03 | 3 | 0 |
+| 46 | Dashboard Widget Management | `bdab96f` | 2026-07-03 | 4 | 0 |
 | 47 | Tracker Export/Import Cleanup + API Usage Widget | `9ec622e` | 2026-07-03 | 2 | 0 |
-| 48 | Settings Pill Navigation | — | 2026-07-03 | 3 | 0 |
-| 49 | Typography Scale | — | 2026-07-03 | 6 | 0 |
-| 50 | Card Style Consistency | — | 2026-07-03 | 2 | 0 |
-| 51 | Inline Hover Styles | — | 2026-07-03 | 5 | 0 |
-| 52 | Accessibility (ARIA + Backdrop) | — | 2026-07-03 | 19 | 0 |
+| 48 | Settings Pill Navigation | `45caaf9` | 2026-07-03 | 3 | 0 |
+| 49 | Typography Scale | `2664cd1` | 2026-07-03 | 6 | 0 |
+| 50 | Card Style Consistency | `474c56a` | 2026-07-03 | 2 | 0 |
+| 51 | Inline Hover Styles | `1bea6c9` | 2026-07-03 | 5 | 0 |
+| 52 | Accessibility (ARIA + Backdrop) | `2a26e9c` | 2026-07-03 | 30 | 0 |
+| 53 | UX Review — Default Tab Fix | e45cba3 | 2026-07-04 | 1 | 0 |
 
-**Total: 313 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 355 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -987,7 +989,7 @@ Added user-defined tag system: add/remove tags on company profiles with datalist
 
 ---
 
-## Category 44 — Missing CSS Variable (2026-07-03)
+## Category 44 — Missing CSS Variable (2026-07-03) — `7946c25`
 
 | # | Severity | Issue | Fix |
 |---|----------|-------|-----|
@@ -995,7 +997,7 @@ Added user-defined tag system: add/remove tags on company profiles with datalist
 
 ---
 
-## Category 45 — Screener/Compare Discoverability (2026-07-03)
+## Category 45 — Screener/Compare Discoverability (2026-07-03) — `74fa17c`
 
 | # | Severity | Issue | Fix |
 |---|----------|-------|-----|
@@ -1031,7 +1033,7 @@ Removed redundant Export/Import buttons and functions from Tracker tab (Settings
 
 ---
 
-## Category 48 — Settings Pill Navigation (2026-07-03)
+## Category 48 — Settings Pill Navigation (2026-07-03) — `45caaf9`
 
 Added sticky pill navigation bar to Settings page for quick section jumping (8 pills for 8 cards). Fixed CSS `position:sticky` broken by parent `overflow-x:hidden`.
 
@@ -1043,7 +1045,7 @@ Added sticky pill navigation bar to Settings page for quick section jumping (8 p
 
 ---
 
-## Category 49 — Typography Scale (2026-07-03)
+## Category 49 — Typography Scale (2026-07-03) — `2664cd1`
 
 Introduced 8-level typographic scale via CSS variables (--fs-xs through --fs-3xl). Eliminated 3 redundant font sizes (9px, 17px, 22px), consolidated dialog headings to 16px, hero numbers to 20px. Converted 285 CSS class declarations to use variables.
 
@@ -1058,7 +1060,7 @@ Introduced 8-level typographic scale via CSS variables (--fs-xs through --fs-3xl
 
 ---
 
-## Category 50 — Card Style Consistency (2026-07-03)
+## Category 50 — Card Style Consistency (2026-07-03) — `474c56a`
 
 Unified card border-radius to var(--radius) and normalized db-hero padding.
 
@@ -1069,7 +1071,7 @@ Unified card border-radius to var(--radius) and normalized db-hero padding.
 
 ---
 
-## Category 51 — Inline Hover Styles (2026-07-03)
+## Category 51 — Inline Hover Styles (2026-07-03) — `1bea6c9`
 
 Replaced 5 inline JS hover handlers with CSS :hover pseudo-classes.
 
@@ -1083,7 +1085,7 @@ Replaced 5 inline JS hover handlers with CSS :hover pseudo-classes.
 
 ---
 
-## Category 52 — Accessibility (ARIA + Backdrop) (2026-07-03)
+## Category 52 — Accessibility (ARIA + Backdrop) (2026-07-03) — `2a26e9c`
 
 Added ARIA dialog roles, unified backdrop click-to-close, and aria-labels on icon-only buttons.
 
@@ -1097,6 +1099,16 @@ Added ARIA dialog roles, unified backdrop click-to-close, and aria-labels on ico
 | 27 | LOW | Research image delete button (× symbol) missing aria-label | Added `aria-label="Remove image"` |
 | 28-29 | LOW | Todo delete buttons (× symbol) missing aria-label | Added `aria-label` to company profile and dashboard todo delete |
 | 30 | LOW | Valuation snapshot delete button (× symbol) missing aria-label | Added `aria-label="Delete snapshot"` |
+
+---
+
+## Category 53 — UX Review — Default Tab Fix (2026-07-04) — `e45cba3`
+
+Companies section default tab changed from Calculator to Tracker for better new-user experience.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | LOW | Companies section opens on Calculator tab (8+ input fields) — unintuitive for new users who want to add their first company | Default tab changed to Tracker; sessionStorage still preserves last-used tab for returning users |
 
 ---
 

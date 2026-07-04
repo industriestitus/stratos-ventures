@@ -1423,12 +1423,12 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 <!-- ====== SECTION: COMPANIES ====== -->
 <div class="content" id="section-companies">
   <div class="company-tabs">
-    <button class="tab active" onclick="switchCompanyTab('calculator')" data-i18n="comp.calculator">Calculator</button>
-    <button class="tab" onclick="switchCompanyTab('tracker')" data-i18n="comp.tracker">Tracker</button>
+    <button class="tab" onclick="switchCompanyTab('calculator')" data-i18n="comp.calculator">Calculator</button>
+    <button class="tab active" onclick="switchCompanyTab('tracker')" data-i18n="comp.tracker">Tracker</button>
     <button class="tab" onclick="switchCompanyTab('charts')" data-i18n="comp.charts">Charts</button>
   </div>
 
-  <div id="company-panel-calculator" class="company-panel active">
+  <div id="company-panel-calculator" class="company-panel">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
       <div style="flex:1"></div>
       <div class="calc-actions">
@@ -1662,7 +1662,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 </div><!-- end section-calculators -->
   </div><!-- end company-panel-calculator -->
 
-  <div id="company-panel-tracker" class="company-panel">
+  <div id="company-panel-tracker" class="company-panel active">
 
 <div class="card">
   <div class="card-title">Tracker Defaults</div>
