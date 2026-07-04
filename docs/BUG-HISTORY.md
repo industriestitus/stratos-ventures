@@ -60,7 +60,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 51 | Inline Hover Styles | `1bea6c9` | 2026-07-03 | 5 | 0 |
 | 52 | Accessibility (ARIA + Backdrop) | `2a26e9c` | 2026-07-03 | 30 | 0 |
 | 53 | UX Review — Default Tab Fix | e45cba3 | 2026-07-04 | 1 | 0 |
-| 54 | UX — Back Navigation | TBD | 2026-07-04 | 1 | 0 |
+| 54 | UX — Back Navigation | d3260d0 | 2026-07-04 | 1 | 0 |
 
 **Total: 355 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -1113,7 +1113,7 @@ Companies section default tab changed from Calculator to Tracker for better new-
 
 ---
 
-## Category 54 — UX — Back Navigation (2026-07-04) — `TBD`
+## Category 54 — UX — Back Navigation (2026-07-04) — `d3260d0`
 
 Company profile "Back" button now returns to the originating section instead of always going to Tracker.
 
