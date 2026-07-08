@@ -67,7 +67,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 58 | UX — TEST-PLAN.md + Data Structures | 68604b1 | 2026-07-04 | 0 | 0 |
 | 59 | UX — Screener Filter Presets | 3f81b2d | 2026-07-04 | 4 | 0 |
 | 60 | Keyboard Shortcut + TEST-PLAN Accuracy | c4427e0 | 2026-07-04 | 1 | 0 |
-| 62 | Tooltip Expansion QA | TBD | 2026-07-08 | 4 | 0 |
+| 62 | Tooltip Expansion QA | `9a875f9` | 2026-07-08 | 4 | 0 |
 
 **Total: 356 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
