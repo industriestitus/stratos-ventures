@@ -1,6 +1,6 @@
 # Coding Lessons — Stratos Ventures Finance App
 
-**Last Updated:** 2026-07-01
+**Last Updated:** 2026-07-03
 **Source:** 171+ bug fixes across 19+ QA sessions (Categories 1-23)
 
 Reference for AI assistants and developers. All lessons are validated patterns from actual bugs found and fixed.
@@ -376,7 +376,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Process | 4 | 15+ (Categories 19-23) |
 | AI Behavioral | 6 | 100+ (cross-cutting) |
 
-**Total:** 201+ bugs fixed, 33 lessons, 7 domains.
+**Total:** 354+ bugs fixed, 33 lessons, 7 domains.
 
 ## Related Documents
 

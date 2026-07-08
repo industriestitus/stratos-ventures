@@ -1,6 +1,6 @@
 # Stratos Ventures — Architecture Decision Records
 
-**Last Updated:** 2026-07-01  
+**Last Updated:** 2026-07-03  
 **Format:** ADR (Architecture Decision Record) — context, decision, consequences, date
 
 ---
@@ -929,6 +929,34 @@ Need per-company research report export as PDF. Options: server-side (Cloudflare
 
 ---
 
+## ADR-031: 8-Level CSS Typography Scale
+
+**Status:** Accepted (2026-07-03)
+
+**Context:**  
+The codebase had inconsistent font sizes — arbitrary values like 9px, 17px, 22px scattered across 285 CSS declarations. Dialog headings ranged from 14px to 22px, hero numbers from 18px to 24px. No systematic scale existed.
+
+**Decision:**  
+- 8-level CSS variable scale: `--fs-xs` (10px) through `--fs-3xl` (20px)
+- Eliminated all non-standard sizes (9px → 10px, 17px → 16px, 22px → 20px)
+- Consolidated dialog headings to 16px (`--fs-xl`), hero numbers to 20px (`--fs-3xl`)
+- All 285 affected CSS declarations converted to use variables
+
+**Alternatives Rejected:**
+- **Tailwind-style utility classes:** Conflicts with no-framework principle (ADR-002)
+- **rem-based scale:** Unnecessary complexity for a single-page app with no user font-size control
+- **Fewer levels (4-5):** Insufficient granularity for financial data tables vs. headings vs. labels
+
+**Consequences:**
+- ✅ **Gained:** Consistent typography — every font size maps to a named variable
+- ✅ **Gained:** Theme-safe — light/dark mode can override the scale if needed
+- ✅ **Gained:** Easier to maintain — changing a size level updates all usages
+- ❌ **Lost:** Migration required touching 285 declarations (one-time cost, done)
+
+**Date:** 2026-07-03 (UX/UI Audit Session 2)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -963,6 +991,7 @@ Need per-company research report export as PDF. Options: server-side (Cloudflare
 | 028 | Multi-currency with FX rates | Accepted | Phase 4 |
 | 029 | Dark UI, purple accent | Accepted | Phase 0 |
 | 030 | Client-side PDF with jsPDF | Accepted | 2026-07-01 |
+| 031 | 8-level CSS typography scale | Accepted | 2026-07-03 |
 
 ---
 
@@ -977,4 +1006,4 @@ Need per-company research report export as PDF. Options: server-side (Cloudflare
 ---
 
 **End of Document**  
-Last updated: 2026-07-01
+Last updated: 2026-07-03

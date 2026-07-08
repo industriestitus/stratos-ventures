@@ -67,6 +67,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 58 | UX — TEST-PLAN.md + Data Structures | 68604b1 | 2026-07-04 | 0 | 0 |
 | 59 | UX — Screener Filter Presets | 3f81b2d | 2026-07-04 | 4 | 0 |
 | 60 | Keyboard Shortcut + TEST-PLAN Accuracy | c4427e0 | 2026-07-04 | 1 | 0 |
+| 62 | Tooltip Expansion QA | TBD | 2026-07-08 | 4 | 0 |
 
 **Total: 356 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -1202,6 +1203,24 @@ Verified TEST-PLAN.md against codebase with 3 parallel agents; found 27 inaccura
 | # | Severity | Bug | Fix |
 |---|----------|-----|-----|
 | 1 | MEDIUM | "N" keyboard shortcut in Companies references `st-input` (doesn't exist) instead of `st-add-input` — shortcut silently fails | Changed `getElementById('st-input')` → `getElementById('st-add-input')` at line 3277 |
+
+---
+
+## Category 62 — Tooltip Expansion QA (2026-07-08)
+
+Added tooltips to dashboard widgets (12), portfolio table columns (9), and screener filters (10 new METRIC_TIPS entries). QA agent found 10 issues, 4 fixed.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | CRITICAL | `tipWrap()` uses `const t=` which shadows global `t()` i18n function — future edits adding `t()` call would crash | Renamed to `const tip=` and updated all references |
+| 2 | HIGH | `tipWrap()` renders empty `<div class="tip-formula">` and `<div class="tip-bench">` when fields are undefined | Added conditional rendering matching `tipWrapObj()` pattern |
+| 3 | HIGH | `tipWrapObj()` function defined but never called — dead code | Removed function, inline code in `pfTh()` and `initWidgetTips()` covers all cases |
+| 4 | LOW | `initWidgetTips()` wraps text nodes in span with `data-i18n` but leaves duplicate `data-i18n` on parent div — could cause double i18n application | Added `titleEl.removeAttribute('data-i18n')` after wrapping |
+
+**Not fixed (accepted):**
+- HIGH: Tooltip texts hardcoded in English (consistent with existing METRIC_TIPS pattern — i18n for tooltips is separate effort)
+- MEDIUM: Tooltips are hover-only, no keyboard/screen reader support (pre-existing cp-tip system limitation)
+- MEDIUM: Top-of-viewport tooltip clipping (pre-existing CSS positioning)
 
 ---
 

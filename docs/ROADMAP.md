@@ -308,7 +308,7 @@ Status: COMPLETE (2026-06-27)
 - [x] Card style consistency — Unified 5 card classes to var(--radius), normalized db-hero padding 24→20px
 - [x] Inline hover styles — Replaced 5 inline JS onmouseover/onmouseout handlers with CSS :hover classes (sidebar buttons, toast undo, dividend calendar tooltip, external links)
 - [ ] Error states polish — Chart container inline error placeholders ("Failed to load chart"), dashboard widget error states. Core API error handling (toasts, rate limit warnings, offline detection, retry logic) already complete.
-- [ ] Tooltips expansion — Dashboard widget tooltips, portfolio table column tooltips, screener metric tooltips. Company profile metric tooltips (definition, formula, benchmark) already complete.
+- [x] Tooltips expansion — WIDGET_TIPS (12 dashboard widgets), PF_COL_TIPS (9 portfolio columns), 10 new METRIC_TIPS screener entries. initWidgetTips() DOM injection, pfTh() integration, renderScreenerUI() label tooltips. QA: 4 fixes (t→tip shadow, conditional formula/bench, dead code removal, i18n attr cleanup).
 - [x] Accessibility (ARIA + Backdrop) — role="dialog" aria-modal on all 13 overlays, backdrop click-to-close on 11 modals, aria-label on 7 icon-only buttons. Remaining: aria-live on toast container, aria-expanded on collapsible toggles.
 - [ ] Mobile gestures — Pull-to-refresh on company profile and dashboard (vertical swipe down, no browser conflict). Long-press on table rows for context menu (edit/delete/archive, replaces tiny icon buttons). Swipe-to-dismiss on toasts (horizontal, no browser back/forward conflict). Note: horizontal swipe navigation deliberately excluded — conflicts with browser back/forward gesture and bottom nav already handles section switching.
 

@@ -1342,7 +1342,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     </div>
 
     <!-- Allocation Charts -->
-    <div class="db-widget" id="db-alloc-widget">
+    <div class="db-widget" id="db-alloc-widget" data-wtip="allocation">
       <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('portfolio')" data-i18n="db.allocation">Allocation</span></div>
       <div class="db-alloc-grid">
         <div class="db-alloc-item"><div class="db-alloc-label" data-i18n="db.byTicker">By Ticker</div><canvas id="db-alloc-ticker"></canvas></div>
@@ -1353,67 +1353,67 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     </div>
 
     <!-- Net Worth -->
-    <div class="db-widget" id="db-networth-widget">
+    <div class="db-widget" id="db-networth-widget" data-wtip="netWorth">
       <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('portfolio')" data-i18n="db.netWorth">Net Worth</span></div>
       <div id="db-networth-content"></div>
     </div>
 
     <!-- Terry Smith Metrics -->
-    <div class="db-widget" id="db-smith-widget">
+    <div class="db-widget" id="db-smith-widget" data-wtip="qualityWeighted">
       <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('portfolio')" data-i18n="db.qualityWeighted">Portfolio Quality (Weighted)</span></div>
       <div id="db-smith-content"></div>
     </div>
 
     <!-- Red Flag Alerts -->
-    <div class="db-widget" id="db-alerts-widget">
+    <div class="db-widget" id="db-alerts-widget" data-wtip="redFlags">
       <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('companies');switchCompanyTab('tracker')" data-i18n="db.redFlags">Red Flag Alerts</span> <span id="db-alerts-count" style="font-size:11px;color:var(--text2);font-weight:400"></span></div>
       <div id="db-alerts-content"></div>
     </div>
 
     <!-- Sell Triggers -->
-    <div class="db-widget" id="db-sell-triggers-widget">
+    <div class="db-widget" id="db-sell-triggers-widget" data-wtip="sellTriggers">
       <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('companies');switchCompanyTab('tracker')" data-i18n="db.sellTriggers">Sell Triggers</span> <span id="db-sell-triggers-count" style="font-size:11px;color:var(--text2);font-weight:400"></span></div>
       <div id="db-sell-triggers-content"></div>
     </div>
 
     <!-- Benchmark -->
-    <div class="db-widget" id="db-benchmark-widget">
+    <div class="db-widget" id="db-benchmark-widget" data-wtip="benchmark">
       <div class="db-widget-title"><span data-i18n="db.benchmark">Benchmark (S&P 500)</span> <button onclick="fetchBenchmarkData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-bench-btn">Refresh</button></div>
       <div id="db-benchmark-content"></div>
     </div>
 
     <!-- Dip Finder -->
-    <div class="db-widget" id="db-dip-widget">
+    <div class="db-widget" id="db-dip-widget" data-wtip="dipFinder">
       <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('companies');switchCompanyTab('tracker')" data-i18n="db.dipFinder">Dip Finder</span> <button onclick="fetchDipData()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-dip-btn">Refresh</button></div>
       <div id="db-dip-content"></div>
     </div>
 
     <!-- FI Tracker -->
-    <div class="db-widget" id="db-fi-widget">
+    <div class="db-widget" id="db-fi-widget" data-wtip="fi">
       <div class="db-widget-title" data-i18n="db.fi">Financial Independence</div>
       <div id="db-fi-content"></div>
     </div>
 
     <!-- Reviews Due -->
-    <div class="db-widget" id="db-reviews-due-widget">
+    <div class="db-widget" id="db-reviews-due-widget" data-wtip="reviewsDue">
       <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('reviews')" data-i18n="db.reviewsDue">Reviews Due</span></div>
       <div id="db-reviews-due-content"></div>
     </div>
 
     <!-- TODO Summary -->
-    <div class="db-widget" id="db-todo-summary-widget">
+    <div class="db-widget" id="db-todo-summary-widget" data-wtip="todoSummary">
       <div class="db-widget-title" data-i18n="db.todoSummary">TODO Summary</div>
       <div id="db-todo-summary-content"></div>
     </div>
 
     <!-- Upcoming Earnings -->
-    <div class="db-widget" id="db-earnings-widget">
+    <div class="db-widget" id="db-earnings-widget" data-wtip="earnings">
       <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('companies');switchCompanyTab('tracker')" data-i18n="db.earnings">Upcoming Earnings</span> <button onclick="fetchEarningsCalendar()" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-family:inherit" data-i18n="db.refresh" id="db-earn-btn">Refresh</button></div>
       <div id="db-earnings-content"></div>
     </div>
 
     <!-- General TODO List -->
-    <div class="db-widget" id="db-todo-widget">
+    <div class="db-widget" id="db-todo-widget" data-wtip="generalTodo">
       <div class="db-widget-title" data-i18n="db.generalTodo">General TODO</div>
       <div class="db-todo-input">
         <input type="text" id="db-todo-text" placeholder="New task..." data-i18n-placeholder="db.newTask" onkeydown="if(event.key==='Enter')addDashTodo()">
@@ -3434,7 +3434,34 @@ document.addEventListener('DOMContentLoaded',()=>{
   const appEl=document.getElementById('app');
   if(appEl)_chartDlObserver.observe(appEl,{childList:true,subtree:true});
   setTimeout(_initChartDlButtons,500);
+  initWidgetTips();
 });
+function initWidgetTips(){
+  document.querySelectorAll('[data-wtip]').forEach(el=>{
+    const tip=WIDGET_TIPS[el.dataset.wtip];
+    if(!tip)return;
+    const titleEl=el.querySelector('.db-widget-title');
+    if(!titleEl||titleEl.querySelector('.cp-tiptext'))return;
+    let target=titleEl.querySelector('.db-widget-link')||titleEl.querySelector('span[data-i18n]');
+    if(!target){
+      const text=titleEl.childNodes[0];
+      if(text){
+        const span=document.createElement('span');
+        span.setAttribute('data-i18n',titleEl.getAttribute('data-i18n')||'');
+        span.textContent=text.textContent;
+        text.replaceWith(span);
+        titleEl.removeAttribute('data-i18n');
+        target=span;
+      }
+    }
+    if(!target)return;
+    target.classList.add('cp-tip');
+    const bubble=document.createElement('div');
+    bubble.className='cp-tiptext';
+    bubble.innerHTML=`<strong>${escH(tip.name)}</strong><br>${escH(tip.desc)}`;
+    target.appendChild(bubble);
+  });
+}
 
 const _lazyChartObserver=new IntersectionObserver((entries)=>{
   entries.forEach(entry=>{
@@ -4891,7 +4918,10 @@ function renderPositions(){
   function pfTh(col,label,cls){
     const sorted=pfSort.col===col?' sorted':'';
     const arrow=pfSort.col===col?(pfSort.dir==='asc'?'▲':'▼'):'▲';
-    return`<th scope="col" class="${cls||''}${sorted} sortable" onclick="sortPositions('${col}')">${label} <span class="sa">${arrow}</span></th>`;
+    const tip=PF_COL_TIPS[col];
+    const inner=`${label} <span class="sa">${arrow}</span>`;
+    const content=tip?`<span class="cp-tip">${inner}<div class="cp-tiptext"><strong>${escH(tip.name)}</strong><br>${escH(tip.desc)}</div></span>`:inner;
+    return`<th scope="col" class="${cls||''}${sorted} sortable" onclick="sortPositions('${col}')">${content}</th>`;
   }
   c.innerHTML=`<div style="overflow-x:auto"><table class="pf-pos-table"><thead><tr>
     <th style="cursor:default"><input type="checkbox" class="bulk-cb" onchange="_toggleAllPos(this.checked)"${_bulkPosIds.size&&enriched.every(r=>_bulkPosIds.has(r.pos.id))?' checked':''} title="Select all"></th>
@@ -6161,6 +6191,7 @@ function renderDashboard(){
     if(!allHiddenEl){allHiddenEl=document.createElement('div');allHiddenEl.id='db-all-hidden-msg';allHiddenEl.className='db-widget';allHiddenEl.style.gridColumn='1/-1';allHiddenEl.style.textAlign='center';allHiddenEl.style.color='var(--text2)';allHiddenEl.style.padding='40px 20px';document.querySelector('.db-grid').appendChild(allHiddenEl)}
     allHiddenEl.textContent=t('db.allWidgetsHidden');allHiddenEl.style.display='';
   } else if(allHiddenEl){allHiddenEl.style.display='none'}
+  initWidgetTips();
 }
 
 // ---- 5A: Portfolio Summary ----
@@ -9299,12 +9330,46 @@ const METRIC_TIPS={
   reTrend:{name:'Retained Earnings Trend',formula:'RE Now - RE 3 Years Ago',bench:'Positive = accumulating profits, Negative = erosion',desc:'Three-year change in retained earnings. Growing = company profitably retaining capital.'},
   treasuryStock:{name:'Treasury Stock',formula:'Shares repurchased × cost basis',bench:'Present = active buybacks',desc:'Value of shares the company has repurchased and holds. Indicates shareholder return via buybacks.'},
   wcMgmt:{name:'Working Capital Management',formula:'(Payables - Receivables - Inventory) / Revenue × 100',bench:'Positive = supplier financing (like Amazon), Negative = cash tied up',desc:'Whether the company finances operations with supplier credit (positive) or ties up its own cash (negative).'},
-  prefStock:{name:'Preferred Stock',formula:'Preferred stock on balance sheet',bench:'None = simpler capital structure',desc:'Preferred shares have priority over common stock for dividends and liquidation. Their presence complicates equity analysis.'}
+  prefStock:{name:'Preferred Stock',formula:'Preferred stock on balance sheet',bench:'None = simpler capital structure',desc:'Preferred shares have priority over common stock for dividends and liquidation. Their presence complicates equity analysis.'},
+  _score:{name:'Total Score',formula:'Average of Valuation + Growth + Profitability + Health',bench:'> 70 strong, 40-70 mixed, < 40 weak',desc:'Composite score across 4 pillars. GARP-tuned thresholds weigh quality and value equally.'},
+  _scoreVal:{name:'Valuation Score',formula:'P/E, P/FCF, PEG, EV/EBIT weighted',bench:'> 70 cheap, 40-70 fair, < 40 expensive',desc:'How cheap or expensive the stock is based on multiple valuation metrics.'},
+  _scoreGrw:{name:'Growth Score',formula:'Revenue growth, EPS growth, 3Y CAGR weighted',bench:'> 70 fast grower, 40-70 moderate, < 40 slow',desc:'Revenue and earnings growth momentum over multiple timeframes.'},
+  _scorePrf:{name:'Profitability Score',formula:'Gross/Op/Net margin, ROE, ROIC weighted',bench:'> 70 high quality, 40-70 decent, < 40 weak',desc:'How profitable the business is across margin and return-on-capital metrics.'},
+  _scoreHlt:{name:'Health Score',formula:'D/E, current ratio, interest coverage weighted',bench:'> 70 fortress, 40-70 adequate, < 40 risky',desc:'Balance sheet strength — leverage, liquidity, and debt serviceability.'},
+  marketCap:{name:'Market Cap',formula:'Share Price × Shares Outstanding',bench:'> $200B mega, $10-200B large, $2-10B mid, < $2B small',desc:'Total market value of the company. Larger = more liquid and stable, smaller = more growth potential but higher risk.'},
+  pipeline:{name:'Pipeline Stage',desc:'Where this company sits in your analysis workflow: Watchlist → Under Review → Buy Target → Owned → Archived.'},
+  companyType:{name:'Company Type',desc:'Growth classification: Slow (< 5% growth), Medium (5-15%), Fast (> 15%), Cyclical, Turnaround, or Asset play.'},
+  _tag:{name:'Tag',desc:'Custom user-defined labels for organizing and filtering companies (e.g., sector, theme, watchlist reason).'}
+};
+const WIDGET_TIPS={
+  allocation:{name:'Allocation',desc:'Portfolio breakdown by ticker, account, asset type, and currency. Shows how concentrated or diversified your holdings are.'},
+  netWorth:{name:'Net Worth',desc:'Total value across all asset classes (stocks, ETFs, crypto, bonds, real estate, cash). Year-over-year change from monthly snapshots.'},
+  qualityWeighted:{name:'Portfolio Quality (Weighted)',desc:'Terry Smith-style weighted metrics for your portfolio. Each metric is weighted by position size so larger positions influence the average more.'},
+  redFlags:{name:'Red Flag Alerts',desc:'Auto-detected warning signals from API data: margin drops, debt increases, revenue slowdowns, insider selling. Based on financial thresholds.'},
+  sellTriggers:{name:'Sell Triggers',desc:'Aggregated view of all active sell trigger conditions across owned companies. Triggered = condition met, action needed.'},
+  benchmark:{name:'Benchmark (S&P 500)',desc:'Your portfolio TWR (time-weighted return) vs S&P 500. Shows if you are beating or lagging the market over the same period.'},
+  dipFinder:{name:'Dip Finder',desc:'Stocks that dropped significantly from their 52-week high. Potential buying opportunities for companies you already follow.'},
+  fi:{name:'Financial Independence',desc:'Progress toward financial independence based on your portfolio value, target amount, and expected return rate. Shows years remaining.'},
+  reviewsDue:{name:'Reviews Due',desc:'Companies in Owned or Buy Target pipeline that have not been reviewed in 90+ days. Click to go to Reviews section.'},
+  todoSummary:{name:'TODO Summary',desc:'Count of open tasks across all companies and general TODOs. Quick overview of pending analysis work.'},
+  earnings:{name:'Upcoming Earnings',desc:'Earnings dates for tracked companies (Owned + Buy Target). Shows days until next report so you can prepare analysis.'},
+  generalTodo:{name:'General TODO',desc:'Personal task list not tied to any specific company. Reminders, research ideas, market observations.'}
+};
+const PF_COL_TIPS={
+  ticker:{name:'Ticker',desc:'Stock symbol or position identifier. Click to open company profile.'},
+  account:{name:'Account',desc:'Broker account where this position is held.'},
+  type:{name:'Type',desc:'Asset class: stock, ETF, crypto, bond, real estate, cash, or other.'},
+  shares:{name:'Shares',desc:'Number of shares or units held. For real estate = 1, for cash = n/a.'},
+  avgCost:{name:'Avg Cost',desc:'Average purchase price per share. Total cost basis divided by number of shares.'},
+  price:{name:'Price',desc:'Current market price per share. For real estate = estimated value, for cash = amount.'},
+  value:{name:'Value',desc:'Current market value. Shares × current price, converted to base currency.'},
+  pnl:{name:'P&L',desc:'Profit or Loss in currency. Market value minus total cost basis.'},
+  pnlPct:{name:'P&L %',desc:'Profit or Loss as percentage. (Market Value - Cost) / Cost × 100.'}
 };
 function tipWrap(key,innerHtml){
-  const t=METRIC_TIPS[key];
-  if(!t)return innerHtml;
-  return`<div class="cp-tip">${innerHtml}<div class="cp-tiptext"><strong>${escH(t.name)}</strong><br>${escH(t.desc)}<div class="tip-formula">${escH(t.formula)}</div><div class="tip-bench">${escH(t.bench)}</div></div></div>`;
+  const tip=METRIC_TIPS[key];
+  if(!tip)return innerHtml;
+  return`<div class="cp-tip">${innerHtml}<div class="cp-tiptext"><strong>${escH(tip.name)}</strong><br>${escH(tip.desc)}${tip.formula?'<div class="tip-formula">'+escH(tip.formula)+'</div>':''}${tip.bench?'<div class="tip-bench">'+escH(tip.bench)+'</div>':''}</div></div>`;
 }
 
 // Data override
@@ -11409,7 +11474,7 @@ function renderScreenerUI(){
   const sel=document.getElementById('screener-add');
   sel.innerHTML='<option value="">+ Add filter...</option>';
   SCREENER_DEFS.forEach(d=>{
-    if(!screenerFilters[d.k])sel.innerHTML+=`<option value="${d.k}">${d.l}</option>`;
+    if(!screenerFilters[d.k]){const mt=METRIC_TIPS[d.k];sel.innerHTML+=`<option value="${d.k}"${mt?' title="'+escH(mt.desc)+'"':''}>${d.l}</option>`}
   });
   const container=document.getElementById('screener-filters');
   let h='';
@@ -11419,7 +11484,9 @@ function renderScreenerUI(){
     const f=screenerFilters[k];
     h+=`<div style="background:var(--surface2);padding:8px 10px;border-radius:6px;display:flex;flex-direction:column;gap:4px">`;
     const ek=escH(k);
-    h+=`<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:11px;font-weight:600;color:var(--text2)">${escH(def.l)}</span><button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:0 2px" onclick="removeScreenerFilter('${ek}')">&times;</button></div>`;
+    const mt=METRIC_TIPS[k];
+    const labelHtml=mt?`<span class="cp-tip" style="font-size:11px;font-weight:600;color:var(--text2)">${escH(def.l)}<div class="cp-tiptext"><strong>${escH(mt.name)}</strong><br>${escH(mt.desc)}${mt.formula?'<div class="tip-formula">'+escH(mt.formula)+'</div>':''}${mt.bench?'<div class="tip-bench">'+escH(mt.bench)+'</div>':''}</div></span>`:`<span style="font-size:11px;font-weight:600;color:var(--text2)">${escH(def.l)}</span>`;
+    h+=`<div style="display:flex;justify-content:space-between;align-items:center">${labelHtml}<button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px;padding:0 2px" onclick="removeScreenerFilter('${ek}')">&times;</button></div>`;
     if(def.src==='select'){
       const opts=typeof def.options==='function'?def.options():def.options;
       h+=`<select onchange="updateScreenerFilter('${ek}','select',this.value)" style="padding:4px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px">`;

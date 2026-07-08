@@ -1,0 +1,231 @@
+Stratos Ventures — Fejlesztési javaslatok
+==========================================
+Készült: 2026-07-03
+Összesen: 18 javaslat, 6 kategória
+
+
+═══════════════════════════════════════════
+1. KATEGÓRIA: Architektúra & karbantarthatóság
+═══════════════════════════════════════════
+
+1. Monolitikus index.html felbontása
+   Prioritás: Fontos | Effort: ~4+ session
+
+   14,634 sor és 544 függvény egyetlen fájlban — ez a legnagyobb technikai
+   adósság. ES modules-re bontás (pl. portfolio.js, dashboard.js, company.js,
+   utils.js) drasztikusan javítaná a karbantarthatóságot, a debug-olást és a
+   betöltési időt.
+
+   Miért fontos: Egy bug keresése 14K sorban exponenciálisan nehezebb, mint
+   moduláris fájlokban. A böngésző sem tud párhuzamosan cache-elni.
+
+2. Tesztek hozzáadása
+   Prioritás: Közepes | Effort: ~4+ session
+
+   Nincs egyetlen automatizált teszt sem. A 354+ bug fix mind manuális QA-ból
+   jött. Legalább a core üzleti logikára (P&L, TWR/XIRR, DCF, scoring) kellene
+   unit test, hogy refaktoráláskor ne törjön semmi.
+
+   Miért fontos: Jelenleg minden módosítás után manuális böngésző-tesztelés
+   kell — ez nem skálázható.
+
+3. Build tooling (Vite/esbuild) — MAYBE LATER
+   Prioritás: Alacsony | Effort: ~2-3 session
+   Státusz: Elhalasztva — csak a #1 (monolith felbontás) részeként releváns.
+   GitHub Pages gzip + SW cache-first jelenleg elegendő.
+
+   Ha a fájlokat szétbontjuk, egy build tool kezelné a bundling-ot,
+   minification-t, és cache-busting-ot. Vite dev server-rel HMR-t is kapnánk.
+
+   Miért fontos: Jelenleg a Service Worker verzió-bumpelése az egyetlen cache
+   invalidáció.
+
+
+═══════════════════════════════════════════
+2. KATEGÓRIA: UX & felhasználói élmény
+═══════════════════════════════════════════
+
+4. Onboarding flow új felhasználóknak
+   Prioritás: Fontos | Effort: ~2-3 session
+
+   Jelenleg egy új felhasználó egy üres DCF kalkulátoron landol kontextus
+   nélkül. Kellene egy 3-4 lépéses welcome wizard: első cég hozzáadása →
+   portfólió beállítása → dashboard felfedezése → opcionális minta adatok.
+
+   Miért fontos: Az app hihetetlenül feature-gazdag (18 fázis!), de a belépési
+   küszöb magas. Első benyomás kritikus.
+
+5. Mobile gesztusok
+   Prioritás: Közepes | Effort: ~2-3 session
+
+   Pull-to-refresh a company profile-on és dashboard-on, long-press context
+   menu a táblázat sorokon (edit/delete/archive), swipe-to-dismiss a
+   toast-okon. A ROADMAP-ban már szerepel, de még nincs implementálva.
+
+   Miért fontos: PWA-ként az app mobil élménye kulcsfontosságú, de jelenleg
+   asztali UX-et kapunk kicsi képernyőn.
+
+6. Tooltips bővítése — DONE (2026-07-08)
+   Prioritás: Alacsony | Effort: ~1 session
+   Státusz: Kész — WIDGET_TIPS (12 widget), PF_COL_TIPS (9 oszlop),
+   METRIC_TIPS screener entries (10 új). tipWrapObj() helper, initWidgetTips()
+   DOM injection, pfTh() tooltip integration, renderScreenerUI() label tooltips.
+
+   Dashboard widget tooltips, portfolio táblázat oszlop tooltips, screener
+   metrika tooltips hiányoznak. A company profile metric tooltips már
+   kiválóak — ugyanezt a mintát kellene máshol is alkalmazni.
+
+   Miért fontos: A sok adat és metrika sok felhasználónak nem egyértelmű
+   kontextus nélkül.
+
+7. Error states polish — MAYBE LATER
+   Prioritás: Alacsony | Effort: ~1 session
+   Státusz: Elhalasztva — az alap error handling (toasts, retry, skeleton,
+   offline cache) már jó. A hiányzó rész (üres chart/widget konténer API hiba
+   után) ritkán fordul elő és marginális hatású.
+
+   Chart konténer inline hiba placeholder-ek ("Failed to load chart"),
+   dashboard widget error state-ek. Az alap API error handling (toasts, rate
+   limit) már jó.
+
+   Miért fontos: Hálózati hibáknál az üres konténerek nem kommunikálnak
+   semmit.
+
+
+═══════════════════════════════════════════
+3. KATEGÓRIA: Adatbiztonság & megbízhatóság
+═══════════════════════════════════════════
+
+8. Cloud sync conflict resolution
+   Prioritás: Fontos | Effort: ~4+ session
+
+   Jelenleg last-write-wins — ha két tab-ról vagy eszközről módosítasz, az
+   utolsó mentés nyer. Kellene egy merge stratégia (pl. field-level timestamp,
+   3-way merge, vagy legalább conflict detection + user prompt).
+
+   Miért fontos: Ahogy az app-ot több eszközről használod (PWA desktop +
+   mobil), az adatvesztés kockázata nő.
+
+9. Multi-tab localStorage sync
+   Prioritás: Közepes | Effort: ~1 session
+
+   StorageEvent listener hozzáadása, hogy ha két tab nyitva van, ne olvassanak
+   stale adatot. A KNOWN-ISSUES-ben már szerepel.
+
+   Miért fontos: Két tab-ból való szerkesztésnél az egyik felülírhatja a másik
+   változtatásait.
+
+10. Staging/test D1 környezet
+    Prioritás: Közepes | Effort: ~1 session
+
+    Egy második D1 database a fejlesztéshez, hogy a schema módosítások ne az
+    éles adatokat kockáztassák. Cloudflare ingyenes szinten is lehetséges.
+
+    Miért fontos: Jelenleg minden D1 módosítás közvetlenül az éles
+    adatbázisodon fut — ez kockázatos.
+
+
+═══════════════════════════════════════════
+4. KATEGÓRIA: Funkcionális fejlesztések
+═══════════════════════════════════════════
+
+11. Portfólió teljesítmény grafikon
+    Prioritás: Fontos | Effort: ~2-3 session
+
+    Időbeli portfólió érték grafikon a monthly snapshot-okból — line chart az
+    összes snapshot-tal, benchmark overlay-jel (S&P 500). Jelenleg csak a
+    pillanatnyi állapotot látod, a trendet nem.
+
+    Miért fontos: Ez az egyik legfontosabb információ egy befektető számára:
+    hogyan alakul a portfólió idővel a benchmark-hoz képest?
+
+12. Watchlist ár-tracking
+    Prioritás: Közepes | Effort: ~2-3 session
+
+    A Watchlist és Buy Target cégekhez automatikus napi/heti ár snapshot, hogy
+    lásd az ár trendjét amióta figyeled. Kis sparkline a tracker táblázatban.
+
+    Miért fontos: Jelenleg csak a pillanatnyi árat látod — nem tudod, hogy a
+    cég olcsóbb vagy drágább lett, amióta watchlisten van.
+
+13. Dashboard testreszabhatóság
+    Prioritás: Alacsony | Effort: ~1 session
+
+    A widget hide/show már kész, de a layout (2x2, 1x4, stb.) és a widget
+    méret nem állítható. Drag-and-drop átrendezés jó lenne.
+
+    Miért fontos: Mindenki mást tart fontosnak — a testreszabhatóság növeli a
+    napi használatot.
+
+
+═══════════════════════════════════════════
+5. KATEGÓRIA: Teljesítmény & betöltés
+═══════════════════════════════════════════
+
+14. Code splitting / lazy loading
+    Prioritás: Közepes | Effort: ~2-3 session
+
+    A 14K soros JS egyben töltődik — ha modularizálunk, a ritkán használt
+    részeket (pl. screener, framework, valuation history) lazy-load-olhatnánk.
+    First paint idő drasztikusan csökkenne.
+
+    Miért fontos: Mobil hálózaton a teljes JS parse + execute lassú. A legtöbb
+    felhasználó a dashboard-ot nézi, nem mind a 18 fázist.
+
+15. Virtual scrolling nagy listákhoz
+    Prioritás: Alacsony | Effort: ~2-3 session
+
+    Ha valaki 100+ céget követ vagy 500+ tranzakciót rögzít, a DOM rendering
+    lassulhat. Virtual scrolling (csak a látható elemek renderelése) megoldaná.
+
+    Miért fontos: Jelenleg kisszámú pozícióval jól működik, de skálázhatóság
+    kérdés.
+
+
+═══════════════════════════════════════════
+6. KATEGÓRIA: Jövőbeli lehetőségek
+═══════════════════════════════════════════
+
+16. Claude API integráció
+    Prioritás: Alacsony | Effort: ~4+ session
+
+    A ROADMAP-ban már szerepel — Haiku 4.5 összefoglalókhoz, Sonnet mélyebb
+    elemzéshez. Earnings call összefoglalók, company thesis generálás, "kérdezd
+    meg Claude-ot erről a cégről" funkció.
+
+    Miért fontos: AI-driven insight-ok differenciálnák az app-ot a
+    versenytársaktól (Qualtrim, StockUnlock).
+
+17. Push notifications price alert-ekhez
+    Prioritás: Közepes | Effort: ~2-3 session
+
+    A basic on-load price check kész (Phase 15.4), de valódi push notification
+    kellene Cloudflare Worker cron-nal. A Service Worker és a PWA
+    infrastruktúra már megvan.
+
+    Miért fontos: Ha nem nyitod meg az app-ot, nem értesülsz a price
+    alert-ről — ez pont az ellentéte annak, amire az alert való.
+
+18. Seasonality elemzés
+    Prioritás: Alacsony | Effort: ~4+ session
+
+    30 évre visszamenő szezonális minták, win rate, átlagos hozam hónapokra
+    bontva. A Forecaster.biz fő USP-je. Value investinghez is hasznos (mikor
+    érdemes pozíciót nyitni).
+
+    Miért fontos: Időzítési edge — még ha buy-and-hold stratégiát követsz is,
+    a belépési pont számít a hozamban.
+
+
+═══════════════════════════════════════════
+ÖSSZEFOGLALÓ
+═══════════════════════════════════════════
+
+Fontos (4):   #1 Monolith felbontás, #4 Onboarding, #8 Conflict resolution, #11 Portfólió grafikon
+Közepes (7):  #2 Tesztek, #5 Mobile gesztusok, #9 Multi-tab sync, #10 Staging D1, #12 Watchlist tracking, #14 Code splitting, #17 Push notifications
+Alacsony (7): #3 Build tooling (MAYBE LATER), #6 Tooltips (DONE), #7 Error states (MAYBE LATER), #13 Dashboard custom, #15 Virtual scroll, #16 Claude API, #18 Seasonality
+
+Effort:
+  ~1 session (4):    #6, #7, #9, #10
+  ~2-3 session (7):  #3, #4, #5, #11, #12, #14, #17
+  ~4+ session (7):   #1, #2, #8, #15, #16, #18
