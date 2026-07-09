@@ -72,7 +72,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 64 | QA Sweep — CRITICAL+HIGH fixes | `e75f044` | 2026-07-09 | 16 | 0 |
 | 65 | QA Sweep — MEDIUM fixes | `60d3c5e` | 2026-07-09 | 14 | 0 |
 | 66 | QA Verification — extra parseInt radix | pending | 2026-07-09 | 2 | 0 |
-| 67 | QA Sweep — LOW fixes | pending | 2026-07-09 | 8 | 0 |
+| 67 | QA Sweep — LOW fixes | `e682b59` | 2026-07-09 | 8 | 0 |
 
 **Total: 401 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -1299,7 +1299,7 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | #14 | `decryptPayload` JSON.parse without try/catch | Caller on line 13999 already wraps in try/catch with user-facing error message |
 | #16 | Worker INSERT OR IGNORE on migrate | Intentional — ON CONFLICT UPDATE would overwrite newer D1 data with older localStorage data during re-migration |
 
-### Category 67 — QA Sweep — LOW fixes (commit pending, 2026-07-09)
+### Category 67 — QA Sweep — LOW fixes (commit `e682b59`, 2026-07-09)
 
 8 LOW bugs fixed: dedup guards, button locks, finally blocks.
 
