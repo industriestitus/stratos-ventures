@@ -123,8 +123,12 @@ Készült: 2026-07-03
    Miért fontos: Két tab-ból való szerkesztésnél az egyik felülírhatja a másik
    változtatásait.
 
-10. Staging/test D1 környezet
-    Prioritás: Közepes | Effort: ~1 session
+10. Staging/test D1 környezet — MAYBE LATER
+    Prioritás: Közepes | Effort: ~30 perc
+    Státusz: Elhalasztva — single-user app, nincs auto-migration a Worker-ben,
+    schema change ritka és mindig manuális `wrangler d1 execute`. A CLAUDE.md
+    védelme (warn before schema changes) gyakorlatban elegendő. Ha kell:
+    `wrangler d1 create stratos-ventures-dev` + env-based binding a toml-ban.
 
     Egy második D1 database a fejlesztéshez, hogy a schema módosítások ne az
     éles adatokat kockáztassák. Cloudflare ingyenes szinten is lehetséges.
