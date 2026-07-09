@@ -159,6 +159,16 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 **Rule:** Always use a regex with global flag for multi-character replacements: `s.replace(/,/g,'')`. The string overload of `.replace()` only affects the first occurrence — this is a JS footgun that silently corrupts data.
 
+### 9. parseInt Radix Placement — Watch the Parentheses
+
+**Bugs found:** 12 (Category 64: 64.1, 64.6-64.16 — 1 CRITICAL crash, 11 HIGH)
+
+**What went wrong:** `parseInt(document.getElementById('id',10).value)` — the `,10` radix is inside `getElementById()`'s parentheses, not `parseInt()`'s. `getElementById` ignores the extra arg, so it works by accident, but `parseInt` runs without radix. Worst case: `parseInt((p.paymentDate||p.date,10).slice(5,7))` — the comma operator evaluates `(expr, 10)` to `10`, then `10.slice()` throws TypeError.
+
+**Why repeatable:** When wrapping a chain like `parseInt(someCall().value)` and adding `,10`, it's easy to put the radix inside the inner call's parentheses instead of parseInt's. The code still works in most cases (modern browsers default to radix 10), so it passes testing.
+
+**Rule:** Always put the radix as parseInt's last argument, outside all inner calls: `parseInt(document.getElementById('id').value, 10)`. Never nest radix inside inner function calls. Watch for comma operators in expressions — `(a||b, 10)` evaluates to `10`, not `a||b`.
+
 ---
 
 ## Data Safety

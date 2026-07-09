@@ -1,0 +1,234 @@
+QA Bug Sweep Report — 2026-07-09
+=================================
+6 parallel QA agents scanned the codebase for recurring bug patterns from 354+ historical fixes.
+Total: 35 findings (1 CRITICAL, 5 HIGH, 10 MEDIUM, 19 LOW/WARN)
+Status: CRITICAL + HIGH all FIXED (cat 64). MEDIUM and below remain unfixed.
+
+
+================================================================================
+CRITICAL — Runtime crash (1)
+================================================================================
+
+#1  Line 9897 — Comma operator TypeError crash
+    parseInt((p.paymentDate||p.date,10).slice(5,7))
+    Comma operator evaluates to 10, then 10.slice() throws TypeError.
+    Dividend calendar crashes at runtime.
+    Agent: isFinite/nullish/parseNum
+
+
+================================================================================
+HIGH — Data loss or permanent lock-up (5)
+================================================================================
+
+#2  Line 10573 — refreshAllStocks dedup flag not in finally
+    Exact repeat of bug P.7: if saveTrackerStocks() or checkPriceAlerts()
+    throws, _refreshing stays true forever, locking out all future refreshes
+    until page reload.
+    Agent: dedup/async
+
+#3  Lines 9673-9684 — Tracker stock fields lost on D1 roundtrip
+    dcfMode, evaWacc, tags, dateAdded, earningsCalendar exist in localStorage
+    but aren't merged back after D1 load (only priceAlerts is). Data silently
+    vanishes on reload for D1 users.
+    Agent: D1 persistence
+
+#4  Line 6886 — Research note images lost on D1 load
+    loadResearchNotes() always sets _images:[]. Image data exists in D1 but
+    no code path reads it back. All note images permanently inaccessible in
+    D1 mode.
+    Agent: D1 persistence
+
+#5  Line 10852 — _tagDec bare decodeURIComponent
+    No try/catch. Called from onclick handlers. Corrupt percent-encoded tag
+    data throws URIError, silently breaking tag UI interactions.
+    Agent: JSON.parse/errors
+
+#6  9 lines — parseInt radix misplaced in parentheses
+    Lines 3590, 4179, 4274, 4502, 5019, 5225, 9901, 11981, 13243: radix 10
+    passed to getElementById/getItem instead of parseInt. Works by accident
+    but parseInt runs without radix.
+    Agent: isFinite/nullish/parseNum
+
+
+================================================================================
+MEDIUM — Wrong behavior or data corruption risk (10)
+================================================================================
+
+#7  9 load functions skip localStorage write-back after D1 success
+    Lines 4405, 4424, 6068, 6076, 6084, 9684, 9731, 11790, 13124.
+    D1 success + later offline = stale localStorage fallback data.
+    Agent: D1 persistence
+
+#8  Lines 9338-9344 — || blocks valid 0 for DCF parameters
+    DCF model: parseFloat()||10, ||20, ||2. User entering 0% growth rate
+    silently becomes 10%. Should use ?? (nullish coalescing).
+    Agent: isFinite/nullish/parseNum
+
+#9  Line 5037 — || blocks 0% coupon rate for zero-coupon bonds
+    parseFloat()||0 for bond coupon rate. A 0% coupon (zero-coupon bond)
+    treated as missing data. Should use ??.
+    Agent: isFinite/nullish/parseNum
+
+#10 Line 9570 — isNaN allows Infinity as valid price alert
+    isNaN(num)||num<=0 guard. Infinity > 0 and isNaN(Infinity) is false,
+    so Infinity is accepted as a valid price alert target. Should use
+    !isFinite(num).
+    Agent: isFinite/nullish/parseNum
+
+#11 3 functions missing dedup guards — double-click races
+    fetchDipData() (line 6537), fetchEarningsCalendar() (line 6722),
+    renderAllCharts() (line 11613). Rapid double-click fires concurrent
+    API calls, wasting quota or causing race conditions.
+    Agent: dedup/async
+
+#12 Line 9668 — JSON.parse in forEach kills entire stock load
+    JSON.parse(cl.answer_json||'{}') inside forEach loop within
+    loadTrackerStocks. One corrupt checklist row kills the entire load.
+    Should have per-item try/catch.
+    Agent: JSON.parse/errors
+
+#13 Line 13124 — JSON.parse in forEach kills entire reviews load
+    JSON.parse(rv.answers_json||'{}') inside forEach loop within
+    loadReviews. One corrupt review row kills the entire reviews load.
+    Should have per-item try/catch.
+    Agent: JSON.parse/errors
+
+#14 Line 2822 — JSON.parse in decryptPayload without try/catch
+    return JSON.parse(new TextDecoder().decode(pt)). If decrypted payload
+    is not valid JSON (corrupt data, wrong password), this throws
+    unhandled.
+    Agent: JSON.parse/errors
+
+#15 Line 3815 — JSON.parse snapshot export without try/catch
+    JSON.parse(snapshot.tracker_settings||'{}') during export. Corrupt
+    localStorage tracker_settings crashes the export function.
+    Agent: JSON.parse/errors
+
+#16 Worker: INSERT OR IGNORE on migrate silently drops updates
+    Worker lines 401, 415, 425, 446. Re-running migration after updating
+    earnings review status or checklist answers will not update existing
+    rows. Changed data silently ignored.
+    Agent: D1 persistence
+
+
+================================================================================
+LOW — Edge cases, minor risks (12)
+================================================================================
+
+#17 Lines 3956/4799-4800 — avgCost ||0 blocks valid $0 cost basis
+    parseFloat(p.avgCost)||0. Gifted stock or stock splits with $0 cost
+    basis treated as missing. Should use ??.
+    Agent: isFinite/nullish/parseNum
+
+#18 Lines 5026-5029 — ||0 blocks valid 0 for real estate fields
+    parseFloat()||0 for monthly rental and annual costs. $0 rental income
+    is valid but treated as missing.
+    Agent: isFinite/nullish/parseNum
+
+#19 Line 5032 — ||0 blocks valid $0 cash position
+    parseFloat()||0 for cash amount. A cash position of exactly $0 treated
+    as missing.
+    Agent: isFinite/nullish/parseNum
+
+#20 Line 5768 — csvNum can return Infinity without guard
+    CSV number parser returns raw parseFloat(s). Callers use isNaN() to
+    check, but Infinity would pass through.
+    Agent: isFinite/nullish/parseNum
+
+#21 Lines 5886-5890 — CSV import validation uses isNaN instead of isFinite
+    isNaN(shares), isNaN(price), isNaN(total). Infinity from division
+    could pass validation. Should be !isFinite().
+    Agent: isFinite/nullish/parseNum
+
+#22 Line 6537 — fetchDipData no dedup guard
+    Button onclick calls directly. setBtnLoading disables button but fast
+    double-click can slip through before DOM update.
+    Agent: dedup/async
+
+#23 Line 6722 — fetchEarningsCalendar no dedup guard
+    Same pattern as #22. Concurrent per-ticker API loops multiply API
+    calls and can hit FMP rate limits.
+    Agent: dedup/async
+
+#24 Line 13474 — cloudSave no dedup guard
+    testSync() can call cloudSave() while a scheduled save is in flight.
+    Two concurrent POSTs to /sync/save race.
+    Agent: dedup/async
+
+#25 Line 14406 — generatePortfolioPdf no dedup or button lock
+    No _lock pattern, no btn.disabled. Double-click triggers two
+    concurrent PDF generations and duplicate downloads.
+    Agent: dedup/async
+
+#26 Line 3951 — exportXlsxAll no dedup guard
+    Same as #25. Double-click fires concurrent XLSX generation.
+    Agent: dedup/async
+
+#27 Line 13688 — _autoLockTimer missing clearTimeout before setTimeout
+    visibilitychange handler sets setTimeout without clearing previous.
+    Rapid tab switching can leak timers.
+    Agent: dedup/async
+
+#28 Line 13444 — testD1 btn.disabled not in finally
+    btn.disabled=false after try/catch, not in finally. Unexpected error
+    leaves button permanently disabled.
+    Agent: dedup/async
+
+#29 Line 13471 — testSync btn re-enable not in finally
+    Same pattern as #28. btn.disabled=false outside finally block.
+    Agent: dedup/async
+
+#30-32 Lines 13404, 13418, 13432 — testWorker/testFinnhub/testFmp btn not in finally
+    All three test buttons use btn.disabled=false after try/catch, not in
+    finally. Low risk since catch blocks are broad.
+    Agent: dedup/async
+
+#33 Line 5630 — JSON.parse in D1 load (outer catch exists)
+    JSON.parse(cfg.value||'{}') inside try/catch on line 5628. Parse
+    kills entire D1 branch but outer catch handles fallback.
+    Agent: JSON.parse/errors
+
+#34 Line 11795 — JSON.parse in D1 load (outer catch exists)
+    JSON.parse(sw.value||'{}') in loadFramework D1 branch. Same pattern
+    as #33 — outer catch exists but parse kills whole branch.
+    Agent: JSON.parse/errors
+
+
+================================================================================
+WARN — Maintenance risk, no current crash (7)
+================================================================================
+
+#35 91 sites — t() i18n function shadowed by local variables
+    16 const t = declarations and ~75 callback parameters (forEach, map,
+    filter, reduce) shadow the global t() translation function. No current
+    crash because t() isn't called inside these scopes, but any future
+    code addition within these scopes that calls t() will cause TypeError.
+    Most frequent: const t=document.createElement('div') in showToast,
+    .forEach(t=>{...}) on transaction arrays, const t=escH(ticker) in
+    checklist rendering.
+    Recommendation: rename to descriptive names (el, tx, todo, tip, etc.)
+    Agent: t() shadowing
+
+
+================================================================================
+CLEAN AUDITS (no findings)
+================================================================================
+
+XSS / innerHTML escaping — All 162 innerHTML sites properly escaped with
+escH(). DOMPurify used for Markdown. textContent used for toasts/confirms.
+No unescaped user-controllable, API-sourced, or localStorage data found.
+Agent: escaping/XSS
+
+
+================================================================================
+Summary by severity
+================================================================================
+
+  CRITICAL:  1  (runtime crash)
+  HIGH:      5  (data loss, lock-up, error handling)
+  MEDIUM:   10  (wrong behavior, data corruption risk)
+  LOW:      12  (edge cases, minor risks)
+  WARN:      7  (maintenance risk, no current crash)
+  CLEAN:     1  (XSS audit — no findings)
+  ─────────────
+  TOTAL:    35  findings + 1 clean audit

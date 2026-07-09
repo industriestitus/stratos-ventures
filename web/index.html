@@ -3641,7 +3641,7 @@ function calcReverseDCF(){
 
 let ariaMultiples=[10,15,20,25,30,35],ariaInit=false;
 function initAriaMultiples(force){
-  const count=parseInt(document.getElementById('aria-mult-count',10).value);
+  const count=parseInt(document.getElementById('aria-mult-count').value,10);
   if(force||!ariaInit||ariaMultiples.length!==count){
     if(force||ariaMultiples.length!==count){const d=[10,15,20,25,30,35,40,45];ariaMultiples=d.slice(0,count)}
     ariaInit=true;
@@ -4231,7 +4231,7 @@ const API={
   _markClean(key){delete this._dirty[key];try{localStorage.removeItem('d1_dirty_'+key)}catch(e){}},
   _markDirty(key){const ts=Date.now();this._dirty[key]=ts;try{localStorage.setItem('d1_dirty_'+key,String(ts))}catch(e){}},
   isDirty(key){return !!(this._dirty[key]||localStorage.getItem('d1_dirty_'+key))},
-  getDirtyTs(key){return this._dirty[key]||parseInt(localStorage.getItem('d1_dirty_'+key,10))||0},
+  getDirtyTs(key){return this._dirty[key]||parseInt(localStorage.getItem('d1_dirty_'+key),10)||0},
   scheduleSave(key,fn,delay=1500){
     if(this._timers[key])clearTimeout(this._timers[key]);
     this._pendingFns[key]=fn;
@@ -4326,7 +4326,7 @@ const MIGRATIONS=[];
 MIGRATIONS[7]=function(){};
 
 function runMigrations(){
-  let v=parseInt(localStorage.getItem('schema_version',10)||'7');
+  let v=parseInt(localStorage.getItem('schema_version')||'7',10);
   if(v>SCHEMA_VERSION){console.warn('Data schema v'+v+' is newer than app v'+SCHEMA_VERSION+' — update the app');showToast(t('toast.newerData'),'warning',8000);return}
   if(v>=SCHEMA_VERSION)return;
   for(;v<SCHEMA_VERSION;v++){
@@ -4555,7 +4555,7 @@ function saveAccount(){
   if(saveAccount._lock)return;saveAccount._lock=true;setTimeout(()=>saveAccount._lock=false,500);
   const name=document.getElementById('pf-acc-name').value.trim();
   const currency=document.getElementById('pf-acc-currency').value;
-  const editId=parseInt(document.getElementById('pf-acc-edit-id',10).value)||0;
+  const editId=parseInt(document.getElementById('pf-acc-edit-id').value,10)||0;
   if(!name){showToast(t('pf.accountRequired'),'error');return}
   const dup=pfAccounts.find(a=>a.name.toLowerCase()===name.toLowerCase()&&a.id!==editId);
   if(dup){showToast(t('pf.accountExists'),'error');return}
@@ -5067,7 +5067,7 @@ function savePosition(){
   savePosition._lock=true;setTimeout(()=>savePosition._lock=false,500);
   const ticker=document.getElementById('pf-pos-ticker').value.trim().toUpperCase();
   const name=document.getElementById('pf-pos-name').value.trim();
-  const accountId=parseInt(document.getElementById('pf-pos-account',10).value);
+  const accountId=parseInt(document.getElementById('pf-pos-account').value,10);
   const assetType=document.getElementById('pf-pos-type').value;
   let shares=parseFloat(document.getElementById('pf-pos-shares').value);
   let avgCost=parseFloat(document.getElementById('pf-pos-avgcost').value);
@@ -5075,7 +5075,7 @@ function savePosition(){
   let currentPrice=priceVal?parseFloat(priceVal):null;
   const currency=document.getElementById('pf-pos-currency').value;
   const notes=document.getElementById('pf-pos-notes').value.trim();
-  const editId=parseInt(document.getElementById('pf-pos-edit-id',10).value)||0;
+  const editId=parseInt(document.getElementById('pf-pos-edit-id').value,10)||0;
 
   if(!ticker){showToast(t('toast.tickerReq'),'error');return}
   if(!accountId||!pfAccounts.find(a=>a.id===accountId)){showToast(t('toast.accountReq'),'error');return}
@@ -5291,13 +5291,13 @@ function saveTransaction(){
   const type=document.getElementById('pf-tx-type').value;
   const date=document.getElementById('pf-tx-date').value;
   const ticker=document.getElementById('pf-tx-ticker').value.trim().toUpperCase();
-  const accountId=parseInt(document.getElementById('pf-tx-account',10).value);
+  const accountId=parseInt(document.getElementById('pf-tx-account').value,10);
   const shares=type!=='dividend'?parseFloat(document.getElementById('pf-tx-shares').value):null;
   const pricePerShare=type!=='dividend'?parseFloat(document.getElementById('pf-tx-price').value):null;
   const totalAmount=parseFloat(document.getElementById('pf-tx-total').value);
   const fees=parseFloat(document.getElementById('pf-tx-fees').value)||0;
   const notes=document.getElementById('pf-tx-notes').value.trim();
-  const editId=parseInt(document.getElementById('pf-tx-edit-id',10).value)||0;
+  const editId=parseInt(document.getElementById('pf-tx-edit-id').value,10)||0;
 
   if(!date){showToast(t('toast.dateReqTx'),'error');return}
   if(date>new Date().toISOString().slice(0,10)){showToast(t('toast.dateFutureTx'),'error');return}
@@ -7200,6 +7200,11 @@ async function loadResearchNotes(){
       researchNotes[noteType]=(r.data||[]).map(n=>({id:n.id,title:n.title,content:n.content,date:n.note_date,ticker:_d1CompanyMap[n.company_id]||null,source:n.source_name,sourceName:n.source_name,sourceUrl:n.source_url,pinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[],deleted_at:n.deleted_at||null}));
       researchNotes[noteType].forEach(n=>{if(n.id>=researchNotes._nextId)researchNotes._nextId=n.id+1});
     }
+    // Merge _images from localStorage (not returned by notes list endpoint)
+    try{const ls=JSON.parse(localStorage.getItem('research_notes_v1')||'{}');
+      ['journal','news','market'].forEach(nt=>{(ls[nt]||[]).forEach(lsNote=>{
+        if(lsNote._images&&lsNote._images.length){const match=researchNotes[nt].find(n=>n.id===lsNote.id);if(match&&(!match._images||!match._images.length))match._images=lsNote._images}
+      })})}catch(e){}
     return;
   }catch(e){console.error('D1 load notes, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('research_notes_v1'));if(d&&typeof d==='object'){researchNotes=d;if(!researchNotes._nextId)researchNotes._nextId=1;if(!researchNotes.journal)researchNotes.journal=[];if(!researchNotes.news)researchNotes.news=[];if(!researchNotes.market)researchNotes.market=[]}}catch(e){}
@@ -10039,9 +10044,10 @@ async function loadTrackerStocks(){
     tStocks={};
     const fullLoads=companies.map(c=>API.get('companies/'+c.symbol+'/full').then(full=>{tStocks[c.symbol]=_d1CompanyToTStock(full)}).catch(e=>{tStocks[c.symbol]={ticker:c.symbol,name:c.name||c.symbol};console.error('D1 load company '+c.symbol+':',e)}));
     await Promise.all(fullLoads);
-    // Merge client-only fields from localStorage (priceAlerts not in D1 schema)
+    // Merge client-only fields from localStorage (not in D1 schema)
     try{const ls=JSON.parse(localStorage.getItem('tracker_stocks_v1')||'{}');
-      Object.entries(ls).forEach(([t,s])=>{if(tStocks[t]&&s.priceAlerts)tStocks[t].priceAlerts=s.priceAlerts})}catch(e){}
+      const mergeKeys=['priceAlerts','dcfMode','evaWacc','tags','dateAdded','earningsCalendar','sbc','roic'];
+      Object.entries(ls).forEach(([tk,s])=>{if(tStocks[tk]){mergeKeys.forEach(k=>{if(s[k]!=null&&tStocks[tk][k]==null)tStocks[tk][k]=s[k]})}})}catch(e){}
     return;
   }catch(e){console.error('D1 load trackerStocks, falling back to localStorage:',e)}}
   const d=localStorage.getItem('tracker_stocks_v1');
@@ -10257,11 +10263,11 @@ function calcDividendForecast(months){
     const cur=pos.currency||'USD';
     const sorted=[...dh.history].sort((a,b)=>b.date.localeCompare(a.date));
     const recentPayments=sorted.slice(0,12);
-    const payMonths=recentPayments.map(p=>parseInt((p.paymentDate||p.date,10).slice(5,7)));
+    const payMonths=recentPayments.map(p=>parseInt((p.paymentDate||p.date).slice(5,7),10));
     const uniqueMonths=[...new Set(payMonths)];
     const latestDPS=recentPayments.length>0?(dh.annualDPS/(uniqueMonths.length||1)):0;
     result.forEach(slot=>{
-      const slotMonth=parseInt(slot.month.slice(5,7,10));
+      const slotMonth=parseInt(slot.month.slice(5,7),10);
       if(uniqueMonths.includes(slotMonth)){
         const gross=shares*latestDPS;
         const net=gross*(1-taxRate/100);
@@ -10930,19 +10936,22 @@ async function refreshAllStocks(){
   if(refreshBtn)setBtnLoading(refreshBtn,true,t('comp.refreshing'));
   if(wrap)showSpinner(wrap,t('comp.refreshingProgress',{i:0,n:tickers.length,ticker:'...'}));
   const failed=[];
+  try{
   for(let i=0;i<tickers.length;i++){
     if(wrap){const ov=wrap.querySelector('.loading-overlay span');if(ov)ov.textContent=t('comp.refreshingProgress',{i:i+1,n:tickers.length,ticker:tickers[i]})}
     try{await fetchStockData(tickers[i])}catch(e){failed.push(tickers[i])}
     if(i%5===4||i===tickers.length-1)renderTracker();
     if(i<tickers.length-1)await new Promise(r=>setTimeout(r,200));
   }
-  if(wrap)hideSpinner(wrap);
-  if(refreshBtn)setBtnLoading(refreshBtn,false,t('comp.refreshAll'));
   saveTrackerStocks();
-  _refreshing=false;
   if(failed.length)showToast(t('comp.refreshedPartial',{ok:tickers.length-failed.length,total:tickers.length,failed:failed.join(', ')}),'warning');
   else showToast(t('comp.allRefreshed',{count:tickers.length}),'success',2000);
   checkPriceAlerts();
+  }finally{
+    _refreshing=false;
+    if(wrap)hideSpinner(wrap);
+    if(refreshBtn)setBtnLoading(refreshBtn,false,t('comp.refreshAll'));
+  }
 }
 
 // Per-stock calculator
@@ -11218,7 +11227,7 @@ function removeTagFromStock(ticker,tag){
   renderTracker();
 }
 function _tagEnc(s){return encodeURIComponent(s).replace(/'/g,'%27')}
-function _tagDec(s){return decodeURIComponent(s)}
+function _tagDec(s){try{return decodeURIComponent(s)}catch(e){return s}}
 function renderProfileTags(ticker){
   const el=document.getElementById('cp-tags-wrap');if(!el)return;
   const s=tStocks[ticker];if(!s)return;
@@ -12436,7 +12445,7 @@ function getFwArr(type){
 function saveFwEntry(){
   if(saveFwEntry._lock)return;saveFwEntry._lock=true;setTimeout(()=>saveFwEntry._lock=false,500);
   const type=document.getElementById('fw-modal-type').value;
-  const editId=parseInt(document.getElementById('fw-modal-edit-id',10).value)||0;
+  const editId=parseInt(document.getElementById('fw-modal-edit-id').value,10)||0;
   const titleVal=document.getElementById('fw-modal-title-input').value.trim();
   const contentVal=document.getElementById('fw-modal-content-input').value.trim();
   const catVal=document.getElementById('fw-modal-category-input').value.trim();
@@ -13699,7 +13708,7 @@ function saveReview(){
   const date=document.getElementById('rv-modal-date').value;
   const ticker=document.getElementById('rv-modal-ticker').value.trim().toUpperCase();
   const summary=document.getElementById('rv-modal-summary').value.trim();
-  const editId=parseInt(document.getElementById('rv-modal-edit-id',10).value)||0;
+  const editId=parseInt(document.getElementById('rv-modal-edit-id').value,10)||0;
 
   if(!date){showToast(t('toast.dateReq'),'error');return}
 
@@ -13989,7 +13998,7 @@ async function cloudLoad(){
       if(!_encPass){console.warn('Cloud data encrypted but no password');return false}
       try{cloud=await decryptPayload(_encPass,cloud)}catch(e){console.warn('Decrypt failed',e);setStatus('sync-status','Decryption failed — wrong password?',false);showToast(t('sync.decryptionFailed'),'error');return false}
     }
-    const localTs=parseInt(localStorage.getItem('sync_ts',10)||'0');
+    const localTs=parseInt(localStorage.getItem('sync_ts')||'0',10);
     if(cloud.ts&&cloud.ts>localTs){
       if(cloud.stocks){tStocks=cloud.stocks;saveTrackerStocks()}
       if(cloud.settings){

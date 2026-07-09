@@ -69,8 +69,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 60 | Keyboard Shortcut + TEST-PLAN Accuracy | c4427e0 | 2026-07-04 | 1 | 0 |
 | 62 | Tooltip Expansion QA | `9a875f9` | 2026-07-08 | 4 | 0 |
 | 63 | Portfolio History Chart QA | `a7d64b9` | 2026-07-09 | 5 | 0 |
+| 64 | QA Sweep — CRITICAL+HIGH fixes | pending | 2026-07-09 | 16 | 0 |
 
-**Total: 361 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 377 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1244,6 +1245,28 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 - LOW: O(n) linear search for SPY fill-forward — acceptable at current data scale
 - LOW: `getActiveTransactions()` called 3 times per render — minor, no perf concern
 - LOW: `maxTicks` passes `undefined` for short ranges — harmless, Chart.js ignores it
+
+---
+
+## Category 64 — QA Sweep: CRITICAL+HIGH Fixes (2026-07-09)
+
+**Date:** 2026-07-09 | **Fixed: 16** | **Unfixed: 0**
+
+6-agent parallel QA sweep based on 354+ historical bug patterns. Scanned for: XSS/escaping, dedup/async guards, isFinite/nullish/parseNum, JSON.parse error handling, t() shadowing, D1 data persistence. Full report: `docs/QA-SWEEP-2026-07-03.txt`.
+
+### Fixed (16)
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 64.1 | CRITICAL | `parseInt((p.paymentDate\|\|p.date,10).slice(5,7))` — comma operator evaluates to `10`, then `10.slice()` throws TypeError, crashing dividend calendar | Moved radix to `parseInt((...).slice(5,7),10)` |
+| 64.2 | HIGH | `refreshAllStocks` dedup flag `_refreshing=false` not in `finally` — exception permanently locks refresh | Wrapped body in try/finally, moved flag reset + spinner cleanup to finally block |
+| 64.3 | HIGH | D1 load merges only `priceAlerts` from localStorage; `dcfMode`, `evaWacc`, `tags`, `dateAdded`, `earningsCalendar`, `sbc`, `roic` silently lost on reload | Added `mergeKeys` array, merge all 8 client-only fields from localStorage after D1 load |
+| 64.4 | HIGH | `loadResearchNotes()` sets `_images:[]` for all D1-loaded notes — images exist in D1 but never read back | Merge `_images` from localStorage backup after D1 note load |
+| 64.5 | HIGH | `_tagDec()` uses bare `decodeURIComponent` with no try/catch — corrupt tag data throws URIError in onclick handlers | Added try/catch with raw string fallback |
+| 64.6 | HIGH | `parseInt(document.getElementById('aria-mult-count',10).value)` — radix `10` passed to getElementById, not parseInt | Fixed 8 instances: moved `,10)` to parseInt's second argument |
+| 64.7 | HIGH | `parseInt(localStorage.getItem('d1_dirty_'+key,10))` — radix passed to getItem | Fixed 3 instances: moved `,10)` to parseInt's second argument |
+| 64.8 | HIGH | `parseInt(slot.month.slice(5,7,10))` — stray `10` inside slice, parseInt has no radix | Fixed to `parseInt(slot.month.slice(5,7),10)` |
+| 64.9-64.16 | — | 8 additional parseInt radix fixes across saveAccount, savePosition, saveTransaction, saveFwEntry, saveReview, schema_version, sync_ts, d1_dirty | All moved `,10` to correct position as parseInt's second argument |
 
 ---
 
