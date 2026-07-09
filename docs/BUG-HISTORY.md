@@ -72,8 +72,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 64 | QA Sweep — CRITICAL+HIGH fixes | `e75f044` | 2026-07-09 | 16 | 0 |
 | 65 | QA Sweep — MEDIUM fixes | `60d3c5e` | 2026-07-09 | 14 | 0 |
 | 66 | QA Verification — extra parseInt radix | pending | 2026-07-09 | 2 | 0 |
+| 67 | QA Sweep — LOW fixes | pending | 2026-07-09 | 8 | 0 |
 
-**Total: 393 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 401 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1297,6 +1298,44 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | #9 | Bond coupon `parseFloat()\|\|0` blocks 0% coupon | `0\|\|0` is still `0` — zero-coupon bonds correctly get 0 |
 | #14 | `decryptPayload` JSON.parse without try/catch | Caller on line 13999 already wraps in try/catch with user-facing error message |
 | #16 | Worker INSERT OR IGNORE on migrate | Intentional — ON CONFLICT UPDATE would overwrite newer D1 data with older localStorage data during re-migration |
+
+### Category 67 — QA Sweep — LOW fixes (commit pending, 2026-07-09)
+
+8 LOW bugs fixed: dedup guards, button locks, finally blocks.
+
+| # | Bug | Fix |
+|---|-----|-----|
+| 67.1 | `cloudSave()` no dedup guard — testSync can overlap with scheduled save | Added `_cloudSaving` flag with try/finally reset |
+| 67.2 | `exportXlsxAll()` no button lock — double-click fires concurrent XLSX generation | Added `btn` param, disabled during export, re-enabled in finally |
+| 67.3 | `generatePortfolioPdf()` no button lock — double-click fires concurrent PDF generation | Added `btn` param, disabled during generation, re-enabled in finally |
+| 67.4 | `testD1()` btn.disabled not in finally — unexpected error leaves button permanently disabled | Moved `btn.disabled=false` to finally block |
+| 67.5 | `testSync()` btn re-enable not in finally — error can leave button stuck | Moved btn re-enable to finally block, removed duplicated re-enables from early returns |
+| 67.6 | `testWorker()` btn re-enable not in finally | Moved btn re-enable to finally block |
+| 67.7 | `testFinnhub()` btn re-enable not in finally | Moved btn re-enable to finally block |
+| 67.8 | `testFmp()` btn re-enable not in finally | Moved btn re-enable to finally block |
+
+### Not Fixed (5 — not real bugs)
+
+| # | Issue | Why not a bug |
+|---|-------|---------------|
+| #17 | `avgCost` `parseFloat()\|\|0` blocks $0 cost basis | Fallback IS 0 — `parseFloat("0")\|\|0` = `0\|\|0` = `0`. Same result for $0 and missing. |
+| #18 | Real estate rental/costs `parseFloat()\|\|0` blocks $0 | Same — fallback = 0 = valid value. No data loss. |
+| #19 | Cash `parseFloat()\|\|0` blocks $0 position | $0 cash position has no meaning + result is 0 either way |
+| #20 | `csvNum` can return Infinity | Regex strips non-digit prefix: `"Infinity"` → `"nfinity"` → `NaN`. Can't produce Infinity. |
+| #21 | CSV import `isNaN` should be `isFinite` | Depends on #20 — `csvNum` can't produce Infinity, so `isNaN` is sufficient here. |
+
+### Already Fixed (2)
+
+| # | Issue | Status |
+|---|-------|--------|
+| #22 | `fetchDipData` no dedup guard | Fixed in cat 65 (65.4) |
+| #23 | `fetchEarningsCalendar` no dedup guard | Fixed in cat 65 (65.5) |
+
+### Not Fixed (1 — not real bug)
+
+| # | Issue | Why not a bug |
+|---|-------|---------------|
+| #27 | `_autoLockTimer` missing clearTimeout before setTimeout | `visibilitychange` alternates hidden↔visible — can't fire hidden→hidden without visible clearing the timer in between |
 
 ---
 

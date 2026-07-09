@@ -2252,8 +2252,8 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
           <button onclick="exportCsvFramework();showCsvExportMenu()" style="display:block;width:100%;text-align:left;padding:8px 14px;background:none;border:none;color:var(--text);font-size:13px;cursor:pointer">Framework</button>
         </div>
       </div>
-      <button class="btn btn-secondary" onclick="exportXlsxAll()" data-i18n="settings.exportXLSX">Export XLSX</button>
-      <button class="btn btn-secondary" onclick="generatePortfolioPdf()" data-i18n="settings.exportPortfolioPDF">Portfolio PDF</button>
+      <button id="export-xlsx-btn" class="btn btn-secondary" onclick="exportXlsxAll(this)" data-i18n="settings.exportXLSX">Export XLSX</button>
+      <button id="export-pdf-btn" class="btn btn-secondary" onclick="generatePortfolioPdf(this)" data-i18n="settings.exportPortfolioPDF">Portfolio PDF</button>
       <div style="position:relative;display:inline-block">
         <button class="btn btn-secondary" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'" data-i18n="settings.exportMarkdown">Export Markdown &#9662;</button>
         <div style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 0;z-index:100;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,.3)">
@@ -4003,7 +4003,9 @@ async function _downloadXlsx(filename,sheets){
   });
   XLSX.writeFile(wb,filename);
 }
-async function exportXlsxAll(){
+async function exportXlsxAll(btn){
+  if(btn){btn.disabled=true;btn.textContent='Exporting...'}
+  try{
   const posH=['Ticker','Name','Account','Type','Shares','Avg Cost','Current Price','Market Value','P&L','P&L %','Currency','Notes'];
   const base=getBaseCurrency();
   const posR=getActivePositions().map(p=>{
@@ -4043,6 +4045,7 @@ async function exportXlsxAll(){
     ]);
     showToast(t('toast.xlsxExported'),'success');
   }catch(e){showToast('XLSX export failed: '+e.message,'error')}
+  }finally{if(btn){btn.disabled=false;btn.textContent=t('settings.exportXLSX','Export XLSX')}}
 }
 
 function _downloadCsv(filename,headers,rows){
@@ -13878,8 +13881,7 @@ async function testWorker(ev){
     const r=await fetch(url+'/health');
     if(r.ok){const d=await r.json();setStatus('worker-status','Connected ✓',true)}
     else setStatus('worker-status','Error ('+r.status+')',false);
-  }catch(e){setStatus('worker-status','Connection failed',false)}
-  if(btn){btn.disabled=false;btn.textContent='Test'}
+  }catch(e){setStatus('worker-status','Connection failed',false)}finally{if(btn){btn.disabled=false;btn.textContent='Test'}}
 }
 
 async function testFinnhub(ev){
@@ -13892,8 +13894,7 @@ async function testFinnhub(ev){
     if(r.ok){const d=await r.json();setStatus('finnhub-status',d.data?.length?'Connected ✓':'No data (check key)',d.data?.length?true:false)}
     else if(r.status===401||r.status===403)setStatus('finnhub-status','Invalid key',false);
     else setStatus('finnhub-status','Error ('+r.status+')',false);
-  }catch(e){setStatus('finnhub-status','Connection failed',false)}
-  if(btn){btn.disabled=false;btn.textContent='Test'}
+  }catch(e){setStatus('finnhub-status','Connection failed',false)}finally{if(btn){btn.disabled=false;btn.textContent='Test'}}
 }
 
 async function testFmp(ev){
@@ -13906,8 +13907,7 @@ async function testFmp(ev){
     if(r.ok){const d=await r.json();setStatus('fmp-status',d.length?'Connected ✓':'Invalid key',d.length?true:false)}
     else if(r.status===401||r.status===403)setStatus('fmp-status','Invalid key',false);
     else setStatus('fmp-status','Error ('+r.status+')',false);
-  }catch(e){setStatus('fmp-status','Connection failed',false)}
-  if(btn){btn.disabled=false;btn.textContent='Test'}
+  }catch(e){setStatus('fmp-status','Connection failed',false)}finally{if(btn){btn.disabled=false;btn.textContent='Test'}}
 }
 
 async function testD1(){
@@ -13918,8 +13918,7 @@ async function testD1(){
     API.init();
     const r=await API.get('companies?limit=1');
     setStatus('sync-status','D1 Connected ✓',true);
-  }catch(e){setStatus('sync-status','D1 error: '+e.message,false)}
-  btn.disabled=false;btn.textContent='Test D1';
+  }catch(e){setStatus('sync-status','D1 error: '+e.message,false)}finally{btn.disabled=false;btn.textContent='Test D1'}
 }
 
 async function testSync(){
@@ -13933,8 +13932,8 @@ async function testSync(){
   try{
     await cloudSave();
     const r=await fetch(url+'/sync/load',{headers:{'X-Sync-Key':key}});
-    if(r.status===401){setStatus('sync-status','Wrong sync key',false);btn.disabled=false;btn.textContent='Sync Now';return}
-    if(!r.ok){setStatus('sync-status','Server error ('+r.status+')',false);btn.disabled=false;btn.textContent='Sync Now';return}
+    if(r.status===401){setStatus('sync-status','Wrong sync key',false);return}
+    if(!r.ok){setStatus('sync-status','Server error ('+r.status+')',false);return}
     const d=await r.json();
     if(d.ok){
       const loaded=await cloudLoad();
@@ -13946,13 +13945,15 @@ async function testSync(){
     }
   }catch(e){
     setStatus('sync-status','Connection failed',false);
-  }
-  btn.disabled=false;btn.textContent='Sync Now';
+  }finally{btn.disabled=false;btn.textContent='Sync Now'}
 }
 
+let _cloudSaving=false;
 async function cloudSave(){
+  if(_cloudSaving)return;
+  _cloudSaving=true;
   const url=getSyncUrl();
-  if(!url||!getSyncKey())return;
+  if(!url||!getSyncKey()){_cloudSaving=false;return}
   const payload={
     ts:Date.now(),
     stocks:tStocks,
@@ -13987,7 +13988,7 @@ async function cloudSave(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     lastSyncTs=payload.ts;
     setStatus('sync-status','Saved ✓ '+new Date().toLocaleTimeString(),true);
-  }catch(e){setStatus('sync-status','Save failed',false);console.warn('Cloud save failed',e);throw e}
+  }catch(e){setStatus('sync-status','Save failed',false);console.warn('Cloud save failed',e);throw e}finally{_cloudSaving=false}
 }
 
 function scheduleCloudSave(){
@@ -14882,7 +14883,8 @@ async function generatePdf(ticker){
   }
 }
 
-async function generatePortfolioPdf(){
+async function generatePortfolioPdf(btn){
+  if(btn){btn.disabled=true;btn.textContent='Generating...'}
   try{
     await loadJsPDF();
     if(!window.jspdf)throw new Error('jsPDF failed to load');
@@ -15078,7 +15080,7 @@ async function generatePortfolioPdf(){
   }catch(e){
     console.error('Portfolio PDF error:',e);
     showToast(t('toast.portfolioPdfFailed',{err:e.message}),'error');
-  }
+  }finally{if(btn){btn.disabled=false;btn.textContent=t('settings.exportPortfolioPDF','Portfolio PDF')}}
 }
 
 window.addEventListener('load',()=>{
