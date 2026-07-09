@@ -240,6 +240,19 @@ Status: COMPLETE (2026-06-27)
 - [x] Company profile summary tab — new default tab with positions, transactions, notes, reviews, sell triggers, TODOs, quick actions, cross-linking
 - [x] KNOWN-ISSUES bugfix sweep — 1 CRITICAL + 5 HIGH fixed: Worker rate limiting, FMP budget tracking, non-D1 cache, atomic DELETE, dividend dedup finally, crypto secure context guard
 
+## Completed: Cross-Device Login (2026-07-09)
+- [x] Worker: GET/POST /sync/meta endpoints for encryption metadata
+- [x] Worker: POST /sync/restore-backup for password change rollback
+- [x] Worker: enc_version optimistic locking on /sync/save (409 if stale)
+- [x] Lock screen: "Sign in from another device" view (Worker URL + Sync Key + password)
+- [x] Lock screen: re-authentication view (password changed on another device)
+- [x] Connection string: generate/paste for easy credential transfer between devices
+- [x] Safe password change: data first, meta last, restore-backup on failure
+- [x] meta_version guard: autoLoad/cloudLoad detect password changes and D1/KV mode switches
+- [x] Settings: "Share connection" button
+- [x] i18n: 20 new keys EN + HU
+- [x] QA: 1 bug found and fixed (cat 68)
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 

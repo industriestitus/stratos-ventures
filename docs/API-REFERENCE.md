@@ -88,6 +88,27 @@
   - Backup existing data to `user_data_backup` before overwrite
   - Stores to `user_data` key in KV
 
+### Sync Meta (Encryption Metadata)
+- **Endpoint:** `GET /sync/meta`
+- **Auth:** Required - `X-Sync-Key` header
+- **Response:** `{ok: true, meta: {meta_version, mode, has_encryption, enc_salt, enc_verify, enc_recovery}}`
+- **Note:** Returns `null` meta if no metadata exists yet
+
+- **Endpoint:** `POST /sync/meta`
+- **Auth:** Required - `X-Sync-Key` header
+- **Request Body:** `{meta: {...}, expected_version: N}` — expected_version enables optimistic locking (409 on conflict)
+- **Response:** `{ok: true, savedAt: "ISO-8601-timestamp"}` or `{error: "Version conflict", current_version: N}` (409)
+
+### Sync Restore Backup
+- **Endpoint:** `POST /sync/restore-backup`
+- **Auth:** Required - `X-Sync-Key` header
+- **Response:** `{ok: true, restoredAt: "ISO-8601-timestamp"}` or `{error: "No backup available"}` (404)
+- **Note:** Restores `user_data` from `user_data_backup` (created automatically on each /sync/save)
+
+### Sync Save — enc_version Guard
+- `/sync/save` now accepts optional `enc_version` field in the request body
+- If `enc_version < meta.meta_version`, the save is rejected with 409 (prevents overwriting with stale encryption)
+
 ### D1 Database CRUD - Generic API
 - **Endpoint:** `GET|POST|PUT|DELETE /api/{table}[/{id}]`
 - **Auth:** Required - `X-Sync-Key` header (timing-safe comparison)
@@ -584,7 +605,10 @@ function stSettings() {
 | **Worker** | GET | `/batch?symbols=A,B,C` | Yahoo batch quotes | X-Sync-Key |
 | **Worker** | GET | `/chart/{SYMBOL}` | Yahoo chart data | X-Sync-Key |
 | **Worker** | GET/POST | `/sync/load` | Load sync data | X-Sync-Key |
-| **Worker** | POST | `/sync/save` | Save sync data | X-Sync-Key |
+| **Worker** | POST | `/sync/save` | Save sync data (enc_version guard) | X-Sync-Key |
+| **Worker** | GET | `/sync/meta` | Load encryption metadata | X-Sync-Key |
+| **Worker** | POST | `/sync/meta` | Save encryption metadata (optimistic lock) | X-Sync-Key |
+| **Worker** | POST | `/sync/restore-backup` | Restore data from backup | X-Sync-Key |
 | **D1 API** | GET/POST/PUT/DELETE | `/api/{table}` | CRUD operations | X-Sync-Key |
 | **D1 API** | POST | `/api/{table}/batch` | Batch upsert | X-Sync-Key |
 | **D1 API** | GET | `/api/companies/{symbol}/full` | Company full profile | X-Sync-Key |

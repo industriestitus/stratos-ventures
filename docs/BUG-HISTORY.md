@@ -1337,11 +1337,19 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 |---|-------|---------------|
 | #27 | `_autoLockTimer` missing clearTimeout before setTimeout | `visibilitychange` alternates hidden↔visible — can't fire hidden→hidden without visible clearing the timer in between |
 
+### Category 68 — Cross-Device Login QA (commit `bbc5856`, 2026-07-09)
+
+1 bug found and fixed during QA of the cross-device login feature.
+
+| # | Bug | Fix |
+|---|-----|-----|
+| 68.1 | `changeEncPassword()` increments `_metaVersion` locally before confirming cloud meta save — conflict leaves local version higher than cloud | Only increment `_metaVersion` after successful `cloudSaveMetaRetry()`; on conflict, keep previous version |
+
 ---
 
 ## Deployment Notes
 
-- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), and any future Worker changes:
+- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), and any future Worker changes:
   ```bash
   cd web/cloudflare-worker && npx wrangler deploy
   ```
