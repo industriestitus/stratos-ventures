@@ -68,8 +68,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 59 | UX — Screener Filter Presets | 3f81b2d | 2026-07-04 | 4 | 0 |
 | 60 | Keyboard Shortcut + TEST-PLAN Accuracy | c4427e0 | 2026-07-04 | 1 | 0 |
 | 62 | Tooltip Expansion QA | `9a875f9` | 2026-07-08 | 4 | 0 |
+| 63 | Portfolio History Chart QA | `pending` | 2026-07-09 | 5 | 0 |
 
-**Total: 356 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 361 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1221,6 +1222,28 @@ Added tooltips to dashboard widgets (12), portfolio table columns (9), and scree
 - HIGH: Tooltip texts hardcoded in English (consistent with existing METRIC_TIPS pattern — i18n for tooltips is separate effort)
 - MEDIUM: Tooltips are hover-only, no keyboard/screen reader support (pre-existing cp-tip system limitation)
 - MEDIUM: Top-of-viewport tooltip clipping (pre-existing CSS positioning)
+
+---
+
+## Category 63 — Portfolio History Chart QA (2026-07-09)
+
+Calculated historical portfolio value chart from transactions + FMP API prices. QA agent found 12 issues, 5 fixed.
+
+| # | Severity | Bug | Fix |
+|---|----------|-----|-----|
+| 1 | HIGH | Race condition: period/filter clicks during fetch are dropped, period button highlights but chart shows old data | Added generation counter `_pfChartGeneration` — stale renders trigger re-render in `finally` block |
+| 2 | HIGH | `savings` asset type produces 0 values — falls through to API price lookup which returns null | Added `savings` to cash branch: `assetType==='cash'\|\|assetType==='savings'` → `price=1` |
+| 3 | HIGH | Status element stays visible on API error — `catch` block only logs, doesn't hide status | Added `statusEl.style.display='none'` in `catch` block |
+| 4 | MEDIUM | Asset filter chip labels hardcoded English — not using i18n `t()` function | Replaced with `t(labelKeys[at])` using existing `pf.stock`, `pf.etf`, etc. keys |
+| 5 | MEDIUM | Bonds fall through to API price lookup but many bonds lack FMP data — shows as 0 | Added `bond` branch with `bondFaceValue`/`currentPrice` fallback before API lookup |
+
+**Not fixed (accepted):**
+- MEDIUM: Real estate uses current value for all historical dates (flat line) — no historical data available, inherent limitation
+- MEDIUM: Price cache never invalidated within session — page reload clears; acceptable for single-session use
+- LOW: Date iteration uses UTC (may show "tomorrow" after 11pm CET) — consistent with rest of codebase
+- LOW: O(n) linear search for SPY fill-forward — acceptable at current data scale
+- LOW: `getActiveTransactions()` called 3 times per render — minor, no perf concern
+- LOW: `maxTicks` passes `undefined` for short ranges — harmless, Chart.js ignores it
 
 ---
 

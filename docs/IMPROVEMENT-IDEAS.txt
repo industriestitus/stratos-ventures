@@ -96,8 +96,12 @@ Készült: 2026-07-03
 3. KATEGÓRIA: Adatbiztonság & megbízhatóság
 ═══════════════════════════════════════════
 
-8. Cloud sync conflict resolution
+8. Cloud sync conflict resolution — MAYBE LATER
    Prioritás: Fontos | Effort: ~4+ session
+   Státusz: Elhalasztva — single-user használat mellett a last-write-wins
+   kockázata alacsony. A 1.5s debounce ablak szűk, a multi-device egyidejű
+   szerkesztés ritka. Ha multi-device használat nő, érdemes _version counter
+   + 409 conflict response megoldást bevezetni.
 
    Jelenleg last-write-wins — ha két tab-ról vagy eszközről módosítasz, az
    utolsó mentés nyer. Kellene egy merge stratégia (pl. field-level timestamp,
@@ -106,8 +110,12 @@ Készült: 2026-07-03
    Miért fontos: Ahogy az app-ot több eszközről használod (PWA desktop +
    mobil), az adatvesztés kockázata nő.
 
-9. Multi-tab localStorage sync
+9. Multi-tab localStorage sync — MAYBE LATER
    Prioritás: Közepes | Effort: ~1 session
+   Státusz: Elhalasztva — D1 módban a StorageEvent listener szándékosan
+   kikapcsolt (szerver az igazság forrása). Az egyetlen kliens-only adat
+   (price alerts) ritkán változik. Nincs valódi adatvesztés, csak átmeneti
+   megjelenítési késés.
 
    StorageEvent listener hozzáadása, hogy ha két tab nyitva van, ne olvassanak
    stale adatot. A KNOWN-ISSUES-ben már szerepel.
@@ -129,18 +137,24 @@ Készült: 2026-07-03
 4. KATEGÓRIA: Funkcionális fejlesztések
 ═══════════════════════════════════════════
 
-11. Portfólió teljesítmény grafikon
-    Prioritás: Fontos | Effort: ~2-3 session
+11. Portfólió teljesítmény grafikon — DONE (2026-07-09)
+    Prioritás: Fontos | Effort: ~1 session
+    Státusz: Kész — Kalkulált historikus chart tranzakciók + FMP API adatok
+    alapján. Period selector (1M/3M/6M/1Y/YTD/ALL), asset type filter chips,
+    S&P 500 benchmark overlay (dashed orange). Savings/bond/real_estate fallback
+    kezelés. Race condition védelem, i18n filter labels.
 
-    Időbeli portfólió érték grafikon a monthly snapshot-okból — line chart az
-    összes snapshot-tal, benchmark overlay-jel (S&P 500). Jelenleg csak a
-    pillanatnyi állapotot látod, a trendet nem.
+    Időbeli portfólió érték grafikon kalkulálva a tranzakciókból és FMP API
+    historikus árakból. Line chart benchmark overlay-jel (S&P 500).
 
     Miért fontos: Ez az egyik legfontosabb információ egy befektető számára:
     hogyan alakul a portfólió idővel a benchmark-hoz képest?
 
-12. Watchlist ár-tracking
+12. Watchlist ár-tracking — MAYBE LATER
     Prioritás: Közepes | Effort: ~2-3 session
+    Státusz: Elhalasztva — a company profile-on és charts tabon már láthatóak
+    az árgrafikonok. Sparkline a tracker táblázatban nice-to-have, de nem
+    kritikus. Új D1 tábla + periodikus fetch + sparkline UI kellene.
 
     A Watchlist és Buy Target cégekhez automatikus napi/heti ár snapshot, hogy
     lásd az ár trendjét amióta figyeled. Kis sparkline a tracker táblázatban.
