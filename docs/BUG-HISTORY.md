@@ -70,9 +70,10 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 62 | Tooltip Expansion QA | `9a875f9` | 2026-07-08 | 4 | 0 |
 | 63 | Portfolio History Chart QA | `a7d64b9` | 2026-07-09 | 5 | 0 |
 | 64 | QA Sweep — CRITICAL+HIGH fixes | `e75f044` | 2026-07-09 | 16 | 0 |
-| 65 | QA Sweep — MEDIUM fixes | pending | 2026-07-09 | 14 | 0 |
+| 65 | QA Sweep — MEDIUM fixes | `60d3c5e` | 2026-07-09 | 14 | 0 |
+| 66 | QA Verification — extra parseInt radix | pending | 2026-07-09 | 2 | 0 |
 
-**Total: 391 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 393 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 

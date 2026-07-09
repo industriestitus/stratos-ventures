@@ -11841,7 +11841,7 @@ function renderPresetSelect(){
 function loadScreenerPreset(val){
   if(!val)return;
   const[type,idx]=val.split(':');
-  const i=parseInt(idx);
+  const i=parseInt(idx,10);
   let preset;
   if(type==='b')preset=SCREENER_BUILT_IN_PRESETS[i];
   else{const user=_getScreenerPresets();preset=user[i]}
@@ -11870,7 +11870,7 @@ function deleteScreenerPresetPrompt(){
   const names=presets.map((p,i)=>`${i+1}. ${p.name}`).join('\n');
   const choice=prompt(t('comp.deletePreset')+':\n'+names);
   if(!choice)return;
-  const idx=parseInt(choice)-1;
+  const idx=parseInt(choice,10)-1;
   if(isNaN(idx)||idx<0||idx>=presets.length)return;
   presets.splice(idx,1);
   _saveScreenerPresets(presets);
