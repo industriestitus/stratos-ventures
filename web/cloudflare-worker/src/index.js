@@ -841,7 +841,34 @@ export default {
       const key = request.headers.get('X-Sync-Key');
       if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
 
-      const action = path.slice(6); // 'load' or 'save'
+      const action = path.slice(6);
+      if (action === 'meta' && request.method === 'GET') {
+        try {
+          const meta = await env.SYNC_DATA.get('user_meta', 'json');
+          return jsonResp({ ok: true, meta: meta || null }, 200, allowedOrigin);
+        } catch (e) {
+          console.error('Sync meta load error:', e.message);
+          return jsonResp({ error: 'Failed to load meta' }, 500, allowedOrigin);
+        }
+      }
+      if (action === 'meta' && request.method === 'POST') {
+        try {
+          const body = await request.json();
+          if (typeof body.expected_version === 'number') {
+            const current = await env.SYNC_DATA.get('user_meta', 'json');
+            if (current && current.meta_version !== body.expected_version) {
+              return jsonResp({ error: 'Version conflict', current_version: current.meta_version }, 409, allowedOrigin);
+            }
+          }
+          const meta = body.meta || body;
+          if (meta.expected_version !== undefined) delete meta.expected_version;
+          await env.SYNC_DATA.put('user_meta', JSON.stringify(meta));
+          return jsonResp({ ok: true, savedAt: new Date().toISOString() }, 200, allowedOrigin);
+        } catch (e) {
+          console.error('Sync meta save error:', e.message);
+          return jsonResp({ error: 'Failed to save meta' }, 500, allowedOrigin);
+        }
+      }
       if (action === 'load' && request.method === 'GET') {
         try {
           const data = await env.SYNC_DATA.get('user_data', 'json');
@@ -854,6 +881,12 @@ export default {
       if (action === 'save' && request.method === 'POST') {
         try {
           const body = await request.json();
+          if (typeof body.enc_version === 'number') {
+            const meta = await env.SYNC_DATA.get('user_meta', 'json');
+            if (meta && typeof meta.meta_version === 'number' && body.enc_version < meta.meta_version) {
+              return jsonResp({ error: 'Stale encryption version', current_meta_version: meta.meta_version }, 409, allowedOrigin);
+            }
+          }
           const prev = await env.SYNC_DATA.get('user_data', 'text');
           if (prev) await env.SYNC_DATA.put('user_data_backup', prev);
           await env.SYNC_DATA.put('user_data', JSON.stringify(body));
@@ -863,7 +896,18 @@ export default {
           return jsonResp({ error: 'Failed to save sync data' }, 500, allowedOrigin);
         }
       }
-      return jsonResp({ error: 'Use GET /sync/load or POST /sync/save' }, 400, allowedOrigin);
+      if (action === 'restore-backup' && request.method === 'POST') {
+        try {
+          const backup = await env.SYNC_DATA.get('user_data_backup', 'text');
+          if (!backup) return jsonResp({ error: 'No backup available' }, 404, allowedOrigin);
+          await env.SYNC_DATA.put('user_data', backup);
+          return jsonResp({ ok: true, restoredAt: new Date().toISOString() }, 200, allowedOrigin);
+        } catch (e) {
+          console.error('Sync restore error:', e.message);
+          return jsonResp({ error: 'Failed to restore backup' }, 500, allowedOrigin);
+        }
+      }
+      return jsonResp({ error: 'Use GET /sync/load, POST /sync/save, GET|POST /sync/meta, or POST /sync/restore-backup' }, 400, allowedOrigin);
     }
 
     // Chart: GET /chart/AAPL?range=1y&interval=1wk

@@ -1146,6 +1146,8 @@ var I18N={en:{
 'comp.tags':'Tags','comp.tag':'Tag','comp.addTag':'Add tag','comp.tagPlaceholder':'New tag...','comp.removeTag':'Remove tag {tag}','common.any':'Any',
 'comp.presets':'Presets','comp.savePreset':'Save preset','comp.presetName':'Preset name','comp.deletePreset':'Delete preset','comp.builtIn':'Built-in','comp.loadPreset':'Load preset','comp.presetSaved':'Preset "{name}" saved','comp.presetDeleted':'Preset deleted','comp.presetNameRequired':'Enter a preset name',
 'sync.httpWarning':'Sync URL uses HTTP — data sent unencrypted. Use HTTPS.','sync.preparing':'Preparing data...','sync.uploading':'Uploading to D1...','sync.migrationComplete':'Migration complete! Reloading...','sync.migrating':'Migrating...','sync.migrated':'Migrated ✓','sync.retryMigration':'Retry migration','sync.enterUrlFirst':'Enter URL first','sync.testing':'Testing...','sync.connected':'Connected ✓','sync.enterKeyFirst':'Enter key first','sync.noData':'No data (check key)','sync.invalidKey':'Invalid key','sync.connectionFailed':'Connection failed','sync.workerMissing':'Worker URL missing','sync.syncKeyMissing':'Sync Key missing','sync.syncing':'Syncing...','sync.wrongKey':'Wrong sync key','sync.serverError':'Server error ({status})','sync.synced':'Synced ✓ ({when})','sync.noDataSaved':'No data yet — saved!','sync.saved':'Saved ✓ {time}','sync.saveFailed':'Save failed','sync.decryptionFailed':'Cloud sync decryption failed','sync.loadingD1':'Loading from D1...','sync.partialLoadFailed':'Some data failed to load from D1','sync.backOnline':'Back online','sync.backOnlineSyncing':'Back online — syncing {n} pending change(s)...','sync.offline':'You are offline — some features may be unavailable','sync.otherTabUpdate':'Data updated from another tab','sync.incognitoWarning':'Private/Incognito mode detected — your data will not persist after closing the window. Use Export to save your work.','sync.appInstalled':'App installed successfully!','sync.installing':'Installing...','sync.newVersion':'New version available — reload now','sync.syncNow':'Sync Now','sync.testD1':'Test D1','sync.d1Connected':'D1 Connected ✓','sync.storageFull':'Storage full — some data may not be saved locally','sync.decryptFailed':'Decryption failed — wrong password?','sync.test':'Test',
+'login.title':'Sign in from another device','login.subtitle':'Enter your connection details or paste a connection string','login.connPlaceholder':'Paste connection string (optional)','login.or':'or enter manually','login.workerUrl':'Worker URL','login.syncKey':'Sync Key','login.password':'Encryption password','login.connect':'Connect','login.connecting':'Connecting...','login.backToSetup':'Back to setup','login.alreadyHaveAccount':'Already have an account? Sign in from another device','login.invalidConn':'Invalid connection string','login.fillFields':'Enter Worker URL and Sync Key','login.noAccount':'No account found with this key','login.enterPassword':'Enter your encryption password','login.success':'Connected successfully!','login.failed':'Connection failed','login.reauthTitle':'Password changed','login.reauthSubtitle':'Your password was changed on another device. Enter the new password to continue.','login.newPassword':'New password','login.authenticate':'Authenticate','login.passwordChangedElsewhere':'Password changed on another device','login.modeChanged':'Account switched to D1 mode — reloading...','login.metaConflict':'Meta version conflict — check other devices','login.noConnectionData':'Set Worker URL and Sync Key first','login.configureApiKeys':'Configure your API keys in Settings for live data',
+'settings.shareConnection':'Share connection','settings.encryption':'Encryption',
 'toast.copyFailed':'Copy failed — select and copy manually','toast.copied':'Copied to clipboard','toast.copiedShort':'Copied!','toast.fileTooLarge':'File too large (max 10MB)',
 'toast.cloudSaveRetry':'Cloud save failed ({key}) — retrying in {sec}s','toast.cloudSaveFailed':'Cloud save failed ({key}) — data kept locally. Will sync on next save.','toast.migrationFailed':'Data migration failed','toast.cloudDeleteFailed':'Cloud delete failed — local only',
 'comp.enterTicker':'Enter a stock name/ticker first.','comp.finnhubInvalid':'Finnhub API key invalid','comp.fmpRateLimit':'FMP rate limit — wait a moment','comp.fmpInvalid':'FMP API key invalid','comp.dataRefreshed':'Data refreshed from API','comp.refreshFailed':'Refresh failed','comp.yahooRateLimit':'Yahoo proxy rate limited — wait a moment','comp.yahooFailed':'Yahoo fetch failed for {ticker}','comp.dataCorrupted':'Company data corrupted — starting fresh. Export your data if you have a backup.','comp.companiesSynced':'Companies synced: {list} → Owned',
@@ -1213,6 +1215,8 @@ var I18N={en:{
 'comp.tags':'Címkék','comp.tag':'Címke','comp.addTag':'Címke hozzáadása','comp.tagPlaceholder':'Új címke...','comp.removeTag':'{tag} címke eltávolítása','common.any':'Bármely',
 'comp.presets':'Sablonok','comp.savePreset':'Sablon mentése','comp.presetName':'Sablon neve','comp.deletePreset':'Sablon törlése','comp.builtIn':'Beépített','comp.loadPreset':'Sablon betöltése','comp.presetSaved':'„{name}" sablon mentve','comp.presetDeleted':'Sablon törölve','comp.presetNameRequired':'Add meg a sablon nevét',
 'sync.httpWarning':'A szinkronizáló URL HTTP-t használ — az adatok titkosítatlanul küldve. Használj HTTPS-t.','sync.preparing':'Adatok előkészítése...','sync.uploading':'Feltöltés D1-be...','sync.migrationComplete':'Migráció kész! Újratöltés...','sync.migrating':'Migrálás...','sync.migrated':'Migrálva ✓','sync.retryMigration':'Migráció újrapróbálása','sync.enterUrlFirst':'Adj meg URL-t először','sync.testing':'Tesztelés...','sync.connected':'Csatlakozva ✓','sync.enterKeyFirst':'Adj meg kulcsot először','sync.noData':'Nincs adat (ellenőrizd a kulcsot)','sync.invalidKey':'Érvénytelen kulcs','sync.connectionFailed':'Csatlakozás sikertelen','sync.workerMissing':'Worker URL hiányzik','sync.syncKeyMissing':'Szinkronizálási kulcs hiányzik','sync.syncing':'Szinkronizálás...','sync.wrongKey':'Hibás szinkronizálási kulcs','sync.serverError':'Szerverhiba ({status})','sync.synced':'Szinkronizálva ✓ ({when})','sync.noDataSaved':'Még nincs adat — mentve!','sync.saved':'Mentve ✓ {time}','sync.saveFailed':'Mentés sikertelen','sync.decryptionFailed':'Felhő szinkronizáció visszafejtés sikertelen','sync.loadingD1':'Betöltés D1-ből...','sync.partialLoadFailed':'Néhány adat nem töltődött be a D1-ből','sync.backOnline':'Újra online','sync.backOnlineSyncing':'Újra online — {n} függő változás szinkronizálása...','sync.offline':'Offline vagy — egyes funkciók nem elérhetők','sync.otherTabUpdate':'Adatok frissítve másik fülről','sync.incognitoWarning':'Privát/Inkognitó mód észlelve — az adataid nem maradnak meg az ablak bezárása után. Használd az Exportálást a munkád mentéséhez.','sync.appInstalled':'Alkalmazás sikeresen telepítve!','sync.installing':'Telepítés...','sync.newVersion':'Új verzió elérhető — töltsd újra most','sync.syncNow':'Szinkronizálás','sync.testD1':'D1 teszt','sync.d1Connected':'D1 csatlakozva ✓','sync.storageFull':'Tárhely megtelt — egyes adatok nem menthetők helyileg','sync.decryptFailed':'Visszafejtés sikertelen — hibás jelszó?','sync.test':'Teszt',
+'login.title':'Bejelentkezés másik eszközről','login.subtitle':'Add meg a kapcsolati adatokat vagy illeszd be a connection stringet','login.connPlaceholder':'Connection string beillesztése (opcionális)','login.or':'vagy add meg kézzel','login.workerUrl':'Worker URL','login.syncKey':'Szinkronizálási kulcs','login.password':'Titkosítási jelszó','login.connect':'Csatlakozás','login.connecting':'Csatlakozás...','login.backToSetup':'Vissza a beállításhoz','login.alreadyHaveAccount':'Már van fiókod? Bejelentkezés másik eszközről','login.invalidConn':'Érvénytelen connection string','login.fillFields':'Add meg a Worker URL-t és a Sync Key-t','login.noAccount':'Nem található fiók ezzel a kulccsal','login.enterPassword':'Add meg a titkosítási jelszót','login.success':'Sikeresen csatlakozva!','login.failed':'Csatlakozás sikertelen','login.reauthTitle':'Jelszó megváltozott','login.reauthSubtitle':'A jelszavad megváltozott egy másik eszközön. Add meg az új jelszót a folytatáshoz.','login.newPassword':'Új jelszó','login.authenticate':'Hitelesítés','login.passwordChangedElsewhere':'Jelszó megváltozott másik eszközön','login.modeChanged':'A fiók D1 módra váltott — újratöltés...','login.metaConflict':'Meta verzió ütközés — ellenőrizd a többi eszközt','login.noConnectionData':'Állítsd be a Worker URL-t és a Sync Key-t először','login.configureApiKeys':'Állítsd be az API kulcsaidat a Beállításokban a valós idejű adatokhoz',
+'settings.shareConnection':'Kapcsolat megosztása','settings.encryption':'Titkosítás',
 'toast.copyFailed':'Másolás sikertelen — jelöld ki és másold manuálisan','toast.copied':'Vágólapra másolva','toast.copiedShort':'Másolva!','toast.fileTooLarge':'Fájl túl nagy (max 10MB)',
 'toast.cloudSaveRetry':'Felhő mentés sikertelen ({key}) — újrapróbálás {sec} mp múlva','toast.cloudSaveFailed':'Felhő mentés sikertelen ({key}) — adatok helyben tárolva. Következő mentésnél szinkronizál.','toast.migrationFailed':'Adatmigráció sikertelen','toast.cloudDeleteFailed':'Felhő törlés sikertelen — csak helyben',
 'comp.enterTicker':'Adj meg egy részvénynevet/tickert először.','comp.finnhubInvalid':'Finnhub API kulcs érvénytelen','comp.fmpRateLimit':'FMP korlát — várj egy pillanatot','comp.fmpInvalid':'FMP API kulcs érvénytelen','comp.dataRefreshed':'Adatok frissítve az API-ból','comp.refreshFailed':'Frissítés sikertelen','comp.yahooRateLimit':'Yahoo proxy korlát — várj egy pillanatot','comp.yahooFailed':'Yahoo lekérés sikertelen: {ticker}','comp.dataCorrupted':'Cég adatok sérültek — újraindítás. Exportáld az adataidat, ha van backup.','comp.companiesSynced':'Cégek szinkronizálva: {list} → Birtokolt',
@@ -1249,6 +1253,9 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
       <div id="setup-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
       <button data-i18n="lock.enable" onclick="setupEncryption()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer">Enable Encryption</button>
       <button data-i18n="lock.skip" onclick="skipEncryption()" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;margin-top:12px;text-decoration:underline">Skip for now</button>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border)">
+        <button data-i18n="login.alreadyHaveAccount" onclick="showLockView('login')" style="background:none;border:none;color:var(--accent);font-size:13px;cursor:pointer;text-decoration:underline">Already have an account? Sign in from another device</button>
+      </div>
     </div>
 
     <div id="lock-recovery-key" style="display:none">
@@ -1267,6 +1274,29 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
       <div id="recovery-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
       <button data-i18n="lock.reset" onclick="recoverWithKey()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px">Reset Password</button>
       <button data-i18n="lock.backToLogin" onclick="showLockView('unlock')" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline">Back to password login</button>
+    </div>
+
+    <div id="lock-login" style="display:none">
+      <p data-i18n="login.title" style="color:var(--text);font-size:16px;font-weight:600;margin-bottom:4px">Sign in from another device</p>
+      <p data-i18n="login.subtitle" style="color:var(--text2);font-size:13px;margin-bottom:16px">Enter your connection details or paste a connection string</p>
+      <input type="text" id="login-conn-string" data-i18n-placeholder="login.connPlaceholder" placeholder="Paste connection string (optional)" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;font-family:monospace;margin-bottom:8px;outline:none" oninput="if(this.value){const p=parseConnectionString(this.value);if(p){document.getElementById('login-worker-url').value=p.workerUrl;document.getElementById('login-sync-key').value=p.syncKey}}">
+      <div style="text-align:center;color:var(--text2);font-size:12px;margin:4px 0" data-i18n="login.or">or enter manually</div>
+      <input type="text" id="login-worker-url" data-i18n-placeholder="login.workerUrl" placeholder="Worker URL" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;margin-bottom:8px;outline:none">
+      <input type="text" id="login-sync-key" data-i18n-placeholder="login.syncKey" placeholder="Sync Key" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;margin-bottom:8px;outline:none">
+      <div id="login-password-area" style="display:none">
+        <input type="password" id="login-password" data-i18n-placeholder="login.password" placeholder="Encryption password" style="width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:13px;margin-bottom:8px;outline:none" onkeydown="if(event.key==='Enter')loginFromDevice()">
+      </div>
+      <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
+      <button id="login-btn" data-i18n="login.connect" onclick="loginFromDevice()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px">Connect</button>
+      <button data-i18n="login.backToSetup" onclick="showLockView('setup')" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline">Back to setup</button>
+    </div>
+
+    <div id="lock-reauth" style="display:none">
+      <p data-i18n="login.reauthTitle" style="color:var(--text);font-size:16px;font-weight:600;margin-bottom:4px">Password changed</p>
+      <p data-i18n="login.reauthSubtitle" style="color:var(--text2);font-size:13px;margin-bottom:16px">Your password was changed on another device. Enter the new password to continue.</p>
+      <input type="password" id="reauth-password" data-i18n-placeholder="login.newPassword" placeholder="New password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:10px;outline:none" onkeydown="if(event.key==='Enter')handleReauth()">
+      <div id="reauth-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
+      <button id="reauth-btn" data-i18n="login.authenticate" onclick="handleReauth()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer">Authenticate</button>
     </div>
   </div>
 </div>
@@ -2165,6 +2195,10 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     <button class="conn-btn conn-btn--sync" onclick="d1Mode?testD1():testSync()" id="sync-btn" data-i18n="settings.syncNow">Sync Now</button>
     <div class="conn-status" id="sync-status"></div>
   </div>
+  <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+    <button class="btn btn-secondary" onclick="shareConnection()" data-i18n="settings.shareConnection" style="font-size:12px;padding:6px 12px">Share connection</button>
+    <span id="conn-string-status" style="font-size:11px;color:var(--text2)"></span>
+  </div>
 </div>
 
 <div class="card" id="settings-encryption">
@@ -2808,6 +2842,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 <script>
 // ====== E2E ENCRYPTION ======
 let _encPass=null;
+let _metaVersion=parseInt(localStorage.getItem('meta_version')||'0',10);
 let _autoLockTimer=null;
 let _encIdleTimer=null;
 const AUTO_LOCK_DELAY=5*60*1000;
@@ -2882,9 +2917,39 @@ async function verifyPassword(pass){
 
 function isEncryptionEnabled(){return !!localStorage.getItem('enc_salt')}
 
+async function verifyPasswordWithMeta(pass,meta){
+  if(!meta||!meta.enc_salt||!meta.enc_verify)return false;
+  try{
+    const key=await deriveKey(pass,new Uint8Array(unb64(meta.enc_salt)));
+    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(unb64(meta.enc_verify.iv))},key,new Uint8Array(unb64(meta.enc_verify.ct)));
+    return new TextDecoder().decode(pt)==='stratos-ok';
+  }catch(e){return false}
+}
+
+function generateConnectionString(){
+  const s=stSettings();
+  if(!s.workerUrl||!s.syncKey)return null;
+  return btoa(JSON.stringify({w:s.workerUrl,k:s.syncKey}));
+}
+
+function parseConnectionString(str){
+  try{
+    const d=JSON.parse(atob(str.trim()));
+    if(d.w&&d.k)return{workerUrl:d.w,syncKey:d.k};
+  }catch(e){}
+  return null;
+}
+
+async function shareConnection(){
+  const cs=generateConnectionString();
+  if(!cs){showToast(t('login.noConnectionData'),'warning');return}
+  try{await navigator.clipboard.writeText(cs);const el=document.getElementById('conn-string-status');if(el){el.textContent=t('toast.copiedShort');setTimeout(()=>el.textContent='',3000)}}
+  catch(e){showToast(t('toast.copyFailed'),'warning')}
+}
+
 function showLockView(view){
-  ['lock-unlock','lock-setup','lock-recovery-key','lock-recovery'].forEach(id=>document.getElementById(id).style.display='none');
-  document.getElementById('lock-'+view).style.display='block';
+  ['lock-unlock','lock-setup','lock-recovery-key','lock-recovery','lock-login','lock-reauth'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
+  const el=document.getElementById('lock-'+view);if(el)el.style.display='block';
   document.getElementById('lock-error')&&(document.getElementById('lock-error').style.display='none');
 }
 
@@ -2914,6 +2979,9 @@ async function setupEncryption(){
   localStorage.setItem('enc_verify',JSON.stringify(verify));
   localStorage.setItem('enc_recovery',rkHash);
   _encPass=p1;
+  _metaVersion=1;
+  localStorage.setItem('meta_version','1');
+  cloudSaveMeta(buildMeta()).catch(()=>{});
   document.getElementById('recovery-key-display').textContent=rk;
   document.getElementById('recovery-saved-check').onchange=function(){
     const btn=document.getElementById('recovery-continue-btn');
@@ -2924,6 +2992,9 @@ async function setupEncryption(){
 
 function skipEncryption(){
   localStorage.setItem('enc_skipped','1');
+  _metaVersion=1;
+  localStorage.setItem('meta_version','1');
+  cloudSaveMeta(buildMeta()).catch(()=>{});
   document.getElementById('lock-screen').style.display='none';
   document.documentElement.classList.remove('app-locked');
   autoLoad();
@@ -2980,12 +3051,13 @@ async function changeEncPassword(){
   const oldP=document.getElementById('enc-old-pass').value;
   const newP=document.getElementById('enc-new-pass').value;
   const err=document.getElementById('enc-change-error');
-  if(!oldP||!newP){err.textContent='Fill in both fields';err.style.display='block';return}
-  if(newP.length<6){err.textContent='New password must be at least 6 characters';err.style.display='block';return}
+  if(!oldP||!newP){err.textContent=t('lock.fillBoth');err.style.display='block';return}
+  if(newP.length<6){err.textContent=t('lock.newMinChars');err.style.display='block';return}
   const ok=await verifyPassword(oldP);
-  if(!ok){err.textContent='Current password is wrong';err.style.display='block';return}
+  if(!ok){err.textContent=t('lock.currentWrong');err.style.display='block';return}
   const prevSalt=localStorage.getItem('enc_salt');
   const prevVerify=localStorage.getItem('enc_verify');
+  const prevVersion=_metaVersion;
   const salt=b64(crypto.getRandomValues(new Uint8Array(16)));
   const verify=await encryptVerify(newP,salt);
   localStorage.setItem('enc_salt',salt);
@@ -2996,12 +3068,29 @@ async function changeEncPassword(){
   document.getElementById('enc-new-pass').value='';
   try{
     await cloudSave();
+    const newVersion=prevVersion+1;
+    const metaCandidate=Object.assign(buildMeta(),{meta_version:newVersion});
+    const metaResult=await cloudSaveMetaRetry(metaCandidate,prevVersion);
+    if(metaResult&&metaResult.conflict){
+      _metaVersion=prevVersion;
+      localStorage.setItem('meta_version',String(prevVersion));
+      showToast(t('login.metaConflict'),'warning');
+    }else{
+      _metaVersion=newVersion;
+      localStorage.setItem('meta_version',String(newVersion));
+    }
     showToast(t('lock.passwordChanged'),'success');
   }catch(e){
     localStorage.setItem('enc_salt',prevSalt);
     localStorage.setItem('enc_verify',prevVerify);
     _encPass=oldP;
-    err.textContent='Cloud save failed — password NOT changed. Try again.';
+    _metaVersion=prevVersion;
+    localStorage.setItem('meta_version',String(prevVersion));
+    try{
+      const url=getSyncUrl();const key=getSyncKey();
+      if(url&&key)await fetch(url+'/sync/restore-backup',{method:'POST',headers:{'Content-Type':'application/json','X-Sync-Key':key}});
+    }catch(re){}
+    err.textContent=t('lock.cloudFailed');
     err.style.display='block';
   }
 }
@@ -13854,6 +13943,7 @@ async function startD1Migration(){
     localStorage.removeItem('d1_migrating');
     localStorage.setItem('d1_migrated','1');
     d1Mode=true;
+    cloudSaveMeta(buildMeta()).catch(()=>{});
     const stats=result.stats||{};
     const parts=Object.entries(stats).filter(([,v])=>v>0).map(([k,v])=>escH(k)+': '+parseInt(v,10));
     status.innerHTML='<span style="color:var(--green);font-weight:600">Migration complete!</span><br>'+parts.join(', ');
@@ -13948,6 +14038,143 @@ async function testSync(){
   }finally{btn.disabled=false;btn.textContent='Sync Now'}
 }
 
+async function cloudLoadMeta(){
+  const url=getSyncUrl();
+  const key=getSyncKey();
+  if(!url||!key)return null;
+  try{
+    const r=await fetch(url+'/sync/meta',{headers:{'X-Sync-Key':key}});
+    if(!r.ok)return null;
+    const d=await r.json();
+    return d.ok?d.meta:null;
+  }catch(e){return null}
+}
+
+async function cloudSaveMeta(meta,expectedVersion){
+  const url=getSyncUrl();
+  const key=getSyncKey();
+  if(!url||!key)return false;
+  const body=typeof expectedVersion==='number'?{meta,expected_version:expectedVersion}:meta;
+  try{
+    const r=await fetch(url+'/sync/meta',{method:'POST',headers:{'Content-Type':'application/json','X-Sync-Key':key},body:JSON.stringify(body)});
+    if(r.status===409)return{conflict:true};
+    return r.ok;
+  }catch(e){return false}
+}
+
+function buildMeta(){
+  return{
+    meta_version:_metaVersion,
+    mode:d1Mode?'d1':'kv',
+    has_encryption:isEncryptionEnabled(),
+    enc_salt:localStorage.getItem('enc_salt')||null,
+    enc_verify:JSON.parse(localStorage.getItem('enc_verify')||'null'),
+    enc_recovery:localStorage.getItem('enc_recovery')||null
+  };
+}
+
+async function cloudSaveMetaRetry(meta,expectedVersion,maxRetries){
+  maxRetries=maxRetries||3;
+  for(let i=0;i<maxRetries;i++){
+    const r=await cloudSaveMeta(meta,expectedVersion);
+    if(r===true)return true;
+    if(r&&r.conflict)return r;
+    if(i<maxRetries-1)await new Promise(res=>setTimeout(res,2000));
+  }
+  return false;
+}
+
+async function loginFromDevice(){
+  const connInput=document.getElementById('login-conn-string');
+  const urlInput=document.getElementById('login-worker-url');
+  const keyInput=document.getElementById('login-sync-key');
+  const passInput=document.getElementById('login-password');
+  const err=document.getElementById('login-error');
+  const btn=document.getElementById('login-btn');
+  err.style.display='none';
+
+  let workerUrl=urlInput.value.trim().replace(/\/$/,'');
+  let syncKey=keyInput.value.trim();
+
+  if(connInput&&connInput.value.trim()){
+    const parsed=parseConnectionString(connInput.value);
+    if(parsed){workerUrl=parsed.workerUrl;syncKey=parsed.syncKey;urlInput.value=workerUrl;keyInput.value=syncKey}
+    else{err.textContent=t('login.invalidConn');err.style.display='block';return}
+  }
+
+  if(!workerUrl||!syncKey){err.textContent=t('login.fillFields');err.style.display='block';return}
+  btn.disabled=true;btn.textContent=t('login.connecting');
+
+  try{
+    const stEl=document.getElementById('st-worker');if(stEl)stEl.value=workerUrl;
+    const skEl=document.getElementById('st-synckey');if(skEl)skEl.value=syncKey;
+    saveTrackerSettings();
+
+    const meta=await cloudLoadMeta();
+    if(!meta){err.textContent=t('login.noAccount');err.style.display='block';btn.disabled=false;btn.textContent=t('login.connect');return}
+
+    if(meta.has_encryption&&meta.mode!=='d1'){
+      const passArea=document.getElementById('login-password-area');
+      if(passArea&&passArea.style.display==='none'){
+        passArea.style.display='block';
+        btn.disabled=false;btn.textContent=t('login.connect');
+        return;
+      }
+      const pass=passInput?passInput.value:'';
+      if(!pass){err.textContent=t('login.enterPassword');err.style.display='block';btn.disabled=false;btn.textContent=t('login.connect');return}
+      const ok=await verifyPasswordWithMeta(pass,meta);
+      if(!ok){err.textContent=t('lock.wrongPassword');err.style.display='block';btn.disabled=false;btn.textContent=t('login.connect');return}
+      _encPass=pass;
+      localStorage.setItem('enc_salt',meta.enc_salt);
+      localStorage.setItem('enc_verify',JSON.stringify(meta.enc_verify));
+      if(meta.enc_recovery)localStorage.setItem('enc_recovery',meta.enc_recovery);
+    }
+
+    _metaVersion=meta.meta_version||1;
+    localStorage.setItem('meta_version',String(_metaVersion));
+
+    if(meta.mode==='d1'){
+      localStorage.setItem('d1_migrated','1');
+      API.init();
+      d1Mode=true;
+    }
+
+    document.getElementById('lock-screen').style.display='none';
+    document.documentElement.classList.remove('app-locked');
+    autoLoad();
+    showToast(t('login.success'),'success');
+  }catch(e){
+    err.textContent=t('login.failed')+': '+e.message;err.style.display='block';
+  }finally{btn.disabled=false;btn.textContent=t('login.connect')}
+}
+
+async function handleReauth(){
+  const passInput=document.getElementById('reauth-password');
+  const err=document.getElementById('reauth-error');
+  const btn=document.getElementById('reauth-btn');
+  if(!passInput||!passInput.value){err.textContent=t('login.enterPassword');err.style.display='block';return}
+  err.style.display='none';
+  btn.disabled=true;
+
+  try{
+    const meta=await cloudLoadMeta();
+    if(!meta){err.textContent=t('login.failed');err.style.display='block';return}
+    const ok=await verifyPasswordWithMeta(passInput.value,meta);
+    if(!ok){err.textContent=t('lock.wrongPassword');err.style.display='block';return}
+    _encPass=passInput.value;
+    localStorage.setItem('enc_salt',meta.enc_salt);
+    localStorage.setItem('enc_verify',JSON.stringify(meta.enc_verify));
+    if(meta.enc_recovery)localStorage.setItem('enc_recovery',meta.enc_recovery);
+    _metaVersion=meta.meta_version;
+    localStorage.setItem('meta_version',String(_metaVersion));
+    document.getElementById('lock-screen').style.display='none';
+    document.documentElement.classList.remove('app-locked');
+    autoLoad();
+  }catch(e){
+    err.textContent=t('login.failed');err.style.display='block';
+  }finally{btn.disabled=false;btn.textContent=t('login.authenticate')}
+}
+
 let _cloudSaving=false;
 async function cloudSave(){
   if(_cloudSaving)return;
@@ -13977,18 +14204,26 @@ async function cloudSave(){
   };
   let body=payload;
   if(_encPass&&isEncryptionEnabled()){
-    try{body=await encryptPayload(_encPass,payload)}catch(e){console.warn('Encrypt failed',e);return}
+    try{body=await encryptPayload(_encPass,payload)}catch(e){console.warn('Encrypt failed',e);_cloudSaving=false;return}
   }
+  if(typeof body==='object'&&body!==null)body.enc_version=_metaVersion;
   try{
     const r=await fetch(url+'/sync/save',{
       method:'POST',
       headers:{'Content-Type':'application/json','X-Sync-Key':getSyncKey()},
       body:JSON.stringify(body)
     });
+    if(r.status===409){setStatus('sync-status',t('login.passwordChangedElsewhere'),false);_cloudSaving=false;showReauthScreen();return}
     if(!r.ok)throw new Error('HTTP '+r.status);
     lastSyncTs=payload.ts;
     setStatus('sync-status','Saved ✓ '+new Date().toLocaleTimeString(),true);
   }catch(e){setStatus('sync-status','Save failed',false);console.warn('Cloud save failed',e);throw e}finally{_cloudSaving=false}
+}
+
+function showReauthScreen(){
+  document.getElementById('lock-screen').style.display='flex';
+  document.documentElement.classList.add('app-locked');
+  showLockView('reauth');
 }
 
 function scheduleCloudSave(){
@@ -14001,6 +14236,18 @@ async function cloudLoad(){
   const key=getSyncKey();
   if(!url||!key)return false;
   try{
+    const meta=await cloudLoadMeta();
+    if(meta){
+      if(meta.meta_version&&meta.meta_version>_metaVersion){
+        showReauthScreen();return false;
+      }
+      if(meta.mode==='d1'&&!d1Mode){
+        showToast(t('login.modeChanged'),'warning');
+        localStorage.setItem('d1_migrated','1');
+        API.init();d1Mode=true;
+        location.reload();return false;
+      }
+    }
     const r=await fetch(url+'/sync/load',{headers:{'X-Sync-Key':key}});
     if(!r.ok)return false;
     const d=await r.json();
@@ -14064,6 +14311,17 @@ async function autoLoad(){
     d1Mode=true;
     const dot=document.getElementById('d1-status-dot');
     if(dot)dot.style.display='';
+    if(navigator.onLine){
+      try{
+        const meta=await cloudLoadMeta();
+        if(meta&&meta.meta_version&&meta.meta_version>_metaVersion&&meta.has_encryption&&meta.mode!=='d1'){
+          showReauthScreen();_autoLoadRunning=false;return;
+        }
+        if(meta&&meta.mode==='kv'&&d1Mode){
+          d1Mode=false;localStorage.removeItem('d1_migrated');
+        }
+      }catch(e){}
+    }
     if(!navigator.onLine){
       showToast(t('toast.offlineCache'),'warning',4000);
       d1Mode=false;
