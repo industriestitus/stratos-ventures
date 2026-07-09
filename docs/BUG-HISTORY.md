@@ -69,9 +69,10 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 60 | Keyboard Shortcut + TEST-PLAN Accuracy | c4427e0 | 2026-07-04 | 1 | 0 |
 | 62 | Tooltip Expansion QA | `9a875f9` | 2026-07-08 | 4 | 0 |
 | 63 | Portfolio History Chart QA | `a7d64b9` | 2026-07-09 | 5 | 0 |
-| 64 | QA Sweep — CRITICAL+HIGH fixes | pending | 2026-07-09 | 16 | 0 |
+| 64 | QA Sweep — CRITICAL+HIGH fixes | `e75f044` | 2026-07-09 | 16 | 0 |
+| 65 | QA Sweep — MEDIUM fixes | pending | 2026-07-09 | 14 | 0 |
 
-**Total: 377 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 391 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1267,6 +1268,34 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 64.7 | HIGH | `parseInt(localStorage.getItem('d1_dirty_'+key,10))` — radix passed to getItem | Fixed 3 instances: moved `,10)` to parseInt's second argument |
 | 64.8 | HIGH | `parseInt(slot.month.slice(5,7,10))` — stray `10` inside slice, parseInt has no radix | Fixed to `parseInt(slot.month.slice(5,7),10)` |
 | 64.9-64.16 | — | 8 additional parseInt radix fixes across saveAccount, savePosition, saveTransaction, saveFwEntry, saveReview, schema_version, sync_ts, d1_dirty | All moved `,10` to correct position as parseInt's second argument |
+
+---
+
+## Category 65 — QA Sweep: MEDIUM Fixes (2026-07-09)
+
+**Date:** 2026-07-09 | **Fixed: 14** | **Unfixed: 0**
+
+### Fixed (14)
+
+| # | Bug | Fix |
+|---|-----|-----|
+| 65.1 | 9 D1 load functions skip localStorage write-back — offline fallback serves stale data | Added `localStorage.setItem()` after D1 success in: loadPortfolioAccounts, loadPortfolioTransactions, loadDashFiSettings, loadDashBenchmark, loadDash52wHighs, loadDivSettings, loadDividendHistory, loadTrackerStocks, loadFramework, loadReviews |
+| 65.2 | DCF model `parseFloat()||10` blocks valid 0% growth rate | Added `_numOr(v,def)` helper using `isFinite()`. Applied to all 7 DCF params (g1-g3, dr, tg, em, fade) |
+| 65.3 | Price alert `isNaN(num)` allows Infinity as valid target | Changed to `!isFinite(num)` |
+| 65.4 | `fetchDipData()` no dedup guard — double-click fires concurrent API batches | Added `_fetchingDip` flag with try/finally reset |
+| 65.5 | `fetchEarningsCalendar()` no dedup guard — concurrent per-ticker loops | Added `_fetchingEarnings` flag with try/finally reset |
+| 65.6 | `fetchEarningsCalendar` `.map(([t])=>t)` shadows global t() | Renamed to `([tk])=>tk` |
+| 65.7 | `JSON.parse(cl.answer_json)` in forEach — one corrupt row kills entire stock load | Per-item try/catch with empty object fallback |
+| 65.8 | `JSON.parse(rv.answers_json)` in forEach — one corrupt row kills entire reviews load | Per-item try/catch with empty object fallback |
+| 65.9 | Snapshot export `JSON.parse(tracker_settings)` unguarded — corrupt localStorage crashes export | Added try/catch with empty object fallback |
+
+### Not Fixed (3 — not real bugs)
+
+| # | Issue | Why not a bug |
+|---|-------|---------------|
+| #9 | Bond coupon `parseFloat()\|\|0` blocks 0% coupon | `0\|\|0` is still `0` — zero-coupon bonds correctly get 0 |
+| #14 | `decryptPayload` JSON.parse without try/catch | Caller on line 13999 already wraps in try/catch with user-facing error message |
+| #16 | Worker INSERT OR IGNORE on migrate | Intentional — ON CONFLICT UPDATE would overwrite newer D1 data with older localStorage data during re-migration |
 
 ---
 

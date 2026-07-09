@@ -3867,7 +3867,7 @@ function _gatherBackupSnapshot(){
   Object.keys(localStorage).forEach(k=>{
     snapshot[k]=localStorage.getItem(k);
   });
-  const ts=JSON.parse(snapshot.tracker_settings||'{}');
+  let ts={};try{ts=JSON.parse(snapshot.tracker_settings||'{}')}catch(e){}
   delete ts.apiKey;delete ts.finnhubKey;delete ts.syncKey;
   snapshot.tracker_settings=JSON.stringify(ts);
   return snapshot;
@@ -4458,7 +4458,7 @@ let pfPositions=[];
 let pfTransactions=[];
 
 async function loadPortfolioAccounts(){
-  if(d1Mode){try{const r=await API.get('broker_accounts');pfAccounts=(r.data||[]).map(a=>({id:a.id,name:a.name,currency:a.currency,isActive:!!a.is_active}));return}catch(e){console.error('D1 load accounts, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('broker_accounts');pfAccounts=(r.data||[]).map(a=>({id:a.id,name:a.name,currency:a.currency,isActive:!!a.is_active}));try{localStorage.setItem('portfolio_accounts_v1',JSON.stringify(pfAccounts))}catch(e){}return}catch(e){console.error('D1 load accounts, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_accounts_v1'));if(Array.isArray(d))pfAccounts=d}catch(e){console.error('Corrupted portfolio_accounts_v1:',e)}
 }
 function savePortfolioAccounts(){
@@ -4477,7 +4477,7 @@ function savePortfolioPositions(){
   try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){showToast(t('toast.storageSaveError',{type:'positions'}),'error')}
 }
 async function loadPortfolioTransactions(){
-  if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=(r.data||[]).map(t=>({id:t.id,ticker:_d1CompanyMap[t.company_id]||t.symbol||'',accountId:t.account_id,type:t.transaction_type,date:t.transaction_date,shares:t.shares,pricePerShare:t.price_per_share,totalAmount:t.total_amount,fees:t.fees,currency:t.currency,notes:t.notes,companyId:t.company_id,deleted_at:t.deleted_at||null}));return}catch(e){console.error('D1 load transactions, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=(r.data||[]).map(tx=>({id:tx.id,ticker:_d1CompanyMap[tx.company_id]||tx.symbol||'',accountId:tx.account_id,type:tx.transaction_type,date:tx.transaction_date,shares:tx.shares,pricePerShare:tx.price_per_share,totalAmount:tx.total_amount,fees:tx.fees,currency:tx.currency,notes:tx.notes,companyId:tx.company_id,deleted_at:tx.deleted_at||null}));try{localStorage.setItem('portfolio_transactions_v1',JSON.stringify(pfTransactions))}catch(e){}return}catch(e){console.error('D1 load transactions, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_transactions_v1'));if(Array.isArray(d))pfTransactions=d}catch(e){console.error('Corrupted portfolio_transactions_v1:',e)}
 }
 function savePortfolioTransactions(){
@@ -6378,7 +6378,7 @@ function saveDashTodos(){
   try{localStorage.setItem('dashboard_todos_v1',JSON.stringify(dbTodos))}catch(e){showToast(t('toast.storageFull'),'error')}
 }
 async function loadDashFiSettings(){
-  if(d1Mode){try{const r=await API.get('app_settings/fi_settings');if(r){const v=JSON.parse(r.value||'{}');Object.assign(dbFiSettings,v)};return}catch(e){console.error('D1 load FI, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('app_settings/fi_settings');if(r){const v=JSON.parse(r.value||'{}');Object.assign(dbFiSettings,v)};try{localStorage.setItem('dashboard_fi_settings_v1',JSON.stringify(dbFiSettings))}catch(e){}return}catch(e){console.error('D1 load FI, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_fi_settings_v1'));if(d&&typeof d==='object')Object.assign(dbFiSettings,d)}catch(e){}
 }
 function saveDashFiSettings(){
@@ -6386,7 +6386,7 @@ function saveDashFiSettings(){
   try{localStorage.setItem('dashboard_fi_settings_v1',JSON.stringify(dbFiSettings))}catch(e){}
 }
 async function loadDashBenchmark(){
-  if(d1Mode){try{const r=await API.get('app_settings/benchmark');if(r){dbBenchmark=JSON.parse(r.value||'{}')};return}catch(e){console.error('D1 load benchmark, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('app_settings/benchmark');if(r){dbBenchmark=JSON.parse(r.value||'{}')};try{localStorage.setItem('dashboard_benchmark_v1',JSON.stringify(dbBenchmark))}catch(e){}return}catch(e){console.error('D1 load benchmark, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_benchmark_v1'));if(d&&typeof d==='object')dbBenchmark=d}catch(e){}
 }
 function saveDashBenchmark(){
@@ -6394,7 +6394,7 @@ function saveDashBenchmark(){
   try{localStorage.setItem('dashboard_benchmark_v1',JSON.stringify(dbBenchmark))}catch(e){}
 }
 async function loadDash52wHighs(){
-  if(d1Mode){try{const r=await API.get('app_settings/52w_highs');if(r){db52wHighs=JSON.parse(r.value||'{}')};return}catch(e){console.error('D1 load 52w, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('app_settings/52w_highs');if(r){db52wHighs=JSON.parse(r.value||'{}')};try{localStorage.setItem('dashboard_52w_highs_v1',JSON.stringify(db52wHighs))}catch(e){}return}catch(e){console.error('D1 load 52w, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_52w_highs_v1'));if(d&&typeof d==='object')db52wHighs=d}catch(e){}
 }
 function saveDash52wHighs(){
@@ -6848,9 +6848,12 @@ function renderDbBenchmark(){
 }
 
 // ---- 5C: Dip Finder ----
+let _fetchingDip=false;
 async function fetchDipData(){
+  if(_fetchingDip)return;
   const tickers=Object.keys(tStocks);
   if(!tickers.length){showToast(t('db.noTracked'),'warning');return}
+  _fetchingDip=true;
   const el=document.getElementById('db-dip-content');
   const dipBtn=document.getElementById('db-dip-btn');
   if(dipBtn)setBtnLoading(dipBtn,true,'Refreshing...');
@@ -6869,7 +6872,7 @@ async function fetchDipData(){
     saveDash52wHighs();
     renderDbDipFinder();
     showToast(t('db.updated52w'),'success');
-  }finally{if(el)hideSkeleton(el);if(dipBtn)setBtnLoading(dipBtn,false,'Refresh')}
+  }finally{_fetchingDip=false;if(el)hideSkeleton(el);if(dipBtn)setBtnLoading(dipBtn,false,'Refresh')}
 }
 
 function renderDbDipFinder(){
@@ -7033,11 +7036,14 @@ function renderDbEarnings(){
   el.innerHTML=h;
 }
 
+let _fetchingEarnings=false;
 async function fetchEarningsCalendar(){
+  if(_fetchingEarnings)return;
   const s=stSettings();
   if(!s.apiKey){showToast(t('db.fmpKeyMissing'),'warning');return}
-  const tickers=Object.entries(tStocks).filter(([,s])=>{const p=s.pipeline||'';return p==='Owned'||p==='Buy target';}).map(([t])=>t);
+  const tickers=Object.entries(tStocks).filter(([,s])=>{const p=s.pipeline||'';return p==='Owned'||p==='Buy target';}).map(([tk])=>tk);
   if(!tickers.length){showToast(t('db.noOwnedCompanies'),'warning');return}
+  _fetchingEarnings=true;
   const el=document.getElementById('db-earnings-content');
   const earnBtn=document.getElementById('db-earn-btn');
   if(earnBtn)setBtnLoading(earnBtn,true,'Refreshing...');
@@ -7073,7 +7079,7 @@ async function fetchEarningsCalendar(){
     saveTrackerStocks();
     renderDbEarnings();
     showToast(t('db.earningsUpdated',{x:updated,y:tickers.length}),'success');
-  }finally{if(el)hideSkeleton(el);if(earnBtn)setBtnLoading(earnBtn,false,'Refresh')}
+  }finally{_fetchingEarnings=false;if(el)hideSkeleton(el);if(earnBtn)setBtnLoading(earnBtn,false,'Refresh')}
 }
 
 function toggleEarningsStatus(ticker,field){
@@ -9695,6 +9701,7 @@ function parseNum(s){s=String(s).trim().replace(/\s/g,'');if(s.length>30)return 
 function asPct(v){if(v==null)return null;return Math.abs(v)<1&&Math.abs(v)>0?v*100:v}
 function fmtCell(v,c){if(v==null||v==='')return'';if(c.txt)return v;if(c.big)return fmt(v);if(c.pct){const n=parseFloat(v);return isFinite(n)?n.toFixed(1):''}return typeof v==='number'?(isFinite(v)?v.toFixed(2):''):v}
 
+function _numOr(v,def){const n=parseFloat(v);return isFinite(n)?n:def}
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 function stSettings(){
@@ -9703,13 +9710,13 @@ function stSettings(){
     finnhubKey:document.getElementById('st-finnhub')?.value||'',
     workerUrl:(document.getElementById('st-worker')?.value||'').replace(/\/$/,''),
     syncKey:document.getElementById('st-synckey')?.value||'',
-    g1:parseFloat(document.getElementById('st-g1')?.value)||10,
-    g2:parseFloat(document.getElementById('st-g2')?.value)||10,
-    g3:parseFloat(document.getElementById('st-g3')?.value)||10,
-    dr:parseFloat(document.getElementById('st-dr')?.value)||10,
-    tg:parseFloat(document.getElementById('st-tg')?.value)||2,
-    em:parseFloat(document.getElementById('st-em')?.value)||20,
-    fade:parseFloat(document.getElementById('st-fade')?.value)||10
+    g1:_numOr(document.getElementById('st-g1')?.value,10),
+    g2:_numOr(document.getElementById('st-g2')?.value,10),
+    g3:_numOr(document.getElementById('st-g3')?.value,10),
+    dr:_numOr(document.getElementById('st-dr')?.value,10),
+    tg:_numOr(document.getElementById('st-tg')?.value,2),
+    em:_numOr(document.getElementById('st-em')?.value,20),
+    fade:_numOr(document.getElementById('st-fade')?.value,10)
   };
 }
 
@@ -9935,7 +9942,7 @@ function savePriceAlert(ticker,field,value){
   const s=tStocks[ticker];if(!s)return;
   if(!s.priceAlerts)s.priceAlerts={};
   const num=parseFloat(value);
-  if(value===''||isNaN(num)||num<=0){delete s.priceAlerts[field]}else{s.priceAlerts[field]=num}
+  if(value===''||!isFinite(num)||num<=0){delete s.priceAlerts[field]}else{s.priceAlerts[field]=num}
   saveTrackerStocks();
 }
 function checkPriceAlerts(){
@@ -10033,7 +10040,7 @@ function _d1CompanyToTStock(c){
     existing.note=n.content||'';
     s.notes.earnings[yr][q]=existing;
   }else if(n.title==='research'){s.notes.research=n.content||''}});
-  if(c.checklist)c.checklist.forEach(cl=>{s.checklist.sections[cl.section_key]={answers:JSON.parse(cl.answer_json||'{}'),progress:cl.progress,status:cl.status||'not_started'}});
+  if(c.checklist)c.checklist.forEach(cl=>{let ans={};try{ans=JSON.parse(cl.answer_json||'{}')}catch(e){}s.checklist.sections[cl.section_key]={answers:ans,progress:cl.progress,status:cl.status||'not_started'}});
   return s;
 }
 
@@ -10048,6 +10055,7 @@ async function loadTrackerStocks(){
     try{const ls=JSON.parse(localStorage.getItem('tracker_stocks_v1')||'{}');
       const mergeKeys=['priceAlerts','dcfMode','evaWacc','tags','dateAdded','earningsCalendar','sbc','roic'];
       Object.entries(ls).forEach(([tk,s])=>{if(tStocks[tk]){mergeKeys.forEach(k=>{if(s[k]!=null&&tStocks[tk][k]==null)tStocks[tk][k]=s[k]})}})}catch(e){}
+    try{localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}catch(e){}
     return;
   }catch(e){console.error('D1 load trackerStocks, falling back to localStorage:',e)}}
   const d=localStorage.getItem('tracker_stocks_v1');
@@ -10081,6 +10089,7 @@ async function loadDividendHistory(){
     Object.entries(byTicker).forEach(([ticker,hist])=>{
       divHistory[ticker]={history:hist,lastFetched:new Date().toISOString()};
     });
+    try{localStorage.setItem('dividend_history_v1',JSON.stringify(divHistory))}catch(e){}
     return;
   }catch(e){console.error('D1 load dividends, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dividend_history_v1'));if(d&&typeof d==='object')divHistory=d}catch(e){}
@@ -10097,7 +10106,7 @@ function saveDividendHistory(){
   try{localStorage.setItem('dividend_history_v1',JSON.stringify(divHistory))}catch(e){showToast(t('toast.storageSaveError',{type:'dividends'}),'error')}
 }
 async function loadDivSettings(){
-  if(d1Mode){try{const r=await API.get('app_settings/dividend_settings');if(r){Object.assign(divSettings,JSON.parse(r.value||'{}'))};return}catch(e){console.error('D1 load div settings, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('app_settings/dividend_settings');if(r){Object.assign(divSettings,JSON.parse(r.value||'{}'))};try{localStorage.setItem('dividend_settings_v1',JSON.stringify(divSettings))}catch(e){}return}catch(e){console.error('D1 load div settings, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dividend_settings_v1'));if(d&&typeof d==='object')Object.assign(divSettings,d)}catch(e){}
 }
 function saveDivSettings(){
@@ -12260,6 +12269,7 @@ async function loadFramework(){
     (r.data||[]).forEach(e=>{const arr=catMap[e.category];if(arr&&fwData[arr]){const isList=(arr==='idealTraits'||arr==='avoidList');fwData[arr].push({id:e.id,title:e.title,label:isList?e.title:'',content:e.content,category:isList?e.content:'',sortOrder:e.sort_order});if(e.id>=fwData._nextId)fwData._nextId=e.id+1}});
     const sw=await API.get('app_settings/scoring_weights').catch(()=>null);
     if(sw)fwData.scoringWeights=JSON.parse(sw.value||'{}');
+    try{localStorage.setItem('framework_v1',JSON.stringify(fwData))}catch(e){}
     return;
   }catch(e){console.error('D1 load framework, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('framework_v1'));if(d&&typeof d==='object'){fwData=d;if(!fwData.principles)fwData.principles=[];if(!fwData.portfolioRules)fwData.portfolioRules=[];if(!fwData.idealTraits)fwData.idealTraits=[];if(!fwData.avoidList)fwData.avoidList=[];if(!fwData.scoringWeights)fwData.scoringWeights={cagr:1,conviction:1,risk:1};if(!fwData._nextId)fwData._nextId=1}}catch(e){}
@@ -13588,7 +13598,8 @@ async function loadReviews(){
   if(d1Mode){try{
     const r=await API.get('reviews?limit=1000');
     rvData={entries:[],_nextId:1};
-    (r.data||[]).forEach(rv=>{rvData.entries.push({id:rv.id,type:rv.review_type,date:rv.review_date,companyTicker:_d1CompanyMap[rv.company_id]||null,companyId:rv.company_id,answers:JSON.parse(rv.answers_json||'{}'),summary:rv.summary||'',deleted_at:rv.deleted_at||null});if(rv.id>=rvData._nextId)rvData._nextId=rv.id+1});
+    (r.data||[]).forEach(rv=>{let ans={};try{ans=JSON.parse(rv.answers_json||'{}')}catch(e){}rvData.entries.push({id:rv.id,type:rv.review_type,date:rv.review_date,companyTicker:_d1CompanyMap[rv.company_id]||null,companyId:rv.company_id,answers:ans,summary:rv.summary||'',deleted_at:rv.deleted_at||null});if(rv.id>=rvData._nextId)rvData._nextId=rv.id+1});
+    try{localStorage.setItem('reviews_v1',JSON.stringify(rvData))}catch(e){}
     return;
   }catch(e){console.error('D1 load reviews, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('reviews_v1'));if(d&&typeof d==='object'){rvData=d;if(!rvData.entries)rvData.entries=[];if(!rvData._nextId)rvData._nextId=1}}catch(e){}

@@ -2,7 +2,8 @@ QA Bug Sweep Report — 2026-07-09
 =================================
 6 parallel QA agents scanned the codebase for recurring bug patterns from 354+ historical fixes.
 Total: 35 findings (1 CRITICAL, 5 HIGH, 10 MEDIUM, 19 LOW/WARN)
-Status: CRITICAL + HIGH all FIXED (cat 64). MEDIUM and below remain unfixed.
+Status: CRITICAL + HIGH all FIXED (cat 64). MEDIUM 7/10 FIXED (cat 65), 3 not real bugs.
+        LOW/WARN remain unfixed (19 items).
 
 
 ================================================================================
