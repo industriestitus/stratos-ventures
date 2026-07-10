@@ -3883,6 +3883,7 @@ function renderSavedStocks(){
   });
 }
 function showExportModal(){
+  _warnPrivacyExport();
   const s=_getSavedStocks();
   document.getElementById('export-data').value=JSON.stringify({version:SCHEMA_VERSION,exportedAt:new Date().toISOString(),current:getAllData(),savedStocks:s,researchNotes:researchNotes,trackerStocks:tStocks,portfolioAccounts:pfAccounts,portfolioPositions:pfPositions,portfolioTransactions:pfTransactions,portfolioExchangeRates:pfExchangeRates,portfolioSnapshots:pfSnapshots,dashboardTodos:dbTodos,dashboardFiSettings:dbFiSettings,dashboardBenchmark:dbBenchmark,dashboard52wHighs:db52wHighs,dividendHistory:divHistory,dividendSettings:divSettings,frameworkData:fwData,reviewsData:rvData},null,2);
   _openModal(document.getElementById('export-modal'));
