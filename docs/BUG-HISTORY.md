@@ -1400,6 +1400,7 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 71.2 | Mobile privacy button only had `onclick` — could enable but never disable privacy mode (no long-press) | Refactored IIFE to `_bindPrivacyBtn()` helper, bound to both sidebar and mobile buttons |
 | 71.3 | FI tracker inputs showed raw amounts in `value` attribute even in privacy mode | Inputs show empty value + `•••••` placeholder + disabled when privacy mode on |
 | 71.4 | Portfolio allocation doughnut chart tooltip showed raw values (no custom callback) | Added `tooltip:{callbacks:{label:...}}` with privacy-aware `formatMoney` call |
+| 71.5 | `showExportModal` displayed full raw JSON on screen without privacy warning toast | Added `_warnPrivacyExport()` call to match all other export paths |
 
 ---
 
