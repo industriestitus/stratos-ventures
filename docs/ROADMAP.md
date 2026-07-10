@@ -253,6 +253,12 @@ Status: COMPLETE (2026-06-27)
 - [x] i18n: 20 new keys EN + HU
 - [x] QA: 1 bug found and fixed (cat 68)
 
+### Pre-Production Security Audit — COMPLETE (2026-07-10)
+- [x] 185-test QA plan: XSS, SQL injection, auth, encryption, data integrity, PWA, mobile, i18n, accessibility
+- [x] 17 bugs fixed (cat 69): CSV formula injection, SW D1 cache, Worker body size limit, dead code, 13 missing escH()
+- [x] 4 accepted risks: API keys in URL (API design), encryption skipped (user choice), i18n fallback, Worker 500 on bad JSON
+- [x] 15 manual tests documented for user verification (Safari, iOS PWA, encryption lifecycle, cross-device sync)
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 

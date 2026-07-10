@@ -73,8 +73,10 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 65 | QA Sweep — MEDIUM fixes | `60d3c5e` | 2026-07-09 | 14 | 0 |
 | 66 | QA Verification — extra parseInt radix | pending | 2026-07-09 | 2 | 0 |
 | 67 | QA Sweep — LOW fixes | `e682b59` | 2026-07-09 | 8 | 0 |
+| 68 | Cross-Device Login QA | `bbc5856` | 2026-07-09 | 1 | 0 |
+| 69 | Pre-Production Security Audit | `f42dfb4` | 2026-07-10 | 17 | 0 |
 
-**Total: 401 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 419 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1345,11 +1347,35 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 |---|-----|-----|
 | 68.1 | `changeEncPassword()` increments `_metaVersion` locally before confirming cloud meta save — conflict leaves local version higher than cloud | Only increment `_metaVersion` after successful `cloudSaveMetaRetry()`; on conflict, keep previous version |
 
+### Category 69 — Pre-Production Security Audit (commit `f42dfb4`, 2026-07-10)
+
+17 bugs found and fixed during comprehensive QA audit before entering live data.
+
+| # | Bug | Fix |
+|---|-----|-----|
+| 69.1 | `_csvEscape()` missing formula injection protection — `=`, `+`, `@`, `\t`, `\r` prefixed cells execute in Excel | Added apostrophe prefix for formula characters; negative numbers (`-100`) exempt |
+| 69.2 | Service Worker caches D1 API responses (portfolio, transactions) in Cache API | Removed `cache.put()` for `workers.dev` GET responses — network-only with offline fallback |
+| 69.3 | Cloudflare Worker has no request body size limit on `/api/` endpoints | Added `Content-Length` check, reject >5MB with 413 |
+| 69.4 | Dead code `_gatherBackupSnapshot()` exports all localStorage keys including `enc_salt`, `enc_verify` | Removed the function entirely |
+| 69.5 | `pos.currency` unescaped in cash position subinfo (line 4988) | Added `escH()` |
+| 69.6 | Asset type filter chips: `at` unescaped in onclick handler and fallback label (line 5840) | Added `escH()` to both |
+| 69.7 | Dashboard todo `t.due` date unescaped (2 locations: lines 7198, 7270) | Added `escH()` |
+| 69.8 | Position sizing `risk` level unescaped (line 8480) | Added `escH()` |
+| 69.9 | Summary tab: position `cur` (currency) unescaped (line 8590) | Added `escH()` |
+| 69.10 | Summary tab: transaction `t.date` unescaped (line 8611) | Added `escH()` |
+| 69.11 | Summary tab: transaction `t.type` unescaped (line 8612) | Added `escH()` |
+| 69.12 | Summary tab: transaction `t.currency` unescaped (line 8613) | Added `escH()` |
+| 69.13 | Summary tab: review `rv.date` unescaped (line 8657) | Added `escH()` |
+| 69.14 | Summary tab: review `rv.type` unescaped in display but escaped in onclick (line 8658) | Added `escH()` |
+| 69.15 | Insider trading `ns.lastDate` unescaped — Finnhub API data (line 8196) | Added `escH()` |
+| 69.16 | Dividend calendar tooltip `p.ticker` unescaped (line 10478) | Added `escH()` |
+| 69.17 | Dividend history table `d.date` and `d.paymentDate` unescaped — FMP API data (lines 10570-10571) | Added `escH()` |
+
 ---
 
 ## Deployment Notes
 
-- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), and any future Worker changes:
+- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), and any future Worker changes:
   ```bash
   cd web/cloudflare-worker && npx wrangler deploy
   ```

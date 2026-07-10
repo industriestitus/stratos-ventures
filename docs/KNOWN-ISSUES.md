@@ -1,6 +1,6 @@
 # Stratos Ventures — Known Issues & Tech Debt
 
-**Last Updated:** 2026-07-01
+**Last Updated:** 2026-07-10
 
 Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and code review.
 
