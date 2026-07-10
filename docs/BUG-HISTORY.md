@@ -75,8 +75,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 67 | QA Sweep — LOW fixes | `e682b59` | 2026-07-09 | 8 | 0 |
 | 68 | Cross-Device Login QA | `bbc5856` | 2026-07-09 | 1 | 0 |
 | 69 | Pre-Production Security Audit | `f42dfb4` | 2026-07-10 | 17 | 0 |
+| 70 | Pre-Production Full QA (A+B+C) | `61488a7` | 2026-07-10 | 7 | 0 |
 
-**Total: 419 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 426 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1370,6 +1371,22 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 69.15 | Insider trading `ns.lastDate` unescaped — Finnhub API data (line 8196) | Added `escH()` |
 | 69.16 | Dividend calendar tooltip `p.ticker` unescaped (line 10478) | Added `escH()` |
 | 69.17 | Dividend history table `d.date` and `d.paymentDate` unescaped — FMP API data (lines 10570-10571) | Added `escH()` |
+
+---
+
+### Category 70 — Pre-Production Full QA (A+B+C) — `61488a7` — 2026-07-10
+
+**~175 tests across 3 priority tiers (Security/Data/Calc, Sync/Stress/Browser, Destructive/API/Edge). 7 bugs found, all fixed.**
+
+| # | Bug | Fix |
+|---|-----|-----|
+| 70.1 | `parseNum("Infinity")` returns Infinity instead of 0 — breaks financial calculations | Added `if(!isFinite(n))return 0` guard |
+| 70.2 | `parseNum("-Infinity")` returns -Infinity — same issue as 70.1 | Same fix as 70.1 |
+| 70.3 | `parseNum("100%")` returns 100 — `parseFloat` ignores trailing `%` in fallback branch | Changed fallback from `parseFloat(s)\|\|0` to strict `return 0` (regex-only matching) |
+| 70.4 | `scheduleCloudSave` silently swallows KV sync errors — `.catch(()=>{})` | Added 3 retries with exponential backoff (3s→6s→9s) + toast notification |
+| 70.5 | `deleteValSnapshot` has no undo/confirm — silently deletes valuation history | Added `undoableDelete` with JSON backup + restore |
+| 70.6 | `deleteDashTodo` shows toast but no undo — inconsistent with other delete functions | Added `undoableDelete` with backup; D1 delete deferred to onConfirm |
+| 70.7 | `deleteTodo` (company) has no guard at all — no toast, no undo, no confirm | Added `undoableDelete` with backup; D1 delete deferred to onConfirm |
 
 ---
 

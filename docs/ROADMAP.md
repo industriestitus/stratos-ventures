@@ -259,6 +259,12 @@ Status: COMPLETE (2026-06-27)
 - [x] 4 accepted risks: API keys in URL (API design), encryption skipped (user choice), i18n fallback, Worker 500 on bad JSON
 - [x] 15 manual tests documented for user verification (Safari, iOS PWA, encryption lifecycle, cross-device sync)
 
+### Pre-Production Full QA (A+B+C) — COMPLETE (2026-07-10)
+- [x] ~175 tests across 3 priority tiers: A (security, data integrity, calculations), B (sync, stress, cross-browser), C (destructive ops, API failures, edge cases)
+- [x] 7 bugs fixed (cat 70): parseNum Infinity/% edge cases, KV cloudSave silent failure + retry, 3 missing undo guards (valuation snapshot, dashboard todo, company todo)
+- [x] Stress test passed: 31 stocks, 150 tab switches 219KB heap growth, 0 chart/DOM leaks, all APIs graceful on failure
+- [x] Cross-browser audit: no Safari-risky APIs, no lookbehind regex, mobile layout clean, all known issues documented
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 
