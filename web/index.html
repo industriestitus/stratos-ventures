@@ -1068,6 +1068,13 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 ::-webkit-scrollbar-thumb:hover{background:var(--border)}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{body{background:#fff;color:#000}#sidebar,#bottom-nav,.toast-container,#lock-screen,.cp-back,.btn,.conn-btn{display:none!important}.card{border-color:#ccc;break-inside:avoid}#main-content{margin-left:0!important;padding-bottom:0!important}}
+.privacy-toggle{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;display:flex;align-items:center;position:relative;transition:all .2s;flex-shrink:0}
+.privacy-toggle:hover{background:var(--surface2)}
+.privacy-toggle svg{width:16px;height:16px;color:var(--text2);transition:color .2s}
+.privacy-toggle.active svg{color:var(--accent)}
+.privacy-toggle .privacy-ring{position:absolute;inset:-2px;pointer-events:none}
+.privacy-toggle .privacy-ring circle{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:62.83;stroke-dashoffset:62.83;stroke-linecap:round;transform:rotate(-90deg);transform-origin:center}
+.privacy-toggle.holding .privacy-ring circle{stroke-dashoffset:0;transition:stroke-dashoffset 1.2s linear}
 body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;background:var(--orange,#e67e22);color:#fff;padding:4px 12px;border-radius:12px;font-size:var(--fs-sm);font-weight:600;z-index:10001;pointer-events:none}
 .pdf-dialog-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px}
 .pdf-dialog{background:var(--surface);border-radius:12px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden}
@@ -1099,6 +1106,7 @@ var I18N={en:{
 'toast.positionsExported':'{count} positions exported','toast.transactionsExported':'{count} transactions exported','toast.positionDeleted':'Position deleted: {ticker}','toast.transactionDeleted':'Transaction deleted: {type} {ticker}','toast.noteDeleted':'Note deleted','toast.reviewDeleted':'Review deleted','toast.stockDeleted':'"{name}" deleted','toast.bulkPositionsDeleted':'{count} positions deleted','toast.bulkTransactionsDeleted':'{count} transactions deleted','toast.bulkNotesDeleted':'{count} notes deleted','toast.bulkReviewsDeleted':'{count} reviews deleted','toast.bulkStocksDeleted':'{count} stocks deleted','toast.recoveryMsg':'{count} unsaved change(s) recovered','toast.offlineCache':'Offline — loading from local cache','toast.storageFull':'Storage full — export your data to avoid data loss','toast.trashEmptied':'Trash emptied','toast.itemRestored':'Item restored','toast.itemPermanentlyDeleted':'Item permanently deleted','toast.trashPurged':'{count} expired item(s) auto-removed from trash','toast.valSnapshotDeleted':'Valuation snapshot deleted','toast.todoDeleted':'Todo deleted',
 'trash.title':'Trash','trash.empty':'Trash is empty','trash.emptyMsg':'Deleted items appear here for 30 days before being permanently removed.','trash.positions':'Positions','trash.transactions':'Transactions','trash.notes':'Notes','trash.reviews':'Reviews','trash.restore':'Restore','trash.permanentDelete':'Permanently Delete','trash.emptyTrash':'Empty Trash','trash.restoreAll':'Restore All','trash.deletedOn':'Deleted {date}','trash.autoDelete':'{days}d left','trash.itemCount':'{count} item(s) in trash','trash.confirmEmpty':'Empty Trash','trash.confirmEmptyMsg':'All {count} items will be permanently deleted. This cannot be undone.','trash.confirmPermanent':'Permanent Delete','trash.confirmPermanentMsg':'This item will be permanently deleted. This cannot be undone.',
 'data.trackerStocks':'Tracked stocks','data.accounts':'Accounts','data.positions':'Positions','data.transactions':'Transactions','data.snapshots':'Snapshots','data.todos':'To-dos','data.exchangeRates':'Exchange rates','data.dividendHistory':'Dividend history','data.reviews':'Reviews','data.researchNotes':'Research notes','data.framework':'Framework','data.dividendSettings':'Dividend settings','data.fiSettings':'FI settings','data.benchmark':'Benchmark','data.52wHighs':'52-week highs',
+'privacy.toggle':'Privacy Mode','privacy.enabled':'Values hidden','privacy.disabled':'Values visible','privacy.holdToReveal':'Hold to reveal','privacy.exportWarning':'Privacy mode is on — exported data will contain real values.',
 'settings.language':'Language','settings.languageHint':'App will reload on change','settings.connections':'Connections','settings.encryption':'Encryption','settings.portfolioSettings':'Portfolio Settings','settings.dataManagement':'Data Management','settings.keyboardShortcuts':'Keyboard Shortcuts','settings.apiUsage':'API Usage','settings.apiUsageHint':'Daily and per-minute limits for external data APIs.','settings.apiName':'API','settings.apiLimit':'Limit','settings.apiUsed':'Used','settings.apiRemaining':'Remaining','settings.apiDataTarget':'Data','settings.apiPerDay':'/day','settings.apiPerMin':'/min','settings.apiNoTracking':'no tracking','settings.apiFmpData':'Profiles, financials, growth, key metrics, dividends, benchmark, screener, earnings','settings.apiYahooData':'Prices, financials, growth, quality metrics, charts, EU stocks','settings.apiFinnhubData':'Insider trading','settings.apiCacheTtl':'Cache TTL','settings.apiNotConfigured':'Not configured',
 'shortcuts.search':'Search','shortcuts.shortcutGuide':'Shortcut guide','shortcuts.addNew':'Add new item','shortcuts.close':'Close','shortcuts.hint':'The N key opens a new item based on the current section: position/transaction (Portfolio), note (Research), review (Reviews), ticker input (Companies).',
 'portfolio.position':'position','portfolio.transaction':'transaction','portfolio.stock':'stock','portfolio.note':'note','portfolio.review':'review',
@@ -1168,6 +1176,7 @@ var I18N={en:{
 'toast.positionsExported':'{count} pozíció exportálva','toast.transactionsExported':'{count} tranzakció exportálva','toast.positionDeleted':'Pozíció törölve: {ticker}','toast.transactionDeleted':'Tranzakció törölve: {type} {ticker}','toast.noteDeleted':'Jegyzet törölve','toast.reviewDeleted':'Review törölve','toast.stockDeleted':'"{name}" törölve','toast.bulkPositionsDeleted':'{count} pozíció törölve','toast.bulkTransactionsDeleted':'{count} tranzakció törölve','toast.bulkNotesDeleted':'{count} jegyzet törölve','toast.bulkReviewsDeleted':'{count} review törölve','toast.bulkStocksDeleted':'{count} részvény törölve','toast.recoveryMsg':'{count} nem mentett változás visszaállítva','toast.offlineCache':'Offline — betöltés helyi gyorsítótárból','toast.storageFull':'Tárhely megtelt — exportáld az adataidat az adatvesztés elkerülése érdekében','toast.trashEmptied':'Kuka kiürítve','toast.itemRestored':'Elem visszaállítva','toast.itemPermanentlyDeleted':'Elem véglegesen törölve','toast.trashPurged':'{count} lejárt elem automatikusan eltávolítva a kukából','toast.valSnapshotDeleted':'Értékelési pillanatkép törölve','toast.todoDeleted':'Teendő törölve',
 'trash.title':'Kuka','trash.empty':'A kuka üres','trash.emptyMsg':'A törölt elemek 30 napig megmaradnak itt, mielőtt véglegesen törlődnének.','trash.positions':'Pozíciók','trash.transactions':'Tranzakciók','trash.notes':'Jegyzetek','trash.reviews':'Review-k','trash.restore':'Visszaállítás','trash.permanentDelete':'Végleges törlés','trash.emptyTrash':'Kuka kiürítése','trash.restoreAll':'Összes visszaállítása','trash.deletedOn':'Törölve: {date}','trash.autoDelete':'{days} nap van hátra','trash.itemCount':'{count} elem a kukában','trash.confirmEmpty':'Kuka kiürítése','trash.confirmEmptyMsg':'Mind a(z) {count} elem véglegesen törlődik. Ez nem vonható vissza.','trash.confirmPermanent':'Végleges törlés','trash.confirmPermanentMsg':'Az elem véglegesen törlődik. Ez nem vonható vissza.',
 'data.trackerStocks':'Követett részvények','data.accounts':'Számlák','data.positions':'Pozíciók','data.transactions':'Tranzakciók','data.snapshots':'Pillanatképek','data.todos':'Teendők','data.exchangeRates':'Árfolyamok','data.dividendHistory':'Osztalék előzmények','data.reviews':'Értékelések','data.researchNotes':'Kutatási jegyzetek','data.framework':'Keretrendszer','data.dividendSettings':'Osztalék beállítások','data.fiSettings':'FI beállítások','data.benchmark':'Benchmark','data.52wHighs':'52 hetes csúcsok',
+'privacy.toggle':'Adatvédelem','privacy.enabled':'Értékek elrejtve','privacy.disabled':'Értékek láthatóak','privacy.holdToReveal':'Tartsd nyomva a megjelenítéshez','privacy.exportWarning':'Adatvédelmi mód aktív — az exportált fájl valós értékeket tartalmaz.',
 'settings.language':'Nyelv','settings.languageHint':'Az app újratöltődik váltáskor','settings.connections':'Kapcsolatok','settings.encryption':'Titkosítás','settings.portfolioSettings':'Portfólió beállítások','settings.dataManagement':'Adatkezelés','settings.keyboardShortcuts':'Billentyűparancsok','settings.apiUsage':'API használat','settings.apiUsageHint':'Napi és perces korlátok a külső adat API-khoz.','settings.apiName':'API','settings.apiLimit':'Korlát','settings.apiUsed':'Felhasznált','settings.apiRemaining':'Maradék','settings.apiDataTarget':'Adat','settings.apiPerDay':'/nap','settings.apiPerMin':'/perc','settings.apiNoTracking':'nincs követés','settings.apiFmpData':'Profilok, pénzügyek, növekedés, kulcsmutatók, osztalékok, benchmark, szűrő, eredmények','settings.apiYahooData':'Árak, pénzügyek, növekedés, minőségi mutatók, grafikonok, EU részvények','settings.apiFinnhubData':'Bennfentes kereskedés','settings.apiCacheTtl':'Cache TTL','settings.apiNotConfigured':'Nincs beállítva',
 'shortcuts.search':'Keresés','shortcuts.shortcutGuide':'Parancsok','shortcuts.addNew':'Új elem hozzáadása','shortcuts.close':'Bezárás','shortcuts.hint':'Az N gomb az aktuális szekció alapján nyit új elemet: pozíció/tranzakció (Portfolio), jegyzet (Research), review (Reviews), ticker input (Companies).',
 'portfolio.position':'pozíció','portfolio.transaction':'tranzakció','portfolio.stock':'részvény','portfolio.note':'jegyzet','portfolio.review':'review',
@@ -1309,6 +1318,11 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     <span>Stratos Ventures</span>
     <span id="d1-status-dot" title="D1 not connected" style="width:8px;height:8px;border-radius:50%;background:var(--text2);margin-left:auto;flex-shrink:0;display:none"></span>
     <button class="sidebar-btn" onclick="setLang(_lang==='en'?'hu':'en')" title="Switch language" aria-label="Switch language"><script>document.currentScript.parentElement.textContent=_lang==='hu'?'EN':'HU'</script></button>
+    <button id="privacy-toggle" class="privacy-toggle" title="Privacy mode" aria-label="Toggle privacy mode">
+      <svg id="privacy-icon-visible" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" style="display:none"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
+      <svg id="privacy-icon-hidden" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" style="display:none"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="3"/><line x1="3" y1="17" x2="17" y2="3" stroke-width="2"/></svg>
+      <svg class="privacy-ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+    </button>
     <button id="theme-toggle" class="sidebar-btn--theme" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark/light theme">
       <svg id="theme-icon-dark" viewBox="0 0 18 18" fill="currentColor" aria-hidden="true" style="width:16px;height:16px;color:var(--accent2);display:none"><path d="M15.3 11.8A7 7 0 016.2 2.7a7 7 0 109.1 9.1z"/></svg>
       <svg id="theme-icon-light" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" style="width:16px;height:16px;color:var(--orange);display:none"><circle cx="9" cy="9" r="3.5"/><line x1="9" y1="1" x2="9" y2="3"/><line x1="9" y1="15" x2="9" y2="17"/><line x1="1" y1="9" x2="3" y2="9"/><line x1="15" y1="9" x2="17" y2="9"/><line x1="3.3" y1="3.3" x2="4.7" y2="4.7"/><line x1="13.3" y1="13.3" x2="14.7" y2="14.7"/><line x1="3.3" y1="14.7" x2="4.7" y2="13.3"/><line x1="13.3" y1="4.7" x2="14.7" y2="3.3"/></svg>
@@ -2379,6 +2393,10 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     <svg id="theme-icon-auto-mobile" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" style="color:var(--text2)"><circle cx="10" cy="10" r="8"/><path d="M10 2a8 8 0 010 16" fill="currentColor"/></svg>
     <span id="theme-label-mobile" data-i18n="settings.autoMode">Auto</span>
   </button>
+  <button class="more-menu-item" id="privacy-toggle-mobile">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1 10s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><circle cx="10" cy="10" r="3"/></svg>
+    <span data-i18n="privacy.toggle">Privacy Mode</span>
+  </button>
   <button class="more-menu-item" onclick="closeMoreMenu();openGlobalSearch()">
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="12.5" y1="12.5" x2="17" y2="17"/></svg>
     <span data-i18n="nav.search">Search</span>
@@ -3262,14 +3280,14 @@ function _gsSearch(q){
     const name=p.name||p.ticker;
     if(p.ticker.toLowerCase().includes(ql)||name.toLowerCase().includes(ql)){
       const acc=pfAccounts.find(a=>a.id===p.accountId);
-      results.push({group:t('search.positions'),icon:'💼',title:`${name} (${p.ticker})`,sub:`${p.shares} db · ${acc?acc.name:''}`,action:()=>{showSection('portfolio')}});
+      results.push({group:t('search.positions'),icon:'💼',title:`${name} (${p.ticker})`,sub:`${_privacyMode?_privacyMask:p.shares+' db'} · ${acc?acc.name:''}`,action:()=>{showSection('portfolio')}});
     }
   });
   // Transactions
   getActiveTransactions().forEach(tx=>{
     const match=tx.ticker.toLowerCase().includes(ql)||(tx.notes||'').toLowerCase().includes(ql);
     if(match){
-      results.push({group:t('search.transactions'),icon:'💱',title:`${tx.type.toUpperCase()} ${tx.ticker}`,sub:`${tx.date} · ${tx.totalAmount?tx.totalAmount.toLocaleString():''}`,action:()=>{showSection('portfolio');document.querySelector('[data-tab="pf-transactions"]')?.click()}});
+      results.push({group:t('search.transactions'),icon:'💱',title:`${tx.type.toUpperCase()} ${tx.ticker}`,sub:`${tx.date} · ${_privacyMode?_privacyMask:tx.totalAmount?tx.totalAmount.toLocaleString():''}`,action:()=>{showSection('portfolio');document.querySelector('[data-tab="pf-transactions"]')?.click()}});
     }
   });
   // Research notes
@@ -3952,6 +3970,7 @@ function _gatherAllData(){
 }
 
 function downloadBackup(){
+  _warnPrivacyExport();
   try{
     const data=_gatherAllData();
     const date=new Date().toISOString().slice(0,10);
@@ -4083,6 +4102,7 @@ async function _downloadXlsx(filename,sheets){
   XLSX.writeFile(wb,filename);
 }
 async function exportXlsxAll(btn){
+  _warnPrivacyExport();
   if(btn){btn.disabled=true;btn.textContent='Exporting...'}
   try{
   const posH=['Ticker','Name','Account','Type','Shares','Avg Cost','Current Price','Market Value','P&L','P&L %','Currency','Notes'];
@@ -4127,7 +4147,10 @@ async function exportXlsxAll(btn){
   }finally{if(btn){btn.disabled=false;btn.textContent=t('settings.exportXLSX','Export XLSX')}}
 }
 
+function _warnPrivacyExport(){if(_privacyMode)showToast(t('privacy.exportWarning'),'warning',4000)}
+
 function _downloadCsv(filename,headers,rows){
+  _warnPrivacyExport();
   const bom='﻿';
   const csv=bom+_csvRow(headers)+'\n'+rows.map(r=>_csvRow(r)).join('\n');
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
@@ -4977,9 +5000,9 @@ function renderPositions(){
     else if(at==='bond'&&pos.bondType)subInfo=`<div class="pf-pos-name" style="font-size:10px;opacity:.7">${escH(pos.bondType)}${pos.bondCouponRate?' · '+pos.bondCouponRate+'%':''}</div>`;
     else if(at==='cash')subInfo=`<div class="pf-pos-name" style="font-size:10px;opacity:.7">${escH(pos.currency||'USD')} cash</div>`;
     let sharesCol,avgCol,priceCol;
-    if(at==='real_estate'){sharesCol='1';avgCol=fmt(pos.rePurchasePrice||0,0);priceCol=fmt(pos.reCurrentValue||0,0)}
-    else if(at==='cash'){sharesCol='—';avgCol='—';priceCol=fmt(pos.cashAmount||0,2)}
-    else{sharesCol=fmt(shares,shares%1?4:0);avgCol=fmt(avg,2);priceCol=price!=null?fmt(price,2):'—'}
+    if(at==='real_estate'){sharesCol='1';avgCol=fmtMoney(pos.rePurchasePrice||0,0);priceCol=fmtMoney(pos.reCurrentValue||0,0)}
+    else if(at==='cash'){sharesCol='—';avgCol='—';priceCol=fmtMoney(pos.cashAmount||0,2)}
+    else{sharesCol=_privacyMode?_privacyMask:fmt(shares,shares%1?4:0);avgCol=fmtMoney(avg,2);priceCol=price!=null?fmt(price,2):'—'}
     return`<tr data-pos-id="${pos.id}"${_bulkPosIds.has(pos.id)?' class="bulk-selected"':''}>
       <td><input type="checkbox" class="bulk-cb bulk-cb-pos" data-id="${pos.id}" onchange="_toggleBulkPos(${pos.id},this.checked)"${_bulkPosIds.has(pos.id)?' checked':''}></td>
       <td><span ${tickerLink}>${escH(pos.ticker||'—')}</span><div class="pf-pos-name">${escH(pos.name||'')}</div>${subInfo}</td>
@@ -4988,8 +5011,8 @@ function renderPositions(){
       <td class="num">${sharesCol}</td>
       <td class="num">${avgCol}</td>
       <td class="num">${priceCol}</td>
-      <td class="num">${mktVal!=null?fmt(mktVal,2):'—'}</td>
-      <td class="num ${pnlClass}">${pnl!=null?(pnl>=0?'+':'')+fmt(pnl,2):'—'}</td>
+      <td class="num">${mktVal!=null?fmtMoney(mktVal,2):'—'}</td>
+      <td class="num ${pnlClass}">${pnl!=null?(pnl>=0?'+':'')+fmtMoney(pnl,2):'—'}</td>
       <td class="num ${pnlClass}">${pnlPct!=null?(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%':'—'}</td>
       <td><div class="pf-pos-actions">
         <button class="pf-pin${pos.pinned?' pinned':''}" onclick="togglePinPosition(${pos.id})" title="${pos.pinned?t('common.unpin'):t('common.pin')}">★</button>
@@ -5004,9 +5027,9 @@ function renderPositions(){
   const pClass=totalPnl>=0?'pf-positive':'pf-negative';
   sumEl.innerHTML=`<div class="pf-summary-bar">
     <div class="pf-summary-item"><span class="pf-summary-label">${t('db.positions')}</span><span class="pf-summary-value">${list.length}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.totalCost')}</span><span class="pf-summary-value">${fmt(totalCost,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.marketValue')}</span><span class="pf-summary-value">${fmt(totalValue,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">P&L</span><span class="pf-summary-value ${pClass}">${totalPnl>=0?'+':''}${fmt(totalPnl,2)} (${isFinite(totalPnlPct)?(totalPnlPct>=0?'+':'')+totalPnlPct.toFixed(1)+'%':'—'})</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.totalCost')}</span><span class="pf-summary-value">${fmtMoney(totalCost,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.marketValue')}</span><span class="pf-summary-value">${fmtMoney(totalValue,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">P&L</span><span class="pf-summary-value ${pClass}">${_privacyMode?_privacyMask:(totalPnl>=0?'+':'')+fmt(totalPnl,2)+' ('+(isFinite(totalPnlPct)?(totalPnlPct>=0?'+':'')+totalPnlPct.toFixed(1)+'%':'—')+')'}</span></div>
   </div>${hasMixedCurrency&&!hasRates?'<div style="color:var(--yellow);font-size:12px;padding:4px 8px">⚠ '+t('pf.ratesNotLoaded')+' <button onclick="fetchExchangeRates()" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline">'+t('pf.fetchRates')+'</button></div>':''}`;
 
   function pfTh(col,label,cls){
@@ -5262,15 +5285,15 @@ function renderTransactions(){
 
   sumEl.innerHTML=`<div class="pf-summary-bar">
     <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.showing')}</span><span class="pf-summary-value">${list.length}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.bought')}</span><span class="pf-summary-value">${fmt(totalBuys,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.sold')}</span><span class="pf-summary-value">${fmt(totalSells,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.dividendsPf')}</span><span class="pf-summary-value pf-positive">${fmt(totalDividends,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.fees')}</span><span class="pf-summary-value">${fmt(totalFees,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.bought')}</span><span class="pf-summary-value">${fmtMoney(totalBuys,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.sold')}</span><span class="pf-summary-value">${fmtMoney(totalSells,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.dividendsPf')}</span><span class="pf-summary-value pf-positive">${fmtMoney(totalDividends,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.fees')}</span><span class="pf-summary-value">${fmtMoney(totalFees,2)}</span></div>
   </div>`;
 
   const rows=list.map(t=>{
-    const shares=t.shares!=null?fmt(parseFloat(t.shares),t.shares%1?4:0):'—';
-    const price=t.pricePerShare!=null?fmt(parseFloat(t.pricePerShare),2):'—';
+    const shares=t.shares!=null?(_privacyMode?_privacyMask:fmt(parseFloat(t.shares),t.shares%1?4:0)):'—';
+    const price=t.pricePerShare!=null?fmtMoney(parseFloat(t.pricePerShare),2):'—';
     return`<tr data-tx-id="${t.id}"${_bulkTxIds.has(t.id)?' class="bulk-selected"':''}>
       <td><input type="checkbox" class="bulk-cb bulk-cb-tx" data-id="${t.id}" onchange="_toggleBulkTx(${t.id},this.checked)"${_bulkTxIds.has(t.id)?' checked':''}></td>
       <td>${escH(t.date||'')}</td>
@@ -5279,8 +5302,8 @@ function renderTransactions(){
       <td>${escH(getAccountName(t.accountId))}</td>
       <td class="num">${shares}</td>
       <td class="num">${price}</td>
-      <td class="num" style="font-weight:600">${fmt(parseFloat(t.totalAmount)||0,2)}</td>
-      <td class="num">${fmt(parseFloat(t.fees)||0,2)}</td>
+      <td class="num" style="font-weight:600">${fmtMoney(parseFloat(t.totalAmount)||0,2)}</td>
+      <td class="num">${fmtMoney(parseFloat(t.fees)||0,2)}</td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--text2)">${escH(t.notes||'')}</td>
       <td><div class="pf-pos-actions">
         <button onclick="openTransactionModal(${t.id})" title="Edit">✏️</button>
@@ -5907,7 +5930,7 @@ async function renderValueChart(){
         plugins:{legend:{display:datasets.length>1,labels:{color:text2,font:{size:10},boxWidth:12}},
           tooltip:{callbacks:{label:ctx=>{const v=ctx.parsed.y;return ctx.dataset.label+': '+formatMoney(v,base)}}}},
         scales:{x:{ticks:{color:text2,font:{size:10},maxTicksLimit:maxTicks,maxRotation:0},grid:{color:border+'44'}},
-          y:{ticks:{color:text2,font:{size:10},callback:v=>fmt(v)},grid:{color:border+'44'}}}}
+          y:{ticks:{color:text2,font:{size:10},callback:v=>_privacyMode?_privacyMask:fmt(v)},grid:{color:border+'44'}}}}
     });
   }catch(e){
     console.error('Portfolio history chart error:',e);
@@ -5953,7 +5976,8 @@ function switchAllocChart(groupBy){
   _pfAllocChart=new Chart(document.getElementById('pf-chart-alloc'),{
     type:'doughnut',
     data:{labels:chartLabels,datasets:[{data:chartData,backgroundColor:colors.slice(0,chartData.length),borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:text2,font:{size:11},padding:8,boxWidth:12}}}}
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:text2,font:{size:11},padding:8,boxWidth:12}},
+      tooltip:{callbacks:{label:ctx=>ctx.label+': '+(_privacyMode?_privacyMask:formatMoney(ctx.parsed,base))}}}}
   });
 }
 
@@ -6084,13 +6108,90 @@ function currencySymbol(code){
   return m[code]||code;
 }
 
+var _privacyMode=localStorage.getItem('stratos_privacy_mode')==='true';
+var _privacyMask='•••••';
+function isPrivacyMode(){return _privacyMode}
+
+function setPrivacyMode(on){
+  _privacyMode=on;
+  localStorage.setItem('stratos_privacy_mode',on?'true':'false');
+  document.body.classList.toggle('privacy-mode',on);
+  _updatePrivacyIcons();
+  _reRenderCurrentSection();
+  showToast(t(on?'privacy.enabled':'privacy.disabled'),on?'info':'success',2000);
+}
+
+function _updatePrivacyIcons(){
+  const on=_privacyMode;
+  const vis=document.getElementById('privacy-icon-visible');
+  const hid=document.getElementById('privacy-icon-hidden');
+  const btn=document.getElementById('privacy-toggle');
+  if(vis)vis.style.display=on?'none':'block';
+  if(hid)hid.style.display=on?'block':'none';
+  if(btn){btn.classList.toggle('active',on);btn.title=on?t('privacy.holdToReveal'):t('privacy.toggle')}
+  const mob=document.getElementById('privacy-toggle-mobile');
+  if(mob){const sp=mob.querySelector('span');if(sp)sp.textContent=t('privacy.toggle')+(on?' ✓':'')}
+}
+
+(function _initPrivacyToggle(){
+  if(_privacyMode)document.body.classList.add('privacy-mode');
+  function _bindPrivacyBtn(btn){
+    if(!btn)return;
+    let holdTimer=null,holding=false;
+    function startHold(e){
+      if(!_privacyMode){handlePrivacyClick();return}
+      e.preventDefault();
+      holding=true;
+      btn.classList.add('holding');
+      holdTimer=setTimeout(()=>{
+        if(holding){setPrivacyMode(false);holding=false;btn.classList.remove('holding')}
+      },1200);
+    }
+    function cancelHold(){
+      if(holdTimer)clearTimeout(holdTimer);
+      holding=false;btn.classList.remove('holding');
+    }
+    btn.addEventListener('mousedown',startHold);
+    btn.addEventListener('mouseup',cancelHold);
+    btn.addEventListener('mouseleave',cancelHold);
+    btn.addEventListener('touchstart',e=>{e.preventDefault();startHold(e)},{passive:false});
+    btn.addEventListener('touchend',cancelHold);
+    btn.addEventListener('touchmove',cancelHold);
+    btn.addEventListener('click',e=>e.preventDefault());
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    _updatePrivacyIcons();
+    _bindPrivacyBtn(document.getElementById('privacy-toggle'));
+    _bindPrivacyBtn(document.getElementById('privacy-toggle-mobile'));
+  });
+})();
+
+function handlePrivacyClick(){
+  if(_privacyMode)return;
+  setPrivacyMode(true);
+}
+
+function _reRenderCurrentSection(){
+  const sec=SECTIONS?.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
+  if(sec==='dashboard')renderDashboard();
+  else if(sec==='portfolio'){renderPortfolioOverview();const at=document.querySelector('.pf-tab.active');if(at)switchPfTab(at.dataset.tab||'overview')}
+  else if(sec==='companies'&&profileTicker)renderProfile(profileTicker);
+  if(typeof renderDividendsTab==='function'){const divPanel=document.getElementById('pf-panel-dividends');if(divPanel&&divPanel.style.display!=='none')renderDividendsTab()}
+}
+
 function formatMoney(amount,currency){
+  if(_privacyMode)return _privacyMask;
   if(amount==null||!isFinite(amount))return'—';
   const sym=currencySymbol(currency||getBaseCurrency());
   if(currency==='HUF')return Math.round(amount).toLocaleString('hu-HU')+' '+sym;
   const abs=Math.abs(amount);
   const formatted=abs.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   return(amount<0?'-':'')+sym+formatted;
+}
+
+function fmtMoney(n,dec=0){
+  if(_privacyMode)return _privacyMask;
+  return fmt(n,dec);
 }
 
 // ---- CSV Import ----
@@ -7041,9 +7142,9 @@ function renderDbFiTracker(){
     </div>
   </div>
   <div class="db-fi-form">
-    <div class="input-group"><label data-i18n="db.targetAmount">Target Amount</label><input type="number" min="0" value="${fi.targetAmount}" onchange="dbFiSettings.targetAmount=Math.max(0,parseFloat(this.value)||0);saveDashFiSettings();renderDbFiTracker()"></div>
-    <div class="input-group"><label data-i18n="db.monthlyExpenses">Monthly Expenses</label><input type="number" min="0" value="${fi.monthlyExpenses}" onchange="dbFiSettings.monthlyExpenses=Math.max(0,parseFloat(this.value)||0);saveDashFiSettings();renderDbFiTracker()"></div>
-    <div class="input-group"><label data-i18n="db.monthlySavings">Monthly Savings</label><input type="number" min="0" value="${fi.monthlySavings}" onchange="dbFiSettings.monthlySavings=Math.max(0,parseFloat(this.value)||0);saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label data-i18n="db.targetAmount">Target Amount</label><input type="number" min="0" value="${_privacyMode?'':fi.targetAmount}" ${_privacyMode?'placeholder="'+_privacyMask+'" disabled':''}onchange="dbFiSettings.targetAmount=Math.max(0,parseFloat(this.value)||0);saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label data-i18n="db.monthlyExpenses">Monthly Expenses</label><input type="number" min="0" value="${_privacyMode?'':fi.monthlyExpenses}" ${_privacyMode?'placeholder="'+_privacyMask+'" disabled':''}onchange="dbFiSettings.monthlyExpenses=Math.max(0,parseFloat(this.value)||0);saveDashFiSettings();renderDbFiTracker()"></div>
+    <div class="input-group"><label data-i18n="db.monthlySavings">Monthly Savings</label><input type="number" min="0" value="${_privacyMode?'':fi.monthlySavings}" ${_privacyMode?'placeholder="'+_privacyMask+'" disabled':''}onchange="dbFiSettings.monthlySavings=Math.max(0,parseFloat(this.value)||0);saveDashFiSettings();renderDbFiTracker()"></div>
     <div class="input-group"><label data-i18n="db.assumedReturn">Assumed Return %</label><input type="number" min="0" max="50" value="${fi.assumedReturnRate}" step="0.5" onchange="dbFiSettings.assumedReturnRate=Math.max(0,Math.min(50,parseFloat(this.value)||0));saveDashFiSettings();renderDbFiTracker()"></div>
   </div>`;
   el.innerHTML=html;
@@ -8586,10 +8687,10 @@ function renderSummaryTab(ticker){
       const pnlCls=pnl>=0?'positive':'negative';
       h+=`<div class="cp-sum-row">
         <span class="cp-sum-label">${escH(accName)}</span>
-        <span class="cp-sum-val">${p.shares} × ${(p.avgCost||0).toFixed(2)} ${escH(cur)}</span>
+        <span class="cp-sum-val">${_privacyMode?_privacyMask:p.shares+' × '+(p.avgCost||0).toFixed(2)+' '+escH(cur)}</span>
         <span style="flex:1"></span>
-        <span class="cp-sum-val">${fmt(mktVal)}</span>
-        <span class="${pnlCls}" style="font-size:11px;min-width:70px;text-align:right">${pnl>=0?'+':''}${fmt(pnl)} (${pnlPct}%)</span>
+        <span class="cp-sum-val">${fmtMoney(mktVal)}</span>
+        <span class="${pnlCls}" style="font-size:11px;min-width:70px;text-align:right">${_privacyMode?_privacyMask:(pnl>=0?'+':'')+fmt(pnl)+' ('+pnlPct+'%)'}</span>
       </div>`;
     });
   }
@@ -8609,9 +8710,9 @@ function renderSummaryTab(ticker){
       h+=`<div class="cp-sum-row">
         <span class="cp-sum-label">${escH(t.date||'—')}</span>
         <span class="${typeCls}" style="font-weight:600;text-transform:uppercase;min-width:40px">${escH(t.type)}</span>
-        <span class="cp-sum-val">${t.shares||'—'} × ${(t.pricePerShare||0).toFixed(2)} ${escH(t.currency||'USD')}</span>
+        <span class="cp-sum-val">${_privacyMode?_privacyMask:(t.shares||'—')+' × '+(t.pricePerShare||0).toFixed(2)+' '+escH(t.currency||'USD')}</span>
         <span style="flex:1"></span>
-        <span class="cp-sum-val">${fmt(t.totalAmount||0)}</span>
+        <span class="cp-sum-val">${fmtMoney(t.totalAmount||0)}</span>
       </div>`;
     });
   }
@@ -9842,10 +9943,10 @@ function getTrashItems(){
   const now=Date.now();
   pfPositions.filter(p=>p.deleted_at).forEach(p=>{
     const acc=pfAccounts.find(a=>a.id===p.accountId);
-    items.push({type:'positions',id:p.id,title:`${p.ticker} — ${acc?acc.name:''}`,sub:`${p.shares} shares @ ${p.avgCost}`,deleted_at:p.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(p.deleted_at).getTime())/86400000))});
+    items.push({type:'positions',id:p.id,title:`${p.ticker} — ${acc?acc.name:''}`,sub:_privacyMode?_privacyMask:`${p.shares} shares @ ${p.avgCost}`,deleted_at:p.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(p.deleted_at).getTime())/86400000))});
   });
   pfTransactions.filter(tx=>tx.deleted_at).forEach(tx=>{
-    items.push({type:'transactions',id:tx.id,title:`${tx.type.toUpperCase()} ${tx.ticker}`,sub:`${tx.date} — ${tx.totalAmount||''}`,deleted_at:tx.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(tx.deleted_at).getTime())/86400000))});
+    items.push({type:'transactions',id:tx.id,title:`${tx.type.toUpperCase()} ${tx.ticker}`,sub:_privacyMode?`${tx.date} — ${_privacyMask}`:`${tx.date} — ${tx.totalAmount||''}`,deleted_at:tx.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(tx.deleted_at).getTime())/86400000))});
   });
   ['journal','news','market'].forEach(nt=>{
     (researchNotes[nt]||[]).filter(n=>n.deleted_at).forEach(n=>{
@@ -10423,11 +10524,11 @@ function renderDividendsTab(){
   if(taxInput)taxInput.value=divSettings.taxRate;
   const income=calcPortfolioDividendIncome();
   const base=getBaseCurrency();
-  const fmt=v=>base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const dfmt2=v=>_privacyMode?_privacyMask:base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   const cards=document.getElementById('div-summary-cards');
   if(cards)cards.innerHTML=[
-    {label:'Annual Income (Net)',value:base+' '+fmt(income.totalAnnualNet),sub:'Gross: '+base+' '+fmt(income.totalAnnualGross)},
-    {label:'Monthly (Avg)',value:base+' '+fmt(income.totalAnnualNet/12),sub:fmt(income.totalAnnualGross/12)+' gross'},
+    {label:'Annual Income (Net)',value:_privacyMode?_privacyMask:base+' '+dfmt2(income.totalAnnualNet),sub:_privacyMode?_privacyMask:'Gross: '+base+' '+dfmt2(income.totalAnnualGross)},
+    {label:'Monthly (Avg)',value:_privacyMode?_privacyMask:base+' '+dfmt2(income.totalAnnualNet/12),sub:_privacyMode?_privacyMask:dfmt2(income.totalAnnualGross/12)+' gross'},
     {label:'Yield on Cost',value:income.portfolioYieldOnCost.toFixed(2)+'%',sub:'Current: '+income.portfolioCurrentYield.toFixed(2)+'%'},
     {label:'Dividend Payers',value:income.dividendPayers+' / '+income.totalPositions,sub:'positions pay dividends'},
     {label:'Avg Growth (5Y)',value:income.avgGrowth5y!=null?income.avgGrowth5y.toFixed(1)+'%':'N/A',sub:'weighted by income'}
@@ -10458,10 +10559,10 @@ function renderDivForecastChart(){
     options:{
       responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:allTickers.length<=8,labels:{color:cv('--text2'),font:{size:10}}},
-        tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${base} ${ctx.raw.toFixed(2)}`}}},
+        tooltip:{callbacks:{label:ctx=>_privacyMode?ctx.dataset.label+': '+_privacyMask:`${ctx.dataset.label}: ${base} ${ctx.raw.toFixed(2)}`}}},
       scales:{
         x:{stacked:true,ticks:{color:cv('--text2'),font:{size:10}},grid:{display:false}},
-        y:{stacked:true,ticks:{color:cv('--text2'),font:{size:10},callback:v=>base+' '+v.toLocaleString()},grid:{color:cv('--border')+'4d'}}
+        y:{stacked:true,ticks:{color:cv('--text2'),font:{size:10},callback:v=>_privacyMode?_privacyMask:base+' '+v.toLocaleString()},grid:{color:cv('--border')+'4d'}}
       }
     }
   });
@@ -10491,7 +10592,7 @@ function renderDivCalendar(year,month){
     if(isToday)cls.push('today');
     let tooltip='';
     if(pays){
-      const details=pays.map(p=>`${escH(p.ticker)}: ${base} ${p.amount.toFixed(2)}`).join('<br>');
+      const details=pays.map(p=>`${escH(p.ticker)}: ${_privacyMode?_privacyMask:base+' '+p.amount.toFixed(2)}`).join('<br>');
       tooltip=`<div class="div-cal-tooltip">${details}</div>`;
     }
     html+=`<div class="${cls.join(' ')}">${d}${pays?'<div class="div-cal-dot"></div>':''}${tooltip}</div>`;
@@ -10511,7 +10612,7 @@ function renderDivBreakdownTable(breakdown){
   const body=document.getElementById('div-breakdown-body');
   if(!body)return;
   const base=getBaseCurrency();
-  const fmt=v=>base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const dfmt=v=>_privacyMode?_privacyMask:base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
   let sorted=[...breakdown];
   sorted.sort((a,b)=>{
     let va=a[divSortCol],vb=b[divSortCol];
@@ -10527,11 +10628,11 @@ function renderDivBreakdownTable(breakdown){
     const freqCls='div-freq-'+(b.frequency||'unknown').replace(/\s/g,'-');
     return `<tr style="cursor:pointer" onclick="showProfile('${escH(b.ticker)}')">
       <td><strong>${escH(b.ticker)}</strong></td>
-      <td class="num">${b.shares.toLocaleString()}</td>
+      <td class="num">${_privacyMode?_privacyMask:b.shares.toLocaleString()}</td>
       <td class="num">${b.annualDPS.toFixed(4)}</td>
       <td><span class="div-freq-badge ${freqCls}">${b.frequency}</span></td>
-      <td class="num">${fmt(b.grossIncome)}</td>
-      <td class="num">${fmt(b.netIncome)}</td>
+      <td class="num">${dfmt(b.grossIncome)}</td>
+      <td class="num">${dfmt(b.netIncome)}</td>
       <td class="num">${b.yieldOnCost.toFixed(2)}%</td>
       <td class="num">${b.currentYield.toFixed(2)}%</td>
       <td class="num">${b.growth5y!=null?b.growth5y.toFixed(1)+'%':'—'}</td>
@@ -14579,6 +14680,7 @@ function closePdfDialog(){
 }
 
 async function generatePdf(ticker){
+  _warnPrivacyExport();
   const s=tStocks[ticker];if(!s)return;
   const selected=new Set();
   document.querySelectorAll('.pdf-sec-cb:checked').forEach(cb=>selected.add(cb.dataset.key));
@@ -15169,6 +15271,7 @@ async function generatePdf(ticker){
 }
 
 async function generatePortfolioPdf(btn){
+  _warnPrivacyExport();
   if(btn){btn.disabled=true;btn.textContent='Generating...'}
   try{
     await loadJsPDF();

@@ -265,6 +265,17 @@ Status: COMPLETE (2026-06-27)
 - [x] Stress test passed: 31 stocks, 150 tab switches 219KB heap growth, 0 chart/DOM leaks, all APIs graceful on failure
 - [x] Cross-browser audit: no Safari-risky APIs, no lookbehind regex, mobile layout clean, all known issues documented
 
+### Privacy Mode — COMPLETE (2026-07-10)
+- [x] Eye icon toggle in sidebar + mobile menu (single click to hide, 1.2s long press to reveal)
+- [x] Masks all private financial data: portfolio values, share counts, avg cost, P&L amounts, dividend income, net worth, FI tracker, transaction amounts
+- [x] Keeps visible: percentages, public company data, DCF/valuation results, chart curve shapes, ticker names, dates
+- [x] Chart.js Y-axis and tooltip masking for portfolio value + dividend forecast charts
+- [x] Export warning toast when exporting (CSV/XLSX/PDF/backup) in privacy mode
+- [x] FI tracker inputs masked + disabled in privacy mode
+- [x] State persisted in localStorage across sessions
+- [x] i18n: EN + HU translations for all privacy strings
+- [x] QA: 4 bugs fixed — syntax error in template literal, mobile long-press handler, FI tracker input leak, allocation chart tooltip leak
+
 ## Phase 10: Optional / Future
 > Nice-to-have features, add when needed.
 

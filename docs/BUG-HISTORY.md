@@ -1390,6 +1390,19 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 
 ---
 
+### Category 71: Privacy Mode QA (2026-07-10)
+**Trigger:** QA agent review of privacy mode feature implementation
+**Scope:** Template literal syntax, mobile UX, data leak prevention
+
+| # | Bug | Fix |
+|---|-----|-----|
+| 71.1 | Template literal syntax error in P&L summary — extra `)` before `}` broke entire main script | Removed extra closing paren in template expression |
+| 71.2 | Mobile privacy button only had `onclick` — could enable but never disable privacy mode (no long-press) | Refactored IIFE to `_bindPrivacyBtn()` helper, bound to both sidebar and mobile buttons |
+| 71.3 | FI tracker inputs showed raw amounts in `value` attribute even in privacy mode | Inputs show empty value + `•••••` placeholder + disabled when privacy mode on |
+| 71.4 | Portfolio allocation doughnut chart tooltip showed raw values (no custom callback) | Added `tooltip:{callbacks:{label:...}}` with privacy-aware `formatMoney` call |
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), and any future Worker changes:

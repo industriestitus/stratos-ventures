@@ -387,7 +387,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Process | 4 | 15+ (Categories 19-23) |
 | AI Behavioral | 6 | 100+ (cross-cutting) |
 
-**Total:** 426+ bugs fixed, 33 lessons, 7 domains.
+**Total:** 430+ bugs fixed, 33 lessons, 7 domains.
 
 ## Related Documents
 
