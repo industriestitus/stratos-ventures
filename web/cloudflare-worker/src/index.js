@@ -643,6 +643,8 @@ async function handleMigrate(body, db, origin) {
 }
 
 async function handleApi(path, method, url, request, env, origin) {
+  const cl = parseInt(request.headers.get('Content-Length') || '0', 10);
+  if (cl > 5 * 1024 * 1024) return new Response(JSON.stringify({ error: 'Request body too large (max 5MB)' }), { status: 413, headers: corsHeaders(origin) });
   const db = env.DB;
   await db.prepare('PRAGMA foreign_keys = ON').run();
 

@@ -3950,17 +3950,6 @@ function _gatherAllData(){
     dashboard52wHighs:db52wHighs,dividendHistory:divHistory,dividendSettings:divSettings,
     frameworkData:fwData,reviewsData:rvData};
 }
-function _gatherBackupSnapshot(){
-  const snapshot={};
-  const sensitiveKeys=['tracker_settings'];
-  Object.keys(localStorage).forEach(k=>{
-    snapshot[k]=localStorage.getItem(k);
-  });
-  let ts={};try{ts=JSON.parse(snapshot.tracker_settings||'{}')}catch(e){}
-  delete ts.apiKey;delete ts.finnhubKey;delete ts.syncKey;
-  snapshot.tracker_settings=JSON.stringify(ts);
-  return snapshot;
-}
 
 function downloadBackup(){
   try{
@@ -4061,6 +4050,7 @@ function doRestore(){
 // CSV helpers
 function _csvEscape(v){
   const s=String(v??'');
+  if(/^[=+@\t\r]/.test(s)||/^-[^\d.]/.test(s))return"\"'"+s.replace(/"/g,'""')+'"';
   if(s.includes(',')||s.includes('"')||s.includes('\n')||s.includes('\r'))return'"'+s.replace(/"/g,'""')+'"';
   return s;
 }
@@ -4985,7 +4975,7 @@ function renderPositions(){
     let subInfo='';
     if(at==='real_estate'&&pos.reLocation)subInfo=`<div class="pf-pos-name" style="font-size:10px;opacity:.7">${escH(pos.reLocation)}</div>`;
     else if(at==='bond'&&pos.bondType)subInfo=`<div class="pf-pos-name" style="font-size:10px;opacity:.7">${escH(pos.bondType)}${pos.bondCouponRate?' · '+pos.bondCouponRate+'%':''}</div>`;
-    else if(at==='cash')subInfo=`<div class="pf-pos-name" style="font-size:10px;opacity:.7">${pos.currency||'USD'} cash</div>`;
+    else if(at==='cash')subInfo=`<div class="pf-pos-name" style="font-size:10px;opacity:.7">${escH(pos.currency||'USD')} cash</div>`;
     let sharesCol,avgCol,priceCol;
     if(at==='real_estate'){sharesCol='1';avgCol=fmt(pos.rePurchasePrice||0,0);priceCol=fmt(pos.reCurrentValue||0,0)}
     else if(at==='cash'){sharesCol='—';avgCol='—';priceCol=fmt(pos.cashAmount||0,2)}
@@ -5837,7 +5827,7 @@ function renderAssetFilterChips(){
   el.innerHTML='<button class="tab'+(isAll?' active':'')+'" onclick="_pfChartAssetFilters=null;renderAssetFilterChips();renderValueChart()" style="padding:2px 8px;font-size:11px">'+t('pf.allTypes')+'</button>'+
     sorted.map(at=>{
       const active=_pfChartAssetFilters&&_pfChartAssetFilters.includes(at);
-      return'<button class="tab'+(active?' active':'')+'" onclick="togglePfAssetFilter(\''+at+'\')" style="padding:2px 8px;font-size:11px">'+(labelKeys[at]?t(labelKeys[at]):at)+'</button>';
+      return'<button class="tab'+(active?' active':'')+'" onclick="togglePfAssetFilter(\''+escH(at)+'\')" style="padding:2px 8px;font-size:11px">'+(labelKeys[at]?t(labelKeys[at]):escH(at))+'</button>';
     }).join('');
 }
 
@@ -7195,7 +7185,7 @@ function renderDbTodoList(){
     return`<div class="cp-todo-item">
       <input type="checkbox" ${t.done?'checked':''} onchange="toggleDashTodo(${t.id})">
       <span class="cp-todo-text ${t.done?'todo-done':''}">${escH(t.text)}</span>
-      ${t.due?`<span class="cp-todo-due ${overdue?'todo-overdue':''}">${t.due}</span>`:''}
+      ${t.due?`<span class="cp-todo-due ${overdue?'todo-overdue':''}">${escH(t.due)}</span>`:''}
       <button class="cp-todo-del" onclick="deleteDashTodo(${t.id})" title="Delete" aria-label="Delete">&times;</button>
     </div>`;
   }).join('');
@@ -7277,7 +7267,7 @@ function renderDbTodoSummary(){
       const overdue=t.due&&t.due<today;
       html+=`<div class="cp-todo-item" style="border-bottom:1px solid var(--border);padding:6px 0">
         <span class="cp-todo-text">${escH(t.text)}</span>
-        ${t.due?`<span class="cp-todo-due ${overdue?'todo-overdue':''}">${t.due}</span>`:''}
+        ${t.due?`<span class="cp-todo-due ${overdue?'todo-overdue':''}">${escH(t.due)}</span>`:''}
       </div>`;
     });
   });
@@ -8179,7 +8169,7 @@ async function renderInsiderTrading(ticker){
   h+='<tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2);font-weight:500">Name</th><th style="text-align:center;padding:6px 8px;color:var(--text2);font-weight:500">Txns</th><th style="text-align:center;padding:6px 8px;color:var(--text2);font-weight:500">Buys</th><th style="text-align:center;padding:6px 8px;color:var(--text2);font-weight:500">Sells</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Net Shares</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Last Activity</th></tr>';
   const showInsiders=nameStats.slice(0,20);
   showInsiders.forEach(ns=>{
-    h+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">${escH(ns.name)}</td><td style="text-align:center;padding:6px 8px">${ns.count}</td><td style="text-align:center;padding:6px 8px;color:var(--green)">${ns.buys}</td><td style="text-align:center;padding:6px 8px;color:var(--red)">${ns.sells}</td><td style="text-align:right;padding:6px 8px;color:${ns.net>=0?'var(--green)':'var(--red)'}">${ns.net>=0?'+':''}${fmt(ns.net)}</td><td style="text-align:right;padding:6px 8px;color:var(--text2)">${ns.lastDate}</td></tr>`;
+    h+=`<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 8px">${escH(ns.name)}</td><td style="text-align:center;padding:6px 8px">${ns.count}</td><td style="text-align:center;padding:6px 8px;color:var(--green)">${ns.buys}</td><td style="text-align:center;padding:6px 8px;color:var(--red)">${ns.sells}</td><td style="text-align:right;padding:6px 8px;color:${ns.net>=0?'var(--green)':'var(--red)'}">${ns.net>=0?'+':''}${fmt(ns.net)}</td><td style="text-align:right;padding:6px 8px;color:var(--text2)">${escH(ns.lastDate)}</td></tr>`;
   });
   if(nameStats.length>20)h+=`<tr><td colspan="6" style="text-align:center;padding:8px;color:var(--text2);font-size:12px">${t('comp.showingTop',{count:nameStats.length})}</td></tr>`;
   h+='</table></div></div>';
@@ -8477,7 +8467,7 @@ function renderPositionSizing(ticker){
     <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Conv. ${conv!==null?conv+'/10':'—'}</div>
     <div style="font-size:15px;font-weight:700;color:var(--text)">${convMult}×</div></div>`;
   h+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px;text-align:center">
-    <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Risk: ${risk||'Normal'}</div>
+    <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Risk: ${escH(risk||'Normal')}</div>
     <div style="font-size:15px;font-weight:700;color:var(--text)">${riskMult}×</div></div>`;
   h+=`</div>`;
   // Kelly criterion
@@ -8587,7 +8577,7 @@ function renderSummaryTab(ticker){
       const pnlCls=pnl>=0?'positive':'negative';
       h+=`<div class="cp-sum-row">
         <span class="cp-sum-label">${escH(accName)}</span>
-        <span class="cp-sum-val">${p.shares} × ${(p.avgCost||0).toFixed(2)} ${cur}</span>
+        <span class="cp-sum-val">${p.shares} × ${(p.avgCost||0).toFixed(2)} ${escH(cur)}</span>
         <span style="flex:1"></span>
         <span class="cp-sum-val">${fmt(mktVal)}</span>
         <span class="${pnlCls}" style="font-size:11px;min-width:70px;text-align:right">${pnl>=0?'+':''}${fmt(pnl)} (${pnlPct}%)</span>
@@ -8608,9 +8598,9 @@ function renderSummaryTab(ticker){
     txns.forEach(t=>{
       const typeCls=t.type==='buy'?'positive':t.type==='sell'?'negative':'';
       h+=`<div class="cp-sum-row">
-        <span class="cp-sum-label">${t.date||'—'}</span>
-        <span class="${typeCls}" style="font-weight:600;text-transform:uppercase;min-width:40px">${t.type}</span>
-        <span class="cp-sum-val">${t.shares||'—'} × ${(t.pricePerShare||0).toFixed(2)} ${t.currency||'USD'}</span>
+        <span class="cp-sum-label">${escH(t.date||'—')}</span>
+        <span class="${typeCls}" style="font-weight:600;text-transform:uppercase;min-width:40px">${escH(t.type)}</span>
+        <span class="cp-sum-val">${t.shares||'—'} × ${(t.pricePerShare||0).toFixed(2)} ${escH(t.currency||'USD')}</span>
         <span style="flex:1"></span>
         <span class="cp-sum-val">${fmt(t.totalAmount||0)}</span>
       </div>`;
@@ -8654,8 +8644,8 @@ function renderSummaryTab(ticker){
     recentReviews.forEach(rv=>{
       const summary=(rv.summary||'').substring(0,80);
       h+=`<div class="cp-sum-row" style="cursor:pointer" onclick="showSection('reviews');setTimeout(()=>openReview('${escH(rv.type)}',${parseInt(rv.id,10)||0}),100)">
-        <span class="cp-sum-label">${rv.date||'—'}</span>
-        <span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface2);color:var(--text2);text-transform:uppercase">${rv.type}</span>
+        <span class="cp-sum-label">${escH(rv.date||'—')}</span>
+        <span style="font-size:11px;padding:2px 6px;border-radius:4px;background:var(--surface2);color:var(--text2);text-transform:uppercase">${escH(rv.type)}</span>
         <span class="cp-sum-val" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escH(summary)||'—'}</span>
       </div>`;
     });
@@ -10475,7 +10465,7 @@ function renderDivCalendar(year,month){
     if(isToday)cls.push('today');
     let tooltip='';
     if(pays){
-      const details=pays.map(p=>`${p.ticker}: ${base} ${p.amount.toFixed(2)}`).join('<br>');
+      const details=pays.map(p=>`${escH(p.ticker)}: ${base} ${p.amount.toFixed(2)}`).join('<br>');
       tooltip=`<div class="div-cal-tooltip">${details}</div>`;
     }
     html+=`<div class="${cls.join(' ')}">${d}${pays?'<div class="div-cal-dot"></div>':''}${tooltip}</div>`;
@@ -10568,7 +10558,7 @@ function renderProfileDividends(ticker){
       <th>Ex-Date</th><th>Payment Date</th><th class="num">Amount</th><th class="num">Adj Amount</th>
     </tr></thead><tbody>`;
   html+=sorted.slice(0,40).map(d=>`<tr>
-    <td>${d.date}</td><td>${d.paymentDate||'—'}</td>
+    <td>${escH(d.date)}</td><td>${escH(d.paymentDate||'—')}</td>
     <td class="num">${d.dividend.toFixed(4)}</td><td class="num">${d.adjDividend.toFixed(4)}</td>
   </tr>`).join('');
   html+=`</tbody></table></div></div>`;

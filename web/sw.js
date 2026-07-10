@@ -57,12 +57,8 @@ self.addEventListener('fetch', e => {
   if (url.hostname.includes('workers.dev')) {
     e.respondWith(
       fetch(e.request).then(response => {
-        if (response.ok && e.request.method === 'GET') {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone)).catch(err => console.warn('Cache put failed:', err));
-        }
         return response;
-      }).catch(() => caches.match(e.request).then(c => c || new Response('{"error":"offline"}', {status:503,headers:{'Content-Type':'application/json'}})))
+      }).catch(() => new Response('{"error":"offline"}', {status:503,headers:{'Content-Type':'application/json'}}))
     );
     return;
   }
