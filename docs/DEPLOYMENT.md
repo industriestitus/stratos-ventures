@@ -103,18 +103,26 @@ wrangler tail --format json | grep /api/    # filter by path
 | Variable | Type | Required | Purpose |
 |----------|------|----------|---------|
 | `SYNC_SECRET` | Secret | Yes | Auth key for all API/sync endpoints (X-Sync-Key header) |
+| `FMP_KEY` | Secret | No* | FMP API key for `/proxy/fmp/*` (server-side, never sent to client) |
+| `FINNHUB_KEY` | Secret | No* | Finnhub API key for `/proxy/finnhub/*` (server-side, never sent to client) |
 | `ALLOWED_ORIGINS` | Secret | No | Extra CORS origins (comma-separated) |
 | `DB` | Binding | Yes | D1 database (configured in wrangler.toml) |
 | `SYNC_DATA` | Binding | Yes | KV namespace (configured in wrangler.toml) |
+
+*Required once the client uses the `/proxy/*` routes for live data (Phase A2). Without them the proxy returns 503.
 
 ### Setting Secrets
 
 ```bash
 cd web/cloudflare-worker
 wrangler secret put SYNC_SECRET       # prompted for value
+wrangler secret put FMP_KEY           # FMP API key (for /proxy/fmp/*)
+wrangler secret put FINNHUB_KEY       # Finnhub API key (for /proxy/finnhub/*)
 wrangler secret put ALLOWED_ORIGINS   # optional
 wrangler secret list                  # verify
 ```
+
+For local `wrangler dev` testing, put the same keys in `web/cloudflare-worker/.dev.vars` (git-ignored) instead of using `wrangler secret put`.
 
 Never commit secrets to git. They are encrypted in Cloudflare's vault.
 

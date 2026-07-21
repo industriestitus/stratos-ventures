@@ -1,6 +1,6 @@
 # Stratos Ventures — Known Issues & Tech Debt
 
-**Last Updated:** 2026-07-10
+**Last Updated:** 2026-07-21
 
 Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and code review.
 
@@ -25,6 +25,27 @@ Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and cod
 
 ### ~~P.10 — Web Crypto Without Secure-Context Guard (FIXED 2026-07-01)~~
 - **Fix applied:** `deriveKey()` checks `window.isSecureContext` and `crypto.subtle` before use, throws descriptive error.
+
+---
+
+## Security v2 — Deferred Hardening (flagged by deep QA 2026-07-21)
+
+These were surfaced during the Security v2 (Phase A+B) audit and consciously deferred. None is a critical/high hole; all are mitigated by server-side auth enforcement and/or the single-user threat model. Track for Phase C/D.
+
+### SV.1 — Per-isolate in-memory rate limiting (MEDIUM, deferred)
+- `checkRateLimit` uses a module-level `Map`, so the `yahoo`/`api`/`proxy` buckets reset per Cloudflare isolate and are trivially bypassed by spreading requests. Only `/auth/login` has durable KV-backed brute-force protection. Mitigation: all rate-limited routes except `/auth/*` require a valid credential, so the blast radius is a credentialed caller (single-user). Fix: back the `proxy`/`api` buckets with KV or a Durable Object. Consider in Phase D.
+
+### SV.2 — Sync key is still root; `/auth/setup` silently overwrites the verifier (LOW-MED, resolved by B3)
+- While the sync key exists, a holder can call `/auth/setup` to overwrite the master-password verifier (silent account takeover) — same blast radius the sync key always had, but the password-reset capability is new. Resolved when the sync key is retired in **Phase B3** (which is gated behind Phase C's recovery key). Until then, treat the sync key as a root credential.
+
+### SV.3 — No encryption at rest until Phase C (LOW/INFO, by design)
+- `encKey` is derived (HKDF `stratos-enc-v1`) but unused; D1 rows + KV `user_data` are plaintext server-side, and localStorage holds plaintext data + sync key + bearer token. A device or Worker/KV compromise exposes everything. This is the dominant residual risk while the sync key is live. Addressed by **Phase C** (envelope + field-level E2EE).
+
+### SV.4 — Production CORS allowlist hardcodes localhost origins (LOW, deferred)
+- `ALLOWED_ORIGINS` includes `localhost:8765/8767` + `127.0.0.1` in the production Worker. `authenticate()` still gates every data route, so this grants no data access without credentials. Recommendation: move localhost origins to a dev-only `ALLOWED_ORIGINS` env var. Cosmetic; low priority.
+
+### SV.5 — Bearer token in localStorage (LOW/INFO, accepted)
+- `auth_token` is XSS-readable like the sync key always was. Stored SHA-256-hashed server-side, never logged, never in URLs. 180-day TTL. Accepted for a single-user app; revocable via the device manager and revoked on password change.
 
 ---
 

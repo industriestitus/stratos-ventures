@@ -1,5 +1,26 @@
 # Stratos Ventures — Roadmap
 
+## In Progress: Security v2 Overhaul
+Goal: single master password, no sync key, server-side API keys, E2E encryption.
+Full plan in `memory/project_security-v2-plan.md`. Stop + multi-agent QA after each task.
+
+**Phase A — Server-side API keys**
+- [x] A1: Worker `/proxy/fmp/*` + `/proxy/finnhub/*` routes; keys as secrets (FMP_KEY, FINNHUB_KEY); SSRF/traversal/key-injection guards; body-scrub; 60/min rate limit. QA: 3 agents, hardening applied (redirect:manual, case-insensitive strip, Object.hasOwn, body-scrub). (2026-07-21)
+- [x] A2: Client FMP/Finnhub/Yahoo calls routed through Worker (proxyFetch + getWorkerUrl); default Worker URL baked in (API.init + getSyncUrl fall back to it); API key fields removed from Settings → "server-side" note; CSP tightened (removed FMP/Finnhub hosts); stale localStorage keys purged on load; proxy regex allows dots/commas for EU tickers + batch. QA: 2 agents (net security improvement, Yahoo-fallback + dotted-ticker fixes applied). localhost:8767 added to Worker CORS. (2026-07-21)
+
+**Phase B — Master password auth, retire sync key**
+- [x] B1: Auth backend — `/auth/salt|setup|login|change|devices|revoke`; PBKDF2 600k → HKDF split (authKey/encKey); device tokens (hashed, 180d TTL, revocable); dual-auth (`authenticate()` accepts sync key OR token); per-IP brute-force lockout. Additive/deploy-safe. QA: 2 agents (crypto sound, no bypass/regression); added `/auth/change` for the flagged post-B3 lockout risk. 19/19 flow tests pass; browser↔Node crypto interop verified. (2026-07-21)
+- [x] B2: Client UI (a+b+c all done 2026-07-21). B2a: master-password policy (min 10, length-only per user choice) + Settings setup card. B2b: login gate on lock screen (#lock-masterlogin, boot gate, 401→re-login), data path → authDataHeaders() (token OR sync key), token-only devices enter D1 mode. B2c: change-password + device manager (list/revoke, "this device" marker). QA: 6 agents across B2, all findings fixed (incl. token-only D1 init, orphan-device-on-change). Posture: master gate is cosmetic for data access until sync key retired (B3). **Awaiting Peter: deploy Worker + set up master password.**
+- [ ] B3: Flip to token-primary; delete connection string; retire sync key. **Blocked until Phase C recovery key exists** (else forgotten password = permanent lockout).
+
+**Deep QA before commit (2026-07-21):** 3 cross-cutting agents (holistic security, full-diff correctness, e2e journeys) over the whole A+B change. All journeys pass; no critical/high. 3 fixes applied+tested: `/auth/change` revokes all tokens (stolen-token remediation), worker `corsHeaders`→`cors` 413-guard typo, boot gate shows master-login (not old encryption setup) when worker unreachable on a fresh device. Deferred hardening logged in KNOWN-ISSUES.md (SV.1-SV.5).
+
+**Phase C — E2E encryption (envelope + field-level)** (NEXT SESSION; includes recovery key — unblocks B3). encKey already derived (`deriveEncKeyBits`, HKDF 'stratos-enc-v1'). Plan in memory/project_security-v2-plan.md.
+**Phase B3 — retire sync key** (after Phase C recovery key exists)
+**Phase D — Cleanup, durable rate limiting, docs, final security QA** (not started)
+
+---
+
 ## Completed: Phase 6 — Dividend Module
 Status: COMPLETE (2026-06-26)
 

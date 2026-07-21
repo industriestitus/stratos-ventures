@@ -13,6 +13,8 @@ database_id = "52a43c92-6fc1-4f00-ab14-7a98e6a88a66"
 
 # Required secrets (set via `wrangler secret put`):
 #   SYNC_SECRET — auth key for /sync endpoints
+#   FMP_KEY     — FMP API key for /proxy/fmp/* (server-side, never sent to client)
+#   FINNHUB_KEY — Finnhub API key for /proxy/finnhub/* (server-side, never sent to client)
 #
 # Optional env vars:
 #   ALLOWED_ORIGINS — comma-separated extra origins (e.g. "https://stratos.example.com")

@@ -70,6 +70,38 @@
   - Calls Yahoo's v8/finance/chart endpoint directly
   - Proxies response with CORS headers
 
+### Data API Proxy (FMP / Finnhub)
+- **Endpoint:** `GET /proxy/{provider}/{endpoint}`
+  - `provider`: `fmp` or `finnhub`
+  - `endpoint`: upstream API path (e.g. `profile`, `stock/insider-transactions`)
+- **Auth:** Required - `X-Sync-Key` header (timing-safe comparison)
+- **Method:** GET only (others → 405)
+- **Query Parameters:** Forwarded to the upstream API. The client's `apikey`/`token`/keyParam values are stripped (case-insensitive) and replaced with the Worker's server-side secret.
+- **Response:** Upstream JSON passed through verbatim, with the secret scrubbed from the body as defense-in-depth. Upstream status codes (401/403/429) surface unchanged.
+- **Purpose:** Keeps FMP/Finnhub API keys server-side (`FMP_KEY`, `FINNHUB_KEY` secrets) so they never reach the browser or appear in URLs.
+- **Security:**
+  - SSRF/open-proxy prevented: fixed per-provider base host + endpoint regex `^[A-Za-z0-9/_.,-]+$` (dots/commas allowed for symbols like `EVO.ST` and batch `AAPL,MSFT`; explicit `..` block prevents traversal; no scheme, host, or query injection)
+  - Provider lookup uses `Object.hasOwn` (prototype-safe)
+  - `redirect: 'manual'` on the upstream fetch
+  - Dedicated rate-limit bucket: 60 requests/min per IP
+- **Line:** cloudflare-worker/src/index.js — `handleProxy`, `PROXY_UPSTREAMS`, `/proxy/` dispatch
+
+### Master-Password Auth (`/auth/*`) — Security v2 / Phase B
+Token-based auth derived from a single master password. Runs alongside the legacy
+sync key during the transition: **all data endpoints accept `X-Sync-Key` OR `X-Auth-Token`** (`authenticate()` helper, dual-auth).
+
+Client derivation: `masterBits = PBKDF2(password, salt, 600k, SHA-256)` → HKDF-Expand into `authKey` (info `stratos-auth-v1`, sent to server) and `encKey` (info `stratos-enc-v1`, never leaves the device; used for Phase C E2EE). Server stores only `SHA-256(authKey)` as the verifier.
+
+- **`GET /auth/salt`** — public. Returns `{salt, initialized}` so the client can derive its authKey before login.
+- **`POST /auth/setup`** — one-time bootstrap, **gated by `X-Sync-Key`** (only the existing owner can establish auth). Body `{salt, authVerifier}`. Allows overwrite (re-setup) while the sync key exists.
+- **`POST /auth/login`** — public, brute-force limited. Body `{authKey, device}`. On match issues a 256-bit bearer token (stored hashed in KV, 180-day TTL). Returns `{token, device}`.
+- **`POST /auth/change`** — change master password. Requires a live session (`X-Auth-Token`/`X-Sync-Key`) **AND** proof of the current password (`oldAuthKey`). Body `{oldAuthKey, salt, authVerifier}`. **Revokes ALL device tokens** (deletes every `token_*` key) so a compromised token cannot survive a password change — every device must sign in again. The client re-logs-in immediately to refresh the current device's token. This is the recovery/rotation path that keeps the account changeable after the sync key is retired.
+- **`GET /auth/devices`** — list active device tokens (requires auth). Returns opaque ids (token-hash prefixes), never the tokens.
+- **`POST /auth/revoke`** — revoke a device token by id (requires auth). Body `{id}`.
+- **Brute-force:** per-IP KV counter (`authfail_<ip>`), 10 fails → 15-min lockout; plus a 20/min per-IP rate-limit bucket. `CF-Connecting-IP` is edge-set (not spoofable).
+- **KV keys:** `auth_config` (salt + verifier), `token_<sha256(token)>` (device tokens), `authfail_<ip>` (brute-force). Reuses the existing `SYNC_DATA` binding — no new secret required.
+- **Line:** cloudflare-worker/src/index.js — `handleAuth`, `authenticate`, `/auth/` dispatch
+
 ### Data Sync - Load
 - **Endpoint:** `GET /sync/load`
 - **Auth:** Required - `X-Sync-Key` header

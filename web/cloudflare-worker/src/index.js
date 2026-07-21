@@ -13,6 +13,8 @@ const rateLimitMap = new Map();
 const RATE_LIMITS = {
   yahoo: { max: 30, windowMs: 60_000 },
   api:   { max: 120, windowMs: 60_000 },
+  proxy: { max: 60, windowMs: 60_000 },
+  auth:  { max: 20, windowMs: 60_000 },
 };
 
 function checkRateLimit(ip, bucket) {
@@ -42,6 +44,8 @@ function checkRateLimit(ip, bucket) {
 const ALLOWED_ORIGINS = [
   'http://localhost:8765',
   'http://127.0.0.1:8765',
+  'http://localhost:8767',
+  'http://127.0.0.1:8767',
   'https://industriestitus.github.io',
   'https://stratos-ventures.pages.dev',
 ];
@@ -63,11 +67,65 @@ function timingSafeEqual(a, b) {
   return result === 0;
 }
 
+// ====== Master-password auth (Security v2 / Phase B) ======
+// The client derives an authKey from the master password (PBKDF2 + HKDF) and
+// sends it to /auth/login. The server stores only SHA-256(authKey) and issues a
+// per-device bearer token. All data endpoints accept EITHER the legacy sync key
+// (X-Sync-Key) OR a valid device token (X-Auth-Token) during the transition.
+
+async function sha256b64(s) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+
+function genToken() {
+  const b = crypto.getRandomValues(new Uint8Array(32));
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+const TOKEN_TTL_SECONDS = 180 * 24 * 60 * 60; // 180 days
+const AUTH_LOCK_MAX = 10;                       // failed attempts before lockout
+const AUTH_LOCK_WINDOW_MS = 15 * 60 * 1000;     // 15-minute lockout window
+
+// True if the request carries a valid sync key OR a live device token.
+async function authenticate(request, env) {
+  const syncKey = request.headers.get('X-Sync-Key');
+  if (syncKey && env.SYNC_SECRET && timingSafeEqual(syncKey, env.SYNC_SECRET)) return true;
+  const token = request.headers.get('X-Auth-Token');
+  if (token && env.SYNC_DATA) {
+    try {
+      const rec = await env.SYNC_DATA.get('token_' + (await sha256b64(token)), 'json');
+      if (rec) return true;
+    } catch (e) { /* fall through to unauthorized */ }
+  }
+  return false;
+}
+
+// Per-IP brute-force gate for /auth/login, persisted in KV so it survives
+// across Worker isolates.
+async function authBruteLocked(env, ip) {
+  try {
+    const rec = await env.SYNC_DATA.get('authfail_' + ip, 'json');
+    return !!(rec && rec.count >= AUTH_LOCK_MAX && Date.now() < rec.resetAt);
+  } catch (e) { return false; }
+}
+async function authRecordFail(env, ip) {
+  try {
+    let rec = await env.SYNC_DATA.get('authfail_' + ip, 'json');
+    if (!rec || Date.now() > rec.resetAt) rec = { count: 0, resetAt: Date.now() + AUTH_LOCK_WINDOW_MS };
+    rec.count++;
+    await env.SYNC_DATA.put('authfail_' + ip, JSON.stringify(rec), { expirationTtl: 3600 });
+  } catch (e) { /* best-effort */ }
+}
+async function authClearFail(env, ip) {
+  try { await env.SYNC_DATA.delete('authfail_' + ip); } catch (e) { /* best-effort */ }
+}
+
 function cors(allowedOrigin) {
   return {
     'Access-Control-Allow-Origin': allowedOrigin || '',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Sync-Key',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Sync-Key, X-Auth-Token',
     'Access-Control-Max-Age': '86400',
     'Content-Type': 'application/json'
   };
@@ -153,6 +211,171 @@ async function fetchBatch(symbols, modules, allowedOrigin) {
     }
   }
   return jsonResp(results, 200, allowedOrigin);
+}
+
+// ====== Data API Proxy (FMP / Finnhub) ======
+// Keys live in Worker secrets (FMP_KEY, FINNHUB_KEY) — never sent to the client.
+
+const PROXY_UPSTREAMS = {
+  fmp:     { base: 'https://financialmodelingprep.com/stable', keyParam: 'apikey', envKey: 'FMP_KEY' },
+  finnhub: { base: 'https://finnhub.io/api/v1',                keyParam: 'token',  envKey: 'FINNHUB_KEY' },
+};
+
+async function handleProxy(provider, endpoint, url, env, allowedOrigin) {
+  if (!Object.hasOwn(PROXY_UPSTREAMS, provider)) return jsonResp({ error: 'Unknown provider' }, 404, allowedOrigin);
+  const cfg = PROXY_UPSTREAMS[provider];
+
+  const secret = env[cfg.envKey];
+  if (!secret) return jsonResp({ error: 'Provider not configured on Worker' }, 503, allowedOrigin);
+
+  // Endpoint sanitization: path segments only — no scheme, no query tricks.
+  // Dots and commas are allowed for symbols (e.g. EVO.ST, batch AAPL,MSFT);
+  // the explicit '..' block still prevents path traversal.
+  if (!/^[A-Za-z0-9/_.,-]+$/.test(endpoint) || endpoint.includes('..')) {
+    return jsonResp({ error: 'Invalid endpoint' }, 400, allowedOrigin);
+  }
+
+  // Forward query params, but never let the client override the API key.
+  // Case-insensitive strip so no casing variant of a key param slips through.
+  const params = new URLSearchParams();
+  for (const [k, v] of url.searchParams) {
+    const lk = k.toLowerCase();
+    if (lk === cfg.keyParam || lk === 'apikey' || lk === 'token') continue;
+    params.set(k, v);
+  }
+  params.set(cfg.keyParam, secret);
+
+  const upstreamUrl = `${cfg.base}/${endpoint}?${params}`;
+  try {
+    const resp = await fetch(upstreamUrl, { redirect: 'manual' });
+    let text = await resp.text();
+    // Defense-in-depth: scrub the secret from the body in case an upstream error
+    // page ever reflects the request URL back verbatim.
+    if (text.includes(secret)) text = text.split(secret).join('[REDACTED]');
+    // Pass through status + body; upstream errors (429/401) surface to the client unchanged
+    return new Response(text, { status: resp.status, headers: cors(allowedOrigin) });
+  } catch (e) {
+    console.error('Proxy error (' + provider + '/' + endpoint + '):', e.message);
+    return jsonResp({ error: 'Upstream fetch failed' }, 502, allowedOrigin);
+  }
+}
+
+// ====== Auth endpoints (/auth/*) ======
+
+async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
+  if (!env.SYNC_DATA) return jsonResp({ error: 'Auth store unavailable' }, 503, allowedOrigin);
+
+  // GET /auth/salt — public. Returns the account salt so the client can derive
+  // its authKey before logging in. `initialized` tells the client whether an
+  // account has been set up yet.
+  if (action === 'salt' && request.method === 'GET') {
+    const cfg = await env.SYNC_DATA.get('auth_config', 'json');
+    return jsonResp({ ok: true, salt: cfg ? cfg.salt : null, initialized: !!cfg }, 200, allowedOrigin);
+  }
+
+  // POST /auth/setup — one-time bootstrap. Gated by the legacy sync key so only
+  // the existing owner can establish master-password auth. Body: {salt, authVerifier}.
+  if (action === 'setup' && request.method === 'POST') {
+    const syncKey = request.headers.get('X-Sync-Key');
+    if (!syncKey || !env.SYNC_SECRET || !timingSafeEqual(syncKey, env.SYNC_SECRET)) {
+      return jsonResp({ error: 'Setup requires the sync key' }, 401, allowedOrigin);
+    }
+    let body;
+    try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
+    if (!body.salt || !body.authVerifier) return jsonResp({ error: 'salt and authVerifier required' }, 400, allowedOrigin);
+    const existing = await env.SYNC_DATA.get('auth_config', 'json');
+    // Allow overwrite (password change / re-setup) since the caller proved the sync key.
+    await env.SYNC_DATA.put('auth_config', JSON.stringify({
+      salt: body.salt, authVerifier: body.authVerifier,
+      created: existing ? existing.created : new Date().toISOString(),
+      updated: new Date().toISOString(),
+    }));
+    return jsonResp({ ok: true, replaced: !!existing }, 200, allowedOrigin);
+  }
+
+  // POST /auth/login — public but brute-force limited. Body: {authKey, device}.
+  // On success issues a per-device bearer token.
+  if (action === 'login' && request.method === 'POST') {
+    if (await authBruteLocked(env, clientIP)) {
+      return jsonResp({ error: 'Too many attempts — try again later' }, 429, allowedOrigin);
+    }
+    let body;
+    try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
+    const cfg = await env.SYNC_DATA.get('auth_config', 'json');
+    if (!cfg) return jsonResp({ error: 'No account — run setup first' }, 404, allowedOrigin);
+    if (!body.authKey) return jsonResp({ error: 'authKey required' }, 400, allowedOrigin);
+    const verifier = await sha256b64(body.authKey);
+    if (!timingSafeEqual(verifier, cfg.authVerifier)) {
+      await authRecordFail(env, clientIP);
+      return jsonResp({ error: 'Invalid password' }, 401, allowedOrigin);
+    }
+    await authClearFail(env, clientIP);
+    const token = genToken();
+    const device = (typeof body.device === 'string' ? body.device : '').slice(0, 60) || 'Unknown device';
+    await env.SYNC_DATA.put('token_' + (await sha256b64(token)), JSON.stringify({
+      device, created: new Date().toISOString(),
+    }), { expirationTtl: TOKEN_TTL_SECONDS });
+    return jsonResp({ ok: true, token, device }, 200, allowedOrigin);
+  }
+
+  // POST /auth/change — change the master password. Requires a live session
+  // (token or sync key) AND proof of the current password (oldAuthKey), so a
+  // stolen bearer token alone cannot change it. Body: {oldAuthKey, salt, authVerifier}.
+  // This is the recovery path that keeps the account changeable after the sync
+  // key is retired in Phase B3.
+  if (action === 'change' && request.method === 'POST') {
+    if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+    let body;
+    try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
+    if (!body.oldAuthKey || !body.salt || !body.authVerifier) return jsonResp({ error: 'oldAuthKey, salt and authVerifier required' }, 400, allowedOrigin);
+    const cfg = await env.SYNC_DATA.get('auth_config', 'json');
+    if (!cfg) return jsonResp({ error: 'No account — run setup first' }, 404, allowedOrigin);
+    const oldVerifier = await sha256b64(body.oldAuthKey);
+    if (!timingSafeEqual(oldVerifier, cfg.authVerifier)) {
+      await authRecordFail(env, clientIP);
+      return jsonResp({ error: 'Current password incorrect' }, 401, allowedOrigin);
+    }
+    await env.SYNC_DATA.put('auth_config', JSON.stringify({
+      salt: body.salt, authVerifier: body.authVerifier,
+      created: cfg.created, updated: new Date().toISOString(),
+    }));
+    // Security: a password change revokes ALL device tokens, so a compromised
+    // token cannot survive the remediation. Every device must sign in again.
+    try {
+      const list = await env.SYNC_DATA.list({ prefix: 'token_' });
+      for (const k of list.keys) await env.SYNC_DATA.delete(k.name);
+    } catch (e) { /* best-effort revoke */ }
+    return jsonResp({ ok: true, tokensRevoked: true }, 200, allowedOrigin);
+  }
+
+  // GET /auth/devices — list active device tokens (requires auth). Returns
+  // opaque ids (token-hash prefixes), never the tokens themselves.
+  if (action === 'devices' && request.method === 'GET') {
+    if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+    const list = await env.SYNC_DATA.list({ prefix: 'token_' });
+    const devices = [];
+    for (const k of list.keys) {
+      const rec = await env.SYNC_DATA.get(k.name, 'json');
+      if (rec) devices.push({ id: k.name.slice('token_'.length, 'token_'.length + 12), device: rec.device, created: rec.created });
+    }
+    return jsonResp({ ok: true, devices }, 200, allowedOrigin);
+  }
+
+  // POST /auth/revoke — revoke a device token by id prefix (requires auth).
+  if (action === 'revoke' && request.method === 'POST') {
+    if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+    let body;
+    try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
+    if (!body.id) return jsonResp({ error: 'id required' }, 400, allowedOrigin);
+    const list = await env.SYNC_DATA.list({ prefix: 'token_' });
+    let revoked = 0;
+    for (const k of list.keys) {
+      if (k.name.slice('token_'.length, 'token_'.length + 12) === body.id) { await env.SYNC_DATA.delete(k.name); revoked++; }
+    }
+    return jsonResp({ ok: true, revoked }, 200, allowedOrigin);
+  }
+
+  return jsonResp({ error: 'Use GET /auth/salt, POST /auth/setup, POST /auth/login, POST /auth/change, GET /auth/devices, POST /auth/revoke' }, 400, allowedOrigin);
 }
 
 // ====== D1 CRUD API ======
@@ -644,7 +867,7 @@ async function handleMigrate(body, db, origin) {
 
 async function handleApi(path, method, url, request, env, origin) {
   const cl = parseInt(request.headers.get('Content-Length') || '0', 10);
-  if (cl > 5 * 1024 * 1024) return new Response(JSON.stringify({ error: 'Request body too large (max 5MB)' }), { status: 413, headers: corsHeaders(origin) });
+  if (cl > 5 * 1024 * 1024) return new Response(JSON.stringify({ error: 'Request body too large (max 5MB)' }), { status: 413, headers: cors(origin) });
   const db = env.DB;
   await db.prepare('PRAGMA foreign_keys = ON').run();
 
@@ -800,15 +1023,41 @@ export default {
       }
     }
 
+    // Rate limit data API proxy endpoints
+    if (path.startsWith('/proxy/')) {
+      const retryAfter = checkRateLimit(clientIP, 'proxy');
+      if (retryAfter) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+          status: 429,
+          headers: { ...cors(allowedOrigin), 'Retry-After': String(retryAfter) },
+        });
+      }
+    }
+
+    // Rate limit auth endpoints (login brute-force also gated per-account in KV)
+    if (path.startsWith('/auth/')) {
+      const retryAfter = checkRateLimit(clientIP, 'auth');
+      if (retryAfter) {
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+          status: 429,
+          headers: { ...cors(allowedOrigin), 'Retry-After': String(retryAfter) },
+        });
+      }
+    }
+
     // Health check
     if (path === '/' || path === '/health') {
       return jsonResp({ status: 'ok', ts: new Date().toISOString() }, 200, allowedOrigin);
     }
 
+    // Auth: /auth/salt, /auth/setup, /auth/login, /auth/devices, /auth/revoke
+    if (path.startsWith('/auth/')) {
+      return handleAuth(path.slice(6), request, url, env, allowedOrigin, clientIP);
+    }
+
     // Single quote: GET /quote/AAPL
     if (path.startsWith('/quote/')) {
-      const key = request.headers.get('X-Sync-Key');
-      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+      if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
       const symbol = decodeURIComponent(path.slice(7));
       if (!symbol) return jsonResp({ error: 'Symbol required' }, 400, allowedOrigin);
       const modules = url.searchParams.get('modules') ||
@@ -823,8 +1072,7 @@ export default {
 
     // Batch: GET /batch?symbols=AAPL,GOOGL,MSFT
     if (path === '/batch') {
-      const key = request.headers.get('X-Sync-Key');
-      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+      if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
       const syms = (url.searchParams.get('symbols') || '').split(',').map(s => s.trim()).filter(Boolean);
       if (!syms.length) return jsonResp({ error: 'symbols parameter required' }, 400, allowedOrigin);
       if (syms.length > 10) return jsonResp({ error: 'Max 10 symbols per batch' }, 400, allowedOrigin);
@@ -840,8 +1088,7 @@ export default {
 
     // Sync: GET /sync/load or POST /sync/save
     if (path.startsWith('/sync/')) {
-      const key = request.headers.get('X-Sync-Key');
-      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+      if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
 
       const action = path.slice(6);
       if (action === 'meta' && request.method === 'GET') {
@@ -914,8 +1161,7 @@ export default {
 
     // Chart: GET /chart/AAPL?range=1y&interval=1wk
     if (path.startsWith('/chart/')) {
-      const key = request.headers.get('X-Sync-Key');
-      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+      if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
       const symbol = decodeURIComponent(path.slice(7));
       if (!symbol) return jsonResp({ error: 'Symbol required' }, 400, allowedOrigin);
       const range = url.searchParams.get('range') || '1y';
@@ -938,16 +1184,27 @@ export default {
       }
     }
 
+    // Data API proxy: GET /proxy/fmp/{endpoint} or GET /proxy/finnhub/{endpoint}
+    if (path.startsWith('/proxy/')) {
+      if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+      if (request.method !== 'GET') return jsonResp({ error: 'GET only' }, 405, allowedOrigin);
+      const rest = path.slice(7); // strip '/proxy/'
+      const slash = rest.indexOf('/');
+      if (slash < 1 || slash === rest.length - 1) return jsonResp({ error: 'Use /proxy/{provider}/{endpoint}' }, 400, allowedOrigin);
+      const provider = rest.slice(0, slash);
+      const endpoint = rest.slice(slash + 1);
+      return handleProxy(provider, endpoint, url, env, allowedOrigin);
+    }
+
     // D1 CRUD API: /api/*
     if (path.startsWith('/api/')) {
-      const key = request.headers.get('X-Sync-Key');
-      if (!key || !timingSafeEqual(key, env.SYNC_SECRET)) {
+      if (!(await authenticate(request, env))) {
         return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
       }
       const apiPath = path.slice(5); // strip '/api/'
       return handleApi(apiPath, request.method, url, request, env, allowedOrigin);
     }
 
-    return jsonResp({ error: 'Not found. Use /quote/{SYMBOL}, /batch?symbols=A,B,C, /chart/{SYMBOL}, or /api/*' }, 404, allowedOrigin);
+    return jsonResp({ error: 'Not found. Use /quote/{SYMBOL}, /batch?symbols=A,B,C, /chart/{SYMBOL}, /proxy/{provider}/*, or /api/*' }, 404, allowedOrigin);
   }
 };

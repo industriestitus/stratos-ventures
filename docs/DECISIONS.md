@@ -957,6 +957,63 @@ The codebase had inconsistent font sizes — arbitrary values like 9px, 17px, 22
 
 ---
 
+## ADR-032: Server-Side API Keys via Worker Proxy
+
+**Status:** Accepted (2026-07-21)
+
+**Context:**  
+FMP and Finnhub API keys were stored in browser localStorage and sent from the client directly to the upstream APIs as URL query parameters (`?apikey=...`, `?token=...`). This exposed the keys in the browser network tab, browser history, and any intermediary logs, and required re-entering them on every device. This is the first step of the Security v2 overhaul (see `memory/project_security-v2-plan.md`), which aims for a single-master-password model with no per-device credential entry.
+
+**Decision:**  
+- Add `/proxy/fmp/{endpoint}` and `/proxy/finnhub/{endpoint}` routes to the Cloudflare Worker.
+- API keys live as Worker secrets (`FMP_KEY`, `FINNHUB_KEY`), injected server-side and never sent to the client.
+- The proxy strips any client-supplied key param (case-insensitive), forces the server key last, and scrubs the secret from the response body as defense-in-depth.
+- SSRF/open-proxy prevented via fixed per-provider base host + strict endpoint regex; `Object.hasOwn` provider lookup; `redirect: 'manual'`; dedicated 60/min rate-limit bucket.
+
+**Alternatives Rejected:**
+- **Sync API keys to D1 (encrypted):** Still delivers the key to every client; larger attack surface than never sending it at all.
+- **Keep keys client-side:** The status quo — exposes keys in URLs and requires per-device entry.
+
+**Consequences:**
+- ✅ **Gained:** Keys never leave the server; not in browser, URLs, history, or logs.
+- ✅ **Gained:** No per-device API key entry — works automatically on any device.
+- ✅ **Gained:** Central rate-limit and quota control point.
+- ⚠️ **Note:** Proxy is currently gated by the sync key (`X-Sync-Key`); this becomes token-based auth in Phase B. Anyone with the sync key can consume the owner's API quota (acceptable for a single-user app).
+- ❌ **Lost:** One extra network hop (client → Worker → upstream) adds minor latency.
+
+**Date:** 2026-07-21 (Security v2, Phase A1)
+
+---
+
+## ADR-033: Master-Password Auth with Device Tokens (retiring the sync key)
+
+**Status:** Accepted (2026-07-21) — Phase B1 backend landed; client UI (B2) and sync-key retirement (B3) pending
+
+**Context:**  
+Auth was a single shared `SYNC_SECRET` (the "sync key") sent as `X-Sync-Key` on every request — no per-device tokens, no expiry, no revocation, and (critically) in D1 mode the encryption password was decorative: anyone with the sync key had full read/write. The Security v2 goal is a single master password that both authenticates and (Phase C) encrypts, with no per-device credential entry.
+
+**Decision:**  
+- Master password → `PBKDF2(600k, SHA-256)` → HKDF-Expand into `authKey` (sent to server) and `encKey` (stays on device, for Phase C E2EE). Distinct HKDF info labels make the two keys cryptographically independent, so disclosing `authKey` reveals nothing about `encKey`.
+- Server stores only `SHA-256(authKey)`; a KV leak cannot yield the password (256-bit preimage) or impersonate.
+- `/auth/login` issues a 256-bit device bearer token (stored hashed, 180-day TTL, individually revocable).
+- **Dual-auth transition:** data endpoints accept the sync key OR a device token, so nothing breaks while devices migrate. `/auth/setup` is bootstrapped by the sync key; `/auth/change` (session + old-password proof) provides rotation/recovery so the account stays changeable after the sync key is retired. A password change **revokes all device tokens**, so it doubles as "log out everywhere" for remediating a stolen token.
+
+**Alternatives Rejected:**
+- **Keep the shared sync key:** no revocation, no per-device identity, and it doubles as the API-quota guard.
+- **Store `authKey` directly on the server:** a KV leak would be a full account takeover; storing the hash avoids this.
+- **Per-account brute-force lockout:** rejected in favor of per-IP (avoids a targeted lockout-DoS of the sole legitimate user); weak-password risk is instead mitigated by enforcing a strong master password at setup (B2).
+
+**Consequences:**
+- ✅ **Gained:** one master password across devices, per-device revocable tokens, no decorative-password gap.
+- ✅ **Gained:** `encKey` foundation ready for Phase C envelope encryption.
+- ⚠️ **Sequencing:** `SYNC_SECRET` must NOT be removed (B3) until a recovery path exists — `/auth/change` covers rotation; forgotten-password recovery needs the Phase C recovery key. So sync-key retirement follows Phase C.
+- ⚠️ **Transition:** while the sync key exists it can overwrite auth (re-setup) — treat it as a root credential until B3.
+- ❌ **Lost:** slight per-request latency (token KV lookup) and PBKDF2 cost on login.
+
+**Date:** 2026-07-21 (Security v2, Phase B1)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -992,6 +1049,8 @@ The codebase had inconsistent font sizes — arbitrary values like 9px, 17px, 22
 | 029 | Dark UI, purple accent | Accepted | Phase 0 |
 | 030 | Client-side PDF with jsPDF | Accepted | 2026-07-01 |
 | 031 | 8-level CSS typography scale | Accepted | 2026-07-03 |
+| 032 | Server-side API keys via Worker proxy | Accepted | 2026-07-21 |
+| 033 | Master-password auth + device tokens | Accepted | 2026-07-21 |
 
 ---
 
