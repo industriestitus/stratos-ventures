@@ -14242,8 +14242,7 @@ async function loginFromDevice(){
         if(probe.ok){
           const probeData=await probe.json();
           if(probeData.data){
-            meta={meta_version:1,mode:'d1',has_encryption:false};
-            cloudSaveMeta(meta).catch(()=>{});
+            meta={meta_version:0,mode:'d1',has_encryption:false};
           }else{metaErr+=' | D1 empty'}
         }else{metaErr+=' | D1 HTTP '+probe.status}
       }catch(e){metaErr+=' | D1: '+e.message}
@@ -14356,7 +14355,7 @@ async function cloudSave(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     lastSyncTs=payload.ts;
     setStatus('sync-status','Saved ✓ '+new Date().toLocaleTimeString(),true);
-    cloudSaveMeta(buildMeta()).catch(()=>{});
+    cloudLoadMeta().then(ex=>{if(!ex)cloudSaveMeta(buildMeta())}).catch(()=>{});
   }catch(e){setStatus('sync-status','Save failed',false);console.warn('Cloud save failed',e);throw e}finally{_cloudSaving=false}
 }
 
