@@ -14276,6 +14276,8 @@ async function loginFromDevice(){
       d1Mode=true;
     }
 
+    if(!meta.has_encryption)localStorage.setItem('enc_skipped','1');
+
     document.getElementById('lock-screen').style.display='none';
     document.documentElement.classList.remove('app-locked');
     autoLoad();
