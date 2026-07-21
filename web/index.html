@@ -10853,7 +10853,10 @@ function saveTrackerStocks(){invalidateScreenerCache();
         if(typeof types!=='object'||types.done!==undefined)return;
         Object.entries(types).forEach(([ftype,v])=>{
           const isQ=/^Q(\d)$/.test(ftype);
-          filings.push({company_id:cid,filing_type:isQ?'10Q':ftype,fiscal_year:+yr||0,fiscal_quarter:isQ?+ftype.slice(1):null,is_read:v.done?1:0,filed_date:v.filedDate||null,notes:v.note||v.notes||''});
+          // fiscal_quarter is 0 (not null) for annual filings: SQLite treats NULLs as
+          // DISTINCT in the UNIQUE(company_id,filing_type,fiscal_year,fiscal_quarter) key,
+          // so a null would defeat the natural-key upsert and duplicate on every save.
+          filings.push({company_id:cid,filing_type:isQ?'10Q':ftype,fiscal_year:+yr||0,fiscal_quarter:isQ?+ftype.slice(1):0,is_read:v.done?1:0,filed_date:v.filedDate||null,notes:v.note||v.notes||''});
         });
       });
       Object.entries(s.overriddenData||{}).forEach(([mk,mv])=>overrides.push({company_id:cid,metric_key:mk,original_value:String((s._origData||{})[mk]||''),override_value:String(mv),reason:''}));

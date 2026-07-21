@@ -474,29 +474,36 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
 
 // ====== D1 CRUD API ======
 
+// conflictTarget: for rows inserted WITHOUT an id, the natural-key UNIQUE constraint to
+// upsert on. Without it the idless INSERT uses ON CONFLICT(id) — which never fires (id is
+// a fresh autoincrement) — so a second save of the same natural key raises a UNIQUE
+// violation and the whole batch fails, silently dropping edits. Tables whose client saver
+// always sends the row id (transactions, reviews, valuations, framework, general_todos,
+// company_todos) don't need one. Tables with no natural key (notes, snapshot_positions,
+// note_images) intentionally have none (they insert-only).
 const TABLES = {
-  companies:             { cols: ['symbol','name','sector','currency','exchange','company_type','pipeline_status','thesis','sort_order','archived_at'], hasUpdatedAt: true },
+  companies:             { cols: ['symbol','name','sector','currency','exchange','company_type','pipeline_status','thesis','sort_order','archived_at'], hasUpdatedAt: true, conflictTarget: 'symbol' },
   company_todos:         { cols: ['company_id','title','due_date','is_done','sort_order'], hasUpdatedAt: true },
-  earnings_timeline:     { cols: ['company_id','year','quarter','is_reported','is_reviewed','report_date'], hasUpdatedAt: true },
-  filing_tracking:       { cols: ['company_id','filing_type','fiscal_year','fiscal_quarter','is_read','filed_date','notes'], hasUpdatedAt: true },
-  company_data_overrides:{ cols: ['company_id','metric_key','original_value','override_value','reason'], hasUpdatedAt: true },
+  earnings_timeline:     { cols: ['company_id','year','quarter','is_reported','is_reviewed','report_date'], hasUpdatedAt: true, conflictTarget: 'company_id, year, quarter' },
+  filing_tracking:       { cols: ['company_id','filing_type','fiscal_year','fiscal_quarter','is_read','filed_date','notes'], hasUpdatedAt: true, conflictTarget: 'company_id, filing_type, fiscal_year, fiscal_quarter' },
+  company_data_overrides:{ cols: ['company_id','metric_key','original_value','override_value','reason'], hasUpdatedAt: true, conflictTarget: 'company_id, metric_key' },
   notes:                 { cols: ['company_id','note_type','title','content','note_date','quarter','source_name','source_url','is_pinned','deleted_at'], hasUpdatedAt: true },
   note_images:           { cols: ['note_id','filename','mime_type','image_data','sort_order'], hasUpdatedAt: false },
-  broker_accounts:       { cols: ['name','currency','is_active'], hasUpdatedAt: true },
-  positions:             { cols: ['company_id','account_id','shares','avg_cost','deleted_at'], hasUpdatedAt: true },
+  broker_accounts:       { cols: ['name','currency','is_active'], hasUpdatedAt: true, conflictTarget: 'name' },
+  positions:             { cols: ['company_id','account_id','shares','avg_cost','deleted_at'], hasUpdatedAt: true, conflictTarget: 'company_id, account_id' },
   transactions:          { cols: ['company_id','account_id','transaction_type','transaction_date','shares','price_per_share','total_amount','fees','currency','notes','deleted_at'], hasUpdatedAt: false },
-  portfolio_snapshots:   { cols: ['snapshot_date','total_value','base_currency','notes'], hasUpdatedAt: false },
+  portfolio_snapshots:   { cols: ['snapshot_date','total_value','base_currency','notes'], hasUpdatedAt: false, conflictTarget: 'snapshot_date' },
   snapshot_positions:    { cols: ['snapshot_id','company_id','account_id','shares','price_per_share','market_value','currency','intent'], hasUpdatedAt: false },
-  exchange_rates:        { cols: ['rate_date','from_currency','to_currency','rate'], hasUpdatedAt: false },
-  dividend_history:      { cols: ['company_id','ex_date','pay_date','amount','currency','frequency'], hasUpdatedAt: false },
+  exchange_rates:        { cols: ['rate_date','from_currency','to_currency','rate'], hasUpdatedAt: false, conflictTarget: 'rate_date, from_currency, to_currency' },
+  dividend_history:      { cols: ['company_id','ex_date','pay_date','amount','currency','frequency'], hasUpdatedAt: false, conflictTarget: 'company_id, ex_date' },
   framework_entries:     { cols: ['category','title','content','sort_order'], hasUpdatedAt: true },
-  checklist_templates:   { cols: ['section_key','title','description','fields_json','sort_order'], hasUpdatedAt: true },
-  checklist_answers:     { cols: ['company_id','template_id','answer_json','progress','status'], hasUpdatedAt: true },
+  checklist_templates:   { cols: ['section_key','title','description','fields_json','sort_order'], hasUpdatedAt: true, conflictTarget: 'section_key' },
+  checklist_answers:     { cols: ['company_id','template_id','answer_json','progress','status'], hasUpdatedAt: true, conflictTarget: 'company_id, template_id' },
   reviews:               { cols: ['review_type','review_date','company_id','answers_json','summary','deleted_at'], hasUpdatedAt: true },
   valuations:            { cols: ['company_id','method','label','currency','scale','inputs_json','results_json','intrinsic_value','upside_pct','is_primary','valuation_date'], hasUpdatedAt: true },
   general_todos:         { cols: ['title','due_date','is_done','sort_order'], hasUpdatedAt: true },
   app_settings:          { cols: ['key','value'], hasUpdatedAt: false, pk: 'key' },
-  api_cache:             { cols: ['company_id','data_source','data_json','fetched_at'], hasUpdatedAt: false },
+  api_cache:             { cols: ['company_id','data_source','data_json','fetched_at'], hasUpdatedAt: false, conflictTarget: 'company_id, data_source' },
 };
 
 async function handleCrud(table, method, id, body, url, db, origin) {
@@ -1047,8 +1054,14 @@ async function handleApi(path, method, url, request, env, origin) {
             if (item[col] !== undefined) { cols.push(col); vals.push(item[col]); ph.push('?'); }
           }
           if (cols.length) {
+            // Upsert on the table's natural key when defined (rows sent without an id),
+            // else fall back to the id target (insert-only for keyless tables). This is
+            // what lets a second save of the same natural key UPDATE instead of raising a
+            // UNIQUE violation that fails the whole batch.
+            const target = cfg.conflictTarget || pk;
+            const updatedAtClause = cfg.hasUpdatedAt ? `, updated_at = datetime('now')` : '';
             const updates = cols.map(c => `${c} = excluded.${c}`).join(',');
-            stmts.push(db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')}) ON CONFLICT(${pk}) DO UPDATE SET ${updates}`).bind(...vals));
+            stmts.push(db.prepare(`INSERT INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')}) ON CONFLICT(${target}) DO UPDATE SET ${updates}${updatedAtClause}`).bind(...vals));
             results.push({ action: 'upserted' });
           }
         }
