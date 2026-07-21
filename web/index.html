@@ -14159,13 +14159,14 @@ async function testSync(){
 async function cloudLoadMeta(){
   const url=getSyncUrl();
   const key=getSyncKey();
-  if(!url||!key)return null;
+  if(!url||!key){console.warn('cloudLoadMeta: no url/key',{url:!!url,key:!!key});return null}
   try{
     const r=await fetch(url+'/sync/meta',{headers:{'X-Sync-Key':key}});
-    if(!r.ok)return null;
+    if(!r.ok){console.warn('cloudLoadMeta: HTTP',r.status);return null}
     const d=await r.json();
+    console.log('cloudLoadMeta response:',JSON.stringify(d));
     return d.ok?d.meta:null;
-  }catch(e){return null}
+  }catch(e){console.warn('cloudLoadMeta error:',e.message);return null}
 }
 
 async function cloudSaveMeta(meta,expectedVersion){
@@ -14228,8 +14229,26 @@ async function loginFromDevice(){
     const skEl=document.getElementById('st-synckey');if(skEl)skEl.value=syncKey;
     saveTrackerSettings();
 
-    const meta=await cloudLoadMeta();
-    if(!meta){err.textContent=t('login.noAccount');err.style.display='block';btn.disabled=false;btn.textContent=t('login.connect');return}
+    let meta=null;
+    let metaErr='';
+    try{
+      const r=await fetch(workerUrl+'/sync/meta',{headers:{'X-Sync-Key':syncKey}});
+      if(r.ok){const d=await r.json();meta=d.ok?d.meta:null;if(!meta)metaErr='meta=null in KV'}
+      else metaErr='HTTP '+r.status;
+    }catch(e){metaErr=e.message}
+    if(!meta){
+      try{
+        const probe=await fetch(workerUrl+'/api/companies?limit=1',{headers:{'X-Sync-Key':syncKey}});
+        if(probe.ok){
+          const probeData=await probe.json();
+          if(probeData.data){
+            meta={meta_version:1,mode:'d1',has_encryption:false};
+            cloudSaveMeta(meta).catch(()=>{});
+          }else{metaErr+=' | D1 empty'}
+        }else{metaErr+=' | D1 HTTP '+probe.status}
+      }catch(e){metaErr+=' | D1: '+e.message}
+      if(!meta){err.textContent=t('login.noAccount')+' ('+metaErr+')';err.style.display='block';btn.disabled=false;btn.textContent=t('login.connect');return}
+    }
 
     if(meta.has_encryption&&meta.mode!=='d1'){
       const passArea=document.getElementById('login-password-area');
@@ -14335,6 +14354,7 @@ async function cloudSave(){
     if(!r.ok)throw new Error('HTTP '+r.status);
     lastSyncTs=payload.ts;
     setStatus('sync-status','Saved ✓ '+new Date().toLocaleTimeString(),true);
+    cloudSaveMeta(buildMeta()).catch(()=>{});
   }catch(e){setStatus('sync-status','Save failed',false);console.warn('Cloud save failed',e);throw e}finally{_cloudSaving=false}
 }
 
