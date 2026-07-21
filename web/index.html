@@ -10861,8 +10861,11 @@ function saveTrackerStocks(){invalidateScreenerCache();
       });
       Object.entries(s.overriddenData||{}).forEach(([mk,mv])=>overrides.push({company_id:cid,metric_key:mk,original_value:String((s._origData||{})[mk]||''),override_value:String(mv),reason:''}));
       if(s.notes&&typeof s.notes==='object'){
-        if(s.notes.research)notes.push({company_id:cid,note_type:'earnings',title:'research',content:s.notes.research,note_date:null,quarter:null});
-        Object.entries(s.notes.earnings||{}).forEach(([yr,qs])=>{Object.entries(qs).forEach(([q,v])=>{notes.push({company_id:cid,note_type:'earnings',title:'',content:v.note||'',note_date:null,quarter:yr+q})})});
+        // note_date is OMITTED (not null): the column is NOT NULL DEFAULT date('now'), and
+        // SQLite does NOT apply the default when a column is explicitly set to NULL — passing
+        // null violates NOT NULL and 500s the whole notes batch. Omitting lets the default apply.
+        if(s.notes.research)notes.push({company_id:cid,note_type:'earnings',title:'research',content:s.notes.research,quarter:null});
+        Object.entries(s.notes.earnings||{}).forEach(([yr,qs])=>{Object.entries(qs).forEach(([q,v])=>{notes.push({company_id:cid,note_type:'earnings',title:'',content:v.note||'',quarter:yr+q})})});
       }
       const secs=(s.checklist&&s.checklist.sections)||{};
       Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(sv.answers||{}),progress:sv.progress||0,status:sv.status||'not_started'}));
