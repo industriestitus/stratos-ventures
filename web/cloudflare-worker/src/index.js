@@ -120,6 +120,20 @@ async function authRecordFail(env, ip) {
 async function authClearFail(env, ip) {
   try { await env.SYNC_DATA.delete('authfail_' + ip); } catch (e) { /* best-effort */ }
 }
+// Revoke every device token, following the KV list cursor so nothing is missed past
+// the first page. Used after a password change or recovery reset. Returns true on a
+// fully-completed sweep, false if a page failed (caller can treat that as non-silent).
+async function revokeAllTokens(env) {
+  let cursor;
+  try {
+    do {
+      const list = await env.SYNC_DATA.list({ prefix: 'token_', cursor });
+      for (const k of list.keys) await env.SYNC_DATA.delete(k.name);
+      cursor = list.list_complete ? undefined : list.cursor;
+    } while (cursor);
+    return true;
+  } catch (e) { return false; }
+}
 
 function cors(allowedOrigin) {
   return {
@@ -335,17 +349,22 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
       await authRecordFail(env, clientIP);
       return jsonResp({ error: 'Current password incorrect' }, 401, allowedOrigin);
     }
-    await env.SYNC_DATA.put('auth_config', JSON.stringify({
+    // The new password derives a new encKey, so the envelope's encKey-wrapped DEK
+    // must be re-wrapped (client sends newWrapEnc). The recovery wrap (wrapRec) and
+    // its verifier are untouched, so the recovery key still works. Envelope fields
+    // live inside auth_config, so this single put updates auth + wrapEnc ATOMICALLY —
+    // no window where the password and the DEK wrapper disagree.
+    const changed = {
       salt: body.salt, authVerifier: body.authVerifier,
       created: cfg.created, updated: new Date().toISOString(),
-    }));
+      wrapEnc: body.newWrapEnc || cfg.wrapEnc || null,
+      wrapRec: cfg.wrapRec || null, recVerifier: cfg.recVerifier || null,
+    };
+    await env.SYNC_DATA.put('auth_config', JSON.stringify(changed));
     // Security: a password change revokes ALL device tokens, so a compromised
     // token cannot survive the remediation. Every device must sign in again.
-    try {
-      const list = await env.SYNC_DATA.list({ prefix: 'token_' });
-      for (const k of list.keys) await env.SYNC_DATA.delete(k.name);
-    } catch (e) { /* best-effort revoke */ }
-    return jsonResp({ ok: true, tokensRevoked: true }, 200, allowedOrigin);
+    const revoked = await revokeAllTokens(env);
+    return jsonResp({ ok: true, tokensRevoked: revoked }, 200, allowedOrigin);
   }
 
   // GET /auth/devices — list active device tokens (requires auth). Returns
@@ -375,7 +394,82 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
     return jsonResp({ ok: true, revoked }, 200, allowedOrigin);
   }
 
-  return jsonResp({ error: 'Use GET /auth/salt, POST /auth/setup, POST /auth/login, POST /auth/change, GET /auth/devices, POST /auth/revoke' }, 400, allowedOrigin);
+  // POST /auth/recover — recovery-key password reset (public, brute-force limited).
+  // Two phases keyed on the body: {proof} alone returns wrapRec so the client can
+  // unwrap the DEK; {proof, salt, authVerifier, newWrapEnc} commits the new password.
+  // `proof` is SHA-256(recoveryKey), compared timing-safe against the stored verifier.
+  // The DEK is unchanged (wrapRec/recVerifier preserved), so encrypted data survives.
+  if (action === 'recover' && request.method === 'POST') {
+    if (await authBruteLocked(env, clientIP)) {
+      return jsonResp({ error: 'Too many attempts — try again later' }, 429, allowedOrigin);
+    }
+    let body;
+    try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
+    if (!body.proof) return jsonResp({ error: 'proof required' }, 400, allowedOrigin);
+    const cfg = await env.SYNC_DATA.get('auth_config', 'json');
+    if (!cfg || !cfg.recVerifier) return jsonResp({ error: 'No recovery key set up' }, 404, allowedOrigin);
+    // Parity with /auth/login: the stored recVerifier is SHA-256 of the submitted proof,
+    // so the stored value is NOT itself a usable proof. A read-only KV leak of auth_config
+    // therefore cannot be replayed to pass recovery.
+    if (!timingSafeEqual(await sha256b64(body.proof), cfg.recVerifier)) {
+      await authRecordFail(env, clientIP);
+      return jsonResp({ error: 'Invalid recovery key' }, 401, allowedOrigin);
+    }
+    await authClearFail(env, clientIP);
+    // Phase 1: hand back wrapRec so the client can unwrap the DEK with the recovery key.
+    if (!body.salt || !body.authVerifier || !body.newWrapEnc) {
+      return jsonResp({ ok: true, wrapRec: cfg.wrapRec || null }, 200, allowedOrigin);
+    }
+    // Phase 2: commit the reset — single atomic put, then revoke every device token.
+    // The client rotates the recovery key (the old one may be compromised — that's why
+    // we're here), so newWrapRec/newRecVerifier replace the old ones when provided.
+    await env.SYNC_DATA.put('auth_config', JSON.stringify({
+      salt: body.salt, authVerifier: body.authVerifier,
+      created: cfg.created, updated: new Date().toISOString(),
+      wrapEnc: body.newWrapEnc,
+      wrapRec: body.newWrapRec || cfg.wrapRec,
+      recVerifier: body.newRecVerifier || cfg.recVerifier,
+    }));
+    const revoked = await revokeAllTokens(env);
+    return jsonResp({ ok: true, reset: true, tokensRevoked: revoked }, 200, allowedOrigin);
+  }
+
+  // GET /auth/dek — return the envelope's encKey-wrapped DEK (requires auth). The
+  // wrapEnc blob is only decryptable with the caller's encKey (never sent to us),
+  // so this leaks nothing usable. `exists` tells the client whether to provision.
+  // Envelope fields live inside auth_config (one object → atomic password changes).
+  if (action === 'dek' && request.method === 'GET') {
+    if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+    const cfg = await env.SYNC_DATA.get('auth_config', 'json');
+    return jsonResp({ ok: true, exists: !!(cfg && cfg.wrapEnc), wrapEnc: cfg ? (cfg.wrapEnc || null) : null }, 200, allowedOrigin);
+  }
+
+  // PUT /auth/dek — one-time envelope provisioning. Stores the DEK wrapped by encKey
+  // AND by the recovery key, plus SHA-256(recoveryKey) for the C1b reset flow. Beyond
+  // a valid session it also requires `authProof` (the caller's authKey) that hashes to
+  // the account verifier — so a bare stolen token cannot plant an envelope the real
+  // owner can't open. Rejected if already provisioned (re-wrap goes through /auth/change).
+  if (action === 'dek' && request.method === 'PUT') {
+    if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
+    let body;
+    try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
+    if (!body.wrapEnc || !body.wrapRec || !body.recVerifier || !body.authProof) return jsonResp({ error: 'wrapEnc, wrapRec, recVerifier and authProof required' }, 400, allowedOrigin);
+    const cfg = await env.SYNC_DATA.get('auth_config', 'json');
+    if (!cfg) return jsonResp({ error: 'No account — run setup first' }, 404, allowedOrigin);
+    if (!timingSafeEqual(await sha256b64(body.authProof), cfg.authVerifier)) {
+      await authRecordFail(env, clientIP);
+      return jsonResp({ error: 'Password proof invalid' }, 401, allowedOrigin);
+    }
+    if (cfg.wrapEnc) return jsonResp({ error: 'Envelope already provisioned' }, 409, allowedOrigin);
+    cfg.wrapEnc = body.wrapEnc;
+    cfg.wrapRec = body.wrapRec;
+    cfg.recVerifier = body.recVerifier;
+    cfg.updated = new Date().toISOString();
+    await env.SYNC_DATA.put('auth_config', JSON.stringify(cfg));
+    return jsonResp({ ok: true }, 200, allowedOrigin);
+  }
+
+  return jsonResp({ error: 'Use GET /auth/salt, POST /auth/setup, POST /auth/login, POST /auth/change, POST /auth/recover, GET /auth/devices, POST /auth/revoke, GET|PUT /auth/dek' }, 400, allowedOrigin);
 }
 
 // ====== D1 CRUD API ======
