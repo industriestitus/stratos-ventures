@@ -3198,6 +3198,20 @@ async function decStr(v){
 // undecryptable row can't abort a whole-collection load, and a save-back round-trips
 // the ciphertext unchanged (encStr passes isEncStr through) rather than overwriting it.
 async function decStrSafe(v){try{return await decStr(v)}catch(e){return v}}
+// Decrypt a numeric field (Security v2 / Phase C2d): recover the plaintext string then
+// coerce back to Number. Built on decStrSafe so one undecryptable row keeps its raw value
+// rather than aborting a whole-collection load. null/'' pass through unchanged (nullable
+// columns like transactions.shares); a legacy plaintext REAL arrives from D1 already as a
+// JS number and round-trips untouched (isEncStr(number)===false → decStr returns it as-is
+// → Number() is a no-op). If the recovered value isn't numeric (e.g. ciphertext left raw
+// because the key was locked) the raw value is kept, so a save-back round-trips it
+// unchanged via encStr's isEncStr passthrough instead of clobbering the ciphertext.
+async function decNum(v){
+  const s=await decStrSafe(v);
+  if(s==null||s==='')return s;
+  const n=Number(s);
+  return Number.isNaN(n)?s:n;
+}
 
 function getAuthToken(){return localStorage.getItem('auth_token')||''}
 function setAuthToken(tok){if(tok)localStorage.setItem('auth_token',tok);else localStorage.removeItem('auth_token')}
@@ -5226,22 +5240,22 @@ function savePortfolioAccounts(){
   try{localStorage.setItem('portfolio_accounts_v1',JSON.stringify(pfAccounts))}catch(e){showToast(t('toast.storageSaveError',{type:'accounts'}),'error')}
 }
 async function loadPortfolioPositions(){
-  if(d1Mode){try{const r=await API.get('positions');const d1Pos=(r.data||[]).map(p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:p.shares,avgCost:p.avg_cost,currency:(s?s.currency:'')||'USD',companyId:p.company_id,deleted_at:p.deleted_at||null}});
+  if(d1Mode){try{const r=await API.get('positions');const d1Pos=await Promise.all((r.data||[]).map(async p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:await decNum(p.shares),avgCost:await decNum(p.avg_cost),currency:(s?s.currency:'')||'USD',companyId:p.company_id,deleted_at:p.deleted_at||null}}));
     let lsExtra={};try{const ls=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(ls))ls.forEach(p=>{if(p.id)lsExtra[p.id]=p})}catch(e){}
     pfPositions=d1Pos.map(p=>{const ex=lsExtra[p.id];if(ex)return{...ex,...p,assetType:ex.assetType||'stock',currentPrice:ex.currentPrice,notes:ex.notes,reLocation:ex.reLocation,rePurchaseDate:ex.rePurchaseDate,rePurchasePrice:ex.rePurchasePrice,reCurrentValue:ex.reCurrentValue,reMonthlyRental:ex.reMonthlyRental,reAnnualCosts:ex.reAnnualCosts,bondType:ex.bondType,bondFaceValue:ex.bondFaceValue,bondCouponRate:ex.bondCouponRate,bondMaturityDate:ex.bondMaturityDate,bondPaymentFreq:ex.bondPaymentFreq,cashAmount:ex.cashAmount};return p});
     try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){}return}catch(e){console.error('D1 load positions, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(d))pfPositions=d}catch(e){console.error('Corrupted portfolio_positions_v1:',e)}
 }
 function savePortfolioPositions(){
-  if(d1Mode){API.scheduleSave('pfPositions',async()=>{await API.post('positions/batch',{items:pfPositions.map(p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:p.shares,avg_cost:p.avgCost,deleted_at:p.deleted_at||null}))})})}
+  if(d1Mode){API.scheduleSave('pfPositions',async()=>{await API.post('positions/batch',{items:await Promise.all(pfPositions.map(async p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:await encStr(p.shares),avg_cost:await encStr(p.avgCost),deleted_at:p.deleted_at||null})))})})}
   try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){showToast(t('toast.storageSaveError',{type:'positions'}),'error')}
 }
 async function loadPortfolioTransactions(){
-  if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=await Promise.all((r.data||[]).map(async tx=>({id:tx.id,ticker:_d1CompanyMap[tx.company_id]||tx.symbol||'',accountId:tx.account_id,type:tx.transaction_type,date:tx.transaction_date,shares:tx.shares,pricePerShare:tx.price_per_share,totalAmount:tx.total_amount,fees:tx.fees,currency:tx.currency,notes:await decStrSafe(tx.notes),companyId:tx.company_id,deleted_at:tx.deleted_at||null})));try{localStorage.setItem('portfolio_transactions_v1',JSON.stringify(pfTransactions))}catch(e){}return}catch(e){console.error('D1 load transactions, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=await Promise.all((r.data||[]).map(async tx=>({id:tx.id,ticker:_d1CompanyMap[tx.company_id]||tx.symbol||'',accountId:tx.account_id,type:tx.transaction_type,date:tx.transaction_date,shares:await decNum(tx.shares),pricePerShare:await decNum(tx.price_per_share),totalAmount:await decNum(tx.total_amount),fees:await decNum(tx.fees),currency:tx.currency,notes:await decStrSafe(tx.notes),companyId:tx.company_id,deleted_at:tx.deleted_at||null})));try{localStorage.setItem('portfolio_transactions_v1',JSON.stringify(pfTransactions))}catch(e){}return}catch(e){console.error('D1 load transactions, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_transactions_v1'));if(Array.isArray(d))pfTransactions=d}catch(e){console.error('Corrupted portfolio_transactions_v1:',e)}
 }
 function savePortfolioTransactions(){
-  if(d1Mode){API.scheduleSave('pfTransactions',async()=>{const items=await Promise.all(pfTransactions.map(async t=>({id:t.id,company_id:t.companyId||_tickerToD1Id(t.ticker),account_id:t.accountId,transaction_type:t.type,transaction_date:t.date,shares:t.shares,price_per_share:t.pricePerShare,total_amount:t.totalAmount,fees:t.fees||0,currency:t.currency||'USD',notes:await encStr(t.notes||''),deleted_at:t.deleted_at||null})));await API.post('transactions/batch',{items})})}
+  if(d1Mode){API.scheduleSave('pfTransactions',async()=>{const items=await Promise.all(pfTransactions.map(async t=>({id:t.id,company_id:t.companyId||_tickerToD1Id(t.ticker),account_id:t.accountId,transaction_type:t.type,transaction_date:t.date,shares:await encStr(t.shares),price_per_share:await encStr(t.pricePerShare),total_amount:await encStr(t.totalAmount),fees:await encStr(t.fees||0),currency:t.currency||'USD',notes:await encStr(t.notes||''),deleted_at:t.deleted_at||null})));await API.post('transactions/batch',{items})})}
   try{localStorage.setItem('portfolio_transactions_v1',JSON.stringify(pfTransactions))}catch(e){showToast(t('toast.storageSaveError',{type:'transactions'}),'error')}
 }
 
@@ -6108,10 +6122,10 @@ let pfSnapshots=[];
 async function loadPortfolioSnapshots(){
   if(d1Mode){try{
     const r=await API.get('portfolio_snapshots?limit=1000');
-    pfSnapshots=await Promise.all((r.data||[]).map(async s=>({id:s.id,date:s.snapshot_date,totalValue:s.total_value,baseCurrency:s.base_currency,notes:await decStrSafe(s.notes),positions:[]})));
+    pfSnapshots=await Promise.all((r.data||[]).map(async s=>({id:s.id,date:s.snapshot_date,totalValue:await decNum(s.total_value),baseCurrency:s.base_currency,notes:await decStrSafe(s.notes),positions:[]})));
     if(pfSnapshots.length){
       const sp=await API.get('snapshot_positions?limit=5000');
-      (sp.data||[]).forEach(p=>{const snap=pfSnapshots.find(s=>s.id===p.snapshot_id);if(snap)snap.positions.push({ticker:_d1CompanyMap[p.company_id]||'?',accountId:p.account_id,shares:p.shares,pricePerShare:p.price_per_share,marketValue:p.market_value,currency:p.currency,intent:p.intent})});
+      for(const p of (sp.data||[])){const snap=pfSnapshots.find(s=>s.id===p.snapshot_id);if(snap)snap.positions.push({ticker:_d1CompanyMap[p.company_id]||'?',accountId:p.account_id,shares:await decNum(p.shares),pricePerShare:await decNum(p.price_per_share),marketValue:await decNum(p.market_value),currency:p.currency,intent:p.intent})}
     }
     return;
   }catch(e){console.error('D1 load snapshots, falling back to localStorage:',e)}}
@@ -6119,13 +6133,13 @@ async function loadPortfolioSnapshots(){
 }
 function savePortfolioSnapshots(){
   if(d1Mode){API.scheduleSave('pfSnapshots',async()=>{
-    const items=await Promise.all(pfSnapshots.map(async s=>({snapshot_date:s.date,total_value:s.totalValue,base_currency:s.baseCurrency||'USD',notes:await encStr(s.notes||'')})));
+    const items=await Promise.all(pfSnapshots.map(async s=>({snapshot_date:s.date,total_value:await encStr(s.totalValue),base_currency:s.baseCurrency||'USD',notes:await encStr(s.notes||'')})));
     if(items.length)await API.post('portfolio_snapshots/batch',{items});
     // Re-fetch snapshot IDs then save positions
     const sr=await API.get('portfolio_snapshots?limit=1000');
     const dateToId={};(sr.data||[]).forEach(s=>{dateToId[s.snapshot_date]=s.id});
     const posItems=[];
-    pfSnapshots.forEach(s=>{const sid=dateToId[s.date];if(!sid)return;(s.positions||[]).forEach(p=>{const cid=_tickerToD1Id(p.ticker);if(!cid)return;posItems.push({snapshot_id:sid,company_id:cid,account_id:p.accountId||null,shares:p.shares||0,price_per_share:p.pricePerShare||0,market_value:p.marketValue||0,currency:p.currency||'USD',intent:p.intent||'hold'})})});
+    for(const s of pfSnapshots){const sid=dateToId[s.date];if(!sid)continue;for(const p of (s.positions||[])){const cid=_tickerToD1Id(p.ticker);if(!cid)continue;posItems.push({snapshot_id:sid,company_id:cid,account_id:p.accountId||null,shares:await encStr(p.shares||0),price_per_share:await encStr(p.pricePerShare||0),market_value:await encStr(p.marketValue||0),currency:p.currency||'USD',intent:p.intent||'hold'})}}
     if(posItems.length)await API.post('snapshot_positions/batch',{items:posItems});
   })}
   try{localStorage.setItem('portfolio_snapshots_v1',JSON.stringify(pfSnapshots))}catch(e){showToast(t('pf.storageFull'),'error')}
