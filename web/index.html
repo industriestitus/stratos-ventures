@@ -10892,7 +10892,7 @@ function saveTrackerStocks(){invalidateScreenerCache();
         Object.entries(s.notes.earnings||{}).forEach(([yr,qs])=>{Object.entries(qs||{}).forEach(([q,v])=>{if(v.note||v.noteId)notes.push({id:v.noteId||undefined,company_id:cid,note_type:'earnings',title:'',content:v.note||'',quarter:yr+q})})});
       }
       const secs=(s.checklist&&s.checklist.sections)||{};
-      Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(sv.answers||{}),progress:sv.progress||0,status:sv.status||'not_started'}));
+      Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(_sectionAnswers(sv)),progress:sv.progress||0,status:sv.status||'not_started'}));
     });
     const batch=[];
     if(todos.length)batch.push(API.postBatch('company_todos/batch',todos));
@@ -10940,6 +10940,19 @@ function _noteRowNewer(n,prev){
   const b=String(prev.updated_at||prev.created_at||prev.note_date||'');
   if(a!==b)return a>b;
   return (n.id||0)>(prev.id||0);
+}
+// A checklist section is stored FLAT in memory ({fieldKey:value, src_N:true, tenk_N:true,
+// items:[], entries:[], progress, status, ...}) — render and calcClProgress read it flat.
+// progress/status are separate D1 columns, so strip them from the answer_json payload; also
+// unwrap the legacy {answers:{}} nesting a pre-fix D1 row may carry. Everything else (text
+// fields, checkbox flags, risks.items, *_log entries) is user data that must persist. Prior
+// to this the save serialized `sv.answers` (undefined for flat sections) → answer_json was
+// always `{}` → checklist content never reached D1.
+function _sectionAnswers(sv){
+  if(!sv||typeof sv!=='object')return {};
+  const {progress,status,answers,...rest}=sv;
+  if(answers&&typeof answers==='object'&&!Object.keys(rest).length)return answers;
+  return rest;
 }
 async function _d1CompanyToTStock(c){
   // Phase C2: thesis is encrypted at rest. On decrypt failure keep the raw ciphertext
@@ -10993,7 +11006,7 @@ async function _d1CompanyToTStock(c){
       }
     }
   }
-  if(c.checklist)for(const cl of c.checklist){let ans;try{ans=JSON.parse((await decStr(cl.answer_json))||'{}')}catch(e){continue}/* undecryptable → skip so save-back (upsert) leaves the D1 row intact */s.checklist.sections[cl.section_key]={answers:ans,progress:cl.progress,status:cl.status||'not_started'}}
+  if(c.checklist)for(const cl of c.checklist){let ans;try{ans=JSON.parse((await decStr(cl.answer_json))||'{}')}catch(e){continue}/* undecryptable → skip so save-back (upsert) leaves the D1 row intact */s.checklist.sections[cl.section_key]={...(ans&&typeof ans==='object'?ans:{}),progress:cl.progress,status:cl.status||'not_started'}}
   return s;
 }
 
@@ -11014,7 +11027,25 @@ async function loadTrackerStocks(){
     // entangled and handled by their own dedicated fixes — see the sync-audit memory.)
     try{const ls=JSON.parse(localStorage.getItem('tracker_stocks_v1')||'{}');
       const mergeKeys=['priceAlerts','dcfMode','evaWacc','tags','dateAdded','earningsCalendar','sbc','roic','scenarios','valuationHistory','overrides'];
-      Object.entries(ls).forEach(([tk,s])=>{if(tStocks[tk]&&s&&typeof s==='object'){mergeKeys.forEach(k=>{if(s[k]!=null&&tStocks[tk][k]==null)tStocks[tk][k]=s[k]})}})}catch(e){}
+      Object.entries(ls).forEach(([tk,s])=>{if(tStocks[tk]&&s&&typeof s==='object'){
+        mergeKeys.forEach(k=>{if(s[k]!=null&&tStocks[tk][k]==null)tStocks[tk][k]=s[k]});
+        // Preserve checklist section fields the D1 load didn't provide — answers that haven't
+        // synced yet (e.g. entered before the flat-answer-json fix), field by field. D1 stays
+        // authoritative for anything it DID return, so a synced/cleared value is never
+        // resurrected. Without this, deploying the shape fix would wipe an existing local-only
+        // checklist on the first reload (D1 answer_json was historically empty '{}').
+        const lsCl=s.checklist&&s.checklist.sections;
+        if(lsCl&&typeof lsCl==='object'){
+          if(!tStocks[tk].checklist)tStocks[tk].checklist={sections:{}};
+          if(!tStocks[tk].checklist.sections)tStocks[tk].checklist.sections={};
+          const d1Cl=tStocks[tk].checklist.sections;
+          Object.entries(lsCl).forEach(([sk,lsSec])=>{
+            if(!lsSec||typeof lsSec!=='object')return;
+            if(!d1Cl[sk])d1Cl[sk]={};
+            Object.keys(lsSec).forEach(f=>{if(f!=='progress'&&f!=='status'&&lsSec[f]!=null&&d1Cl[sk][f]==null)d1Cl[sk][f]=lsSec[f]});
+          });
+        }
+      }})}catch(e){}
     try{localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}catch(e){}
     return;
   }catch(e){console.error('D1 load trackerStocks, falling back to localStorage:',e)}}
