@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v27';
+var APP_VERSION='v28';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -6749,8 +6749,8 @@ async function loadExchangeRates(){
   if(d1Mode){try{
     const cfg=await API.get('app_settings/exchange_rates_config');
     if(cfg){const v=JSON.parse(cfg.value||'{}');pfExchangeRates.baseCurrency=v.baseCurrency||'HUF';pfExchangeRates.lastFetched=v.lastFetched||null}
-    const r=await API.get('exchange_rates?limit=500');
-    pfExchangeRates.rates={};(r.data||[]).forEach(er=>{const pair=er.from_currency+'/'+er.to_currency;pfExchangeRates.rates[pair]=er.rate});
+    const r=await API.get('exchange_rates?limit=100000');
+    pfExchangeRates.rates={};(r.data||[]).forEach(er=>{const pair=er.from_currency+'/'+er.to_currency;pfExchangeRates.rates[pair]=er.rate});/* high limit so legacy dated cruft rows can't truncate the current 'latest' rows; rows arrive ORDER BY id ASC so the newest (highest id) per pair wins the map assignment */
     return;
   }catch(e){console.error('D1 load exchange rates, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_exchange_rates_v1'));if(d&&typeof d==='object'){pfExchangeRates=d;if(!pfExchangeRates.rates)pfExchangeRates.rates={};if(!pfExchangeRates.baseCurrency)pfExchangeRates.baseCurrency='HUF'}}catch(e){}
@@ -6758,7 +6758,7 @@ async function loadExchangeRates(){
 function saveExchangeRates(){
   if(d1Mode){API.scheduleSave('exRates',async()=>{
     await API.put('app_settings/exchange_rates_config',{key:'exchange_rates_config',value:JSON.stringify({baseCurrency:pfExchangeRates.baseCurrency,lastFetched:pfExchangeRates.lastFetched})});
-    const items=Object.entries(pfExchangeRates.rates||{}).map(([pair,rate])=>{const [from,to]=pair.includes('/')?pair.split('/'):[pair.slice(0,3),pair.slice(3)];return{rate_date:pfExchangeRates.lastFetched||new Date().toISOString(),from_currency:from,to_currency:to,rate}});
+    const items=Object.entries(pfExchangeRates.rates||{}).map(([pair,rate])=>{const [from,to]=pair.includes('/')?pair.split('/'):[pair.slice(0,3),pair.slice(3)];return{rate_date:'latest',from_currency:from,to_currency:to,rate}});/* fixed rate_date so the (rate_date,from,to) key upserts one row per pair in place — a per-refresh timestamp made every save a new row (unbounded growth). lastFetched is kept in exchange_rates_config. */
     if(items.length)await API.post('exchange_rates/batch',{items});
   })}
   try{localStorage.setItem('portfolio_exchange_rates_v1',JSON.stringify(pfExchangeRates))}catch(e){}
