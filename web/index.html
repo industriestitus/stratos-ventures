@@ -8046,7 +8046,7 @@ async function loadResearchNotes(){
     researchNotes={journal:[],news:[],market:[],_nextId:1};
     for(const noteType of ['journal','news','market']){
       const r=await API.get('notes?filter=note_type&filter_value='+noteType+'&limit=5000');
-      researchNotes[noteType]=(r.data||[]).map(n=>({id:n.id,title:n.title,content:n.content,date:n.note_date,ticker:_d1CompanyMap[n.company_id]||null,source:n.source_name,sourceName:n.source_name,sourceUrl:n.source_url,pinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[],deleted_at:n.deleted_at||null}));
+      researchNotes[noteType]=await Promise.all((r.data||[]).map(async n=>{const title=await decStrSafe(n.title),content=await decStrSafe(n.content),src=await decStrSafe(n.source_name),srcUrl=await decStrSafe(n.source_url);return{id:n.id,title,content,date:n.note_date,ticker:_d1CompanyMap[n.company_id]||null,source:src,sourceName:src,sourceUrl:srcUrl,pinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[],deleted_at:n.deleted_at||null}}));
       researchNotes[noteType].forEach(n=>{if(n.id>=researchNotes._nextId)researchNotes._nextId=n.id+1});
     }
     // Merge _images from localStorage (not returned by notes list endpoint)
@@ -8061,7 +8061,7 @@ async function loadResearchNotes(){
 function saveResearchNotes(){
   if(d1Mode){API.scheduleSave('researchNotes',async()=>{
     for(const noteType of ['journal','news','market']){
-      const items=(researchNotes[noteType]||[]).map(n=>({id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:n.title||'',content:n.content||n.excerpt||n.comment||'',note_date:n.date||new Date().toISOString().slice(0,10),source_name:n.sourceName||n.source||'',source_url:n.sourceUrl||'',is_pinned:n.pinned?1:0,quarter:n.quarter||null,deleted_at:n.deleted_at||null}));
+      const items=await Promise.all((researchNotes[noteType]||[]).map(async n=>({id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:await encStr(n.title||''),content:await encStr(n.content||n.excerpt||n.comment||''),note_date:n.date||new Date().toISOString().slice(0,10),source_name:await encStr(n.sourceName||n.source||''),source_url:await encStr(n.sourceUrl||''),is_pinned:n.pinned?1:0,quarter:n.quarter||null,deleted_at:n.deleted_at||null})));
       if(items.length)await API.post('notes/batch',{items});
     }
   })}
@@ -10873,11 +10873,13 @@ function saveTrackerStocks(){invalidateScreenerCache();
     const batch=[];
     if(todos.length)batch.push(API.postBatch('company_todos/batch',todos));
     if(earnings.length)batch.push(API.postBatch('earnings_timeline/batch',earnings));
-    // Phase C2b: encrypt filing notes, override values, and checklist answers. (Earnings/
-    // research notes go to the FTS-indexed notes table → deferred to C2c.)
+    // Phase C2b/C2c: encrypt filing notes, override values, checklist answers, and the
+    // company note CONTENT. The note title stays plaintext — for company notes it's a
+    // structural marker ('research'/'' + quarter), not user text, and _d1CompanyToTStock
+    // keys on it. Search is client-side, so encrypting content doesn't break it.
     if(filings.length){const enc=await Promise.all(filings.map(async f=>({...f,notes:await encStr(f.notes||'')})));batch.push(API.postBatch('filing_tracking/batch',enc))}
     if(overrides.length){const enc=await Promise.all(overrides.map(async o=>({...o,original_value:await encStr(o.original_value),override_value:await encStr(o.override_value),reason:await encStr(o.reason||'')})));batch.push(API.postBatch('company_data_overrides/batch',enc))}
-    if(notes.length)batch.push(API.postBatch('notes/batch',notes));
+    if(notes.length){const enc=await Promise.all(notes.map(async n=>({...n,content:await encStr(n.content)})));batch.push(API.postBatch('notes/batch',enc))}
     if(checklist.length){
       const tmplR=await API.get('checklist_templates?limit=100');
       const tmplMap={};(tmplR.data||[]).forEach(t=>{tmplMap[t.section_key]=t.id});
@@ -10923,13 +10925,16 @@ async function _d1CompanyToTStock(c){
     try{orig=await decStr(o.original_value)}catch(e){}
     s.overriddenData[o.metric_key]=ov;s._origData[o.metric_key]=orig;
   }
-  if(c.notes)c.notes.forEach(n=>{if(n.quarter){
-    const yr=n.quarter.slice(0,4),q=n.quarter.slice(4);
-    if(!s.notes.earnings[yr])s.notes.earnings[yr]={};
-    const existing=s.notes.earnings[yr][q]||{done:false,note:''};
-    existing.note=n.content||'';
-    s.notes.earnings[yr][q]=existing;
-  }else if(n.title==='research'){s.notes.research=n.content||''}});
+  if(c.notes)for(const n of c.notes){
+    const content=await decStrSafe(n.content); // C2c: company note content is encrypted; title is a plaintext marker
+    if(n.quarter){
+      const yr=n.quarter.slice(0,4),q=n.quarter.slice(4);
+      if(!s.notes.earnings[yr])s.notes.earnings[yr]={};
+      const existing=s.notes.earnings[yr][q]||{done:false,note:''};
+      existing.note=content||'';
+      s.notes.earnings[yr][q]=existing;
+    }else if(n.title==='research'){s.notes.research=content||''}
+  }
   if(c.checklist)for(const cl of c.checklist){let ans;try{ans=JSON.parse((await decStr(cl.answer_json))||'{}')}catch(e){continue}/* undecryptable → skip so save-back (upsert) leaves the D1 row intact */s.checklist.sections[cl.section_key]={answers:ans,progress:cl.progress,status:cl.status||'not_started'}}
   return s;
 }
