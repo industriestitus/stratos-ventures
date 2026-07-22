@@ -16240,7 +16240,10 @@ window.addEventListener('load',()=>{
         if(nw)nw.addEventListener('statechange',()=>{
           if(nw.state==='installed'&&navigator.serviceWorker.controller){
             window._waitingSW=nw;
-            showToast('New version available — <a onclick="if(window._waitingSW)window._waitingSW.postMessage(\'skipWaiting\');location.reload()" style="color:var(--accent);cursor:pointer;text-decoration:underline">reload now</a>','info',15000);
+            // showToast renders msg as textContent (XSS-safe), so an HTML <a> would show as
+            // literal text. Use the plain i18n string + opts.onClick to make the whole toast
+            // clickable → activate the waiting SW and reload.
+            showToast(t('sync.newVersion'),'info',15000,{onClick:()=>{if(window._waitingSW)window._waitingSW.postMessage('skipWaiting');location.reload()}});
           }
         });
       });
