@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v22';
+var APP_VERSION='v23';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -10918,7 +10918,7 @@ function saveTrackerStocks(){invalidateScreenerCache();
           filings.push({company_id:cid,filing_type:isQ?'10Q':ftype,fiscal_year:+yr||0,fiscal_quarter:isQ?+ftype.slice(1):0,is_read:v.done?1:0,filed_date:v.filedDate||null,notes:v.note||v.notes||''});
         });
       });
-      Object.entries(s.overriddenData||{}).forEach(([mk,mv])=>overrides.push({company_id:cid,metric_key:mk,original_value:String((s._origData||{})[mk]||''),override_value:String(mv),reason:''}));
+      Object.entries(s.overriddenData||{}).forEach(([mk,mv])=>overrides.push({company_id:cid,metric_key:mk,original_value:String((s._origData||{})[mk]??''),override_value:String(mv),reason:''}));
       if(s.notes&&typeof s.notes==='object'){
         // note_date is OMITTED (not null): the column is NOT NULL DEFAULT date('now'), and
         // SQLite does NOT apply the default when a column is explicitly set to NULL — passing
@@ -11026,7 +11026,7 @@ async function _d1CompanyToTStock(c){
     let ov=o.override_value,orig=o.original_value; // preserve ciphertext on decrypt failure
     try{ov=await decStr(o.override_value)}catch(e){}
     try{orig=await decStr(o.original_value)}catch(e){}
-    s.overriddenData[o.metric_key]=ov;s._origData[o.metric_key]=orig;
+    s.overriddenData[o.metric_key]=_coerceOverrideVal(ov);s._origData[o.metric_key]=_coerceOverrideVal(orig); // numeric metrics stored as String() -> restore as Number so arithmetic/scoring stays correct
   }
   if(c.notes){
     let researchMeta=null;const _qMeta={}; // freshest row seen per bucket (dup rows have no natural key)
@@ -11087,6 +11087,17 @@ async function loadTrackerStocks(){
             Object.keys(lsSec).forEach(f=>{if(f!=='progress'&&f!=='status'&&lsSec[f]!=null&&d1Cl[sk][f]==null)d1Cl[sk][f]=lsSec[f]});
           });
         }
+        // Preserve checklist-ROOT trait/avoid checkbox states. These live on checklist.idealTraitChecks/
+        // avoidChecks (not in .sections), are never written to D1, and would be wiped on every reload.
+        // D1 never provides them, so the ==null guard just restores the localStorage copy (cross-device
+        // sync for these is deferred to S2).
+        ['idealTraitChecks','avoidChecks'].forEach(ck=>{
+          const lsv=s.checklist&&s.checklist[ck];
+          if(lsv&&typeof lsv==='object'&&Object.keys(lsv).length){
+            if(!tStocks[tk].checklist)tStocks[tk].checklist={sections:{}};
+            if(tStocks[tk].checklist[ck]==null)tStocks[tk].checklist[ck]=lsv;
+          }
+        });
       }})}catch(e){}
     try{localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}catch(e){}
     return;
@@ -11818,7 +11829,11 @@ async function _fetchStockDataInner(ticker){
   }
   if(stock.price!=null&&(stock.price<0||!isFinite(stock.price))){console.warn('Invalid price for',ticker,stock.price);stock.price=null}
   if(stock.marketCap!=null&&(stock.marketCap<0||!isFinite(stock.marketCap))){stock.marketCap=null}
-  if(stock.overriddenData){Object.entries(stock.overriddenData).forEach(([k,v])=>{stock[k]=v})}
+  if(stock.overriddenData){Object.entries(stock.overriddenData).forEach(([k,v])=>{stock[k]=v});
+    // recompute derived fields when a component is overridden (unless the derived field is itself overridden)
+    if(('ocf'in stock.overriddenData||'sbc'in stock.overriddenData)&&!('ocfSbc'in stock.overriddenData))stock.ocfSbc=(stock.ocf||0)-(stock.sbc||0);
+    if(('fcf'in stock.overriddenData||'sbc'in stock.overriddenData)&&!('fcfSbc'in stock.overriddenData))stock.fcfSbc=(stock.fcf||0)-(stock.sbc||0);
+  }
   tStocks[ticker]=stock;
   return stock;
 }
@@ -12693,35 +12708,56 @@ function stDataFocus(inp){
   if(raw!==''&&raw!=null)inp.value=raw;
   inp.select();
 }
+// Record/clear a manual tracker data edit as a company_data_overrides entry, so the edit survives
+// a D1 reload AND is re-applied on top of fresh API data (see _fetchStockDataInner ~11821). Without
+// this, manual edits live only as top-level tStock fields that D1 doesn't store and the next API
+// fetch overwrites → wiped on reload. Mirrors the company-profile override path (startOverride).
+function _setTrackerOverride(s,field,val,prev){
+  if(!s.overriddenData)s.overriddenData={};
+  if(!s._origData)s._origData={};
+  if(s.overriddenData[field]==null&&s._origData[field]==null&&prev!=null)s._origData[field]=prev; // capture API baseline once
+  s.overriddenData[field]=val;
+}
+function _clearTrackerOverride(s,field){
+  if(s.overriddenData)delete s.overriddenData[field];
+  if(s._origData&&s._origData[field]!=null)s[field]=s._origData[field]; // revert to API baseline if we have one
+}
+// D1 stores override values via String(); restore numeric metrics as Number so downstream
+// arithmetic/scoring/formatting stays correct. Non-numeric (text) overrides stay strings.
+function _coerceOverrideVal(x){if(typeof x==='string'){const s=x.trim();if(s!==''&&isFinite(Number(s)))return Number(s)}return x}
 function stDataBlur(inp){
   const t=inp.dataset.ticker,f=inp.dataset.field;
-  if(!tStocks[t])return;
+  const s=tStocks[t];if(!s)return;
+  const prev=s[f];
   const v=inp.value.trim();
   if(inp.dataset.txt){
-    tStocks[t][f]=v||undefined;
+    if(v===''){delete s[f];_clearTrackerOverride(s,f)}
+    else{s[f]=v;_setTrackerOverride(s,f,v,prev)}
   }else{
-    if(v===''||v==='-'){delete tStocks[t][f];inp.value='';inp.dataset.raw=''}
+    if(v===''||v==='-'){delete s[f];inp.value='';inp.dataset.raw='';_clearTrackerOverride(s,f)}
     else{
       const n=parseNum(v);
-      tStocks[t][f]=n;
+      s[f]=n;
       inp.dataset.raw=n;
       const col=stCols.find(c=>c.k===f);
       inp.value=col?fmtCell(n,col):n;
+      _setTrackerOverride(s,f,n,prev);
     }
-    if(f==='ocf'||f==='sbc')tStocks[t].ocfSbc=(tStocks[t].ocf||0)-(tStocks[t].sbc||0);
-    if(f==='fcf'||f==='sbc')tStocks[t].fcfSbc=(tStocks[t].fcf||0)-(tStocks[t].sbc||0);
+    if(f==='ocf'||f==='sbc')s.ocfSbc=(s.ocf||0)-(s.sbc||0);
+    if(f==='fcf'||f==='sbc')s.fcfSbc=(s.fcf||0)-(s.sbc||0);
   }
   saveTrackerStocks();
 }
 
 function updateTrackerDataField(inp){
   const t=inp.dataset.ticker,f=inp.dataset.field;
-  if(!tStocks[t])return;
+  const s=tStocks[t];if(!s)return;
+  const prev=s[f];
   const v=inp.value.trim();
-  if(v===''){delete tStocks[t][f]}
-  else{tStocks[t][f]=parseFloat(v)}
-  if(f==='ocf'||f==='sbc')tStocks[t].ocfSbc=(tStocks[t].ocf||0)-(tStocks[t].sbc||0);
-  if(f==='fcf'||f==='sbc')tStocks[t].fcfSbc=(tStocks[t].fcf||0)-(tStocks[t].sbc||0);
+  if(v===''){delete s[f];_clearTrackerOverride(s,f)}
+  else{const n=parseFloat(v);s[f]=n;_setTrackerOverride(s,f,n,prev)}
+  if(f==='ocf'||f==='sbc')s.ocfSbc=(s.ocf||0)-(s.sbc||0);
+  if(f==='fcf'||f==='sbc')s.fcfSbc=(s.fcf||0)-(s.sbc||0);
   saveTrackerStocks();
 }
 
@@ -13961,6 +13997,8 @@ function ensureChecklist(ticker){
     tStocks[ticker].checklist={sections:{},idealTraitChecks:{},avoidChecks:{},overallProgress:0,lastUpdated:''};
   }
   const cl=tStocks[ticker].checklist;
+  if(!cl.idealTraitChecks)cl.idealTraitChecks={};   // D1-loaded checklists arrive as {sections:{}} without these; render/save read them unguarded
+  if(!cl.avoidChecks)cl.avoidChecks={};
   CL_SECTIONS.forEach(s=>{if(!cl.sections[s.key])cl.sections[s.key]={}});
   if(!cl.sections.risks.items)cl.sections.risks.items=[];
   if(!cl.sections.quarterly_followup.entries)cl.sections.quarterly_followup.entries=[];
