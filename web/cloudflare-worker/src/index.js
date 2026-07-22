@@ -506,13 +506,21 @@ const TABLES = {
   api_cache:             { cols: ['company_id','data_source','data_json','fetched_at'], hasUpdatedAt: false, conflictTarget: 'company_id, data_source' },
 };
 
+// Whitelist for natural-key DELETE (DELETE /api/{table}?col=val...). Only these tables allow it, and
+// ONLY when the FULL key below is supplied — so it can delete exactly one logical row and can never
+// degrade into a partial-key mass delete (e.g. wiping every override/position of a company).
+const NATURAL_DELETE = {
+  company_data_overrides: ['company_id', 'metric_key'],
+  valuations:             ['company_id', 'label'],
+};
+
 async function handleCrud(table, method, id, body, url, db, origin) {
   const cfg = TABLES[table];
   if (!cfg) return jsonResp({ error: 'Unknown table' }, 404, origin);
   const pk = cfg.pk || 'id';
 
   if (method === 'GET' && !id) {
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '500'), 1000);
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '500'), 100000);
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const filterCol = url.searchParams.get('filter');
     const filterVal = url.searchParams.get('filter_value');
@@ -609,6 +617,25 @@ async function handleCrud(table, method, id, body, url, db, origin) {
       await db.prepare(`DELETE FROM ${table} WHERE ${pk} = ?`).bind(id).run();
     }
     return jsonResp({ ok: true, deleted: row }, 200, origin);
+  }
+
+  // Natural-key delete: DELETE /api/{table}?col=val&col2=val2 — lets the client remove a row it only
+  // knows by natural key (e.g. clearing a company_data_overrides entry by company_id+metric_key)
+  // instead of by an id it never captured. Restricted to the NATURAL_DELETE allowlist and requires
+  // the FULL key (every listed column, each non-empty) so it targets exactly one logical row and can
+  // never become a partial-key mass delete.
+  if (method === 'DELETE' && !id) {
+    const keyCols = NATURAL_DELETE[table];
+    if (!keyCols) return jsonResp({ error: 'Natural-key delete not allowed for this table' }, 400, origin);
+    const binds = [];
+    for (const k of keyCols) {
+      const v = url.searchParams.get(k);
+      if (v === null || v === '') return jsonResp({ error: 'Missing key column: ' + k }, 400, origin);
+      binds.push(v);
+    }
+    const where = keyCols.map(k => `${k} = ?`).join(' AND ');
+    const res = await db.prepare(`DELETE FROM ${table} WHERE ${where}`).bind(...binds).run();
+    return jsonResp({ ok: true, deleted: res.meta ? res.meta.changes : undefined }, 200, origin);
   }
 
   return jsonResp({ error: 'Method not allowed' }, 405, origin);

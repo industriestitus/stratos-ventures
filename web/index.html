@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v26';
+var APP_VERSION='v27';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -4528,7 +4528,7 @@ function saveCurrentStock(){
   _putSavedStocks(saved);showToast(`"${name}" saved.`,'success');renderSavedStocks();
 }
 function loadStock(name){const saved=_getSavedStocks();if(saved[name]){loadData(saved[name]);switchTab('dcf-perpetuity')}}
-function deleteStock(name,e){e.stopPropagation();const s=_getSavedStocks();const backup=s[name]?JSON.parse(JSON.stringify(s[name])):null;undoableDelete(t('toast.stockDeleted',{name}),()=>{const s2=_getSavedStocks();delete s2[name];_putSavedStocks(s2);renderSavedStocks()},()=>{if(backup){const s2=_getSavedStocks();s2[name]=backup;_putSavedStocks(s2);renderSavedStocks()}},()=>{if(d1Mode&&backup&&backup._d1ValId)API.del('valuations/'+backup._d1ValId).catch(e=>console.error('D1 del valuation:',e))})}
+function deleteStock(name,e){e.stopPropagation();const s=_getSavedStocks();const backup=s[name]?JSON.parse(JSON.stringify(s[name])):null;undoableDelete(t('toast.stockDeleted',{name}),()=>{const s2=_getSavedStocks();delete s2[name];_putSavedStocks(s2);renderSavedStocks()},()=>{if(backup){const s2=_getSavedStocks();s2[name]=backup;_putSavedStocks(s2);renderSavedStocks()}},()=>{if(d1Mode&&backup){const cid=_tickerToD1Id(backup.name||name)||_tickerToD1Id(name);if(cid)API.del('valuations?company_id='+cid+'&label='+encodeURIComponent(name)).catch(e=>console.error('D1 del valuation:',e))}})}
 function populateCalcTickerList(){const dl=document.getElementById('calc-ticker-list');if(dl){const allTk=new Set([...Object.keys(_getSavedStocks()),...Object.keys(tStocks)]);dl.innerHTML=[...allTk].map(tk=>`<option value="${escH(tk)}">`).join('')}}
 function renderSavedStocks(){
   const c=document.getElementById('saved-stocks-list'),s=_getSavedStocks();
@@ -10588,6 +10588,7 @@ function startOverride(ticker,field,el){
     if(raw===''){
       delete s.overriddenData[field];
       if(s._origData&&s._origData[field]!=null)s[field]=s._origData[field];
+      _delD1Override(s._d1Id||_tickerToD1Id(ticker),field);
       saveTrackerStocks();
       showProfile(ticker);
       return;
@@ -12728,9 +12729,14 @@ function _setTrackerOverride(s,field,val,prev){
   if(s.overriddenData[field]==null&&s._origData[field]==null&&prev!=null)s._origData[field]=prev; // capture API baseline once
   s.overriddenData[field]=val;
 }
+// Delete a cleared override's D1 row by natural key (company_id, metric_key). Without this the
+// saveTrackerStocks upsert only re-writes the REMAINING overrides, leaving the cleared one in D1 →
+// it resurrects on reload. Natural-key delete also works same-session (no need to have captured a row id).
+function _delD1Override(cid,field){if(d1Mode&&cid)API.del('company_data_overrides?company_id='+cid+'&metric_key='+encodeURIComponent(field)).catch(e=>console.error('D1 del override:',e))}
 function _clearTrackerOverride(s,field){
   if(s.overriddenData)delete s.overriddenData[field];
   if(s._origData&&s._origData[field]!=null)s[field]=s._origData[field]; // revert to API baseline if we have one
+  _delD1Override(s._d1Id||_tickerToD1Id(s.ticker),field);
 }
 // D1 stores override values via String(); restore numeric metrics as Number so downstream
 // arithmetic/scoring/formatting stays correct. Non-numeric (text) overrides stay strings.
@@ -13573,6 +13579,7 @@ async function deleteFwEntry(type,id){
     saveTrackerStocks();
   }
   saveFramework();
+  if(d1Mode)API.del('framework_entries/'+id).catch(e=>console.error('D1 del framework:',e)); // else the saveFramework upsert leaves the D1 row → it resurrects on reload
   const panelMap={principle:'principles',rule:'rules',trait:'traits',avoid:'avoid'};
   renderFwPanel(panelMap[type]);
   showToast(t('db.deleted'),'success');
