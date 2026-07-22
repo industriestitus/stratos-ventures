@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v23';
+var APP_VERSION='v24';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -5282,7 +5282,17 @@ function savePortfolioTransactions(){
   try{localStorage.setItem('portfolio_transactions_v1',JSON.stringify(pfTransactions))}catch(e){showToast(t('toast.storageSaveError',{type:'transactions'}),'error')}
 }
 
-function pfNextId(arr){if(!arr.length)return 1;let mx=0;for(let i=0;i<arr.length;i++){const id=arr[i].id||0;if(id>mx)mx=id}return mx+1}
+// Collision-resistant id generator (#5). Per-device max(id)+1 made two devices mint the SAME id for
+// DIFFERENT new objects before syncing → ON CONFLICT(id) DO UPDATE silently overwrote one with the
+// other. id = (epoch SECONDS << 21) | 21-bit counter (random per-session start). Two devices collide
+// only when both create in the SAME wall-clock second AND their contiguous counter ranges overlap
+// mod 2^21 — ≈(nA+nB)/2^21, i.e. effectively never for normal use (a rare risk only for concurrent
+// offline BULK imports in the same second). Stays under Number.MAX_SAFE_INTEGER (≈3.7e15 now, crosses
+// 2^53 only ~year 2106), is monotonic within a session (bigger = newer), and coexists with the old
+// small sequential ids (new ids are ~3.7e15, can never collide with them).
+let _idCtr=Math.floor(Math.random()*0x200000);
+function _mintId(){return Math.floor(Date.now()/1000)*0x200000+((_idCtr++)&0x1FFFFF)}
+function pfNextId(arr){return _mintId()}
 
 function switchPortfolioTab(name){
   _bulkPosIds.clear();_bulkTxIds.clear();_updateBulkBar();
@@ -8484,7 +8494,7 @@ function saveResearchEntry(){
       entry.content=content;
     }
   }else{
-    const id=researchNotes._nextId++;
+    const id=_mintId();
     const base={id,date,pinned:false,createdAt:now,updatedAt:now,images:_reImages.length?[..._reImages]:[]};
     if(type==='journal'){
       base.ticker=document.getElementById('re-ticker').value.trim().toUpperCase()||'';
@@ -10352,7 +10362,7 @@ function renderTodos(ticker){
   const delTitle=t('pf.deleteTitle');
   let h='';
   todos.forEach(td=>{
-    if(!td.id)td.id=++todoIdCounter;
+    if(!td.id)td.id=_mintId();
     const overdue=td.due&&!td.done&&td.due<today;
     h+=`<div class="cp-todo-item">`;
     h+=`<input type="checkbox" ${td.done?'checked':''} aria-label="Mark complete: ${escH(td.text)}" onchange="toggleTodo('${escH(ticker)}',${td.id},this.checked)">`;
@@ -10371,7 +10381,7 @@ function addTodo(ticker){
   const dateInput=document.getElementById('cp-todo-date');
   const text=input?.value?.trim();if(!text)return;
   initTodos(s);
-  s.todos.push({id:++todoIdCounter,text:text,due:dateInput?.value||'',done:false});
+  s.todos.push({id:_mintId(),text:text,due:dateInput?.value||'',done:false});
   saveTrackerStocks();
   input.value='';
   if(dateInput)dateInput.value='';
@@ -13351,7 +13361,7 @@ function saveFramework(){
   try{localStorage.setItem('framework_v1',JSON.stringify(fwData))}catch(e){showToast(t('toast.storageFull'),'error',8000)}
 }
 
-function fwNextId(){return fwData._nextId++}
+function fwNextId(){return _mintId()}
 
 function switchFwTab(name){
   const prevPanel=document.querySelector('.fw-panel.active');
@@ -14689,7 +14699,7 @@ function saveReviews(){
   try{localStorage.setItem('reviews_v1',JSON.stringify(rvData))}catch(e){showToast(t('toast.storageFull'),'error',8000)}
 }
 
-function rvNextId(){return rvData._nextId++}
+function rvNextId(){return _mintId()}
 
 function switchRvTab(name){
   _bulkRvIds.clear();_updateBulkBar();
