@@ -10886,7 +10886,10 @@ function saveTrackerStocks(){invalidateScreenerCache();
         // Push if there's content OR an existing row id — so clearing the text upserts the
         // row to empty instead of leaving the old content to repopulate on reload.
         if(s.notes.research||s.notes._researchNoteId)notes.push({id:s.notes._researchNoteId||undefined,company_id:cid,note_type:'earnings',title:'research',content:s.notes.research||'',quarter:null});
-        Object.entries(s.notes.earnings||{}).forEach(([yr,qs])=>{Object.entries(qs||{}).forEach(([q,v])=>{notes.push({id:v.noteId||undefined,company_id:cid,note_type:'earnings',title:'',content:v.note||'',quarter:yr+q})})});
+        // Push a quarter note only if it has text OR an existing D1 row — a review-flagged
+        // quarter with no note text (done lives in earnings_timeline, not here) would otherwise
+        // INSERT a fresh empty row every save until the next reload captures its id (dup growth).
+        Object.entries(s.notes.earnings||{}).forEach(([yr,qs])=>{Object.entries(qs||{}).forEach(([q,v])=>{if(v.note||v.noteId)notes.push({id:v.noteId||undefined,company_id:cid,note_type:'earnings',title:'',content:v.note||'',quarter:yr+q})})});
       }
       const secs=(s.checklist&&s.checklist.sections)||{};
       Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(sv.answers||{}),progress:sv.progress||0,status:sv.status||'not_started'}));
@@ -10914,6 +10917,18 @@ function saveTrackerStocks(){invalidateScreenerCache();
     localStorage.setItem('tracker_stocks_v1',JSON.stringify(cleaned))}catch(e){showToast(t('toast.storageFull'),'error',8000)}
 }
 
+// Company notes have no natural key, so duplicate rows can accumulate in D1 (a one-time
+// cleanup is a C3 task). On load the FRESHEST row must win — pick by updated_at (a datetime
+// WITH time), then created_at, then the higher id. Blind last-wins previously let the
+// OLDEST-dated duplicate (the last row under the worker's ORDER BY note_date DESC, since
+// note_date is date-only and ties) clobber a newer note — visible cross-device as stale text.
+function _noteRowNewer(n,prev){
+  if(!prev)return true;
+  const a=String(n.updated_at||n.created_at||n.note_date||'');
+  const b=String(prev.updated_at||prev.created_at||prev.note_date||'');
+  if(a!==b)return a>b;
+  return (n.id||0)>(prev.id||0);
+}
 async function _d1CompanyToTStock(c){
   // Phase C2: thesis is encrypted at rest. On decrypt failure keep the raw ciphertext
   // rather than throwing — so the rest of the company still loads AND a later save-back
@@ -10946,16 +10961,25 @@ async function _d1CompanyToTStock(c){
     try{orig=await decStr(o.original_value)}catch(e){}
     s.overriddenData[o.metric_key]=ov;s._origData[o.metric_key]=orig;
   }
-  if(c.notes)for(const n of c.notes){
-    const content=await decStrSafe(n.content); // C2c: company note content is encrypted; title is a plaintext marker
-    if(n.quarter){
-      const yr=n.quarter.slice(0,4),q=n.quarter.slice(4);
-      if(!s.notes.earnings[yr])s.notes.earnings[yr]={};
-      const existing=s.notes.earnings[yr][q]||{done:false,note:''};
-      existing.note=content||'';
-      existing.noteId=n.id; // keep the D1 row id so the next save upserts instead of re-inserting (dedup)
-      s.notes.earnings[yr][q]=existing;
-    }else if(n.title==='research'){s.notes.research=content||'';s.notes._researchNoteId=n.id}
+  if(c.notes){
+    let researchMeta=null;const _qMeta={}; // freshest row seen per bucket (dup rows have no natural key)
+    for(const n of c.notes){
+      if(n.deleted_at)continue; // never let a soft-deleted duplicate win
+      const content=await decStrSafe(n.content); // C2c: company note content is encrypted; title is a plaintext marker
+      if(n.quarter){
+        const yr=n.quarter.slice(0,4),q=n.quarter.slice(4),bk=yr+'|'+q;
+        if(!s.notes.earnings[yr])s.notes.earnings[yr]={};
+        const existing=s.notes.earnings[yr][q]||{done:false,note:''};
+        if(_noteRowNewer(n,_qMeta[bk])){ // freshest dup wins (was blind last-wins → oldest clobbered)
+          existing.note=content||'';
+          existing.noteId=n.id; // keep the D1 row id so the next save upserts instead of re-inserting (dedup)
+          _qMeta[bk]=n;
+        }
+        s.notes.earnings[yr][q]=existing;
+      }else if(n.title==='research'){
+        if(_noteRowNewer(n,researchMeta)){s.notes.research=content||'';s.notes._researchNoteId=n.id;researchMeta=n}
+      }
+    }
   }
   if(c.checklist)for(const cl of c.checklist){let ans;try{ans=JSON.parse((await decStr(cl.answer_json))||'{}')}catch(e){continue}/* undecryptable → skip so save-back (upsert) leaves the D1 row intact */s.checklist.sections[cl.section_key]={answers:ans,progress:cl.progress,status:cl.status||'not_started'}}
   return s;
