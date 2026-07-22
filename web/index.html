@@ -5241,13 +5241,29 @@ function savePortfolioAccounts(){
 }
 async function loadPortfolioPositions(){
   if(d1Mode){try{const r=await API.get('positions');const d1Pos=await Promise.all((r.data||[]).map(async p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:await decNum(p.shares),avgCost:await decNum(p.avg_cost),currency:(s?s.currency:'')||'USD',companyId:p.company_id,deleted_at:p.deleted_at||null}}));
-    let lsExtra={};try{const ls=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(ls))ls.forEach(p=>{if(p.id)lsExtra[p.id]=p})}catch(e){}
+    let lsArr=[];try{const ls=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(ls))lsArr=ls}catch(e){}
+    const lsExtra={};lsArr.forEach(p=>{if(p.id)lsExtra[p.id]=p});
     pfPositions=d1Pos.map(p=>{const ex=lsExtra[p.id];if(ex)return{...ex,...p,assetType:ex.assetType||'stock',currentPrice:ex.currentPrice,notes:ex.notes,reLocation:ex.reLocation,rePurchaseDate:ex.rePurchaseDate,rePurchasePrice:ex.rePurchasePrice,reCurrentValue:ex.reCurrentValue,reMonthlyRental:ex.reMonthlyRental,reAnnualCosts:ex.reAnnualCosts,bondType:ex.bondType,bondFaceValue:ex.bondFaceValue,bondCouponRate:ex.bondCouponRate,bondMaturityDate:ex.bondMaturityDate,bondPaymentFreq:ex.bondPaymentFreq,cashAmount:ex.cashAmount};return p});
+    // Preserve localStorage-only positions that D1 doesn't have: non-stock cash/RE/bond (company_id
+    // null → never synced) plus any not-yet-synced rows. Without this the D1-only rebuild would drop
+    // them and overwrite localStorage → permanent same-device loss. Skip locally soft-deleted rows so
+    // deletes are not resurrected.
+    const d1Ids=new Set(d1Pos.map(p=>p.id));
+    lsArr.forEach(p=>{if(p.id&&!d1Ids.has(p.id)&&!p.deleted_at)pfPositions.push(p)});
     try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){}return}catch(e){console.error('D1 load positions, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(d))pfPositions=d}catch(e){console.error('Corrupted portfolio_positions_v1:',e)}
 }
 function savePortfolioPositions(){
-  if(d1Mode){API.scheduleSave('pfPositions',async()=>{await API.post('positions/batch',{items:await Promise.all(pfPositions.map(async p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:await encStr(p.shares),avg_cost:await encStr(p.avgCost),deleted_at:p.deleted_at||null})))})})}
+  if(d1Mode){API.scheduleSave('pfPositions',async()=>{
+    // Non-stock positions (cash/RE/bond) have no D1 company row → company_id resolves to null.
+    // positions.company_id is NOT NULL and db.batch is atomic, so including even ONE null-company_id
+    // row throws → the whole batch 500s → NO position syncs (poison). Exclude them from the D1 batch;
+    // they persist in localStorage and loadPortfolioPositions merges them back on reload. Cross-device
+    // sync for non-stock positions is deferred to S2 (synthetic company rows).
+    const syncable=pfPositions.filter(p=>(p.companyId||_tickerToD1Id(p.ticker)));
+    const items=await Promise.all(syncable.map(async p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:await encStr(p.shares),avg_cost:await encStr(p.avgCost),deleted_at:p.deleted_at||null})));
+    await API.post('positions/batch',{items});
+  })}
   try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){showToast(t('toast.storageSaveError',{type:'positions'}),'error')}
 }
 async function loadPortfolioTransactions(){
