@@ -4832,9 +4832,10 @@ function exportCsvNotes(){
     });
   });
   Object.entries(tStocks).forEach(([ticker,s])=>{
-    (s.notes||[]).forEach(n=>{
-      rows.push([n.date||'','earnings',ticker,n.title||n.quarter||'',n.content||'','','']);
-    });
+    // s.notes is an object {thesis, research, earnings:{yr:{q:{note}}}}, NOT an array.
+    const nt=s.notes;if(!nt||typeof nt!=='object')return;
+    if(nt.research)rows.push(['','earnings',ticker,'research',nt.research,'','']);
+    Object.entries(nt.earnings||{}).forEach(([yr,qs])=>Object.entries(qs||{}).forEach(([q,v])=>{if(v&&v.note)rows.push(['','earnings',ticker,yr+q,v.note,'',''])}));
   });
   _downloadCsv('stratos-notes.csv',headers,rows);
 }
@@ -4890,7 +4891,9 @@ function exportMarkdownNotes(){
     // Company earnings notes
     const earningsNotes=[];
     Object.entries(tStocks).forEach(([ticker,s])=>{
-      (s.notes||[]).forEach(n=>earningsNotes.push({...n,ticker}));
+      const nt=s.notes;if(!nt||typeof nt!=='object')return;
+      if(nt.research)earningsNotes.push({ticker,quarter:'research',content:nt.research,date:''});
+      Object.entries(nt.earnings||{}).forEach(([yr,qs])=>Object.entries(qs||{}).forEach(([q,v])=>{if(v&&v.note)earningsNotes.push({ticker,quarter:yr+q,content:v.note,date:''})}));
     });
     if(earningsNotes.length){
       md+='## Earnings Notes\n\n';
@@ -10864,8 +10867,12 @@ function saveTrackerStocks(){invalidateScreenerCache();
         // note_date is OMITTED (not null): the column is NOT NULL DEFAULT date('now'), and
         // SQLite does NOT apply the default when a column is explicitly set to NULL — passing
         // null violates NOT NULL and 500s the whole notes batch. Omitting lets the default apply.
-        if(s.notes.research)notes.push({company_id:cid,note_type:'earnings',title:'research',content:s.notes.research,quarter:null});
-        Object.entries(s.notes.earnings||{}).forEach(([yr,qs])=>{Object.entries(qs).forEach(([q,v])=>{notes.push({company_id:cid,note_type:'earnings',title:'',content:v.note||'',quarter:yr+q})})});
+        // Re-send the captured row id so a repeat save UPSERTS by id instead of inserting a
+        // duplicate (company notes have no natural key). Undefined id → first insert.
+        // Push if there's content OR an existing row id — so clearing the text upserts the
+        // row to empty instead of leaving the old content to repopulate on reload.
+        if(s.notes.research||s.notes._researchNoteId)notes.push({id:s.notes._researchNoteId||undefined,company_id:cid,note_type:'earnings',title:'research',content:s.notes.research||'',quarter:null});
+        Object.entries(s.notes.earnings||{}).forEach(([yr,qs])=>{Object.entries(qs||{}).forEach(([q,v])=>{notes.push({id:v.noteId||undefined,company_id:cid,note_type:'earnings',title:'',content:v.note||'',quarter:yr+q})})});
       }
       const secs=(s.checklist&&s.checklist.sections)||{};
       Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(sv.answers||{}),progress:sv.progress||0,status:sv.status||'not_started'}));
@@ -10932,8 +10939,9 @@ async function _d1CompanyToTStock(c){
       if(!s.notes.earnings[yr])s.notes.earnings[yr]={};
       const existing=s.notes.earnings[yr][q]||{done:false,note:''};
       existing.note=content||'';
+      existing.noteId=n.id; // keep the D1 row id so the next save upserts instead of re-inserting (dedup)
       s.notes.earnings[yr][q]=existing;
-    }else if(n.title==='research'){s.notes.research=content||''}
+    }else if(n.title==='research'){s.notes.research=content||'';s.notes._researchNoteId=n.id}
   }
   if(c.checklist)for(const cl of c.checklist){let ans;try{ans=JSON.parse((await decStr(cl.answer_json))||'{}')}catch(e){continue}/* undecryptable → skip so save-back (upsert) leaves the D1 row intact */s.checklist.sections[cl.section_key]={answers:ans,progress:cl.progress,status:cl.status||'not_started'}}
   return s;
