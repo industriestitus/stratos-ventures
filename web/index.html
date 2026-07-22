@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v24';
+var APP_VERSION='v25';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -7252,22 +7252,22 @@ let dbBenchmark={ticker:'SPY',prices:[],fetchedAt:null};
 let db52wHighs={};
 
 async function loadDashTodos(){
-  if(d1Mode){try{const r=await API.get('general_todos?limit=500');dbTodos=(r.data||[]).map(t=>({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order}));
+  if(d1Mode){try{const r=await API.get('general_todos?limit=500');dbTodos=await Promise.all((r.data||[]).map(async t=>({id:t.id,text:await decStrSafe(t.title),due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order})));
     // Merge any localStorage todos not yet in D1 (race condition safety net)
     try{const ls=JSON.parse(localStorage.getItem('dashboard_todos_v1'));if(Array.isArray(ls)){const d1Ids=new Set(dbTodos.map(t=>t.id));const missing=ls.filter(t=>!d1Ids.has(t.id));if(missing.length){dbTodos.push(...missing);saveDashTodos()}}}catch(e){}
     return}catch(e){console.error('D1 load todos, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_todos_v1'));if(Array.isArray(d))dbTodos=d}catch(e){}
 }
 function saveDashTodos(){
-  if(d1Mode){API.scheduleSave('dashTodos',async()=>{await API.post('general_todos/batch',{items:dbTodos.map(t=>({id:t.id,title:t.text||'',due_date:t.due||null,is_done:t.done?1:0,sort_order:t.sortOrder||0}))})})}
+  if(d1Mode){API.scheduleSave('dashTodos',async()=>{await API.post('general_todos/batch',{items:await Promise.all(dbTodos.map(async t=>({id:t.id,title:await encStr(t.text||''),due_date:t.due||null,is_done:t.done?1:0,sort_order:t.sortOrder||0})))})})}
   try{localStorage.setItem('dashboard_todos_v1',JSON.stringify(dbTodos))}catch(e){showToast(t('toast.storageFull'),'error')}
 }
 async function loadDashFiSettings(){
-  if(d1Mode){try{const r=await API.get('app_settings/fi_settings');if(r){const v=JSON.parse(r.value||'{}');Object.assign(dbFiSettings,v)};try{localStorage.setItem('dashboard_fi_settings_v1',JSON.stringify(dbFiSettings))}catch(e){}return}catch(e){console.error('D1 load FI, falling back to localStorage:',e)}}
+  if(d1Mode){try{const r=await API.get('app_settings/fi_settings');if(r){const v=JSON.parse((await decStrSafe(r.value||''))||'{}');Object.assign(dbFiSettings,v)};try{localStorage.setItem('dashboard_fi_settings_v1',JSON.stringify(dbFiSettings))}catch(e){}return}catch(e){console.error('D1 load FI, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('dashboard_fi_settings_v1'));if(d&&typeof d==='object')Object.assign(dbFiSettings,d)}catch(e){}
 }
 function saveDashFiSettings(){
-  if(d1Mode){API.scheduleSave('dashFi',async()=>{await API.put('app_settings/fi_settings',{key:'fi_settings',value:JSON.stringify(dbFiSettings)})})}
+  if(d1Mode){API.scheduleSave('dashFi',async()=>{await API.put('app_settings/fi_settings',{key:'fi_settings',value:await encStr(JSON.stringify(dbFiSettings))})})}
   try{localStorage.setItem('dashboard_fi_settings_v1',JSON.stringify(dbFiSettings))}catch(e){}
 }
 async function loadDashBenchmark(){
@@ -10947,7 +10947,7 @@ function saveTrackerStocks(){invalidateScreenerCache();
       Object.entries(secs).forEach(([sk,sv])=>checklist.push({company_id:cid,_sectionKey:sk,answer_json:JSON.stringify(_sectionAnswers(sv)),progress:sv.progress||0,status:sv.status||'not_started'}));
     });
     const batch=[];
-    if(todos.length)batch.push(API.postBatch('company_todos/batch',todos));
+    if(todos.length){const todosEnc=await Promise.all(todos.map(async td=>({...td,title:await encStr(td.title||'')})));batch.push(API.postBatch('company_todos/batch',todosEnc))}
     if(earnings.length)batch.push(API.postBatch('earnings_timeline/batch',earnings));
     // Phase C2b/C2c: encrypt filing notes, override values, checklist answers, and the
     // company note CONTENT. The note title stays plaintext — for company notes it's a
@@ -11017,7 +11017,7 @@ async function _d1CompanyToTStock(c){
     pipelineStatus:c.pipeline_status||'watchlist',thesis:thesis,sortOrder:c.sort_order||0,
     _d1Id:c.id,todos:[],earnings:{},filings:{},overriddenData:{},_origData:{},notes:{thesis:thesis,research:'',earnings:{}},checklist:{sections:{}}};
   if(c.archived_at)s.archivedAt=c.archived_at;
-  if(c.todos)c.todos.forEach(t=>{s.todos.push({id:t.id,text:t.title,due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order})});
+  if(c.todos)for(const t of c.todos){s.todos.push({id:t.id,text:await decStrSafe(t.title),due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order})}
   if(c.earnings)c.earnings.forEach(e=>{
     s.earnings[e.year+'Q'+e.quarter]={reported:!!e.is_reported,reviewed:!!e.is_reviewed,reportDate:e.report_date};
     const yr=String(e.year),q='Q'+e.quarter;
