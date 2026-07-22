@@ -126,6 +126,9 @@ CREATE TABLE notes (
     source_name TEXT,
     source_url  TEXT,
     is_pinned   INTEGER NOT NULL DEFAULT 0,
+    excerpt     TEXT,   -- news: key quote (encrypted). NULL on legacy rows (pre-2026-07-23).
+    action      TEXT,   -- journal: action badge, e.g. buy/sell/note (encrypted). NULL = none/legacy.
+    tags        TEXT,   -- market: JSON array of tags (encrypted). NULL = none/legacy.
     deleted_at  TEXT DEFAULT NULL,
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at  TEXT NOT NULL DEFAULT (datetime('now'))

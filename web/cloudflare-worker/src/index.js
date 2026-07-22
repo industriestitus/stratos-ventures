@@ -487,7 +487,7 @@ const TABLES = {
   earnings_timeline:     { cols: ['company_id','year','quarter','is_reported','is_reviewed','report_date'], hasUpdatedAt: true, conflictTarget: 'company_id, year, quarter' },
   filing_tracking:       { cols: ['company_id','filing_type','fiscal_year','fiscal_quarter','is_read','filed_date','notes'], hasUpdatedAt: true, conflictTarget: 'company_id, filing_type, fiscal_year, fiscal_quarter' },
   company_data_overrides:{ cols: ['company_id','metric_key','original_value','override_value','reason'], hasUpdatedAt: true, conflictTarget: 'company_id, metric_key' },
-  notes:                 { cols: ['company_id','note_type','title','content','note_date','quarter','source_name','source_url','is_pinned','deleted_at'], hasUpdatedAt: true },
+  notes:                 { cols: ['company_id','note_type','title','content','note_date','quarter','source_name','source_url','is_pinned','excerpt','action','tags','deleted_at'], hasUpdatedAt: true },
   note_images:           { cols: ['note_id','filename','mime_type','image_data','sort_order'], hasUpdatedAt: false },
   broker_accounts:       { cols: ['name','currency','is_active'], hasUpdatedAt: true, conflictTarget: 'name' },
   positions:             { cols: ['company_id','account_id','shares','avg_cost','deleted_at'], hasUpdatedAt: true, conflictTarget: 'company_id, account_id' },

@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v21';
+var APP_VERSION='v22';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -8086,7 +8086,19 @@ async function loadResearchNotes(){
     researchNotes={journal:[],news:[],market:[],_nextId:1};
     for(const noteType of ['journal','news','market']){
       const r=await API.get('notes?filter=note_type&filter_value='+noteType+'&limit=5000');
-      researchNotes[noteType]=await Promise.all((r.data||[]).map(async n=>{const title=await decStrSafe(n.title),content=await decStrSafe(n.content),src=await decStrSafe(n.source_name),srcUrl=await decStrSafe(n.source_url);return{id:n.id,title,content,date:n.note_date,ticker:_d1CompanyMap[n.company_id]||null,source:src,sourceName:src,sourceUrl:srcUrl,pinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[],deleted_at:n.deleted_at||null}}));
+      researchNotes[noteType]=await Promise.all((r.data||[]).map(async n=>{const title=await decStrSafe(n.title),content=await decStrSafe(n.content),src=await decStrSafe(n.source_name),srcUrl=await decStrSafe(n.source_url);
+        const o={id:n.id,title,content,date:n.note_date,ticker:_d1CompanyMap[n.company_id]||null,source:src,sourceName:src,sourceUrl:srcUrl,pinned:!!n.is_pinned,quarter:n.quarter,companyId:n.company_id,_images:[],deleted_at:n.deleted_at||null};
+        // Per-type fields have their own D1 columns (excerpt/action/tags). A NULL column means a
+        // legacy row saved before those columns existed — recover it best-effort so nothing is lost.
+        if(noteType==='news'){
+          if(n.excerpt==null){o.excerpt=content;o.comment='';}                    // legacy: content held the excerpt (kept in o.content too, so exports aren't blanked)
+          else{o.excerpt=await decStrSafe(n.excerpt);o.comment=content;}           // new: content holds the comment/body
+        }else if(noteType==='journal'){
+          if(n.action!=null)o.action=await decStrSafe(n.action);
+        }else if(noteType==='market'){
+          if(n.tags!=null){try{o.tags=JSON.parse((await decStrSafe(n.tags))||'[]')}catch(e){o.tags=[]}}
+        }
+        return o;}));
       researchNotes[noteType].forEach(n=>{if(n.id>=researchNotes._nextId)researchNotes._nextId=n.id+1});
     }
     // Merge _images from localStorage (not returned by notes list endpoint)
@@ -8101,7 +8113,14 @@ async function loadResearchNotes(){
 function saveResearchNotes(){
   if(d1Mode){API.scheduleSave('researchNotes',async()=>{
     for(const noteType of ['journal','news','market']){
-      const items=await Promise.all((researchNotes[noteType]||[]).map(async n=>({id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:await encStr(n.title||''),content:await encStr(n.content||n.excerpt||n.comment||''),note_date:n.date||new Date().toISOString().slice(0,10),source_name:await encStr(n.sourceName||n.source||''),source_url:await encStr(n.sourceUrl||''),is_pinned:n.pinned?1:0,quarter:n.quarter||null,deleted_at:n.deleted_at||null})));
+      const items=await Promise.all((researchNotes[noteType]||[]).map(async n=>{
+        const body=noteType==='news'?(n.comment||''):(n.content||'');   // news body lives in .comment; journal/market in .content
+        return{id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:await encStr(n.title||''),content:await encStr(body),note_date:n.date||new Date().toISOString().slice(0,10),source_name:await encStr(n.sourceName||n.source||''),source_url:await encStr(n.sourceUrl||''),is_pinned:n.pinned?1:0,quarter:n.quarter||null,
+          excerpt:noteType==='news'?await encStr(n.excerpt||''):null,
+          action:noteType==='journal'?await encStr(n.action||''):null,
+          tags:noteType==='market'?await encStr(JSON.stringify(n.tags||[])):null,
+          deleted_at:n.deleted_at||null};
+      }));
       if(items.length)await API.post('notes/batch',{items});
     }
   })}
