@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v25';
+var APP_VERSION='v26';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -4528,7 +4528,7 @@ function saveCurrentStock(){
   _putSavedStocks(saved);showToast(`"${name}" saved.`,'success');renderSavedStocks();
 }
 function loadStock(name){const saved=_getSavedStocks();if(saved[name]){loadData(saved[name]);switchTab('dcf-perpetuity')}}
-function deleteStock(name,e){e.stopPropagation();const s=_getSavedStocks();const backup=s[name]?JSON.parse(JSON.stringify(s[name])):null;undoableDelete(t('toast.stockDeleted',{name}),()=>{const s2=_getSavedStocks();delete s2[name];_putSavedStocks(s2);renderSavedStocks()},()=>{if(backup){const s2=_getSavedStocks();s2[name]=backup;_putSavedStocks(s2);renderSavedStocks()}})}
+function deleteStock(name,e){e.stopPropagation();const s=_getSavedStocks();const backup=s[name]?JSON.parse(JSON.stringify(s[name])):null;undoableDelete(t('toast.stockDeleted',{name}),()=>{const s2=_getSavedStocks();delete s2[name];_putSavedStocks(s2);renderSavedStocks()},()=>{if(backup){const s2=_getSavedStocks();s2[name]=backup;_putSavedStocks(s2);renderSavedStocks()}},()=>{if(d1Mode&&backup&&backup._d1ValId)API.del('valuations/'+backup._d1ValId).catch(e=>console.error('D1 del valuation:',e))})}
 function populateCalcTickerList(){const dl=document.getElementById('calc-ticker-list');if(dl){const allTk=new Set([...Object.keys(_getSavedStocks()),...Object.keys(tStocks)]);dl.innerHTML=[...allTk].map(tk=>`<option value="${escH(tk)}">`).join('')}}
 function renderSavedStocks(){
   const c=document.getElementById('saved-stocks-list'),s=_getSavedStocks();
@@ -6172,7 +6172,7 @@ function savePortfolioSnapshots(){
     const sr=await API.get('portfolio_snapshots?limit=1000');
     const dateToId={};(sr.data||[]).forEach(s=>{dateToId[s.snapshot_date]=s.id});
     const posItems=[];
-    for(const s of pfSnapshots){const sid=dateToId[s.date];if(!sid)continue;for(const p of (s.positions||[])){const cid=_tickerToD1Id(p.ticker);if(!cid)continue;posItems.push({snapshot_id:sid,company_id:cid,account_id:p.accountId||null,shares:await encStr(p.shares||0),price_per_share:await encStr(p.pricePerShare||0),market_value:await encStr(p.marketValue||0),currency:p.currency||'USD',intent:p.intent||'hold'})}}
+    for(const s of pfSnapshots){const sid=dateToId[s.date];if(!sid)continue;for(const p of (s.positions||[])){const cid=_tickerToD1Id(p.ticker);if(!cid||!p.accountId)continue;/* account_id is NOT NULL + a FK (foreign_keys=ON) + part of the upsert key — skip rather than coerce to null/0 which would 500 the whole batch */posItems.push({snapshot_id:sid,company_id:cid,account_id:p.accountId,shares:await encStr(p.shares||0),price_per_share:await encStr(p.pricePerShare||0),market_value:await encStr(p.marketValue||0),currency:p.currency||'USD',intent:p.intent||'hold'})}}
     if(posItems.length)await API.post('snapshot_positions/batch',{items:posItems});
   })}
   try{localStorage.setItem('portfolio_snapshots_v1',JSON.stringify(pfSnapshots))}catch(e){showToast(t('pf.storageFull'),'error')}
@@ -15386,7 +15386,7 @@ async function autoLoad(){
       try{
         const vr=await API.get('valuations?limit=500');
         const sv={};
-        for(const v of (vr.data||[])){const label=v.label||'';if(!label)continue;try{const inputs=JSON.parse((await decStr(v.inputs_json))||'{}');inputs.savedAt=v.updated_at||v.created_at;sv[label]=inputs}catch(e){}}
+        for(const v of (vr.data||[])){const label=v.label||'';if(!label)continue;try{const inputs=JSON.parse((await decStr(v.inputs_json))||'{}');inputs.savedAt=v.updated_at||v.created_at;inputs._d1ValId=v.id;sv[label]=inputs}catch(e){}}
         if(Object.keys(sv).length)_savedStocksCache=sv;
       }catch(e){console.error('D1 load valuations:',e)}
     }catch(e){console.error('D1 load error:',e);showToast(t('sync.partialLoadFailed'),'warning')}

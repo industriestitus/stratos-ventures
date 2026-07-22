@@ -249,6 +249,9 @@ CREATE TABLE snapshot_positions (
 );
 
 CREATE INDEX idx_snap_positions_snapshot ON snapshot_positions(snapshot_id);
+-- Natural key: one row per (snapshot, company, account). Lets the batch upsert on this key
+-- instead of blindly INSERTing every save (which caused quadratic duplicate-row growth).
+CREATE UNIQUE INDEX idx_snap_positions_natural ON snapshot_positions(snapshot_id, company_id, account_id);
 
 -- ============================================================
 -- 10. EXCHANGE RATES (Phase 4)
@@ -373,6 +376,9 @@ CREATE TABLE valuations (
 
 CREATE INDEX idx_valuations_company ON valuations(company_id);
 CREATE INDEX idx_valuations_date ON valuations(company_id, valuation_date);
+-- Natural key: one saved valuation per (company, label). Lets the batch upsert on this key
+-- instead of INSERTing a new row every save (which caused unbounded duplicate-row growth).
+CREATE UNIQUE INDEX idx_valuations_company_label ON valuations(company_id, label);
 
 -- ============================================================
 -- 16. GENERAL TODO LIST (Phase 5)
