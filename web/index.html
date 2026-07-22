@@ -11004,10 +11004,17 @@ async function loadTrackerStocks(){
     tStocks={};
     const fullLoads=companies.map(c=>API.get('companies/'+c.symbol+'/full').then(async full=>{tStocks[c.symbol]=await _d1CompanyToTStock(full)}).catch(e=>{tStocks[c.symbol]={ticker:c.symbol,name:c.name||c.symbol};console.error('D1 load company '+c.symbol+':',e)}));
     await Promise.all(fullLoads);
-    // Merge client-only fields from localStorage (not in D1 schema)
+    // Merge client-only fields from localStorage (not in D1 schema). These are never written
+    // to D1, so without this they'd be permanently WIPED when we overwrite localStorage below
+    // on every d1Mode reload. The `tStocks[tk][k]==null` guard means D1 stays authoritative for
+    // anything _d1CompanyToTStock actually sets (thesis/notes/checklist/etc.), so a D1-cleared
+    // value is never resurrected. scenarios (DCF bear/base/bull), valuationHistory (valuation
+    // snapshots) and overrides (DCF assumption overrides) were previously lost on every reload.
+    // (Nested checklist flat fields / idealTraitChecks and manual data-entry overrides are
+    // entangled and handled by their own dedicated fixes — see the sync-audit memory.)
     try{const ls=JSON.parse(localStorage.getItem('tracker_stocks_v1')||'{}');
-      const mergeKeys=['priceAlerts','dcfMode','evaWacc','tags','dateAdded','earningsCalendar','sbc','roic'];
-      Object.entries(ls).forEach(([tk,s])=>{if(tStocks[tk]){mergeKeys.forEach(k=>{if(s[k]!=null&&tStocks[tk][k]==null)tStocks[tk][k]=s[k]})}})}catch(e){}
+      const mergeKeys=['priceAlerts','dcfMode','evaWacc','tags','dateAdded','earningsCalendar','sbc','roic','scenarios','valuationHistory','overrides'];
+      Object.entries(ls).forEach(([tk,s])=>{if(tStocks[tk]&&s&&typeof s==='object'){mergeKeys.forEach(k=>{if(s[k]!=null&&tStocks[tk][k]==null)tStocks[tk][k]=s[k]})}})}catch(e){}
     try{localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}catch(e){}
     return;
   }catch(e){console.error('D1 load trackerStocks, falling back to localStorage:',e)}}
