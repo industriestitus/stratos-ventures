@@ -10905,8 +10905,20 @@ function saveTrackerStocks(){invalidateScreenerCache();
     if(overrides.length){const enc=await Promise.all(overrides.map(async o=>({...o,original_value:await encStr(o.original_value),override_value:await encStr(o.override_value),reason:await encStr(o.reason||'')})));batch.push(API.postBatch('company_data_overrides/batch',enc))}
     if(notes.length){const enc=await Promise.all(notes.map(async n=>({...n,content:await encStr(n.content)})));batch.push(API.postBatch('notes/batch',enc))}
     if(checklist.length){
-      const tmplR=await API.get('checklist_templates?limit=100');
-      const tmplMap={};(tmplR.data||[]).forEach(t=>{tmplMap[t.section_key]=t.id});
+      let tmplR=await API.get('checklist_templates?limit=100');
+      let tmplMap={};(tmplR.data||[]).forEach(t=>{tmplMap[t.section_key]=t.id});
+      // checklist_templates are never seeded anywhere (no INSERT in worker/schema/client),
+      // yet a checklist_answer needs a template_id (FK). Without the template row the answer
+      // is dropped HERE (tid undefined) AND the /full JOIN drops it on load — so checklist
+      // edits never reached D1 and didn't sync cross-device. Seed the missing section
+      // templates (upsert by section_key), then re-fetch to map answers → template_id.
+      const need=[...new Set(checklist.map(c=>c._sectionKey))].filter(k=>!tmplMap[k]);
+      if(need.length){
+        const seed=need.map(k=>{const def=CL_SECTIONS.find(s=>s.key===k);return{section_key:k,title:(def&&def.title)||k,sort_order:(def&&def.num)||0}});
+        await API.postBatch('checklist_templates/batch',seed);
+        tmplR=await API.get('checklist_templates?limit=100');
+        tmplMap={};(tmplR.data||[]).forEach(t=>{tmplMap[t.section_key]=t.id});
+      }
       const clItems=(await Promise.all(checklist.map(async c=>{const tid=tmplMap[c._sectionKey];if(!tid)return null;return{company_id:c.company_id,template_id:tid,answer_json:await encStr(c.answer_json),progress:c.progress,status:c.status}}))).filter(Boolean);
       if(clItems.length)batch.push(API.postBatch('checklist_answers/batch',clItems));
     }
