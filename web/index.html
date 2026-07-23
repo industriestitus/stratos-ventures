@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v36';
+var APP_VERSION='v37';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -11263,7 +11263,13 @@ async function loadTrackerStocks(){
     // (Nested checklist flat fields / idealTraitChecks and manual data-entry overrides are
     // entangled and handled by their own dedicated fixes — see the sync-audit memory.)
     try{const ls=JSON.parse(localStorage.getItem('tracker_stocks_v1')||'{}');
-      const mergeKeys=['priceAlerts','dcfMode','evaWacc','tags','dateAdded','earningsCalendar','sbc','roic','scenarios','valuationHistory','overrides'];
+      // moat/risk/uncertainty/conviction/expectedReturn: manual tracker `edit:1` assessment columns;
+      // pinned: pin-to-top state. Client-only (no D1 column, not sent by saveTrackerStocks). Until the
+      // Cat 80 write-path sanitize they survived a D1 reload only accidentally, via the whole-object
+      // api_cache `stock_data` snapshot round-trip (stale-prone — only as fresh as the last Refresh);
+      // now they must ride this localStorage merge like the other client-only fields. Cross-device sync
+      // deferred to S2 (same as tags/scenarios).
+      const mergeKeys=['priceAlerts','dcfMode','evaWacc','tags','dateAdded','earningsCalendar','sbc','roic','scenarios','valuationHistory','overrides','moat','risk','uncertainty','conviction','expectedReturn','pinned'];
       Object.entries(ls).forEach(([tk,s])=>{if(tStocks[tk]&&s&&typeof s==='object'){
         mergeKeys.forEach(k=>{if(s[k]!=null&&tStocks[tk][k]==null)tStocks[tk][k]=s[k]});
         // Preserve checklist section fields the D1 load didn't provide — answers that haven't
@@ -11805,6 +11811,22 @@ async function fmpFetch(endpoint,params){
 }
 
 const CACHE_TTLS={stock_data:1,historical_charts:24,dividend_history:24,insider_transactions:12};
+// api_cache 'stock_data' rows must hold MARKET METRICS ONLY. fetchYahooData starts from the live
+// tStock and _fetchStockDataRaw returns `{...yahoo}`, so the raw fetch result also carries encrypted/
+// private fields (thesis, notes, checklist, overriddenData, _origData) and bulky client-only state
+// (scenarios, valuationHistory, _bsData/_isData/_cfData, tags, priceAlerts, …). Sanitize with an
+// ALLOWLIST (fail-closed: anything not a known market field is dropped) before the cache-upsert PUT so
+// no plaintext private content is ever STORED at rest in D1. This is the WRITE side; the worker's
+// CACHE_STOCK_STRIP denylist is the READ side (what /full returns). Keep this list in sync with the
+// fields fetchYahooData / _fetchStockDataRaw set — a new MARKET metric must be added here or it won't
+// cache (a visible functional miss, never a silent leak — the safe failure direction for a security fix).
+const STOCK_CACHE_FIELDS=['ticker','name','price','marketCap','date','revenue','ocf','fcf','ebitda','profit','ebit','revenueGrowth','epsGrowth','epsDiluted','revGrowthY1','revGrowthY2','revGrowthY3','revCAGR3','grossMargin','operatingMargin','netMargin','roe','roa','roic','totalDebt','totalCash','debtEquity','currentRatio','ocfSbc','fcfSbc','sbc','buybackRaw','_source'];
+function _sanitizeStockCache(fresh){
+  if(!fresh||typeof fresh!=='object')return fresh;
+  const out={};
+  for(const k of STOCK_CACHE_FIELDS)if(fresh[k]!==undefined)out[k]=fresh[k];
+  return out;
+}
 let _lastCacheAge=null;
 let _forceRefresh=false;
 
@@ -11837,7 +11859,9 @@ async function cachedFetch(ticker,dataSource,fetchFn){
   const fresh=await fetchFn();
   if(fresh!=null&&!fresh.rateLimited){
     if(dataSource==='stock_data')_lastCacheAge={source:dataSource,fetched_at:new Date().toISOString(),ageHours:0};
-    try{await API.put('cache-upsert',{company_id:companyId,data_source:dataSource,data_json:fresh})}catch(e){console.error('Cache upsert failed:',e)}
+    // Persist market-only for stock_data (strip private/plaintext + client-only state before at-rest store).
+    const toStore=dataSource==='stock_data'?_sanitizeStockCache(fresh):fresh;
+    try{await API.put('cache-upsert',{company_id:companyId,data_source:dataSource,data_json:toStore})}catch(e){console.error('Cache upsert failed:',e)}
   }
   return fresh;
 }
