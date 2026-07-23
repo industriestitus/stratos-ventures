@@ -54,11 +54,11 @@ docs/
 - Branch per major feature: `feature/portfolio`, `feature/notes`, etc.
 
 ## Documentation Maintenance
-After each session, update relevant docs (see `memory/feedback_doc-maintenance.md` for full rules):
-- **Every session:** ROADMAP.md checkboxes, BUG-HISTORY.md QA findings
+Do a **docs pass at the end of every batch** (each shippable feature/fix, not just once per session) — a dedicated `docs:` commit right after the code commit, so the repo is never left in a code-without-docs state (see `memory/feedback_doc-maintenance.md` for full rules):
+- **Every batch:** ROADMAP.md checkboxes, BUG-HISTORY.md (new Category + top summary-table row + running total)
 - **Feature work:** KNOWN-ISSUES.md, CODING-LESSONS.md, GLOSSARY.md
-- **Architecture changes:** ARCHITECTURE.md, API-REFERENCE.md, DECISIONS.md, DEPLOYMENT.md
-- **Schema changes:** d1-schema.sql, ARCHITECTURE.md § 5
+- **Architecture changes:** ARCHITECTURE.md, API-REFERENCE.md, DECISIONS.md (new ADR + summary-table row), DEPLOYMENT.md
+- **Schema changes:** d1-schema.sql, ARCHITECTURE.md § 5, and add the exact `ALTER … BEFORE wrangler deploy` commands to BUG-HISTORY Deployment Notes
 
 ## Project Status
 See `docs/ROADMAP.md` for current phase, tasks, and progress.
