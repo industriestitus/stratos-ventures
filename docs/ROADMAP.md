@@ -15,6 +15,9 @@ Full plan in `memory/project_security-v2-plan.md`. Stop + multi-agent QA after e
 
 **Deep QA before commit (2026-07-21):** 3 cross-cutting agents (holistic security, full-diff correctness, e2e journeys) over the whole A+B change. All journeys pass; no critical/high. 3 fixes applied+tested: `/auth/change` revokes all tokens (stolen-token remediation), worker `corsHeaders`→`cors` 413-guard typo, boot gate shows master-login (not old encryption setup) when worker unreachable on a fresh device. Deferred hardening logged in KNOWN-ISSUES.md (SV.1-SV.5).
 
+**At-rest hardening (out-of-band):**
+- [x] SV.6: `api_cache` `stock_data` write-path sanitized — fail-closed market-only allowlist (`STOCK_CACHE_FIELDS`/`_sanitizeStockCache`) before `cache-upsert`, so no plaintext copy of encrypted fields is stored at rest. Cat 80. Frontend-only. **Pending Peter: one-time `DELETE FROM api_cache WHERE data_source='stock_data'` on live D1 (backup first) + `git push`.** (2026-07-23)
+
 **Phase C — E2E encryption (envelope + field-level)** (NEXT SESSION; includes recovery key — unblocks B3). encKey already derived (`deriveEncKeyBits`, HKDF 'stratos-enc-v1'). Plan in memory/project_security-v2-plan.md.
 **Phase B3 — retire sync key** (after Phase C recovery key exists)
 **Phase D — Cleanup, durable rate limiting, docs, final security QA** (not started)

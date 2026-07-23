@@ -85,8 +85,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 77 | S2c Soft-Delete Tombstones (framework/override/valuation/note_images) | `19faaf4` | 2026-07-23 | 4 | 0 |
 | 78 | Tracker Metric + Override Hydration on D1 Load | `af214e4` | 2026-07-23 | 2 | 0 |
 | 79 | Tracker Hydration Rate-Limit Regression (v35→v36) | `d9c4ad6` | 2026-07-23 | 2 | 0 |
+| 80 | api_cache Write-Path Sanitize (SV.6) + tracker-field persistence | `5d5cf69` | 2026-07-23 | 2 | 0 |
 
-**Total: 472 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 474 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1563,6 +1564,21 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 79.2 | QA-caught: `cachedStock` could ship plaintext private fields | `api_cache` `stock_data` is written as a snapshot of the WHOLE client stock object (`fetchYahooData` returns the live tStock), so a cached row carries plaintext copies of encrypted fields (thesis/notes/checklist/override values) + client-only state. Fix: `handleCompanyFull` sanitizes `cachedStock` to market-only fields (`CACHE_STOCK_STRIP` denylist) before returning it → no private/stale content in `/full`. The at-rest copy in `api_cache` itself (cache WRITE path) is a separate pre-existing concern → KNOWN-ISSUES **SV.6** + spawned task. | `d9c4ad6` |
 
 **QA:** 4 parallel agents (correctness/regression, rate-limit root-cause, data-safety/security, deploy-safety). Correctness — behavior-preserving refactor, 1 cosmetic diff (dropped `console.warn`). Rate-limit — CONFIRMED resolved (34→0 extra requests); residual pre-existing note: 3+ rapid reloads/60s could still approach 120 via the ~34 `/full` alone. Deploy — no hazard either interleaving; worker-first recommended (no blank-tracker window). Data-safety — surfaced 79.2 (fixed via strip); load path itself data-safe (PRESERVE_FIELDS protects user fields, overrides win, tombstones honored, holders excluded).
+
+---
+
+## Category 80 — api_cache Write-Path Sanitize (2026-07-23)
+
+**Trigger:** Cat 79 (79.2) fixed the READ side (`handleCompanyFull` strips private fields from `cachedStock` before `/full` returns) but the WRITE side was unchanged — `api_cache.data_json` for `stock_data` was still STORED as a whole-object snapshot, so plaintext copies of encrypted fields (thesis, notes, checklist, `overriddenData`, `_origData`) + bulky client-only state (scenarios, valuationHistory, `_bsData`/`_isData`/`_cfData`, tags, priceAlerts, …) sat at rest in D1 — partially defeating Security v2 C2 encryption-at-rest. Tracked as KNOWN-ISSUES **SV.6**. This category closes it.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 80.1 | `api_cache` stored plaintext private fields at rest (SV.6) | `cachedFetch` persisted the raw `_fetchStockDataRaw` result verbatim; that result is `{...yahoo}` where `yahoo` starts from the live `tStocks[ticker]`, so it carried every private/client-only field. Fix: new **fail-closed allowlist** `STOCK_CACHE_FIELDS` + `_sanitizeStockCache()` in `web/index.html`; `cachedFetch` sanitizes the `stock_data` payload to market-only fields **before** the `cache-upsert` PUT (`return fresh` unchanged, so the live `_applyMarketData` merge is byte-identical — only the STORED copy is trimmed). Allowlist chosen over the worker's `CACHE_STOCK_STRIP` denylist so any future private field can never silently leak; the trade-off (a new MARKET metric must be added to the list or it won't cache) is the safe failure direction. `historical_charts` (`{incData,cfData,bsData}`), `dividend_history` (raw FMP), `insider_transactions` (raw Finnhub array) confirmed clean — not whole-object snapshots — so no fix needed there. | `5d5cf69` |
+| 80.2 | QA-caught: 6 manual tracker fields would be WIPED by 80.1 | Adversarial QA of 80.1 found that `moat`/`risk`/`uncertainty`/`conviction`/`expectedReturn` (manual `edit:1` tracker columns) + `pinned` (pin-to-top) are client-only — no D1 column, not sent by `saveTrackerStocks` — and were **missing from the `loadTrackerStocks` `mergeKeys` rescue** (index.html ~11266). They survived a D1 reload only accidentally, via the same whole-object `api_cache` snapshot that 80.1 removes (and only as fresh as the last Refresh — stale-prone). Without a fix, deploying 80.1 would permanently wipe the user's assessment + pin state on the next reload. Fix: added all 6 to `mergeKeys` so they ride the established localStorage→D1-reload merge (same-device persistence, like `tags`/`scenarios`; cross-device deferred to S2). Net effect: **more** reliable than before (localStorage is always current). Verified via node merge-simulation (all 6 rescued). | `5d5cf69` |
+
+**Verification:** node:sqlite round-trip using the constants extracted from the actual source (`STOCK_CACHE_FIELDS`, worker `CACHE_STOCK_STRIP`, `PRESERVE_FIELDS`) — asserted (a) **zero** private fields stored at rest, (b) all sampled market metrics survive store→worker-read→hydrate intact, (c) no allowlist field collides with the worker denylist. Plus a `mergeKeys` merge-simulation confirming all 6 fields from 80.2 are rescued on a D1 reload. Inline-script syntax check of the edited `index.html` passed. An **adversarial QA subagent** reviewed 80.1 across 5 dimensions (functional-regression field-by-field, hydration-consumer, write-path bypass, sanitizer correctness, typos) — it surfaced 80.2 (the only confirmed issue); A/C/D/E clean. A live browser round-trip was intentionally NOT run — it would write test rows to production D1 (against the data-safety rules); the in-memory sqlite simulation is the safer equivalent.
+
+**One-time cleanup (PENDING PETER, live D1):** existing polluted rows only self-heal when each stock is next refreshed. Purge all at once: `DELETE FROM api_cache WHERE data_source='stock_data';` (backup first; rows self-repopulate clean on next Refresh All). No worker deploy needed for the fix (frontend-only, `web/index.html`) — ships with the next `git push` + sw.js bump.
 
 ---
 
