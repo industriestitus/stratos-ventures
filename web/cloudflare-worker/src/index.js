@@ -12,7 +12,7 @@ let crumbExpiry = 0;
 const rateLimitMap = new Map();
 const RATE_LIMITS = {
   yahoo: { max: 30, windowMs: 60_000 },
-  api:   { max: 120, windowMs: 60_000 },
+  api:   { max: 600, windowMs: 60_000 }, // a legit tracker load is ~55 /api requests (mostly per-company /full); 120 was too low — 3 rapid reloads (~165) 429'd. 600 ≈ 10 reloads/min headroom, still caps real abuse (single-user, auth-gated).
   proxy: { max: 60, windowMs: 60_000 },
   auth:  { max: 20, windowMs: 60_000 },
 };
