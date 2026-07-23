@@ -82,8 +82,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 74 | S2a-2 Per-Company Attr Sync + Single-PUT Upsert | `aaff465` | 2026-07-23 | 2 | 0 |
 | 75 | S2a-3 Research-Note Images → D1 | `9c4e6ca` | 2026-07-23 | 3 | 0 |
 | 76 | S2b Non-Stock Positions Cross-Device | `b8d5778` | 2026-07-23 | 3 | 0 |
+| 77 | S2c Soft-Delete Tombstones (framework/override/valuation/note_images) | `19faaf4` | 2026-07-23 | 4 | 0 |
 
-**Total: 464 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 468 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1520,6 +1521,23 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 
 ---
 
+## Category 77 — S2c Soft-Delete Tombstones (2026-07-23)
+
+**Trigger:** S2c — extend `deleted_at` soft-delete to the last four hard-delete sync paths so a delete can't be resurrected by a stale second device (KNOWN-ISSUES **SA.3**, resolved). Commit `19faaf4`, sw.js v34. **Needs 4 D1 `ALTER` + worker deploy (order MANDATORY, see Deployment Notes).** Verified: worker `node --check` OK; in-browser load (localStorage mode) clean console, all 4 handlers defined, v34 indicator. Closes the whole S2 cross-device block.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 77.1 | framework_entries delete resurrects (SA.3) | `deleteFwEntry` now PUTs `deleted_at` (was hard `API.del`); `loadFramework` skips tombstoned rows. Entry is spliced from the local array on delete → absent from later `saveFramework` batches → tombstone sticks (id-based, re-add gets a fresh id, so no un-tombstone needed). | `19faaf4` |
+| 77.2 | valuations delete resurrects (SA.3) | Natural-key delete (`deleteStock`) soft-deletes via the worker route change (no client edit); bulk-delete PUTs `deleted_at` by id; dedicated valuations load skips tombstoned rows. Live `_putSavedStocks` batch sends `deleted_at:null` so re-adding a same `(company_id,label)` valuation un-tombstones it. | `19faaf4` |
+| 77.3 | company_data_overrides clear resurrects (SA.3) | Natural-key clear (`_delD1Override`) soft-deletes via the worker route change (no client edit); company-full load skips tombstoned overrides; live save batch sends `deleted_at:null` for natural-key re-add. | `19faaf4` |
+| 77.4 | note_images removal resurrects (SA.3, S2a-3 gap) | Removed images PUT `deleted_at` (was hard `API.del`); load skips tombstoned rows, keeping them out of both `n.images` and the `_d1ImageIds` diff snapshot so a stale device stops re-uploading (id-based client-minted id, re-add is a fresh id). | `19faaf4` |
+
+**Worker mechanism:** the natural-key `DELETE /api/{table}?key=…` route now `UPDATE … SET deleted_at` (soft) instead of `DELETE` when the table's `TABLES` cols include `deleted_at`; hard-delete stays for keyless tables. By-id soft-deletes use the existing `PUT {table}/{id} {deleted_at}` path (notes/reviews pattern). GET returns tombstones verbatim — client filters everywhere (no server-side `deleted_at IS NULL`), consistent with notes/reviews.
+
+**Known (accepted):** same stale-writer window as notes/reviews — a second device that still holds the row live and saves BEFORE it loads the tombstone will re-assert it (natural-key tables send `deleted_at:null`; id-based tables just omit it, so their tombstone is stickier). Load-on-startup mitigates. No 30-day trash/purge UI for these four types (unlike notes/reviews) — a tombstone is permanent until overwritten; acceptable (single-user, low row counts).
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), `36cf706` (natural-key upsert conflict targets), `cc3c9a2` (natural-key DELETE route + `NATURAL_DELETE` allowlist + GET cap 100000), `aaff465` (S2a-2: companies attr columns + single-PUT upsert — **run the D1 `ALTER` first**, see below), and any future Worker changes:
@@ -1536,6 +1554,12 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
   ```bash
   cd web/cloudflare-worker
   npx wrangler d1 execute stratos-ventures-db --remote --command "ALTER TABLE companies ADD COLUMN holder_type TEXT; ALTER TABLE positions ADD COLUMN details TEXT;"
+  npx wrangler deploy
+  ```
+- **`19faaf4` (S2c) deploy order is MANDATORY** — add the 4 `deleted_at` columns to live D1 BEFORE deploying the worker (same reason: the new `TABLES` cols reference missing columns → the override/valuation/framework/note_images batch upserts 500). All 4 are nullable `ADD COLUMN`s — non-destructive, no backfill needed:
+  ```bash
+  cd web/cloudflare-worker
+  npx wrangler d1 execute stratos-ventures-db --remote --command "ALTER TABLE framework_entries ADD COLUMN deleted_at TEXT DEFAULT NULL; ALTER TABLE company_data_overrides ADD COLUMN deleted_at TEXT DEFAULT NULL; ALTER TABLE valuations ADD COLUMN deleted_at TEXT DEFAULT NULL; ALTER TABLE note_images ADD COLUMN deleted_at TEXT DEFAULT NULL;"
   npx wrangler deploy
   ```
 - **Service Worker** cache version is `stratos-v3` — browsers auto-update on next visit

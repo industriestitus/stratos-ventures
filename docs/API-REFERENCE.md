@@ -182,15 +182,15 @@ Client derivation: `masterBits = PBKDF2(password, salt, 600k, SHA-256)` → HKDF
 - **Response:** `{ok: true, deleted: {...previous_row}}`
 - **Cascades:** Enforced via FOREIGN KEY constraints; notes on companies explicitly deleted
 
-#### DELETE (Remove row by natural key) — added `cc3c9a2`
+#### DELETE (Remove row by natural key) — added `cc3c9a2`, soft-delete `19faaf4`
 - **Endpoint:** `DELETE /api/{table}?col=val&col2=val2`
 - **Purpose:** Delete a row the client only knows by natural key (it never captured the autoincrement `id`). Lets a delete of a framework entry / data override / valuation actually propagate to D1 instead of resurrecting on reload.
 - **Allowlist (`NATURAL_DELETE`):** only these tables are eligible, and the **full** key must be supplied (every listed column present and non-empty, else 400):
   - `company_data_overrides` → `company_id`, `metric_key`
   - `valuations` → `company_id`, `label`
+- **Soft-delete (S2c, `19faaf4`):** when the target table has a `deleted_at` column (both allowlisted tables now do), the route `UPDATE … SET deleted_at = <now>` instead of `DELETE`, so the row persists as a tombstone and a stale second device can't resurrect it. Response is `{ok: true, softDeleted: N}`. Tables without `deleted_at` still hard-delete (`{ok: true, deleted: N}`). GET returns tombstones verbatim — the client filters `deleted_at` everywhere.
 - **Safety:** column names come only from the fixed allowlist (never request input); values are bound params; a partial key is rejected so it can never degrade into a mass delete.
-- **Response:** `{ok: true, deleted: N}`
-- **Caveat:** hard delete — no tombstone, so a stale copy on another device can still re-upload the row on its next sync (tracked as SA.3 / S2c in KNOWN-ISSUES.md).
+- **Related:** by-id soft-deletes use `PUT /api/{table}/{id} {deleted_at}` (notes/reviews/framework/valuation/note_images). A later live upsert of the same natural key with `deleted_at:null` un-tombstones the row (re-add).
 
 #### Batch Upsert
 - **Endpoint:** `POST /api/{table}/batch`

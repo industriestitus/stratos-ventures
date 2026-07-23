@@ -39,14 +39,14 @@ Goal: a field-by-field save/load/cross-device audit (5 QA agents) of every data 
 - [x] Stop unbounded `exchange_rates` row growth + stale load (fixed `'latest'` rate_date key) — `1d31799`
 
 **Remaining — S2 Cross-Device Completeness** (started; not data-loss, only "shows on device A, not B" gaps)
-- [~] **S2a — localStorage-only fields → D1:** each needs a D1 home.
+- [x] **S2a — localStorage-only fields → D1:** each needs a D1 home.
   - [x] S2a-1 (`e8aacb0`): dashboard widget config + screener presets → `app_settings` (via batch upsert; single PUT is UPDATE-only). Boot hydrators + cross-device sync.
   - [x] S2a-2 (`aaff465`, sw.js v31; needs D1 `ALTER` + worker deploy): priceAlerts (encrypted), tags, idealTrait/avoid checks → 4 new nullable TEXT columns on `companies` + batch payload + `_d1CompanyToTStock` load. Bundled the systemic single-PUT→upsert worker fix (app_settings family now works on a fresh account). NULL = never-synced (localStorage fallback); `'{}'`/`'[]'` = cross-device clear wins.
   - [x] S2a-3 (`9c4e6ca`, sw.js v32, frontend-only): research-note images → existing `note_images` D1 table. Client-minted id per image (upsert, no dup growth), image_data+filename encrypted, sort_order preserves markdown `img:N` order, deletion reconcile via `_d1ImageIds` diff. Also fixed a latent bug (D1-mode images were written to `_images` but read from `images` → vanished on reload).
   - [x] RE/bond/cash position detail fields — done as part of S2b (positions.details blob).
 - [x] **S2b — non-stock positions cross-device** (`b8d5778`, sw.js v33; needs 2 D1 `ALTER` + worker deploy): RE/cash/bond positions get a synthetic holder-company row (`companies.holder_type`) kept in `_holderCompanies` (out of tStocks → auto-excluded from all tracker/screener/comparison/dividend/search/dashboard views). Position client-only fields ride a new encrypted `positions.details` JSON column (also closes the stock currentPrice/notes gap). Auto-migrates pre-existing localStorage-only non-stock positions on first load. Guard: a ticker can't be both a stock and a non-stock holder (UNIQUE symbol).
-- [ ] **S2c — soft-delete tombstones:** framework/override/valuation/note_images deletes are currently hard deletes (no tombstone) → a stale copy on another device can re-write them. Proper fix = `deleted_at` soft-delete (like notes/reviews).
-- Suggested order: ~~S2a~~ ✅ → ~~S2b~~ ✅ → S2c (tombstones, only remaining).
+- [x] **S2c — soft-delete tombstones** (`19faaf4`, sw.js v34; needs 4 D1 `ALTER` + worker deploy): framework/override/valuation/note_images deletes converted from hard-delete to `deleted_at` tombstones (like notes/reviews) so a stale device can't resurrect them. Worker natural-key DELETE route now soft-deletes when the table has `deleted_at`; by-id deletes PUT `deleted_at`; loads filter tombstones; natural-key tables send `deleted_at:null` on live upsert for re-add. Resolves KNOWN-ISSUES SA.3. **Completes the S2 cross-device block.**
+- Suggested order: ~~S2a~~ ✅ → ~~S2b~~ ✅ → ~~S2c~~ ✅ — **S2 DONE.**
 
 **SW-update UX** (small)
 - [x] Auto-reload on new Service Worker (`8803d3c`): `controllerchange` → `location.reload()` + auto-`skipWaiting()`, gated on `_swUpdatePending` (never first-install) and `_safeToAutoReload()` (typing / open overlay / lock / pending D1 save → fall back to clickable toast), with a 30s sessionStorage throttle against CDN-propagation reload loops + `visibilitychange`→`reg.update()`. No manual hard reload needed after a deploy.

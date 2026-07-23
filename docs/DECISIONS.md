@@ -1057,11 +1057,11 @@ Two related defects surfaced in the field-by-field sync audit. (1) The batch ups
 **Alternatives Rejected:**
 - **Always capture the server id round-trip before delete:** extra latency and a fetch the local-first flow doesn't otherwise need; fails when the row was created offline and never synced.
 - **`INSERT OR REPLACE`:** would reset autoincrement ids and break FK children; `ON CONFLICT DO UPDATE` preserves the row identity.
-- **Soft-delete tombstones for these three types (the fully-correct fix):** deferred — hard delete stops the *same-device* resurrection now; cross-device resurrection via a stale copy remains (SA.3 / S2c) and will get `deleted_at` tombstones like notes/reviews.
+- **Soft-delete tombstones for these three types (the fully-correct fix):** deferred at the time — hard delete stopped the *same-device* resurrection; cross-device resurrection via a stale copy was left open (SA.3 / S2c). **Now done — see ADR-038.**
 
 **Consequences:**
 - ✅ Duplicate-row growth stopped; batches no longer 500 on natural-key re-saves; local deletes propagate to D1.
-- ⚠️ These deletes are still hard (no tombstone) → cross-device delete-resurrection remains open (KNOWN-ISSUES SA.3).
+- ✅ Cross-device delete-resurrection since resolved by S2c soft-delete tombstones (ADR-038, `19faaf4`); the natural-key DELETE route now soft-deletes when the table has a `deleted_at` column.
 - ⚠️ Worker redeploy required for both commits; a one-time live D1 dedup + unique-index add was run for `snapshot_positions`/`valuations`.
 
 **Date:** 2026-07-23 (Sync Audit)
@@ -1120,6 +1120,34 @@ Non-stock positions (cash / real-estate / bond) were localStorage-only: `positio
 
 ---
 
+## ADR-038: Soft-Delete Tombstones for framework/override/valuation/note_images (S2c)
+
+**Status:** Accepted (2026-07-23) — S2c (`19faaf4`)
+
+**Context:**  
+ADR-035 made deletes of framework entries / data overrides / valuations propagate to D1, but as **hard** deletes. `note_images` (ADR — S2a-3) had the same gap. A second device holding a stale copy could re-upload the row on its next batch upsert, resurrecting a deleted item (KNOWN-ISSUES SA.3). Notes/reviews/positions/transactions already avoid this with a `deleted_at` tombstone. This is the last hard-delete path in the cross-device sync surface.
+
+**Decision:**  
+- **Extend the `deleted_at` tombstone pattern** to `framework_entries`, `company_data_overrides`, `valuations`, `note_images` (nullable `TEXT` column, ISO timestamp; `NULL` = live). Same convention as notes/reviews — snake_case `deleted_at` on the client object, wire payload, and D1 column.
+- **Worker natural-key DELETE → soft-delete:** the `NATURAL_DELETE` route now `UPDATE … SET deleted_at` (instead of `DELETE`) when the table's `TABLES` cols include `deleted_at`. This converts the override + valuation natural-key deletes with **zero client change**. Hard-delete stays for keyless tables (and the by-id DELETE route stays hard, preserving the notes/reviews permanent-purge/trash flow).
+- **By-id soft-deletes** (framework, note_images, valuation bulk) use the existing `PUT {table}/{id} {deleted_at}` path — the established notes/reviews mechanism — so the hard by-id DELETE route is untouched.
+- **Load filtering:** every consumer skips tombstoned rows (`loadFramework`, dedicated valuations load, company-full overrides load, note_images load — the last keeps tombstones out of both `n.images` and the `_d1ImageIds` diff snapshot so a stale device stops re-uploading).
+- **Re-add un-tombstone:** natural-key tables (override, valuation) send `deleted_at:null` on every live upsert, so re-adding the same `(company_id, metric_key)` / `(company_id, label)` clears a stale tombstone. Id-based tables (framework, note_images) omit `deleted_at` on live batches — re-adds get a fresh id, so their tombstone is stickier (a stale device's live re-upsert can't clobber it via the column).
+
+**Alternatives Rejected:**
+- **Make the by-id DELETE route globally soft-delete:** would break the notes/reviews permanent-purge (empty-trash) flow, which relies on a true hard delete. Kept soft-delete = PUT-`deleted_at`, hard/permanent = DELETE.
+- **A dedicated natural-key soft-delete endpoint:** the existing natural-key DELETE route already carries the full-key safety guarantees; branching it on `deleted_at` reuses that surface with no new route.
+- **Keep the deleted item in the local array (full notes-style lifecycle) + 30-day trash UI:** more render-site filters for framework and awkward for the map-shaped override/valuation stores; not worth it for four low-volume, single-user types. Tombstone-write + drop-from-local-set + load-filter is sufficient.
+
+**Consequences:**
+- ✅ Cross-device delete-resurrection closed for all four types (SA.3 resolved); the entire S2 cross-device block is complete.
+- ⚠️ **Deploy order MANDATORY:** the 4 `deleted_at` `ALTER`s before `wrangler deploy` (else the new `TABLES` cols reference missing columns → 500s the batch). All nullable `ADD COLUMN`s, non-destructive.
+- ⚠️ Same accepted stale-writer window as notes/reviews (a device that saves before it loads the tombstone re-asserts it); load-on-startup mitigates. No 30-day trash/purge UI for these four — a tombstone is permanent until overwritten.
+
+**Date:** 2026-07-23 (S2c)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1161,6 +1189,7 @@ Non-stock positions (cash / real-estate / bond) were localStorage-only: `positio
 | 035 | Natural-key upsert & natural-key DELETE | Accepted | 2026-07-23 |
 | 036 | Per-company attr columns + single-PUT upsert (S2a-2) | Accepted | 2026-07-23 |
 | 037 | Synthetic holder companies + positions.details blob (S2b) | Accepted | 2026-07-23 |
+| 038 | Soft-delete tombstones for framework/override/valuation/note_images (S2c) | Accepted | 2026-07-23 |
 
 ---
 
