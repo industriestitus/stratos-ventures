@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v37';
+var APP_VERSION='v38';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1144,7 +1144,7 @@ var I18N={en:{
 'fw.principles':'Principles','fw.portfolioRules':'Portfolio Rules','fw.idealTraits':'Ideal Traits','fw.avoidList':'Avoid List','fw.positionScoring':'Position Scoring','fw.addPrinciple':'Add Principle','fw.principleTitle':'Title','fw.principleDesc':'Description (Markdown)','fw.principleDescPh':'Describe your principle or rule...',
 'rv.all':'All','rv.weekly':'Weekly','rv.monthly':'Monthly','rv.quarterly':'Quarterly','rv.newReview':'New Review','rv.reviewType':'Type','rv.reviewDate':'Date','rv.reviewCompany':'Company (optional)','rv.reviewSummary':'Summary / Key Takeaway','rv.reviewSummaryPh':'What\'s the main insight from this review?',
 'settings.install':'Install Stratos Ventures','settings.installHint':'Add to home screen for offline access and a native app experience','settings.apiKeysNote':'FMP and Finnhub API keys are stored securely on the Worker (server-side) — never in the browser or source code. Only your Sync Key is kept locally.','settings.yahooWorker':'Yahoo Worker URL','settings.fmpKey':'FMP API Key','settings.finnhubKey':'Finnhub API Key','settings.keyServerSide':'🔒 Stored securely on the Worker','settings.syncKey':'Sync Key',
-'mp.title':'Master Password','mp.setupHint':'Set one master password to sign in on any device — no sync key needed. Minimum 10 characters (letters and numbers are enough).','mp.status.checkFailed':'Could not reach the server to check status — try again','mp.choose':'Choose a master password','mp.confirm':'Confirm master password','mp.setup':'Set Master Password','mp.change':'Change Master Password','mp.current':'Current master password','mp.new':'New master password','mp.tooShort':'Password must be at least {n} characters','mp.allSame':'Password cannot be a single repeated character','mp.mismatch':'Passwords do not match','mp.setupOk':'Master password set. You can now sign in with it on any device.','mp.changeOk':'Master password changed.','mp.status.set':'✓ Master password is set up','mp.status.notSet':'Not set up yet','mp.status.notReady':'Set your Sync Key first (needed once to set up the master password)','mp.devices':'Signed-in Devices','mp.devicesHint':'Each device that signs in with the master password appears here. Revoke any you no longer use.','mp.thisDevice':'(this device)','mp.revoke':'Revoke','mp.revoked':'Device revoked','mp.noDevices':'No devices signed in yet','mp.needSetup':'Set up a master password first','mp.wrongCurrent':'Current password incorrect','mp.enterCurrent':'Enter your current master password','mp.loginPrompt':'Enter your master password to sign in','mp.signIn':'Sign In','mp.signingIn':'Signing in…','mp.loginFailed':'Sign-in failed','mp.sessionExpired':'Your session expired — please sign in again','mp.enc.title':'Data Encryption','mp.enc.checking':'Checking…','mp.enc.active':'✓ End-to-end encryption is active on this device','mp.enc.needLogin':'Encryption is set up — sign in again on this device to activate it','mp.enc.notSet':'Not set up yet — finish below to protect your data','mp.enc.setupHint':'Enter your master password to generate your data key and one-time recovery key.','mp.enc.enable':'Enable Encryption','mp.enc.nudge':'Finish encryption setup in Settings → Master Password to protect your data.','mp.enc.needKey':'Enter your master password to unlock your encrypted data on this device.','mp.enc.rkTitle':'Save your recovery key','mp.enc.rkBody':'This is the only way to recover your data if you forget your master password. Store it somewhere safe — it is shown only once.','mp.rec.forgot':'Forgot password? Use recovery key','mp.rec.title':'Enter your recovery key and a new master password','mp.rec.keyPlaceholder':'Recovery key (xxxx-xxxx-…)','mp.rec.newPassword':'New master password','mp.rec.reset':'Reset Password','mp.rec.resetting':'Resetting…','mp.rec.back':'Back to sign in','mp.rec.enterKey':'Enter your recovery key','mp.rec.invalidKey':'Invalid recovery key','mp.rec.noEnvelope':'No recovery key is set up for this account','mp.rec.done':'Password reset — signed in with your new password.','mp.rec.resetSignIn':'Password reset — sign in with your new password.','mp.rec.failed':'Reset failed','settings.syncNow':'Sync Now','settings.encNotEnabled':'Encryption is not enabled. Your cloud data is stored in plaintext.','settings.enableEnc':'Enable Encryption','settings.encEnabled':'Encryption is enabled. Cloud data is encrypted with AES-256-GCM.','settings.currentPassword':'Current Password','settings.newPassword':'New Password','settings.changePassword':'Change Password','settings.baseCurrency':'Base Currency','settings.exchangeRates':'Exchange Rates','settings.notFetched':'Not fetched','settings.refreshRates':'Refresh Rates','settings.d1':'Cloud Database (D1)','settings.d1Hint':'Migrate your data from browser storage to Cloudflare D1 for cross-device access.','settings.migrateD1':'Migrate to Cloud Database','settings.d1Connected':'Connected to D1 — all data is stored in your Cloudflare D1 database.','settings.backupHint':'Backup downloads a full snapshot. Restore replaces all data with a backup file.','settings.downloadBackup':'Download Backup','settings.restoreBackup':'Restore from Backup','settings.importHint':'Import merges data without replacing. Export saves individual data types.','settings.importJSON':'Import JSON','settings.exportCSV':'Export CSV','settings.exportXLSX':'Export XLSX','settings.exportMarkdown':'Export Markdown','settings.exportPortfolioPDF':'Portfolio PDF','settings.darkMode':'Dark Mode','settings.lightMode':'Light Mode','settings.autoMode':'Auto',
+'mp.title':'Master Password','mp.setupHint':'Set one master password to sign in on any device — no sync key needed. Minimum 10 characters (letters and numbers are enough).','mp.status.checkFailed':'Could not reach the server to check status — try again','mp.choose':'Choose a master password','mp.confirm':'Confirm master password','mp.setup':'Set Master Password','mp.change':'Change Master Password','mp.current':'Current master password','mp.new':'New master password','mp.tooShort':'Password must be at least {n} characters','mp.allSame':'Password cannot be a single repeated character','mp.mismatch':'Passwords do not match','mp.setupOk':'Master password set. You can now sign in with it on any device.','mp.changeOk':'Master password changed.','mp.status.set':'✓ Master password is set up','mp.status.notSet':'Not set up yet','mp.status.notReady':'Set your Sync Key first (needed once to set up the master password)','mp.devices':'Signed-in Devices','mp.devicesHint':'Each device that signs in with the master password appears here. Revoke any you no longer use.','mp.thisDevice':'(this device)','mp.revoke':'Revoke','mp.revoked':'Device revoked','mp.noDevices':'No devices signed in yet','mp.needSetup':'Set up a master password first','mp.wrongCurrent':'Current password incorrect','mp.enterCurrent':'Enter your current master password','mp.loginPrompt':'Enter your master password to sign in','mp.signIn':'Sign In','mp.signingIn':'Signing in…','mp.loginFailed':'Sign-in failed','mp.sessionExpired':'Your session expired — please sign in again','mp.enc.title':'Data Encryption','mp.enc.checking':'Checking…','mp.enc.active':'✓ End-to-end encryption is active on this device','mp.enc.needLogin':'Encryption is set up — sign in again on this device to activate it','mp.enc.notSet':'Not set up yet — finish below to protect your data','mp.enc.setupHint':'Enter your master password to generate your data key and one-time recovery key.','mp.enc.enable':'Enable Encryption','mp.enc.nudge':'Finish encryption setup in Settings → Master Password to protect your data.','mp.enc.needKey':'Enter your master password to unlock your encrypted data on this device.','mp.enc.rkTitle':'Save your recovery key','mp.enc.rkBody':'This is the only way to recover your data if you forget your master password. Store it somewhere safe — it is shown only once.','mp.rec.forgot':'Forgot password? Use recovery key','mp.rec.title':'Enter your recovery key and a new master password','mp.rec.keyPlaceholder':'Recovery key (xxxx-xxxx-…)','mp.rec.newPassword':'New master password','mp.rec.reset':'Reset Password','mp.rec.resetting':'Resetting…','mp.rec.back':'Back to sign in','mp.rec.enterKey':'Enter your recovery key','mp.rec.invalidKey':'Invalid recovery key','mp.rec.noEnvelope':'No recovery key is set up for this account','mp.rec.done':'Password reset — signed in with your new password.','mp.rec.resetSignIn':'Password reset — sign in with your new password.','mp.rec.failed':'Reset failed','mp.mig.title':'Encrypt Existing Cloud Data','mp.mig.hint':'Data saved before encryption was enabled may still be stored unencrypted in the cloud. Scan is read-only; Encrypt rewrites those rows in place.','mp.mig.scan':'Scan Cloud Data','mp.mig.scanning':'Scanning cloud data…','mp.mig.clean':'✓ All cloud data is encrypted — nothing to migrate','mp.mig.found':'{fields} unencrypted fields in {rows} rows • {dups} duplicate note rows to clean up','mp.mig.run':'Encrypt Existing Data','mp.mig.running':'Encrypting: {table}…','mp.mig.confirmTitle':'Encrypt existing cloud data?','mp.mig.confirmMsg':'Back up your database first — this rewrites cloud rows in place. Close the app on other devices and don\'t edit data while it runs. Orphaned duplicate note rows will also be removed.','mp.mig.confirmOk':'Encrypt Now','mp.mig.done':'✓ Done — {fields} fields in {rows} rows encrypted, {dups} duplicate rows removed','mp.mig.partial':'{fields} fields / {dups} duplicate rows still remain — run Scan again or check the console','mp.mig.failed':'Migration failed — rows are rewritten in place so existing data is safe; run Scan again','mp.mig.busy':'A cloud save is in progress — wait a few seconds and try again','mp.mig.needD1':'Cloud database (D1) mode is required','settings.syncNow':'Sync Now','settings.encNotEnabled':'Encryption is not enabled. Your cloud data is stored in plaintext.','settings.enableEnc':'Enable Encryption','settings.encEnabled':'Encryption is enabled. Cloud data is encrypted with AES-256-GCM.','settings.currentPassword':'Current Password','settings.newPassword':'New Password','settings.changePassword':'Change Password','settings.baseCurrency':'Base Currency','settings.exchangeRates':'Exchange Rates','settings.notFetched':'Not fetched','settings.refreshRates':'Refresh Rates','settings.d1':'Cloud Database (D1)','settings.d1Hint':'Migrate your data from browser storage to Cloudflare D1 for cross-device access.','settings.migrateD1':'Migrate to Cloud Database','settings.d1Connected':'Connected to D1 — all data is stored in your Cloudflare D1 database.','settings.backupHint':'Backup downloads a full snapshot. Restore replaces all data with a backup file.','settings.downloadBackup':'Download Backup','settings.restoreBackup':'Restore from Backup','settings.importHint':'Import merges data without replacing. Export saves individual data types.','settings.importJSON':'Import JSON','settings.exportCSV':'Export CSV','settings.exportXLSX':'Export XLSX','settings.exportMarkdown':'Export Markdown','settings.exportPortfolioPDF':'Portfolio PDF','settings.darkMode':'Dark Mode','settings.lightMode':'Light Mode','settings.autoMode':'Auto',
 'modal.exportData':'Export Data','modal.importData':'Import Data','modal.pasteJSON':'Paste JSON data here...','modal.loadFile':'Load File','modal.downloadJSON':'Download JSON','modal.removeCompany':'Remove Company','modal.archive':'Archive — keep all data','modal.deletePermanently':'Delete permanently',
 'toast.imported':'{count} data section(s) imported','toast.backupDownloaded':'Backup downloaded','toast.backupFailed':'Backup failed: {err}','toast.invalidJSON':'Invalid JSON data.','toast.noImportable':'No importable data found in file.','toast.newerVersion':'This backup was created by a newer app version (v{v}). Please update the app first.','toast.invalidBackup':'Invalid backup file — no version field','toast.restoredLocal':'Restored locally but D1 sync failed','toast.backupRestored':'Backup restored successfully!','toast.restoreFailed':'Restore failed — original data preserved: {err}','toast.restoreError':'Restore failed: {err}','toast.cannotReadFile':'Could not read file','toast.newerData':'Your data was saved by a newer app version. Please update to avoid issues.','toast.noTicker':'No ticker specified','toast.companyNotFound':'Company not found: {ticker}','toast.pageNotFound':'Page not found: #{hash}','toast.storageSaveError':'Storage full — could not save {type}','toast.saved':'Saved','toast.yearExists':'Year {yr} already exists',
 'toast.dateReq':'Date is required','toast.contentReq':'Content is required','toast.excerptReq':'Excerpt or comment is required','toast.tickerReq':'Ticker / identifier is required','toast.tickerIsStock':'"{ticker}" is already a tracked stock — use a distinct identifier for this cash/real-estate/bond position (e.g. append -BOND).','toast.tickerIsNonStock':'"{ticker}" is already used by a cash/real-estate/bond position — use a distinct ticker for this stock.','toast.accountReq':'Select a valid account','toast.priceReq':'Enter purchase price or current value','toast.cashAmountReq':'Enter a cash amount','toast.sharesReq':'Enter a valid number of shares/units','toast.avgCostReq':'Enter a valid average cost','toast.sharesOrAvg':'Enter shares or average cost','toast.dateReqTx':'Date is required','toast.dateFutureTx':'Date cannot be in the future','toast.tickerReqTx':'Ticker is required','toast.accountReqTx':'Select an account','toast.amountReqTx':'Enter a valid total amount','toast.sharesReqTx':'Enter a valid number of shares',
@@ -1158,7 +1158,7 @@ var I18N={en:{
 'comp.hideArchived':'Hide archived ({count})','comp.showArchived':'Show archived ({count})','comp.noArchived':'No archived','comp.matchCount':'{count} match','comp.matchCountPlural':'{count} matches','comp.noFilterMatch':'No stocks match filter.','comp.noTrackedYet':'No stocks tracked yet','comp.typeTickerHint':'Type a ticker above and click + Add to start tracking companies.',
 'comp.tags':'Tags','comp.tag':'Tag','comp.addTag':'Add tag','comp.tagPlaceholder':'New tag...','comp.removeTag':'Remove tag {tag}','common.any':'Any',
 'comp.presets':'Presets','comp.savePreset':'Save preset','comp.presetName':'Preset name','comp.deletePreset':'Delete preset','comp.builtIn':'Built-in','comp.loadPreset':'Load preset','comp.presetSaved':'Preset "{name}" saved','comp.presetDeleted':'Preset deleted','comp.presetNameRequired':'Enter a preset name',
-'sync.httpWarning':'Sync URL uses HTTP — data sent unencrypted. Use HTTPS.','sync.preparing':'Preparing data...','sync.uploading':'Uploading to D1...','sync.migrationComplete':'Migration complete! Reloading...','sync.migrating':'Migrating...','sync.migrated':'Migrated ✓','sync.retryMigration':'Retry migration','sync.enterUrlFirst':'Enter URL first','sync.testing':'Testing...','sync.connected':'Connected ✓','sync.enterKeyFirst':'Enter key first','sync.noData':'No data (check key)','sync.invalidKey':'Invalid key','sync.connectionFailed':'Connection failed','sync.workerMissing':'Worker URL missing','sync.syncKeyMissing':'Sync Key missing','sync.syncing':'Syncing...','sync.wrongKey':'Wrong sync key','sync.serverError':'Server error ({status})','sync.synced':'Synced ✓ ({when})','sync.noDataSaved':'No data yet — saved!','sync.saved':'Saved ✓ {time}','sync.saveFailed':'Save failed','sync.decryptionFailed':'Cloud sync decryption failed','sync.loadingD1':'Loading from D1...','sync.partialLoadFailed':'Some data failed to load from D1','sync.backOnline':'Back online','sync.backOnlineSyncing':'Back online — syncing {n} pending change(s)...','sync.offline':'You are offline — some features may be unavailable','sync.otherTabUpdate':'Data updated from another tab','sync.incognitoWarning':'Private/Incognito mode detected — your data will not persist after closing the window. Use Export to save your work.','sync.appInstalled':'App installed successfully!','sync.installing':'Installing...','sync.updating':'Updating to the latest version…','sync.newVersion':'New version available — reload now','sync.syncNow':'Sync Now','sync.testD1':'Test D1','sync.d1Connected':'D1 Connected ✓','sync.storageFull':'Storage full — some data may not be saved locally','sync.decryptFailed':'Decryption failed — wrong password?','sync.test':'Test',
+'sync.httpWarning':'Sync URL uses HTTP — data sent unencrypted. Use HTTPS.','sync.preparing':'Preparing data...','sync.uploading':'Uploading to D1...','sync.migrationComplete':'Migration complete! Reloading...','sync.migrating':'Migrating...','sync.migrated':'Migrated ✓','sync.retryMigration':'Retry migration','sync.enterUrlFirst':'Enter URL first','sync.testing':'Testing...','sync.connected':'Connected ✓','sync.enterKeyFirst':'Enter key first','sync.noData':'No data (check key)','sync.invalidKey':'Invalid key','sync.connectionFailed':'Connection failed','sync.workerMissing':'Worker URL missing','sync.syncKeyMissing':'Sync Key missing','sync.syncing':'Syncing...','sync.wrongKey':'Wrong sync key','sync.serverError':'Server error ({status})','sync.synced':'Synced ✓ ({when})','sync.noDataSaved':'No data yet — saved!','sync.saved':'Saved ✓ {time}','sync.saveFailed':'Save failed','sync.decryptionFailed':'Cloud sync decryption failed','sync.loadingD1':'Loading from D1...','sync.partialLoadFailed':'Some data failed to load from D1','sync.backOnline':'Back online','sync.backOnlineSyncing':'Back online — syncing {n} pending change(s)...','sync.offline':'You are offline — some features may be unavailable','sync.otherTabUpdate':'Data updated from another tab','sync.incognitoWarning':'Private/Incognito mode detected — your data will not persist after closing the window. Use Export to save your work.','sync.appInstalled':'App installed successfully!','sync.installing':'Installing...','sync.updating':'Updating to the latest version…','sync.newVersion':'New version available — reload now','sync.syncNow':'Sync Now','sync.testD1':'Test D1','sync.d1Connected':'D1 Connected ✓','sync.storageFull':'Storage full — some data may not be saved locally','sync.decryptFailed':'Decryption failed — wrong password?','sync.test':'Test','sync.restoreEncBlocked':'Encryption is active — the plaintext cloud restore was skipped. The restored data syncs to the cloud encrypted as a MERGE: cloud rows that are not in the backup are kept (not deleted) and may reappear after a reload.','sync.migrateEncBlocked':'Encryption is active on this account — the one-time plaintext cloud migration is disabled.',
 'login.title':'Sign in from another device','login.subtitle':'Enter your connection details or paste a connection string','login.connPlaceholder':'Paste connection string (optional)','login.or':'or enter manually','login.workerUrl':'Worker URL','login.syncKey':'Sync Key','login.password':'Encryption password','login.connect':'Connect','login.connecting':'Connecting...','login.backToSetup':'Back to setup','login.alreadyHaveAccount':'Already have an account? Sign in from another device','login.invalidConn':'Invalid connection string','login.fillFields':'Enter Worker URL and Sync Key','login.noAccount':'No account found with this key','login.enterPassword':'Enter your encryption password','login.success':'Connected successfully!','login.failed':'Connection failed','login.reauthTitle':'Password changed','login.reauthSubtitle':'Your password was changed on another device. Enter the new password to continue.','login.newPassword':'New password','login.authenticate':'Authenticate','login.passwordChangedElsewhere':'Password changed on another device','login.modeChanged':'Account switched to D1 mode — reloading...','login.metaConflict':'Meta version conflict — check other devices','login.noConnectionData':'Set Worker URL and Sync Key first','login.configureApiKeys':'Configure your API keys in Settings for live data',
 'settings.shareConnection':'Share connection','settings.encryption':'Encryption',
 'toast.copyFailed':'Copy failed — select and copy manually','toast.copied':'Copied to clipboard','toast.copiedShort':'Copied!','toast.fileTooLarge':'File too large (max 10MB)',
@@ -1215,7 +1215,7 @@ var I18N={en:{
 'fw.principles':'Elvek','fw.portfolioRules':'Portfólió szabályok','fw.idealTraits':'Ideális tulajdonságok','fw.avoidList':'Kerülendő lista','fw.positionScoring':'Pozíció pontozás','fw.addPrinciple':'Elv hozzáadása','fw.principleTitle':'Cím','fw.principleDesc':'Leírás (Markdown)','fw.principleDescPh':'Írd le az elvedet vagy szabályodat...',
 'rv.all':'Mind','rv.weekly':'Heti','rv.monthly':'Havi','rv.quarterly':'Negyedéves','rv.newReview':'Új értékelés','rv.reviewType':'Típus','rv.reviewDate':'Dátum','rv.reviewCompany':'Cég (opcionális)','rv.reviewSummary':'Összefoglaló / Fő tanulság','rv.reviewSummaryPh':'Mi a fő tanulság ebből az értékelésből?',
 'settings.install':'Stratos Ventures telepítése','settings.installHint':'Telepítsd az asztalra offline hozzáféréshez és natív alkalmazás élményhez','settings.apiKeysNote':'Az FMP és Finnhub API kulcsok biztonságosan a Workeren (szerver-oldalon) vannak tárolva — soha nem a böngészőben vagy a forráskódban. Csak a Sync Key marad helyben.','settings.yahooWorker':'Yahoo Worker URL','settings.fmpKey':'FMP API kulcs','settings.finnhubKey':'Finnhub API kulcs','settings.keyServerSide':'🔒 Biztonságosan a Workeren tárolva','settings.syncKey':'Szinkronizálási kulcs',
-'mp.title':'Mesterjelszó','mp.setupHint':'Állíts be egy mesterjelszót, amivel bármely eszközön beléphetsz — sync key nélkül. Minimum 10 karakter (a betű és szám elég).','mp.status.checkFailed':'Nem sikerült elérni a szervert az állapot ellenőrzéséhez — próbáld újra','mp.choose':'Válassz mesterjelszót','mp.confirm':'Mesterjelszó megerősítése','mp.setup':'Mesterjelszó beállítása','mp.change':'Mesterjelszó megváltoztatása','mp.current':'Jelenlegi mesterjelszó','mp.new':'Új mesterjelszó','mp.tooShort':'A jelszó legalább {n} karakter legyen','mp.allSame':'A jelszó nem állhat egyetlen ismételt karakterből','mp.mismatch':'A jelszavak nem egyeznek','mp.setupOk':'Mesterjelszó beállítva. Mostantól bármely eszközön beléphetsz vele.','mp.changeOk':'Mesterjelszó megváltoztatva.','mp.status.set':'✓ A mesterjelszó be van állítva','mp.status.notSet':'Még nincs beállítva','mp.status.notReady':'Előbb állítsd be a Sync Key-t (egyszer szükséges a mesterjelszó beállításához)','mp.devices':'Bejelentkezett eszközök','mp.devicesHint':'Minden eszköz, amely a mesterjelszóval belép, itt megjelenik. Vond vissza, amit már nem használsz.','mp.thisDevice':'(ez az eszköz)','mp.revoke':'Visszavonás','mp.revoked':'Eszköz visszavonva','mp.noDevices':'Még nincs bejelentkezett eszköz','mp.needSetup':'Előbb állíts be mesterjelszót','mp.wrongCurrent':'A jelenlegi jelszó helytelen','mp.enterCurrent':'Add meg a jelenlegi mesterjelszavad','mp.loginPrompt':'Add meg a mesterjelszavad a belépéshez','mp.signIn':'Belépés','mp.signingIn':'Belépés…','mp.loginFailed':'A belépés sikertelen','mp.sessionExpired':'A munkameneted lejárt — lépj be újra','mp.enc.title':'Adattitkosítás','mp.enc.checking':'Ellenőrzés…','mp.enc.active':'✓ A végpontok közötti titkosítás aktív ezen az eszközön','mp.enc.needLogin':'A titkosítás be van állítva — lépj be újra ezen az eszközön az aktiváláshoz','mp.enc.notSet':'Még nincs beállítva — fejezd be lent az adataid védelméhez','mp.enc.setupHint':'Add meg a mesterjelszavad az adatkulcs és az egyszer megjelenő helyreállítási kulcs létrehozásához.','mp.enc.enable':'Titkosítás engedélyezése','mp.enc.nudge':'Fejezd be a titkosítás beállítását: Beállítások → Mesterjelszó, az adataid védelméhez.','mp.enc.needKey':'Add meg a mesterjelszavad a titkosított adataid feloldásához ezen az eszközön.','mp.enc.rkTitle':'Mentsd el a helyreállítási kulcsod','mp.enc.rkBody':'Ez az egyetlen mód az adataid helyreállítására, ha elfelejted a mesterjelszavad. Tárold biztonságos helyen — csak egyszer jelenik meg.','mp.rec.forgot':'Elfelejtetted a jelszót? Használd a helyreállítási kulcsot','mp.rec.title':'Add meg a helyreállítási kulcsod és egy új mesterjelszót','mp.rec.keyPlaceholder':'Helyreállítási kulcs (xxxx-xxxx-…)','mp.rec.newPassword':'Új mesterjelszó','mp.rec.reset':'Jelszó visszaállítása','mp.rec.resetting':'Visszaállítás…','mp.rec.back':'Vissza a belépéshez','mp.rec.enterKey':'Add meg a helyreállítási kulcsod','mp.rec.invalidKey':'Érvénytelen helyreállítási kulcs','mp.rec.noEnvelope':'Ehhez a fiókhoz nincs helyreállítási kulcs beállítva','mp.rec.done':'Jelszó visszaállítva — beléptél az új jelszavaddal.','mp.rec.resetSignIn':'Jelszó visszaállítva — lépj be az új jelszavaddal.','mp.rec.failed':'A visszaállítás sikertelen','settings.syncNow':'Szinkronizálás','settings.encNotEnabled':'Titkosítás nincs engedélyezve. A felhő adataid titkosítatlanul vannak tárolva.','settings.enableEnc':'Titkosítás engedélyezése','settings.encEnabled':'Titkosítás engedélyezve. A felhő adatok AES-256-GCM titkosítással vannak védve.','settings.currentPassword':'Jelenlegi jelszó','settings.newPassword':'Új jelszó','settings.changePassword':'Jelszó megváltoztatása','settings.baseCurrency':'Alap pénznem','settings.exchangeRates':'Árfolyamok','settings.notFetched':'Nem lekérve','settings.refreshRates':'Árfolyamok frissítése','settings.d1':'Felhő adatbázis (D1)','settings.d1Hint':'Migráld az adataidat a böngésző tárhelyéről Cloudflare D1-be az eszközök közötti hozzáféréshez.','settings.migrateD1':'Migráció felhő adatbázisba','settings.d1Connected':'Csatlakozva a D1-hez — minden adat a Cloudflare D1 adatbázisban van.','settings.backupHint':'Backup teljes pillanatfelvételt tölt le. A visszaállítás felülírja az összes adatot.','settings.downloadBackup':'Backup letöltése','settings.restoreBackup':'Visszaállítás backupból','settings.importHint':'Importálás összefűzi az adatokat felülírás nélkül. Exportálás egyes adattípusokat ment.','settings.importJSON':'JSON importálás','settings.exportCSV':'CSV exportálás','settings.exportXLSX':'XLSX exportálás','settings.exportMarkdown':'Markdown exportálás','settings.exportPortfolioPDF':'Portfólió PDF','settings.darkMode':'Sötét mód','settings.lightMode':'Világos mód','settings.autoMode':'Automatikus',
+'mp.title':'Mesterjelszó','mp.setupHint':'Állíts be egy mesterjelszót, amivel bármely eszközön beléphetsz — sync key nélkül. Minimum 10 karakter (a betű és szám elég).','mp.status.checkFailed':'Nem sikerült elérni a szervert az állapot ellenőrzéséhez — próbáld újra','mp.choose':'Válassz mesterjelszót','mp.confirm':'Mesterjelszó megerősítése','mp.setup':'Mesterjelszó beállítása','mp.change':'Mesterjelszó megváltoztatása','mp.current':'Jelenlegi mesterjelszó','mp.new':'Új mesterjelszó','mp.tooShort':'A jelszó legalább {n} karakter legyen','mp.allSame':'A jelszó nem állhat egyetlen ismételt karakterből','mp.mismatch':'A jelszavak nem egyeznek','mp.setupOk':'Mesterjelszó beállítva. Mostantól bármely eszközön beléphetsz vele.','mp.changeOk':'Mesterjelszó megváltoztatva.','mp.status.set':'✓ A mesterjelszó be van állítva','mp.status.notSet':'Még nincs beállítva','mp.status.notReady':'Előbb állítsd be a Sync Key-t (egyszer szükséges a mesterjelszó beállításához)','mp.devices':'Bejelentkezett eszközök','mp.devicesHint':'Minden eszköz, amely a mesterjelszóval belép, itt megjelenik. Vond vissza, amit már nem használsz.','mp.thisDevice':'(ez az eszköz)','mp.revoke':'Visszavonás','mp.revoked':'Eszköz visszavonva','mp.noDevices':'Még nincs bejelentkezett eszköz','mp.needSetup':'Előbb állíts be mesterjelszót','mp.wrongCurrent':'A jelenlegi jelszó helytelen','mp.enterCurrent':'Add meg a jelenlegi mesterjelszavad','mp.loginPrompt':'Add meg a mesterjelszavad a belépéshez','mp.signIn':'Belépés','mp.signingIn':'Belépés…','mp.loginFailed':'A belépés sikertelen','mp.sessionExpired':'A munkameneted lejárt — lépj be újra','mp.enc.title':'Adattitkosítás','mp.enc.checking':'Ellenőrzés…','mp.enc.active':'✓ A végpontok közötti titkosítás aktív ezen az eszközön','mp.enc.needLogin':'A titkosítás be van állítva — lépj be újra ezen az eszközön az aktiváláshoz','mp.enc.notSet':'Még nincs beállítva — fejezd be lent az adataid védelméhez','mp.enc.setupHint':'Add meg a mesterjelszavad az adatkulcs és az egyszer megjelenő helyreállítási kulcs létrehozásához.','mp.enc.enable':'Titkosítás engedélyezése','mp.enc.nudge':'Fejezd be a titkosítás beállítását: Beállítások → Mesterjelszó, az adataid védelméhez.','mp.enc.needKey':'Add meg a mesterjelszavad a titkosított adataid feloldásához ezen az eszközön.','mp.enc.rkTitle':'Mentsd el a helyreállítási kulcsod','mp.enc.rkBody':'Ez az egyetlen mód az adataid helyreállítására, ha elfelejted a mesterjelszavad. Tárold biztonságos helyen — csak egyszer jelenik meg.','mp.rec.forgot':'Elfelejtetted a jelszót? Használd a helyreállítási kulcsot','mp.rec.title':'Add meg a helyreállítási kulcsod és egy új mesterjelszót','mp.rec.keyPlaceholder':'Helyreállítási kulcs (xxxx-xxxx-…)','mp.rec.newPassword':'Új mesterjelszó','mp.rec.reset':'Jelszó visszaállítása','mp.rec.resetting':'Visszaállítás…','mp.rec.back':'Vissza a belépéshez','mp.rec.enterKey':'Add meg a helyreállítási kulcsod','mp.rec.invalidKey':'Érvénytelen helyreállítási kulcs','mp.rec.noEnvelope':'Ehhez a fiókhoz nincs helyreállítási kulcs beállítva','mp.rec.done':'Jelszó visszaállítva — beléptél az új jelszavaddal.','mp.rec.resetSignIn':'Jelszó visszaállítva — lépj be az új jelszavaddal.','mp.rec.failed':'A visszaállítás sikertelen','mp.mig.title':'Meglévő felhőadatok titkosítása','mp.mig.hint':'A titkosítás bekapcsolása előtt mentett adatok még titkosítatlanul lehetnek a felhőben. A keresés csak olvas; a titkosítás helyben írja át az érintett sorokat.','mp.mig.scan':'Felhőadatok átvizsgálása','mp.mig.scanning':'Felhőadatok vizsgálata…','mp.mig.clean':'✓ Minden felhőadat titkosítva — nincs teendő','mp.mig.found':'{fields} titkosítatlan mező {rows} sorban • {dups} duplikált jegyzetsor törölhető','mp.mig.run':'Meglévő adatok titkosítása','mp.mig.running':'Titkosítás: {table}…','mp.mig.confirmTitle':'Titkosítod a meglévő felhőadatokat?','mp.mig.confirmMsg':'Előbb készíts adatbázis-backupot — a művelet helyben írja át a felhő sorait. Zárd be az appot a többi eszközön, és futás közben ne szerkessz adatot. Az árva duplikált jegyzetsorok is törlődnek.','mp.mig.confirmOk':'Titkosítás most','mp.mig.done':'✓ Kész — {fields} mező {rows} sorban titkosítva, {dups} duplikált sor törölve','mp.mig.partial':'{fields} mező / {dups} duplikált sor még hátravan — futtasd újra a keresést, vagy nézd meg a konzolt','mp.mig.failed':'A migráció megszakadt — a sorok helyben íródnak át, a meglévő adat biztonságban van; futtasd újra a keresést','mp.mig.busy':'Felhőmentés van folyamatban — várj pár másodpercet, és próbáld újra','mp.mig.needD1':'Felhő adatbázis (D1) mód szükséges','settings.syncNow':'Szinkronizálás','settings.encNotEnabled':'Titkosítás nincs engedélyezve. A felhő adataid titkosítatlanul vannak tárolva.','settings.enableEnc':'Titkosítás engedélyezése','settings.encEnabled':'Titkosítás engedélyezve. A felhő adatok AES-256-GCM titkosítással vannak védve.','settings.currentPassword':'Jelenlegi jelszó','settings.newPassword':'Új jelszó','settings.changePassword':'Jelszó megváltoztatása','settings.baseCurrency':'Alap pénznem','settings.exchangeRates':'Árfolyamok','settings.notFetched':'Nem lekérve','settings.refreshRates':'Árfolyamok frissítése','settings.d1':'Felhő adatbázis (D1)','settings.d1Hint':'Migráld az adataidat a böngésző tárhelyéről Cloudflare D1-be az eszközök közötti hozzáféréshez.','settings.migrateD1':'Migráció felhő adatbázisba','settings.d1Connected':'Csatlakozva a D1-hez — minden adat a Cloudflare D1 adatbázisban van.','settings.backupHint':'Backup teljes pillanatfelvételt tölt le. A visszaállítás felülírja az összes adatot.','settings.downloadBackup':'Backup letöltése','settings.restoreBackup':'Visszaállítás backupból','settings.importHint':'Importálás összefűzi az adatokat felülírás nélkül. Exportálás egyes adattípusokat ment.','settings.importJSON':'JSON importálás','settings.exportCSV':'CSV exportálás','settings.exportXLSX':'XLSX exportálás','settings.exportMarkdown':'Markdown exportálás','settings.exportPortfolioPDF':'Portfólió PDF','settings.darkMode':'Sötét mód','settings.lightMode':'Világos mód','settings.autoMode':'Automatikus',
 'modal.exportData':'Adatok exportálása','modal.importData':'Adatok importálása','modal.pasteJSON':'Illeszd be a JSON adatokat ide...','modal.loadFile':'Fájl betöltése','modal.downloadJSON':'JSON letöltése','modal.removeCompany':'Cég eltávolítása','modal.archive':'Archiválás — adatok megőrzése','modal.deletePermanently':'Végleges törlés',
 'toast.imported':'{count} adatszekció importálva','toast.backupDownloaded':'Backup letöltve','toast.backupFailed':'Backup sikertelen: {err}','toast.invalidJSON':'Érvénytelen JSON adat.','toast.noImportable':'Nem található importálható adat a fájlban.','toast.newerVersion':'Ezt a backupot újabb alkalmazás verzió készítette (v{v}). Kérlek frissítsd az appot.','toast.invalidBackup':'Érvénytelen backup fájl — nincs verzió mező','toast.restoredLocal':'Helyben visszaállítva, de D1 szinkronizálás sikertelen','toast.backupRestored':'Backup sikeresen visszaállítva!','toast.restoreFailed':'Visszaállítás sikertelen — eredeti adatok megőrizve: {err}','toast.restoreError':'Visszaállítás sikertelen: {err}','toast.cannotReadFile':'Fájl olvasása sikertelen','toast.newerData':'Az adataidat újabb alkalmazás verzió mentette. Frissíts a problémák elkerülése érdekében.','toast.noTicker':'Nincs megadva ticker','toast.companyNotFound':'Cég nem található: {ticker}','toast.pageNotFound':'Oldal nem található: #{hash}','toast.storageSaveError':'Tárhely megtelt — nem sikerült menteni: {type}','toast.saved':'Mentve','toast.yearExists':'{yr} év már létezik',
 'toast.dateReq':'Dátum kötelező','toast.contentReq':'Tartalom kötelező','toast.excerptReq':'Kivonat vagy megjegyzés kötelező','toast.tickerReq':'Ticker / azonosító kötelező','toast.tickerIsStock':'"{ticker}" már egy követett részvény — használj külön azonosítót ehhez a készpénz/ingatlan/kötvény pozícióhoz (pl. told meg -BOND-dal).','toast.tickerIsNonStock':'"{ticker}" már egy készpénz/ingatlan/kötvény pozícióhoz használt — használj külön tickert ehhez a részvényhez.','toast.accountReq':'Válassz érvényes számlát','toast.priceReq':'Vételár vagy jelenlegi érték kötelező','toast.cashAmountReq':'Add meg a készpénz összeget','toast.sharesReq':'Érvényes darabszám szükséges','toast.avgCostReq':'Érvényes átlagár szükséges','toast.sharesOrAvg':'Adj meg darabszámot vagy átlagárat','toast.dateReqTx':'Dátum kötelező','toast.dateFutureTx':'A dátum nem lehet jövőbeli','toast.tickerReqTx':'Ticker kötelező','toast.accountReqTx':'Válassz egy számlát','toast.amountReqTx':'Érvényes összeg szükséges','toast.sharesReqTx':'Érvényes darabszám szükséges',
@@ -1229,7 +1229,7 @@ var I18N={en:{
 'comp.hideArchived':'Archivált elrejtése ({count})','comp.showArchived':'Archivált mutatása ({count})','comp.noArchived':'Nincs archivált','comp.matchCount':'{count} találat','comp.matchCountPlural':'{count} találat','comp.noFilterMatch':'Nincs a szűrőnek megfelelő részvény.','comp.noTrackedYet':'Még nincs követett részvény','comp.typeTickerHint':'Adj meg egy tickert fent és kattints a + Hozzáadás gombra a cégek követéséhez.',
 'comp.tags':'Címkék','comp.tag':'Címke','comp.addTag':'Címke hozzáadása','comp.tagPlaceholder':'Új címke...','comp.removeTag':'{tag} címke eltávolítása','common.any':'Bármely',
 'comp.presets':'Sablonok','comp.savePreset':'Sablon mentése','comp.presetName':'Sablon neve','comp.deletePreset':'Sablon törlése','comp.builtIn':'Beépített','comp.loadPreset':'Sablon betöltése','comp.presetSaved':'„{name}" sablon mentve','comp.presetDeleted':'Sablon törölve','comp.presetNameRequired':'Add meg a sablon nevét',
-'sync.httpWarning':'A szinkronizáló URL HTTP-t használ — az adatok titkosítatlanul küldve. Használj HTTPS-t.','sync.preparing':'Adatok előkészítése...','sync.uploading':'Feltöltés D1-be...','sync.migrationComplete':'Migráció kész! Újratöltés...','sync.migrating':'Migrálás...','sync.migrated':'Migrálva ✓','sync.retryMigration':'Migráció újrapróbálása','sync.enterUrlFirst':'Adj meg URL-t először','sync.testing':'Tesztelés...','sync.connected':'Csatlakozva ✓','sync.enterKeyFirst':'Adj meg kulcsot először','sync.noData':'Nincs adat (ellenőrizd a kulcsot)','sync.invalidKey':'Érvénytelen kulcs','sync.connectionFailed':'Csatlakozás sikertelen','sync.workerMissing':'Worker URL hiányzik','sync.syncKeyMissing':'Szinkronizálási kulcs hiányzik','sync.syncing':'Szinkronizálás...','sync.wrongKey':'Hibás szinkronizálási kulcs','sync.serverError':'Szerverhiba ({status})','sync.synced':'Szinkronizálva ✓ ({when})','sync.noDataSaved':'Még nincs adat — mentve!','sync.saved':'Mentve ✓ {time}','sync.saveFailed':'Mentés sikertelen','sync.decryptionFailed':'Felhő szinkronizáció visszafejtés sikertelen','sync.loadingD1':'Betöltés D1-ből...','sync.partialLoadFailed':'Néhány adat nem töltődött be a D1-ből','sync.backOnline':'Újra online','sync.backOnlineSyncing':'Újra online — {n} függő változás szinkronizálása...','sync.offline':'Offline vagy — egyes funkciók nem elérhetők','sync.otherTabUpdate':'Adatok frissítve másik fülről','sync.incognitoWarning':'Privát/Inkognitó mód észlelve — az adataid nem maradnak meg az ablak bezárása után. Használd az Exportálást a munkád mentéséhez.','sync.appInstalled':'Alkalmazás sikeresen telepítve!','sync.installing':'Telepítés...','sync.updating':'Frissítés a legújabb verzióra…','sync.newVersion':'Új verzió elérhető — töltsd újra most','sync.syncNow':'Szinkronizálás','sync.testD1':'D1 teszt','sync.d1Connected':'D1 csatlakozva ✓','sync.storageFull':'Tárhely megtelt — egyes adatok nem menthetők helyileg','sync.decryptFailed':'Visszafejtés sikertelen — hibás jelszó?','sync.test':'Teszt',
+'sync.httpWarning':'A szinkronizáló URL HTTP-t használ — az adatok titkosítatlanul küldve. Használj HTTPS-t.','sync.preparing':'Adatok előkészítése...','sync.uploading':'Feltöltés D1-be...','sync.migrationComplete':'Migráció kész! Újratöltés...','sync.migrating':'Migrálás...','sync.migrated':'Migrálva ✓','sync.retryMigration':'Migráció újrapróbálása','sync.enterUrlFirst':'Adj meg URL-t először','sync.testing':'Tesztelés...','sync.connected':'Csatlakozva ✓','sync.enterKeyFirst':'Adj meg kulcsot először','sync.noData':'Nincs adat (ellenőrizd a kulcsot)','sync.invalidKey':'Érvénytelen kulcs','sync.connectionFailed':'Csatlakozás sikertelen','sync.workerMissing':'Worker URL hiányzik','sync.syncKeyMissing':'Szinkronizálási kulcs hiányzik','sync.syncing':'Szinkronizálás...','sync.wrongKey':'Hibás szinkronizálási kulcs','sync.serverError':'Szerverhiba ({status})','sync.synced':'Szinkronizálva ✓ ({when})','sync.noDataSaved':'Még nincs adat — mentve!','sync.saved':'Mentve ✓ {time}','sync.saveFailed':'Mentés sikertelen','sync.decryptionFailed':'Felhő szinkronizáció visszafejtés sikertelen','sync.loadingD1':'Betöltés D1-ből...','sync.partialLoadFailed':'Néhány adat nem töltődött be a D1-ből','sync.backOnline':'Újra online','sync.backOnlineSyncing':'Újra online — {n} függő változás szinkronizálása...','sync.offline':'Offline vagy — egyes funkciók nem elérhetők','sync.otherTabUpdate':'Adatok frissítve másik fülről','sync.incognitoWarning':'Privát/Inkognitó mód észlelve — az adataid nem maradnak meg az ablak bezárása után. Használd az Exportálást a munkád mentéséhez.','sync.appInstalled':'Alkalmazás sikeresen telepítve!','sync.installing':'Telepítés...','sync.updating':'Frissítés a legújabb verzióra…','sync.newVersion':'Új verzió elérhető — töltsd újra most','sync.syncNow':'Szinkronizálás','sync.testD1':'D1 teszt','sync.d1Connected':'D1 csatlakozva ✓','sync.storageFull':'Tárhely megtelt — egyes adatok nem menthetők helyileg','sync.decryptFailed':'Visszafejtés sikertelen — hibás jelszó?','sync.test':'Teszt','sync.restoreEncBlocked':'A titkosítás aktív — a titkosítatlan felhő-visszaállítás kimaradt. A visszaállított adatok titkosítva, ÖSSZEFÉSÜLÉSKÉNT szinkronizálódnak a felhőbe: a backupban nem szereplő felhő-sorok megmaradnak (nem törlődnek), és újratöltés után visszatérhetnek.','sync.migrateEncBlocked':'Ezen a fiókon aktív a titkosítás — az egyszeri titkosítatlan felhőmigráció le van tiltva.',
 'login.title':'Bejelentkezés másik eszközről','login.subtitle':'Add meg a kapcsolati adatokat vagy illeszd be a connection stringet','login.connPlaceholder':'Connection string beillesztése (opcionális)','login.or':'vagy add meg kézzel','login.workerUrl':'Worker URL','login.syncKey':'Szinkronizálási kulcs','login.password':'Titkosítási jelszó','login.connect':'Csatlakozás','login.connecting':'Csatlakozás...','login.backToSetup':'Vissza a beállításhoz','login.alreadyHaveAccount':'Már van fiókod? Bejelentkezés másik eszközről','login.invalidConn':'Érvénytelen connection string','login.fillFields':'Add meg a Worker URL-t és a Sync Key-t','login.noAccount':'Nem található fiók ezzel a kulccsal','login.enterPassword':'Add meg a titkosítási jelszót','login.success':'Sikeresen csatlakozva!','login.failed':'Csatlakozás sikertelen','login.reauthTitle':'Jelszó megváltozott','login.reauthSubtitle':'A jelszavad megváltozott egy másik eszközön. Add meg az új jelszót a folytatáshoz.','login.newPassword':'Új jelszó','login.authenticate':'Hitelesítés','login.passwordChangedElsewhere':'Jelszó megváltozott másik eszközön','login.modeChanged':'A fiók D1 módra váltott — újratöltés...','login.metaConflict':'Meta verzió ütközés — ellenőrizd a többi eszközt','login.noConnectionData':'Állítsd be a Worker URL-t és a Sync Key-t először','login.configureApiKeys':'Állítsd be az API kulcsaidat a Beállításokban a valós idejű adatokhoz',
 'settings.shareConnection':'Kapcsolat megosztása','settings.encryption':'Titkosítás',
 'toast.copyFailed':'Másolás sikertelen — jelöld ki és másold manuálisan','toast.copied':'Vágólapra másolva','toast.copiedShort':'Másolva!','toast.fileTooLarge':'Fájl túl nagy (max 10MB)',
@@ -2282,6 +2282,17 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
         </div>
         <div id="mp-enc-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
         <button id="mp-enc-btn" class="btn btn-primary" onclick="completeEncryptionSetup()" data-i18n="mp.enc.enable" style="font-size:13px;padding:8px 16px">Enable Encryption</button>
+      </div>
+      <!-- placed OUTSIDE #mp-enc-setup: that form only shows when encryption is NOT yet
+           provisioned, while this migration block shows when it IS active (renderEncBlock) -->
+      <div id="mp-mig-block" style="display:none;margin-top:14px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:4px" data-i18n="mp.mig.title">Encrypt Existing Cloud Data</div>
+        <p style="color:var(--text2);font-size:12px;margin-bottom:8px" data-i18n="mp.mig.hint">Data saved before encryption was enabled may still be stored unencrypted in the cloud. Scan is read-only; Encrypt rewrites those rows in place.</p>
+        <div id="mp-mig-status" style="font-size:12px;color:var(--text2);margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="mp-mig-scan-btn" class="btn btn-secondary" onclick="c3Scan()" data-i18n="mp.mig.scan" style="font-size:13px;padding:8px 16px">Scan Cloud Data</button>
+          <button id="mp-mig-run-btn" class="btn btn-primary" onclick="c3Run()" data-i18n="mp.mig.run" style="font-size:13px;padding:8px 16px;display:none">Encrypt Existing Data</button>
+        </div>
       </div>
     </div>
     <div style="border-top:1px solid var(--border);padding-top:14px">
@@ -3353,13 +3364,18 @@ async function renderEncBlock(){
   const block=document.getElementById('mp-enc-block');
   const statusEl=document.getElementById('mp-enc-status');
   const setup=document.getElementById('mp-enc-setup');
+  const mig=document.getElementById('mp-mig-block');
   if(!block||!statusEl||!setup)return;
   block.style.display='block';setup.style.display='none';
+  if(mig)mig.style.display='none';
   statusEl.textContent=t('mp.enc.checking');statusEl.style.color='var(--text2)';
   let env;
   try{env=await fetchEnvelope()}catch(e){statusEl.textContent=t('mp.status.checkFailed');statusEl.style.color='var(--text2)';return}
   if(env.exists&&localStorage.getItem('dek_cache')){
     statusEl.textContent=t('mp.enc.active');statusEl.style.color='var(--green)';
+    // C3: the one-time plaintext→ciphertext migration only makes sense once this device
+    // holds the DEK and the account stores its data in D1.
+    if(mig&&d1Mode)mig.style.display='block';
   }else if(env.exists){
     // Provisioned elsewhere but this device has no local data key — sign in again.
     statusEl.textContent=t('mp.enc.needLogin');statusEl.style.color='var(--yellow)';
@@ -3392,6 +3408,196 @@ async function completeEncryptionSetup(){
     renderEncBlock();
   }catch(e){show(/proof invalid|incorrect|401/i.test(e.message||'')?t('mp.wrongCurrent'):(e.message||'Failed'))}
   finally{btn.disabled=false}
+}
+
+// ====== C3: one-time migration of pre-encryption plaintext D1 rows ======
+// Everything written before field encryption went live (C2a–d) is still plaintext at
+// rest in D1 and only re-encrypts lazily when that row happens to be saved again. This
+// scans every encrypted-scope column, rewrites plaintext values as ciphertext IN PLACE
+// (upsert by row id, sending ONLY the affected columns), and purges the orphaned
+// duplicate company-note rows that predate the id-capture fix. The column rules mirror
+// the C2 savers exactly — a column not listed here is plaintext BY DESIGN (queryable
+// keys, natural-key cols like broker_accounts.name, public per-share dividends, tags).
+const C3_RESEARCH_TYPES=['journal','news','market'];
+const C3_TABLES=[
+  {t:'companies',cols:['thesis','price_alerts']},
+  {t:'company_todos',cols:['title']},
+  {t:'filing_tracking',cols:['notes']},
+  {t:'company_data_overrides',cols:['original_value','override_value','reason']},
+  {t:'notes',special:'notes'},
+  {t:'note_images',cols:['filename','image_data']},
+  {t:'positions',cols:['shares','avg_cost','details']},
+  {t:'transactions',cols:['shares','price_per_share','total_amount','fees','notes']},
+  {t:'portfolio_snapshots',cols:['total_value','notes']},
+  {t:'snapshot_positions',cols:['shares','price_per_share','market_value']},
+  {t:'framework_entries',cols:['content']},
+  {t:'checklist_answers',cols:['answer_json']},
+  {t:'reviews',cols:['answers_json','summary']},
+  {t:'valuations',cols:['inputs_json']},
+  {t:'general_todos',cols:['title']}
+];
+// Which columns of a notes row are sensitive depends on its type: standalone research
+// notes (journal/news/market) encrypt title+content+sources+extras; company notes keep
+// title/quarter as plaintext structural markers ('research'/'', keyed on load) and
+// encrypt only the content — exact C2c parity.
+function _c3NoteCols(row){
+  return C3_RESEARCH_TYPES.includes(row.note_type)
+    ?['title','content','source_name','source_url','excerpt','action','tags']
+    :['content'];
+}
+// Needs encryption: any non-null, non-empty value that isn't already ciphertext.
+// Numbers (legacy plaintext REALs) count — encStr stringifies them, decNum reads back.
+function _c3Needs(v){return v!=null&&v!==''&&!isEncStr(v)}
+// Orphaned duplicate company-note rows (pre id-capture inserts): live 'earnings'-type
+// rows grouped the same way the loader buckets them — (company_id, quarter) for quarter
+// notes, (company_id,'research') for the research note. The loader's freshest-wins pick
+// (_noteRowNewer) is the survivor; every other row in the bucket is invisible cruft.
+// Tombstoned rows and unrecognized legacy shapes are left untouched.
+function _c3DupNoteIds(rows){
+  const buckets={};
+  for(const n of rows){
+    if(n.deleted_at)continue;
+    if(n.note_type!=='earnings')continue;
+    let bk=null;
+    if(n.quarter)bk=n.company_id+'|'+n.quarter;
+    else if(n.title==='research')bk=n.company_id+'|research';
+    if(!bk)continue;
+    (buckets[bk]=buckets[bk]||[]).push(n);
+  }
+  const ids=[];
+  Object.values(buckets).forEach(list=>{
+    let win=null;list.forEach(n=>{if(_noteRowNewer(n,win))win=n});
+    list.forEach(n=>{if(n!==win&&n.id!=null)ids.push(n.id)});
+  });
+  return ids;
+}
+async function _c3FetchAll(tbl){
+  const r=await API.get(tbl+'?limit=100000');
+  return (r&&r.data)||[];
+}
+// Read-only scan: count plaintext fields per table, dup note rows, and fi_settings.
+async function c3ScanData(){
+  const res={tables:{},fields:0,rows:0,dups:0};
+  for(const spec of C3_TABLES){
+    const rows=await _c3FetchAll(spec.t);
+    let f=0,rc=0;
+    for(const row of rows){
+      const cols=spec.special==='notes'?_c3NoteCols(row):spec.cols;
+      const n=cols.filter(c=>_c3Needs(row[c])).length;
+      if(n){f+=n;rc++}
+    }
+    if(f)res.tables[spec.t]={fields:f,rows:rc};
+    res.fields+=f;res.rows+=rc;
+    if(spec.t==='notes')res.dups=_c3DupNoteIds(rows).length;
+  }
+  try{const fi=await API.get('app_settings/fi_settings');if(fi&&_c3Needs(fi.value)){res.tables.fi_settings={fields:1,rows:1};res.fields++;res.rows++}}catch(e){}
+  return res;
+}
+// The migration itself. Each table is re-fetched IMMEDIATELY before its write-back (the
+// scan result is display-only), so a value edited between scan and run can't be
+// overwritten with a stale copy. The WHOLE fetched row is sent back with the affected
+// columns replaced by ciphertext: SQLite checks NOT NULL on the candidate row BEFORE
+// ON CONFLICT(id) fires, so a partial {id, changed-cols} item would abort on any
+// NOT NULL column (symbol, note_date, …). Sending the full row keeps every other
+// column — including deleted_at tombstones — at its just-fetched value, and the worker
+// ignores keys outside its column allowlist (created_at/updated_at).
+// A cloud save racing the migration could be reverted by the full-row write-back, so
+// the run refuses to start — and aborts between tables — whenever one is queued/in-flight.
+function _c3SaveBusy(){
+  return !!(Object.keys(API._pendingFns).length||Object.keys(API._inFlight).length||Object.keys(API._timers).some(k=>API._timers[k]));
+}
+// Batch write-back chunked by BOTH row count and approximate payload size: encrypted
+// text inflates ~1.4×, and 100 large notes/checklist rows could otherwise cross the
+// worker's 5MB body cap (413 aborts the run — safe, but it couldn't complete).
+async function _c3PostChunked(tbl,items){
+  const MAX_BYTES=3*1024*1024,MAX_ROWS=100;
+  let chunk=[],size=0;
+  for(const it of items){
+    const sz=JSON.stringify(it).length+2;
+    if(chunk.length&&(size+sz>MAX_BYTES||chunk.length>=MAX_ROWS)){await API.post(tbl+'/batch',{items:chunk});chunk=[];size=0}
+    chunk.push(it);size+=sz;
+  }
+  if(chunk.length)await API.post(tbl+'/batch',{items:chunk});
+}
+async function c3Encrypt(progress){
+  if(_dek==null)throw new Error(t('mp.enc.needKey'));
+  const stats={purged:0,fields:0,rows:0,tables:{}};
+  // 1) purge orphan duplicates first (fresh fetch → current winners are authoritative)
+  const dupIds=new Set(_c3DupNoteIds(await _c3FetchAll('notes')));
+  for(const id of dupIds){await API.del('notes/'+id);stats.purged++}
+  // 2) in-place encryption per table
+  for(const spec of C3_TABLES){
+    if(_c3SaveBusy())throw new Error(t('mp.mig.busy')); // abort between tables rather than race a save
+    if(progress)progress(spec.t);
+    // every table — notes included — is fetched fresh right before its own write-back,
+    // so the staleness window is as narrow as it can be
+    let rows=await _c3FetchAll(spec.t);
+    if(spec.t==='notes')rows=rows.filter(n=>!dupIds.has(n.id));
+    const items=[];
+    for(const row of rows){
+      if(row.id==null)continue; // id is the upsert key — never write back without one
+      const cols=spec.special==='notes'?_c3NoteCols(row):spec.cols;
+      const item={...row};let dirty=false;
+      for(const c of cols){if(_c3Needs(row[c])){item[c]=await encStr(row[c]);dirty=true;stats.fields++}}
+      if(dirty){items.push(item);stats.rows++}
+    }
+    if(items.length){
+      await _c3PostChunked(spec.t,items);
+      stats.tables[spec.t]=items.length;
+    }
+  }
+  // 3) fi_settings: the whole JSON string is the encrypted unit — same shape the saver writes
+  const fi=await API.get('app_settings/fi_settings');
+  if(fi&&_c3Needs(fi.value)){
+    await API.put('app_settings/fi_settings',{key:'fi_settings',value:await encStr(fi.value)});
+    stats.fields++;stats.rows++;stats.tables.fi_settings=1;
+  }
+  return stats;
+}
+async function c3Scan(){
+  const st=document.getElementById('mp-mig-status');
+  const runBtn=document.getElementById('mp-mig-run-btn');
+  const scanBtn=document.getElementById('mp-mig-scan-btn');
+  if(!st||!runBtn||!scanBtn)return;
+  if(!d1Mode){st.textContent=t('mp.mig.needD1');st.style.color='var(--yellow)';return}
+  scanBtn.disabled=true;runBtn.style.display='none';
+  st.textContent=t('mp.mig.scanning');st.style.color='var(--text2)';
+  try{
+    const s=await c3ScanData();
+    if(!s.fields&&!s.dups){st.textContent=t('mp.mig.clean');st.style.color='var(--green)'}
+    else{
+      st.textContent=t('mp.mig.found',{fields:s.fields,rows:s.rows,dups:s.dups});
+      st.style.color='var(--yellow)';
+      runBtn.style.display='';
+    }
+  }catch(e){console.error('C3 scan:',e);st.textContent=(e&&e.message)||'Scan failed';st.style.color='var(--red)'}
+  finally{scanBtn.disabled=false}
+}
+async function c3Run(){
+  const st=document.getElementById('mp-mig-status');
+  const runBtn=document.getElementById('mp-mig-run-btn');
+  const scanBtn=document.getElementById('mp-mig-scan-btn');
+  if(!st||!runBtn||!scanBtn)return;
+  if(_dek==null){st.textContent=t('mp.enc.needKey');st.style.color='var(--red)';return}
+  // refuse while local edits are still flushing — the migration must not race a save
+  if(_c3SaveBusy()){st.textContent=t('mp.mig.busy');st.style.color='var(--yellow)';return}
+  if(!await showConfirm(t('mp.mig.confirmTitle'),t('mp.mig.confirmMsg'),{okLabel:t('mp.mig.confirmOk')}))return;
+  // re-check after the dialog: a save scheduled while it sat open must also block the run
+  if(_c3SaveBusy()){st.textContent=t('mp.mig.busy');st.style.color='var(--yellow)';return}
+  runBtn.disabled=true;scanBtn.disabled=true;
+  st.style.color='var(--text2)';
+  try{
+    const stats=await c3Encrypt(tbl=>{st.textContent=t('mp.mig.running',{table:tbl})});
+    const v=await c3ScanData(); // verify pass — must come back clean
+    if(v.fields||v.dups){console.warn('C3 verify — remaining:',v);st.textContent=t('mp.mig.partial',{fields:v.fields,dups:v.dups});st.style.color='var(--yellow)'}
+    else{
+      const msg=t('mp.mig.done',{fields:stats.fields,rows:stats.rows,dups:stats.purged});
+      st.textContent=msg;st.style.color='var(--green)';
+      showToast(msg,'success',8000);
+      runBtn.style.display='none';
+    }
+  }catch(e){console.error('C3 migration:',e);st.textContent=t('mp.mig.failed')+((e&&e.message)?' ('+e.message+')':'');st.style.color='var(--red)'}
+  finally{runBtn.disabled=false;scanBtn.disabled=false}
 }
 
 // Reveal the recovery key exactly once. Gated by an acknowledgement checkbox and
@@ -4695,7 +4901,13 @@ function doRestore(){
         if(d.reviewsData&&typeof d.reviewsData==='object'){rvData=d.reviewsData;rvData._nextId=Math.max(rvData._nextId||0,...(rvData.entries||[]).map(x=>x.id||0),0)+1;saveReviews()}
         localStorage.setItem('schema_version',String(SCHEMA_VERSION));
         if(d1Mode&&API.ready()){
-          try{await API.post('migrate',{trackerStocks:d.trackerStocks||tStocks,researchNotes:d.researchNotes||researchNotes,
+          // C3: /migrate writes raw plaintext into D1 (the worker has no DEK and also
+          // blocks it server-side once the envelope exists). With encryption active the
+          // restored data still reaches the cloud ENCRYPTED via the savers invoked above —
+          // as a merge (upserts), without first clearing the cloud. An encrypted
+          // clear-and-restore flow is tracked as C3b in KNOWN-ISSUES.
+          if(_encRequired){showToast(t('sync.restoreEncBlocked'),'warning',12000)}
+          else try{await API.post('migrate',{trackerStocks:d.trackerStocks||tStocks,researchNotes:d.researchNotes||researchNotes,
             portfolioAccounts:d.portfolioAccounts||pfAccounts,portfolioPositions:d.portfolioPositions||pfPositions,
             portfolioTransactions:d.portfolioTransactions||pfTransactions,portfolioSnapshots:d.portfolioSnapshots||pfSnapshots,
             portfolioExchangeRates:d.portfolioExchangeRates||pfExchangeRates,dashboardTodos:d.dashboardTodos||dbTodos,
@@ -15131,6 +15343,9 @@ function updateD1UI(){
 }
 
 async function startD1Migration(){
+  // C3: with the E2EE envelope provisioned, the plaintext /migrate import is blocked
+  // server-side (403) — fail here with a clear message instead of a failed upload.
+  if(_encRequired){showToast(t('sync.migrateEncBlocked'),'warning',10000);return}
   if(localStorage.getItem('d1_migrating')==='1'){
     if(!await showConfirm(t('confirm.migrationRetry'),t('confirm.migrationRetryMsg'),{okLabel:t('confirm.migrationRetryOk')}))return;
   }else{

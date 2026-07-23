@@ -1103,6 +1103,21 @@ async function handleApi(path, method, url, request, env, origin) {
     return jsonResp({ ok: true }, 200, origin);
   }
   if (table === 'migrate' && method === 'POST') {
+    // C3: once the E2EE envelope exists (auth_config.wrapEnc), every sensitive field
+    // must reach D1 as ciphertext. handleMigrate writes the raw client JSON — it has no
+    // DEK and never will — so a plaintext import would silently undo the encryption
+    // (and its clear-tables step would wipe the encrypted data first). Block it.
+    // Fail CLOSED on a KV read error: allowing a plaintext write is the worse failure.
+    // An encrypted restore flow is tracked as C3b.
+    try {
+      const authCfg = await env.SYNC_DATA.get('auth_config', 'json');
+      if (authCfg && authCfg.wrapEnc) {
+        return jsonResp({ error: 'Encryption is active — plaintext migrate/restore is disabled' }, 403, origin);
+      }
+    } catch (e) {
+      console.error('Migrate gate check failed:', e.message);
+      return jsonResp({ error: 'Encryption state check failed — try again' }, 500, origin);
+    }
     try {
       const body = await request.json();
       return handleMigrate(body, db, origin);
