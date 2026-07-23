@@ -229,6 +229,7 @@ Client derivation: `masterBits = PBKDF2(password, salt, 600k, SHA-256)` → HKDF
 - **Endpoint:** `POST /api/migrate`
 - **Request Body:** Legacy app state (trackerStocks, researchNotes, portfolioAccounts, etc.)
 - **Response:** `{ok: true, stats: {companies: X, todos: Y, ...}, errors?: [...]}`
+- **403 when encryption is active (C3, Cat 82):** if the E2EE envelope exists (KV `auth_config.wrapEnc`), returns `{error: "Encryption is active — plaintext migrate/restore is disabled"}` BEFORE the clear-tables step — this endpoint writes raw client JSON (the worker has no DEK), so a plaintext import would silently undo field encryption. Fail-closed: a KV read error returns 500, never proceeds. Encrypted restore flow tracked as C3b (KNOWN-ISSUES SV.8).
 - **Line:** cloudflare-worker/src/index.js:643-650, 322-609
 
 ---

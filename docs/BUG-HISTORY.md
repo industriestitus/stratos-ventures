@@ -87,8 +87,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 79 | Tracker Hydration Rate-Limit Regression (v35→v36) | `d9c4ad6` | 2026-07-23 | 2 | 0 |
 | 80 | api_cache Write-Path Sanitize (SV.6) + tracker-field persistence | `5d5cf69` | 2026-07-23 | 2 | 0 |
 | 81 | /api Rate-Limit Raise + app_settings 404→200-null | `608c102` | 2026-07-23 | 2 | 0 |
+| 82 | Security v2 C3 — Encrypt Existing Cloud Rows + /migrate Gate | `d176a0a` | 2026-07-23 | 5 | 0 |
 
-**Total: 476 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 481 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1596,8 +1597,27 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 
 ---
 
+## Category 82 — Security v2 C3: Encrypt Existing Cloud Rows + /migrate Gate (2026-07-23)
+
+**Trigger:** Phase C2 (a–d) encrypted every sensitive column on WRITE, but rows written before C2 went live sat plaintext in D1 and only re-encrypted lazily when saved again (mixed state). C3 adds a one-time client-side migration (Settings → Master Password → Data Encryption → "Encrypt Existing Cloud Data"): a read-only **Scan** counts plaintext fields per table, then **Encrypt** rewrites them in place (upsert by row id, whole fetched row sent back, only affected columns replaced by ciphertext) with a verify-scan at the end. It also purges the orphaned duplicate company-note rows that predate the id-capture fix (loader's `_noteRowNewer` freshest-wins winner survives; tombstones untouched), and the worker now **blocks `POST /api/migrate` with 403** when the E2EE envelope exists (`auth_config.wrapEnc`) — that endpoint clears tables and re-imports raw plaintext client JSON, which would silently undo the encryption. Fail-closed on KV read error. Commit `d176a0a`, sw.js v38. Column rules mirror the C2 savers exactly (16 tables + `app_settings/fi_settings`; tags/checks/broker names/dividends stay plaintext by design).
+
+**Verification:** node:sqlite dry-run harness runs the REAL client code (sliced from `index.html`) + the worker's REAL `TABLES`/batch SQL against the real `d1-schema.sql` — 61/61 assertions (full conversion, round-trip decrypt, no-clobber, tombstones preserved, dup-purge winner logic, idempotent re-run, locked-DEK and busy-guard aborts). 2 adversarial QA agents (correctness/data-safety + security/completeness): both SHIP, 0 critical; column parity confirmed 1:1 against all 23 `encStr` saver sites; DEK never rotated by password change/recovery (stale `dek_cache` is provably the same key).
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 82.1 | Dry-run-caught: partial-row write-back 500s on NOT NULL | First design sent `{id, changed-cols}` only; SQLite checks NOT NULL on the candidate row BEFORE `ON CONFLICT(id)` fires, so any NOT NULL column not sent (companies.symbol, notes.note_date, …) aborted the batch. Fix: send the WHOLE fetched row with affected columns replaced — the worker binds only allowlisted columns, so extras (created_at/updated_at) are ignored and untouched columns keep their just-fetched values. | `d176a0a` |
+| 82.2 | QA-caught (F1): busy-guard TOCTOU | The pending-save check ran once, before `showConfirm` — a save scheduled while the dialog sat open (or mid-run) could race the full-row write-back and be reverted. Fix: `_c3SaveBusy()` re-checked after the dialog AND between every table inside `c3Encrypt` (throws → safe, resumable abort). | `d176a0a` |
+| 82.3 | QA-caught (F2): notes written back from a stale fetch | The notes table reused the purge-step fetch (staleness window spanned the dup-DELETEs + 4 tables). Fix: every table — notes included — is re-fetched immediately before its own write-back. | `d176a0a` |
+| 82.4 | QA-caught (F3): count-only batch chunking could cross the 5MB body cap | 100 large encrypted notes/checklist rows (~1.4× inflation) could exceed the worker cap → 413 abort. Fix: `_c3PostChunked` chunks by BOTH row count (100) and payload size (3MB) for every table (replaces the note_images-only special case). | `d176a0a` |
+| 82.5 | QA-caught (F5/6a): misleading partial/restore messages | Verify-pass message omitted remaining dup count; restore toast undersold the merge semantics. Fix: `mp.mig.partial` now shows `{fields}/{dups}`; `sync.restoreEncBlocked` states explicitly that cloud rows absent from the backup are kept and may reappear (merge, not replace) — full encrypted clear-and-restore tracked as C3b. | `d176a0a` |
+
+**Accepted/tracked (KNOWN-ISSUES):** server never enforces ciphertext on batch/CRUD — client-enforced invariant until B3 retires the sync key (SV.7); encrypted restore is merge-not-replace until C3b (SV.8); after migration, pre-C2 notes stop matching the (unused) server-side FTS — search is client-side, no user impact.
+
+---
+
 ## Deployment Notes
 
+- **`d176a0a` (C3) deploy order is MANDATORY — worker FIRST, then frontend push.** The 403 gate on `/api/migrate` must be live before (or together with) the client push: until the worker is deployed, a stale cached pre-encryption client could still call the un-gated `/migrate` and clear+re-import plaintext. No schema change. Then: **backup live D1** (`cd web/cloudflare-worker && npx wrangler d1 export stratos-ventures-db --remote --output=../../backup-pre-c3.sql`), reload to v38, and run Settings → Master Password → Data Encryption → Scan → Encrypt on ONE device with others closed.
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), `36cf706` (natural-key upsert conflict targets), `cc3c9a2` (natural-key DELETE route + `NATURAL_DELETE` allowlist + GET cap 100000), `aaff465` (S2a-2: companies attr columns + single-PUT upsert — **run the D1 `ALTER` first**, see below), and any future Worker changes:
   ```bash
   cd web/cloudflare-worker && npx wrangler deploy

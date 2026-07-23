@@ -18,8 +18,13 @@ Full plan in `memory/project_security-v2-plan.md`. Stop + multi-agent QA after e
 **At-rest hardening (out-of-band):**
 - [x] SV.6: `api_cache` `stock_data` write-path sanitized — fail-closed market-only allowlist (`STOCK_CACHE_FIELDS`/`_sanitizeStockCache`) before `cache-upsert`, so no plaintext copy of encrypted fields is stored at rest. Cat 80. Frontend-only. **Pending Peter: one-time `DELETE FROM api_cache WHERE data_source='stock_data'` on live D1 (backup first) + `git push`.** (2026-07-23)
 
-**Phase C — E2E encryption (envelope + field-level)** (NEXT SESSION; includes recovery key — unblocks B3). encKey already derived (`deriveEncKeyBits`, HKDF 'stratos-enc-v1'). Plan in memory/project_security-v2-plan.md.
-**Phase B3 — retire sync key** (after Phase C recovery key exists)
+**Phase C — E2E encryption (envelope + field-level)**
+- [x] C1 (a+b): envelope (random DEK wrapped by encKey + recovery key, atomic in `auth_config`), recovery reset flow with key rotation. Deployed + provisioned in production 2026-07-21.
+- [x] C2 (a+b+c+d): field-level encryption of every sensitive column — reviews/valuations/thesis, remaining TEXT cols, notes, REAL numerics via `decNum` — plus FI settings + todo titles (`5bc8b52`). All live in prod.
+- [x] C3 (`d176a0a`, sw.js v38, 2026-07-23): one-time migration of pre-C2 plaintext D1 rows → ciphertext (Settings → Data Encryption → Scan/Encrypt, in-place upsert by id + verify pass), purge of orphaned duplicate company-note rows, and a worker 403 gate on `POST /api/migrate` while the envelope exists (plaintext import would undo encryption). 61/61 node:sqlite dry-run on the real code+schema; 2 QA agents SHIP. BUG-HISTORY Cat 82. **Deploy: worker FIRST, then push; Peter runs backup + the in-app migration.**
+- [ ] C3b: encrypted clear-and-restore flow (restore in encrypted mode is currently a merge — see KNOWN-ISSUES SV.8).
+
+**Phase B3 — retire sync key** (UNBLOCKED — recovery key live; next after C3 is run in prod)
 **Phase D — Cleanup, durable rate limiting, docs, final security QA** (not started)
 
 ---

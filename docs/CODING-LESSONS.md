@@ -253,6 +253,14 @@ Peter's D1 is production-only — no staging environment. All investment data is
 
 ---
 
+### 7. Upsert-by-id Rescues UNIQUE Conflicts, NOT NULL Ones — Partial Rows Abort
+
+**What went wrong:** The C3 migration's first design updated single columns by sending `{id, changed_col}` through the batch upsert (`INSERT ... ON CONFLICT(id) DO UPDATE`). SQLite evaluates **NOT NULL (and CHECK) constraints on the candidate row BEFORE conflict resolution** — `ON CONFLICT` only rescues uniqueness failures — so any NOT NULL column missing from the item (`companies.symbol`, `notes.note_date`, …) aborted the whole batch with a constraint error even though the target row existed. Caught by the node:sqlite dry-run before it ever touched live data. (Category 82, `d176a0a`.)
+
+**Rule:** An upsert-shaped write is an INSERT first. To do a partial update through an upsert endpoint, either send the **whole row** (fetch → mutate → send back; the worker's column allowlist drops extras) or use a true `UPDATE` path (the PUT-by-id route). And dry-run any bulk write against the real schema — this class of bug is invisible in code review and fatal against live data.
+
+---
+
 ## API & Caching
 
 ### 1. FMP API Budget Tracking
@@ -435,13 +443,13 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 |--------|---------|-----------|
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
 | JavaScript | 11 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
-| Data Safety | 6 | 28+ (Categories 15, 72) |
+| Data Safety | 7 | 33+ (Categories 15, 72, 82) |
 | API & Caching | 5 | 31+ (Categories 5, 6, 21, 80) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |
 | AI Behavioral | 6 | 100+ (cross-cutting) |
 
-**Total:** 470+ bugs fixed, 34 lessons, 7 domains.
+**Total:** 481+ bugs fixed, 35 lessons, 7 domains.
 
 ## Related Documents
 
