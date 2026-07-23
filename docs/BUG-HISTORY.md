@@ -83,8 +83,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 75 | S2a-3 Research-Note Images → D1 | `9c4e6ca` | 2026-07-23 | 3 | 0 |
 | 76 | S2b Non-Stock Positions Cross-Device | `b8d5778` | 2026-07-23 | 3 | 0 |
 | 77 | S2c Soft-Delete Tombstones (framework/override/valuation/note_images) | `19faaf4` | 2026-07-23 | 4 | 0 |
+| 78 | Tracker Metric + Override Hydration on D1 Load | `af214e4` | 2026-07-23 | 2 | 0 |
 
-**Total: 468 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 470 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1535,6 +1536,19 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 **Worker mechanism:** the natural-key `DELETE /api/{table}?key=…` route now `UPDATE … SET deleted_at` (soft) instead of `DELETE` when the table's `TABLES` cols include `deleted_at`; hard-delete stays for keyless tables. By-id soft-deletes use the existing `PUT {table}/{id} {deleted_at}` path (notes/reviews pattern). GET returns tombstones verbatim — client filters everywhere (no server-side `deleted_at IS NULL`), consistent with notes/reviews.
 
 **Known (accepted):** same stale-writer window as notes/reviews — a second device that still holds the row live and saves BEFORE it loads the tombstone will re-assert it (natural-key tables send `deleted_at:null`; id-based tables just omit it, so their tombstone is stickier). Load-on-startup mitigates. No 30-day trash/purge UI for these four types (unlike notes/reviews) — a tombstone is permanent until overwritten; acceptable (single-user, low row counts).
+
+---
+
+## Category 78 — Tracker Metric + Override Hydration on D1 Load (2026-07-23)
+
+**Trigger:** in D1 mode the tracker showed all-dashes on a fresh reload and a manual data override vanished until the next Refresh All — even though the override was safely persisted in D1 (`company_data_overrides`, confirmed live via `wrangler d1 execute`). Surfaced while smoke-testing S2c. Commit `af214e4`, sw.js v35. **Frontend-only — no worker/schema change, deploy = `git push`.** Verified: in-browser `_d1CompanyToTStock` mock round-trip (live override → top-level field set; tombstoned override → skipped) + cacheOnly no-op path.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 78.1 | Manual override invisible after reload | Root cause: D1 stores live metrics only in `api_cache` (never on `companies`), and `_d1CompanyToTStock` loaded overrides into `overriddenData` but not onto the top-level metric fields the tracker cells read (`stock.marketCap` etc.) — only `_fetchStockDataInner` (~12021) did, and that runs only on an API fetch. Fix: `_d1CompanyToTStock` now applies `overriddenData` to top-level fields after building it, so an override shows on a pure reload. Tombstoned (`deleted_at`) overrides are still skipped first (S2c intact). | `af214e4` |
+| 78.2 | Tracker list empty until manual Refresh All | Fix: cache-first hydration on load. `cachedFetch`/`_fetchStockDataInner`/`fetchStockData` gain a `cacheOnly` mode that reads `api_cache` **read-only and never calls the live API** (no quota/rate-limit cost); `loadTrackerStocks` backgrounds a `cacheOnly` pass over all stocks (post-paint via `setTimeout`) so the list shows last-known metrics + overrides immediately, matching localStorage-mode behavior. Stale/uncached stocks stay blank until a manual Refresh All (live data is still on-demand by design). | `af214e4` |
+
+**Note:** metrics remain **cache** (`api_cache`, TTL-based), not permanent company columns — market data goes stale by nature. This change only makes the last-cached values visible on load instead of requiring a manual refresh. The `cacheOnly` in-flight promise is keyed separately (`ticker:c`) so it never collides with a concurrent live fetch.
 
 ---
 

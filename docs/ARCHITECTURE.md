@@ -188,6 +188,8 @@ User edits data (e.g., adds position)
 └──────────────────────────────────────────────────┘
 ```
 
+**Tracker load hydration (`af214e4`):** D1 keeps live metrics only in Layer 4 (`api_cache`), never on the `companies` row. So on a fresh D1-mode reload `loadTrackerStocks` backgrounds a **cache-first** pass — `cachedFetch(...,cacheOnly=true)` reads `api_cache` read-only and never calls the live API — so the tracker shows last-known metrics + manual overrides immediately instead of all-dashes-until-Refresh-All. `_d1CompanyToTStock` also applies `overriddenData` onto the top-level metric fields so overrides survive a reload without a fetch. Live refresh stays on-demand (Refresh All / opening a company).
+
 ### localStorage Keys
 
 | Key | Data | Module |
