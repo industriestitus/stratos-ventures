@@ -1,6 +1,6 @@
 # Stratos Ventures — Known Issues & Tech Debt
 
-**Last Updated:** 2026-07-21
+**Last Updated:** 2026-07-23
 
 Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and code review.
 
@@ -46,6 +46,27 @@ These were surfaced during the Security v2 (Phase A+B) audit and consciously def
 
 ### SV.5 — Bearer token in localStorage (LOW/INFO, accepted)
 - `auth_token` is XSS-readable like the sync key always was. Stored SHA-256-hashed server-side, never logged, never in URLs. 180-day TTL. Accepted for a single-user app; revocable via the device manager and revoked on password change.
+
+---
+
+## Sync Audit — Deferred to S2 Cross-Device Completeness (flagged 2026-07-22)
+
+The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat source (see `docs/BUG-HISTORY.md` Category 71). What remains is **cross-device completeness only** — data that is correct on the device that wrote it but doesn't propagate to a second device. None causes data loss on the originating device. Tracked as the **S2** batch in ROADMAP.md.
+
+### SA.1 — localStorage-only fields never reach D1 (MEDIUM, deferred → S2a)
+- `priceAlerts`, custom `tags`, dashboard widget config, screener presets, idealTrait/avoid checks, real-estate/bond/cash position details, and note images live only in localStorage. They survive reload on the same device but are invisible on any other device. Fix: give each a D1 home (table or `app_settings` key). Cheapest S2 sub-batch — do first.
+
+### SA.2 — Non-stock positions don't sync cross-device (MEDIUM, deferred → S2b)
+- Real-estate/cash/bond positions have no `company_id` anchor, so they can't ride the existing position sync. Fix: synthetic holder-company rows + `company_type` filtering across tracker/screener/compare. Large regression surface — own session.
+
+### SA.3 — Cross-device delete-resurrection for framework/override/valuation (LOW-MED, deferred → S2c)
+- `cc3c9a2` added a Worker natural-key DELETE so a delete propagates to D1, but these three types are **hard** deletes (no tombstone). A second device holding a stale copy can re-upload the row on its next sync, resurrecting it. Notes/reviews already avoid this via `deleted_at` soft-delete. Fix: extend soft-delete tombstones to framework_entries / company_data_overrides / valuations.
+
+### SA.4 — Collision-resistant ID tail (LOW, accepted)
+- `_mintId` (`0fc3579`) makes client-minted IDs collision-resistant going forward, but any IDs minted by the old short-random scheme before the fix remain as-is. No migration performed; the residual collision probability on legacy IDs is negligible for a single-user dataset. Accepted.
+
+### SA.5 — Frozen legacy `exchange_rates` rows (LOW, cosmetic)
+- `1d31799` fixed the unbounded row growth by pinning `rate_date='latest'`, but historical per-date rows written before the fix are inert clutter in D1. Optional one-line cleanup after any FX refresh: `DELETE FROM exchange_rates WHERE rate_date != 'latest';`. Harmless if left.
 
 ---
 

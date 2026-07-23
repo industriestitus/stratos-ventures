@@ -1014,6 +1014,60 @@ Auth was a single shared `SYNC_SECRET` (the "sync key") sent as `X-Sync-Key` on 
 
 ---
 
+## ADR-034: Collision-Resistant Client-Minted IDs (`_mintId`)
+
+**Status:** Accepted (2026-07-22) — Sync Audit, data-loss-stop batch (`0fc3579`)
+
+**Context:**  
+D1 tables use autoincrement `id` PKs, but the client mints ids locally so an object has a stable id before it ever reaches the server. The old scheme was per-device `max(existing id)+1`. With two devices editing offline, each would mint the *same* small id for *different* objects; on sync the batch upsert's `ON CONFLICT(id) DO UPDATE` silently overwrote one unrelated row with the other's data — a genuine cross-device data-loss bug affecting positions, transactions, broker accounts, general/company todos, framework entries, reviews, and research notes.
+
+**Decision:**  
+All seven mint points delegate to a single helper:
+```js
+let _idCtr = Math.floor(Math.random()*0x200000);
+function _mintId(){ return Math.floor(Date.now()/1000)*0x200000 + ((_idCtr++)&0x1FFFFF); }
+```
+Format: **`(epoch-seconds << 21) | 21-bit per-session counter`**, the counter seeded to a random start and masked to 21 bits. Properties: monotonic within a session; time-ordered across sessions; max value ≈3.7e15 stays well under `MAX_SAFE_INTEGER` (ceiling ~year 2106); coexists with legacy small ids; two devices minting concurrently share a second-granularity high part but diverge on the random-seeded counter, so a collision is effectively impossible for a single-user, low-write dataset.
+
+**Alternatives Rejected:**
+- **UUID strings:** would require changing every `id` column from INTEGER and all id-typed client code — disproportionate.
+- **Server-assigned ids only:** breaks the local-first model (objects need an id before the debounced sync fires) and offline creation.
+- **Per-device id prefix ranges:** needs a device registry and coordination the single-user app doesn't have.
+
+**Consequences:**
+- ✅ Cross-device concurrent creates no longer clobber each other. Frontend-only; no schema change, no migration.
+- ⚠️ Legacy ids minted by the old scheme are left as-is (no back-fill) — residual collision risk on *pre-fix* ids only, accepted as negligible (KNOWN-ISSUES SA.4).
+- ❌ IDs are larger integers now (cosmetic; still JSON-safe numbers).
+
+**Date:** 2026-07-22 (Sync Audit)
+
+---
+
+## ADR-035: Natural-Key Upsert & Natural-Key DELETE for Cross-Device Sync
+
+**Status:** Accepted (2026-07-22 → 2026-07-23) — Sync Audit (`36cf706`, `cc3c9a2`)
+
+**Context:**  
+Two related defects surfaced in the field-by-field sync audit. (1) The batch upsert used `ON CONFLICT(id) DO UPDATE` unconditionally, but the client inserts many rows **without** an `id` (it only knows their natural key). `ON CONFLICT(id)` never fires for an idless insert, so re-saving the same logical row either raised a UNIQUE violation that 500'd the whole batch (dropping the edit to localStorage) or piled up duplicate rows (`snapshot_positions`, `valuations`, `exchange_rates` grew unboundedly). (2) Deleting a framework entry / data override / valuation removed it locally but, lacking a captured `id`, never issued a D1 delete — so it resurrected on the next reload.
+
+**Decision:**  
+- **Natural-key upsert:** each affected table declares a `conflictTarget` (its natural key) in the Worker's `TABLES` map; idless inserts upsert on that key with an `updated_at` bump. Examples: `snapshot_positions(snapshot_id, company_id, account_id)`, `valuations(company_id, label)`, `exchange_rates(rate_date, from_currency, to_currency)`, `checklist_templates(section_key)`.
+- **Natural-key DELETE route:** `DELETE /api/{table}?col=val&col2=val2`, gated by a fixed `NATURAL_DELETE` allowlist (`company_data_overrides`→`company_id,metric_key`; `valuations`→`company_id,label`). The **full** key is mandatory (partial key → 400), column names come only from the allowlist (never request input), and values are bound params — so it targets exactly one logical row and can't degrade into a mass delete. GET list cap was raised 1000→100000 in the same change so large tables aren't truncated.
+
+**Alternatives Rejected:**
+- **Always capture the server id round-trip before delete:** extra latency and a fetch the local-first flow doesn't otherwise need; fails when the row was created offline and never synced.
+- **`INSERT OR REPLACE`:** would reset autoincrement ids and break FK children; `ON CONFLICT DO UPDATE` preserves the row identity.
+- **Soft-delete tombstones for these three types (the fully-correct fix):** deferred — hard delete stops the *same-device* resurrection now; cross-device resurrection via a stale copy remains (SA.3 / S2c) and will get `deleted_at` tombstones like notes/reviews.
+
+**Consequences:**
+- ✅ Duplicate-row growth stopped; batches no longer 500 on natural-key re-saves; local deletes propagate to D1.
+- ⚠️ These deletes are still hard (no tombstone) → cross-device delete-resurrection remains open (KNOWN-ISSUES SA.3).
+- ⚠️ Worker redeploy required for both commits; a one-time live D1 dedup + unique-index add was run for `snapshot_positions`/`valuations`.
+
+**Date:** 2026-07-23 (Sync Audit)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1051,6 +1105,8 @@ Auth was a single shared `SYNC_SECRET` (the "sync key") sent as `X-Sync-Key` on 
 | 031 | 8-level CSS typography scale | Accepted | 2026-07-03 |
 | 032 | Server-side API keys via Worker proxy | Accepted | 2026-07-21 |
 | 033 | Master-password auth + device tokens | Accepted | 2026-07-21 |
+| 034 | Collision-resistant client-minted IDs (`_mintId`) | Accepted | 2026-07-22 |
+| 035 | Natural-key upsert & natural-key DELETE | Accepted | 2026-07-23 |
 
 ---
 
@@ -1065,4 +1121,4 @@ Auth was a single shared `SYNC_SECRET` (the "sync key") sent as `X-Sync-Key` on 
 ---
 
 **End of Document**  
-Last updated: 2026-07-03
+Last updated: 2026-07-23

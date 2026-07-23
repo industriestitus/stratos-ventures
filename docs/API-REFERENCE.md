@@ -149,7 +149,7 @@ Client derivation: `masterBits = PBKDF2(password, salt, 600k, SHA-256)` → HKDF
 #### GET (List all rows)
 - **Endpoint:** `GET /api/{table}`
 - **Query Parameters:**
-  - `limit` (default: 500, max: 1000)
+  - `limit` (default: 500, max: 100000 — raised from 1000 in `cc3c9a2` so large tables like `exchange_rates` are not silently truncated)
   - `offset` (default: 0)
   - `filter` (optional): Column name to filter by
   - `filter_value` (required if filter set)
@@ -175,20 +175,28 @@ Client derivation: `masterBits = PBKDF2(password, salt, 600k, SHA-256)` → HKDF
 - **Auto-Fields:** `updated_at` set to `datetime('now')` if table has it
 - **Line:** cloudflare-worker/src/index.js:217-242
 
-#### DELETE (Remove row)
+#### DELETE (Remove row by id)
 - **Endpoint:** `DELETE /api/{table}/{id}`
 - **Response:** `{ok: true, deleted: {...previous_row}}`
 - **Cascades:** Enforced via FOREIGN KEY constraints; notes on companies explicitly deleted
-- **Line:** cloudflare-worker/src/index.js:245-254
+
+#### DELETE (Remove row by natural key) — added `cc3c9a2`
+- **Endpoint:** `DELETE /api/{table}?col=val&col2=val2`
+- **Purpose:** Delete a row the client only knows by natural key (it never captured the autoincrement `id`). Lets a delete of a framework entry / data override / valuation actually propagate to D1 instead of resurrecting on reload.
+- **Allowlist (`NATURAL_DELETE`):** only these tables are eligible, and the **full** key must be supplied (every listed column present and non-empty, else 400):
+  - `company_data_overrides` → `company_id`, `metric_key`
+  - `valuations` → `company_id`, `label`
+- **Safety:** column names come only from the fixed allowlist (never request input); values are bound params; a partial key is rejected so it can never degrade into a mass delete.
+- **Response:** `{ok: true, deleted: N}`
+- **Caveat:** hard delete — no tombstone, so a stale copy on another device can still re-upload the row on its next sync (tracked as SA.3 / S2c in KNOWN-ISSUES.md).
 
 #### Batch Upsert
 - **Endpoint:** `POST /api/{table}/batch`
 - **Request Body:** `{items: [{...}, {...}]}`
 - **Limits:** Max 1000 items per batch
-- **Logic:** INSERT OR REPLACE (upsert) on primary key conflict
+- **Logic:** `INSERT ... ON CONFLICT(<conflictTarget>) DO UPDATE` — upserts on the table's **natural key** when the item has no `id` (fixed in `36cf706`; previously `ON CONFLICT(id)` never fired for idless inserts, causing UNIQUE-violation 500s and duplicate-row growth). Falls back to primary-key conflict when `id` is present.
 - **Auto-Fields:** `updated_at` set if table supports it
 - **Response:** `{ok: true, results: [{id/key: ..., action: "upserted"}, ...]}`
-- **Line:** cloudflare-worker/src/index.js:653-709
 
 #### Special Endpoints
 

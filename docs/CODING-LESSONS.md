@@ -1,7 +1,7 @@
 # Coding Lessons — Stratos Ventures Finance App
 
-**Last Updated:** 2026-07-03
-**Source:** 171+ bug fixes across 19+ QA sessions (Categories 1-23)
+**Last Updated:** 2026-07-23
+**Source:** 450+ bug fixes across 25+ QA sessions (Categories 1-72)
 
 Reference for AI assistants and developers. All lessons are validated patterns from actual bugs found and fixed.
 
@@ -184,11 +184,11 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 ---
 
-### 2. INSERT ON CONFLICT for Upserts
+### 2. INSERT ON CONFLICT — Use the NATURAL Key, Not `id`
 
-**What went wrong:** Worker batch endpoint used `UPDATE ... WHERE id = ?`. New items with locally-generated IDs didn't exist in D1 — UPDATE matched 0 rows, data silently dropped.
+**What went wrong (twice):** (a) Worker batch used `UPDATE ... WHERE id = ?`; new items with local IDs matched 0 rows and were dropped. (b) The follow-up used `INSERT ... ON CONFLICT(id) DO UPDATE`, but the client inserts many rows **without an `id`** (only a natural key). `ON CONFLICT(id)` never fires for an idless insert, so re-saving the same logical row raised a UNIQUE violation that 500'd the whole batch, or piled up duplicate rows (`snapshot_positions`, `valuations`, `exchange_rates` grew unboundedly). (Category 72, `36cf706`/`1231c52`/`1d31799`.)
 
-**Rule:** Use `INSERT INTO ... ON CONFLICT(id) DO UPDATE SET ...` for all batch operations. Works for both new and existing items atomically.
+**Rule:** Batch upsert must conflict on the column(s) that actually collide — the table's **natural key** (`ON CONFLICT(snapshot_id, company_id, account_id)`, `(company_id, label)`, `(rate_date, from_currency, to_currency)`, …), falling back to `id` only when the item carries one. Every table that accepts idless inserts needs a declared `conflictTarget`. A UNIQUE index on that natural key is what makes the upsert deterministic — add it in the schema, not just in code.
 
 ---
 
@@ -204,6 +204,30 @@ Peter's D1 is production-only — no staging environment. All investment data is
 - localStorage clearing code
 
 **Safe operations:** HTML/CSS/JS edits, adding columns/tables, `wrangler deploy` (code only).
+
+---
+
+### 4. Client-Only Fields Get Wiped on Reload — Whitelist Every One
+
+**What went wrong:** `loadTrackerStocks` rebuilds `tStocks` from D1 and overwrites localStorage, keeping only a hand-maintained whitelist of client-only fields. Any field NOT in the whitelist and NOT stored in D1 (DCF `scenarios`, `valuationHistory`, `overrides`, `idealTraitChecks`, manual tracker numbers, checklist answers) was silently erased on every d1Mode reload. The data looked saved (it was in memory and localStorage) right up until the next load. (Category 72, `6799d0b`/`8aea7eb`/`815857d`.)
+
+**Rule:** A field that lives only client-side is a reload-erasure waiting to happen. Either (a) give it a D1 home so the load is authoritative, or (b) add it to the merge whitelist with a `local==null ? d1 : local` guard so the load never clobbers unsynced local data. When adding ANY new per-entity field, decide its persistence home in the same commit — never "it's in localStorage for now."
+
+---
+
+### 5. Client-Minted IDs Must Be Collision-Resistant Across Devices
+
+**What went wrong:** Client minted ids as per-device `max(id)+1`. Two offline devices minted the *same* small id for *different* objects; on sync the upsert's `ON CONFLICT(id) DO UPDATE` overwrote one unrelated row with the other's data — cross-device data loss across 7 entity types. (Category 72, `0fc3579`.)
+
+**Rule:** Never mint sync-bound ids from local sequence position. Use a time-plus-random scheme (`_mintId()` = `(epoch-seconds << 21) | 21-bit random-seeded counter`) so two devices can't independently produce the same id. Keep it under `MAX_SAFE_INTEGER` and monotonic within a session. Route every mint point through one shared helper — scattered `max+1` call sites are how this regresses.
+
+---
+
+### 6. A Local Delete Must Delete the Server Row
+
+**What went wrong:** Deleting a framework entry / data override / valuation removed it from memory + localStorage but, because the client never captured the autoincrement `id`, issued no D1 delete. The row reappeared on the next reload (delete-resurrection). (Category 72, `cc3c9a2`.)
+
+**Rule:** Every delete path must reach D1. If the client knows the row only by natural key, provide a **natural-key DELETE** route (allowlisted tables, full-key-required, bound params) rather than skipping the server call. Note this still leaves *cross-device* resurrection: a hard delete has no tombstone, so a stale copy on another device re-uploads it. The complete fix is a `deleted_at` soft-delete (as notes/reviews use) — track it explicitly if you ship the hard-delete interim.
 
 ---
 
@@ -381,7 +405,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 |--------|---------|-----------|
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
 | JavaScript | 7 | 53+ (Categories 5, 8, 9, 22, 34) |
-| Data Safety | 3 | 7 (Category 15) |
+| Data Safety | 6 | 28+ (Categories 15, 72) |
 | API & Caching | 4 | 30+ (Categories 5, 6, 21) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |

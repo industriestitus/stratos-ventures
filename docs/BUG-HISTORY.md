@@ -76,8 +76,10 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 68 | Cross-Device Login QA | `bbc5856` | 2026-07-09 | 1 | 0 |
 | 69 | Pre-Production Security Audit | `f42dfb4` | 2026-07-10 | 17 | 0 |
 | 70 | Pre-Production Full QA (A+B+C) | `61488a7` | 2026-07-10 | 7 | 0 |
+| 71 | Privacy Mode QA | `` | 2026-07-10 | 5 | 0 |
+| 72 | Field-by-Field Sync Audit & Hardening | `36cf706`…`1d31799` | 2026-07-22 | 21 | 0 |
 
-**Total: 426 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 452 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1404,9 +1406,63 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 
 ---
 
+## Category 72 — Field-by-Field Sync Audit & Hardening (2026-07-22 → 2026-07-23)
+
+**Trigger:** A full field-by-field save/load/cross-device audit (5 QA agents) of every data type between the app, localStorage, and D1. Two systemic patterns dominated: **client-minted ID collisions** and **localStorage-only data wiped on reload / never synced**. Commits `36cf706`…`1d31799`. Batch strategy in `memory/project_sync-audit-2026-07-22.md`. Frontend = `web/index.html`; Worker = `web/cloudflare-worker/src/index.js`; schema = `docs/d1-schema.sql`.
+
+### D1 upsert / duplicate-row growth (5)
+
+| # | Bug | Fix | Commit |
+|---|-----|-----|--------|
+| 72.1 | Idless-insert rows used `ON CONFLICT(id)` which never fires on a fresh autoincrement → 2nd save of the same natural key raised a UNIQUE violation, 500'd the whole batch, and silently dropped the edit to localStorage. | Added `conflictTarget` (natural-key cols) to the 12 affected tables; idless branch upserts `ON CONFLICT(conflictTarget)` + `updated_at` bump; client sends `fiscal_quarter=0` (not null) for annual filings. | `36cf706` |
+| 72.2 | `notes/batch` sent `note_date:null`, but `notes.note_date` is `NOT NULL DEFAULT date('now')` and SQLite skips the default on an explicit NULL → every notes batch 500'd the whole trackerStocks save. | Omit `note_date` from the payload so the column default applies. | `1c9b68f` |
+| 72.3 | Company earnings/research notes sent idless with no natural key → re-INSERTed every save (duplicate pile-up). `exportCsvNotes`/`exportMarkdownNotes` iterated `s.notes` as an array but it's an object → threw for any stock with notes. | Capture each note's row id on load and re-send so the worker upserts by id (a cleared note now persists); guard note shape + iterate research+earnings notes in exports. | `90e7e82` |
+| 72.4 | `snapshot_positions` and `valuations` re-INSERTed every save with no conflict target → unbounded/quadratic duplicate rows. | Worker `conflictTarget`: `snapshot_id,company_id,account_id` (snapshots) and `company_id,label` (valuations). Frontend skips snapshot positions with missing `accountId`; valuation load captures `_d1ValId`; `deleteStock` deletes the D1 valuation row. Live D1 dedup + unique index run by Peter. | `1231c52` |
+| 72.5 | `saveExchangeRates` stamped `rate_date=now` every refresh → new key each time = unbounded growth; `loadExchangeRates` read `limit=500 ORDER BY id ASC` → newest rates truncated/stale past 500 rows. | Save with fixed `rate_date='latest'` (upserts one row per pair in place); load with `limit=100000`, last-wins by highest id. `lastFetched` kept in `exchange_rates_config`. | `1d31799` |
+
+### Data-loss on reload — client-only fields wiped (8)
+
+| # | Bug | Fix | Commit |
+|---|-----|-----|--------|
+| 72.6 | `loadTrackerStocks` merge whitelist kept only 8 client-only fields → `scenarios` (DCF bear/base/bull), `valuationHistory`, `overrides` (never in D1) permanently wiped on every d1Mode reload. | Add those 3 to the merge whitelist; `==null` guard keeps D1 authoritative where it has data. | `6799d0b` |
+| 72.7 | Checklist answers never synced: `checklist_templates` was never seeded, so answers had no `template_id` FK → client dropped them and the worker `/full` INNER JOIN dropped them. Checklist lived only in localStorage. | Seed missing section templates via `checklist_templates/batch` (upsert by `section_key`, UNIQUE → converges all devices), re-fetch, map answers→template_id. | `4b7db52` |
+| 72.8 | Checklist sections stored FLAT in memory but save serialized `sv.answers||{}` (undefined for flat sections) → `answer_json` always `{}`, content never reached D1; load nested under `{answers:ans}` → blank after reload. | New `_sectionAnswers(sv)` serializes flat answer fields (strips progress/status, unwraps legacy nesting); loader spreads answers FLAT. Covers regular fields, src_N/tenk_N checkboxes, risks.items, *_log entries, buy_sell drivers. | `815857d` |
+| 72.9 | RE/cash/bond positions have no D1 company row → `company_id` null; `positions.company_id` is NOT NULL and the batch is atomic → one null row 500'd the ENTIRE positions batch (nothing synced). Load rebuilt from D1 only → localStorage-only positions dropped. | `savePortfolioPositions` excludes null-company_id rows from the D1 batch; `loadPortfolioPositions` re-merges localStorage-only positions absent from D1 (skipping soft-deleted). | `d58653b` |
+| 72.10 | Research-note `excerpt`+comment (news), `action` (journal), `tags` (market) had nowhere to persist (single `content` col) → news notes blank after reload, action/tags dropped. | Schema: add `excerpt`/`action`/`tags` cols (nullable, encrypted). Worker `TABLES.notes.cols` += those. Save/load restore them per-type; legacy NULL rows recovered best-effort. Needed a live D1 `ALTER TABLE` (Peter ran it 2026-07-23). | `6eaf85a` |
+| 72.11 | `checklist.idealTraitChecks`/`avoidChecks` (never in D1) and manual tracker data (revenue/profit/ocf/fcf typed into the table) wiped on every d1Mode reload / next API fetch. | Preserve idealTrait/avoid from localStorage (`==null` guard); `ensureChecklist` inits them. Route manual edits through `company_data_overrides` (`overriddenData`/`_origData`) so they persist cross-device and re-apply over fresh API data. | `8aea7eb` |
+| 72.12 | Company notes have no natural key → duplicate rows; load used blind last-wins over `ORDER BY note_date DESC`, but date-only ties → OLDEST duplicate clobbered newer note (stale text cross-device). | Load picks freshest duplicate per bucket via `_noteRowNewer()` (updated_at → created_at → higher id), skips soft-deleted. Save only pushes an earnings-quarter note with text or an existing id. | `83403d9` |
+| 72.13 | (Same cluster as 72.8) checklist content preserved on reload — flat sections re-rendered blank because the loader re-nested answers the flat renderer couldn't read. | Loader spreads `answer_json` FLAT onto the section value; regression-tested across all section types. | `815857d` |
+
+### Cross-device ID collisions & delete-resurrection (2)
+
+| # | Bug | Fix | Commit |
+|---|-----|-----|--------|
+| 72.14 | Client minted ids as per-device `max(id)+1` → two unsynced devices minted the SAME id for different objects; worker `ON CONFLICT(id) DO UPDATE` silently overwrote an unrelated row. Affected positions, transactions, broker_accounts, general/company todos, framework_entries, reviews, research notes. | Replace all 7 mint points with shared `_mintId()` = `(epoch-seconds << 21) \| 21-bit random-seeded per-session counter`. Monotonic per session, under `MAX_SAFE_INTEGER`, collision-resistant cross-device. Frontend-only, no migration. | `0fc3579` |
+| 72.15 | Deleting a framework entry, clearing a data override, or deleting a saved valuation removed it locally but never removed the D1 row → resurrected on reload. | New Worker natural-key DELETE route + `NATURAL_DELETE` allowlist (`company_data_overrides`→company_id+metric_key, `valuations`→company_id+label); GET row cap raised 1000→100000. `deleteFwEntry` deletes by id; override-clear + `deleteStock` use the natural-key route. | `cc3c9a2` |
+
+### Encryption at rest (3)
+
+| # | Bug | Fix | Commit |
+|---|-----|-----|--------|
+| 72.16 | Note fields stored plaintext in D1 (Security v2 Phase C2c). | Encrypt research-note title/content/source_name/source_url + company-note content (title stays plaintext as structural marker). Loaders use `decStrSafe` (preserve ciphertext on decrypt failure); queryable cols stay plaintext. | `cf4dc5b` |
+| 72.17 | Personal financial numbers stored plaintext in REAL columns (Phase C2d). | AES-GCM encrypt positions.shares/avg_cost; transactions.shares/price_per_share/total_amount/fees; portfolio_snapshots.total_value; snapshot_positions.shares/price_per_share/market_value. New `decNum()` helper (decrypt→Number, legacy-plaintext passthrough). No schema/worker change (SQLite non-strict). | `4799fda` |
+| 72.18 | FI settings JSON (targetAmount/monthlyExpenses/monthlySavings), general_todos titles, company_todos titles stored plaintext despite holding personal data. | Route all three through `encStr`/`decStrSafe`; `decStr` passes legacy plaintext through, so existing rows load and re-encrypt on next save. | `5bc8b52` |
+
+### UI fixes (3)
+
+| # | Bug | Fix | Commit |
+|---|-----|-----|--------|
+| 72.19 | SW-update "New version available" toast showed raw HTML `<a>` as literal text (showToast uses textContent) and wasn't clickable. | Use plain i18n key `sync.newVersion` (EN+HU) + `opts.onClick` so the whole toast is clickable to activate the waiting SW and reload. | `af052d9` |
+| 72.20 | No way to confirm a reload loaded the latest deploy. | Show `APP_VERSION` at sidebar bottom + in Settings. Must stay in sync with sw.js `CACHE_NAME` on each deploy. | `a720745` |
+| 72.21 | D1-connected status dot (`margin-left:auto`) pushed the HU/privacy/theme buttons right; theme toggle overflowed the 240px sidebar and was clipped on desktop. | Reduce sidebar-logo gap 10→6px, horizontal padding 20→16px. | `81903d1` |
+
+**Remaining (deferred to S2 cross-device completeness):** see `docs/KNOWN-ISSUES.md` § Sync Audit (SA.1–SA.5) and `docs/ROADMAP.md` § Data Sync Audit — localStorage-only fields → D1, non-stock positions cross-device, and soft-delete tombstones for framework/override/valuation.
+
+---
+
 ## Deployment Notes
 
-- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), and any future Worker changes:
+- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), `36cf706` (natural-key upsert conflict targets), `cc3c9a2` (natural-key DELETE route + `NATURAL_DELETE` allowlist + GET cap 100000), and any future Worker changes:
   ```bash
   cd web/cloudflare-worker && npx wrangler deploy
   ```

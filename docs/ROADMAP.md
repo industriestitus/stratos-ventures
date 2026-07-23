@@ -21,6 +21,34 @@ Full plan in `memory/project_security-v2-plan.md`. Stop + multi-agent QA after e
 
 ---
 
+## Data Sync Audit & Hardening (2026-07-22 → 2026-07-23)
+Goal: a field-by-field save/load/cross-device audit (5 QA agents) of every data type flowing between the app, localStorage, and D1. Found ~18 real bugs across two systemic patterns: **client-minted ID collisions** (short random ids overwrote each other cross-device) and **localStorage-only data** (fields silently wiped on reload / never synced). Full findings in `memory/project_sync-audit-2026-07-22.md`. Details of every fix in `docs/BUG-HISTORY.md` Category 71.
+
+**Batch 1 — Data-loss stop (all data-destroying bugs)** — COMPLETE
+- [x] Reload no longer wipes client-only company fields (scenarios, valuations, DCF overrides) — `6799d0b`
+- [x] Checklist content actually reaches D1 (flat-vs-`.answers` shape mismatch) + seed missing `checklist_templates` — `815857d`, `4b7db52`
+- [x] Position batch-poison: one bad non-stock position no longer blocks the whole D1 sync — `d58653b`
+- [x] Research-note excerpt/comment/action/tags preserved on D1 reload (needed a D1 `ALTER TABLE`, run live 2026-07-23) — `6eaf85a`
+- [x] idealTrait/avoid checks + manual tracker data preserved on D1 reload — `8aea7eb`
+- [x] Collision-resistant client IDs (`_mintId`) stop cross-device overwrite — `0fc3579`
+
+**Batch 2 — Non-loss hardening (dup growth, plaintext, cross-device delete)** — COMPLETE
+- [x] Encrypt FI settings + todo titles at rest (frontend-only) — `5bc8b52`
+- [x] Stop duplicate-row growth for `portfolio_snapshots` + `valuations` (natural-key upsert + live D1 dedup/index) — `1231c52`
+- [x] Cross-device delete no longer resurrects framework/override/valuation rows — new Worker natural-key DELETE route (`NATURAL_DELETE` allowlist); GET row cap 1000 → 100000 — `cc3c9a2`
+- [x] Stop unbounded `exchange_rates` row growth + stale load (fixed `'latest'` rate_date key) — `1d31799`
+
+**Remaining — S2 Cross-Device Completeness** (NOT started; not data-loss, only "shows on device A, not B" gaps)
+- [ ] **S2a — localStorage-only fields → D1:** priceAlerts, tags, widget-config, screener presets, idealTrait/avoid checks, RE/bond/cash position details, note images each need a D1 home.
+- [ ] **S2b — non-stock positions cross-device:** RE/cash/bond positions via synthetic holder-company rows + `company_type` filtering in tracker/screener/compare. Large regression surface — own session.
+- [ ] **S2c — soft-delete tombstones:** framework/override/valuation deletes are currently hard deletes (no tombstone) → a stale copy on another device can re-write them. Proper fix = `deleted_at` soft-delete (like notes/reviews).
+- Suggested order: S2a (cheap fields) → S2c (tombstones) → S2b (non-stock positions).
+
+**SW-update UX** (small, optional)
+- [ ] Auto-reload on new Service Worker: `controllerchange` → `location.reload()` + auto-`skipWaiting()` on the waiting worker, guarded by "no save in flight". Today a new version shows a click-to-reload toast; a plain reload already suffices (hard reload not required).
+
+---
+
 ## Completed: Phase 6 — Dividend Module
 Status: COMPLETE (2026-06-26)
 

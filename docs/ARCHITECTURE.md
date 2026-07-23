@@ -77,7 +77,7 @@ No build process, no frameworks, no npm — vanilla JS with CDN libraries.
 | `#framework` | Investment principles, 12-section checklist |
 | `#reviews` | Periodic investment reviews, conviction tracking |
 
-### 1.2 Backend — Cloudflare Worker (843 lines)
+### 1.2 Backend — Cloudflare Worker (~1340 lines)
 Serverless edge compute handling:
 - Yahoo Finance proxy (CORS workaround + crumb/cookie auth)
 - D1 database CRUD API (22 tables)
@@ -144,9 +144,15 @@ User edits data (e.g., adds position)
 ### 2.3 Conflict Resolution
 **Strategy: Last-Write-Wins (LWW)**
 - Each entity has implicit `updated_at` timestamp
-- Batch upsert uses `INSERT ... ON CONFLICT DO UPDATE SET`
+- Batch upsert uses `INSERT ... ON CONFLICT(<key>) DO UPDATE SET`
 - No field-level merge — entire entity is replaced
 - Dirty tracking prevents re-uploading unchanged data
+
+**Natural-key upsert (fixed `36cf706`):** For rows the client inserts without an `id`, the conflict target is the table's **natural key** (e.g. `snapshot_positions` → `(snapshot_id, company_id, account_id)`, `valuations` → `(company_id, label)`, `exchange_rates` → `(rate_date, from_currency, to_currency)`), not `id`. The earlier `ON CONFLICT(id)` never fired for idless inserts, so re-saving the same logical row raised a UNIQUE violation (500'd the whole batch) or piled up duplicate rows. Each affected table now declares a `conflictTarget` in the Worker's `TABLES` map.
+
+**Collision-resistant IDs (fixed `0fc3579`):** Client-minted ids formerly used per-device `max(id)+1`, so two offline devices could mint the *same* id for different objects and silently overwrite each other on sync. All client mint points now use `_mintId()` = `(epoch-seconds << 21) | 21-bit per-session counter` (random-seeded) — monotonic within a session, under `MAX_SAFE_INTEGER`, and effectively collision-free across devices. See ADR-034.
+
+**Delete propagation (fixed `cc3c9a2`):** Rows the client only knows by natural key (framework entries, data overrides, valuations) are deleted via the Worker's natural-key DELETE route (`NATURAL_DELETE` allowlist), so a local delete actually removes the D1 row. These remain *hard* deletes — no tombstone yet — so a stale copy on a second device can still resurrect the row (see ADR-035 and KNOWN-ISSUES SA.3). Notes/reviews avoid this via `deleted_at` soft-delete.
 
 ---
 
@@ -621,9 +627,11 @@ User configures Worker URL + Sync Secret
 ### 6.2 Ongoing Sync
 - **Trigger:** Every data write calls `API.scheduleSave(key, callback)`
 - **Debounce:** 1500ms default (coalesces rapid edits)
-- **Batch upsert:** `INSERT ... ON CONFLICT DO UPDATE` (max 1000 items)
+- **Batch upsert:** `INSERT ... ON CONFLICT(<natural key or id>) DO UPDATE` (max 1000 items). See §2.3 for the natural-key upsert fix.
 - **Dirty tracking:** localStorage flags (`d1_dirty_*`) prevent re-uploading unchanged data
 - **Retry:** Up to 3 attempts with exponential backoff (2s → 4s → 6s)
+- **IDs:** new rows get collision-resistant ids from `_mintId()` (see §2.3)
+- **Client-only fields:** some fields still live only in localStorage (priceAlerts, tags, widget config, screener presets, idealTrait/avoid checks, RE/bond/cash position details, note images) — correct on the writing device but not yet cross-device. Tracked as the S2 batch (ROADMAP.md) / SA.1 (KNOWN-ISSUES.md). The 2026-07-22 audit ensured these are no longer *wiped on reload*, only not-yet-synced.
 
 ### 6.3 Export/Import (Manual Sync)
 - **Export:** `_gatherAllData()` → JSON file download
