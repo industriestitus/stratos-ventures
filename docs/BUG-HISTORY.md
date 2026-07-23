@@ -81,8 +81,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 73 | S2a Cross-Device Sync + SW Auto-Reload | `e8aacb0`+`8803d3c` | 2026-07-23 | 4 | 0 |
 | 74 | S2a-2 Per-Company Attr Sync + Single-PUT Upsert | `aaff465` | 2026-07-23 | 2 | 0 |
 | 75 | S2a-3 Research-Note Images → D1 | `9c4e6ca` | 2026-07-23 | 3 | 0 |
+| 76 | S2b Non-Stock Positions Cross-Device | `b8d5778` | 2026-07-23 | 3 | 0 |
 
-**Total: 461 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 464 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1505,6 +1506,20 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 
 ---
 
+## Category 76 — S2b Non-Stock Positions Cross-Device (2026-07-23)
+
+**Trigger:** S2b — sync cash/RE/bond positions cross-device. Commit `b8d5778`, sw.js v33. **Needs 2 D1 `ALTER` + worker deploy.** Verified: node:sqlite round-trip (10/10) + in-browser load/save/holder-routing/guard round-trip. Adversarial QA verdict SHIP (8 invariants checked; 1 real bug caught + fixed).
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 76.1 | Non-stock positions localStorage-only (SA.2) | Synthetic holder company per non-stock ticker (`companies.holder_type`) gives the position a `company_id` anchor; kept in `_holderCompanies` (out of tStocks → auto-excluded from all tStocks-iterating views). Detail fields ride the encrypted `positions.details` JSON column (also closes the stock currentPrice/notes gap). `_migrateNonStockHolders` auto-migrates pre-existing positions on first load; `saveTrackerStocks` re-sync trigger syncs first-cycle-unresolved positions. | `b8d5778` |
+| 76.2 | QA-caught: ticker collision hides a real company | If a non-stock position reused a tracked stock's ticker, the holder row and stock row fused on the UNIQUE `companies.symbol`, stamping `holder_type` on the real company → it vanished from every tStocks view. Fixed: `savePosition` rejects a non-stock ticker already in `tStocks` (and a stock ticker already a holder) with a clear message. | `b8d5778` |
+| 76.3 | QA-caught (self): i18n `{ticker}` interpolated only once | The new collision message used `{ticker}` twice but `t()` replaces only the first occurrence → a literal `{ticker}` would ship. Reworded to a single placeholder. | `b8d5778` |
+
+**Known (accepted):** deploy-window (new frontend + old worker) can briefly show a holder as a bogus company until the worker lands (self-heals); pre-existing positions `ON CONFLICT(id)` vs `UNIQUE(company_id,account_id)` offline-clash class is slightly widened (not introduced) by shared-by-ticker holders.
+
+---
+
 ## Deployment Notes
 
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), `36cf706` (natural-key upsert conflict targets), `cc3c9a2` (natural-key DELETE route + `NATURAL_DELETE` allowlist + GET cap 100000), `aaff465` (S2a-2: companies attr columns + single-PUT upsert — **run the D1 `ALTER` first**, see below), and any future Worker changes:
@@ -1515,6 +1530,12 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
   ```bash
   cd web/cloudflare-worker
   npx wrangler d1 execute stratos-ventures-db --remote --command "ALTER TABLE companies ADD COLUMN price_alerts TEXT; ALTER TABLE companies ADD COLUMN tags TEXT; ALTER TABLE companies ADD COLUMN ideal_trait_checks TEXT; ALTER TABLE companies ADD COLUMN avoid_checks TEXT;"
+  npx wrangler deploy
+  ```
+- **`b8d5778` (S2b) deploy order is MANDATORY** — add both columns to live D1 BEFORE deploying the worker (same reason: the new `TABLES` reference missing columns → 500s the whole batch):
+  ```bash
+  cd web/cloudflare-worker
+  npx wrangler d1 execute stratos-ventures-db --remote --command "ALTER TABLE companies ADD COLUMN holder_type TEXT; ALTER TABLE positions ADD COLUMN details TEXT;"
   npx wrangler deploy
   ```
 - **Service Worker** cache version is `stratos-v3` — browsers auto-update on next visit

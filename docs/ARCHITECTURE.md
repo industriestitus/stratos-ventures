@@ -631,7 +631,8 @@ User configures Worker URL + Sync Secret
 - **Dirty tracking:** localStorage flags (`d1_dirty_*`) prevent re-uploading unchanged data
 - **Retry:** Up to 3 attempts with exponential backoff (2s → 4s → 6s)
 - **IDs:** new rows get collision-resistant ids from `_mintId()` (see §2.3)
-- **Client-only fields:** most now sync cross-device — widget config + screener presets (S2a-1, `app_settings`), priceAlerts/tags/idealTrait+avoid checks (S2a-2, new `companies` columns), and research-note images (S2a-3, `note_images` table). Still localStorage-only: RE/bond/cash position details (blocked on S2b). Tracked as the S2 batch (ROADMAP.md) / SA.1 (KNOWN-ISSUES.md). The 2026-07-22 audit ensured all of these are no longer *wiped on reload*, only not-yet-synced.
+- **Client-only fields:** all now sync cross-device — widget config + screener presets (S2a-1, `app_settings`), priceAlerts/tags/idealTrait+avoid checks (S2a-2, `companies` columns), research-note images (S2a-3, `note_images`), and non-stock positions + all position detail fields incl. stock currentPrice/notes (S2b, `positions.details` blob + synthetic `companies.holder_type` anchor). The S2 cross-device batch is complete except S2c (soft-delete tombstones).
+- **Synthetic holder companies (S2b):** a non-stock position (cash/RE/bond) needs a `company_id` (positions.company_id is NOT NULL) but has no real company. It gets a synthetic `companies` row tagged `holder_type`, held in the client `_holderCompanies` map — deliberately NOT in `tStocks`, so every view that iterates `tStocks` (tracker/screener/comparison/dividends/search/dashboard) excludes it automatically. `_d1CompanyMap` still carries the holder id so the position resolves its ticker on load. A ticker is EITHER a tracked stock OR a holder, never both (UNIQUE `companies.symbol`).
 
 ### 6.3 Export/Import (Manual Sync)
 - **Export:** `_gatherAllData()` → JSON file download

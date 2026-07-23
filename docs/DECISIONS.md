@@ -1093,6 +1093,33 @@ Four per-company attributes — `priceAlerts`, `tags`, `idealTraitChecks`, `avoi
 
 ---
 
+## ADR-037: Synthetic Holder Companies + positions.details Blob (S2b)
+
+**Status:** Accepted (2026-07-23) — S2b (`b8d5778`)
+
+**Context:**  
+Non-stock positions (cash / real-estate / bond) were localStorage-only: `positions.company_id` is NOT NULL and non-stock positions have no real company, so they were excluded from the D1 positions batch (the B-position-poison fix). Their detail fields (assetType, RE/bond/cash specifics) — plus `currentPrice`/`notes` even for stocks — also had no D1 home (merged from localStorage via `lsExtra`).
+
+**Decision:**  
+- **Synthetic holder company:** each non-stock ticker gets a `companies` row tagged `holder_type` ('cash'|'real_estate'|'bond'), giving its position a `company_id` anchor. Holders are kept in a client `_holderCompanies` map and deliberately NOT in `tStocks`, so the ~30 views that iterate `tStocks` exclude them for free (chosen over filtering each render site — fewer, more testable touch-points). `_d1CompanyMap` still carries the holder id so positions resolve their ticker on load.
+- **positions.details:** one nullable encrypted JSON column holds all position client-only fields. Chosen over ~14 typed columns because the app filters/sorts entirely client-side, so column-level queryability buys nothing; the blob is a smaller surface, encrypts everything at once, and also closes the stock currentPrice/notes gap.
+- **Collision guard:** a ticker is EITHER a tracked stock OR a holder (UNIQUE `companies.symbol`). `savePosition` rejects a non-stock ticker already in `tStocks` (and vice-versa) — else the two rows would fuse and `holder_type` would hide the real company.
+- **Auto-migration:** `_migrateNonStockHolders` creates holders for pre-existing localStorage-only non-stock positions on first load; the `saveTrackerStocks` re-sync trigger then syncs the positions.
+
+**Alternatives Rejected:**
+- **Make `positions.company_id` nullable:** requires recreating the positions table (SQLite can't drop NOT NULL) on live financial data — too risky.
+- **A new `company_type` marker value:** blocked by the CHECK constraint on `company_type` (SQLite can't ALTER a CHECK) → a dedicated `holder_type` column instead.
+- **Typed detail columns / a separate nonstock table:** more schema + duplicated position logic for no user-visible benefit (client-side filtering only).
+
+**Consequences:**
+- ✅ Non-stock positions and all position detail fields sync cross-device; net-worth snapshots now include non-stock breakdowns.
+- ⚠️ **Deploy order MANDATORY:** both `ALTER`s (`companies.holder_type`, `positions.details`) before `wrangler deploy`.
+- ⚠️ Deploy-window (new frontend + old worker): a holder briefly persists without `holder_type` → shows as a bogus company until the worker lands; self-heals. Avoid adding non-stock positions mid-deploy.
+
+**Date:** 2026-07-23 (S2b)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1133,6 +1160,7 @@ Four per-company attributes — `priceAlerts`, `tags`, `idealTraitChecks`, `avoi
 | 034 | Collision-resistant client-minted IDs (`_mintId`) | Accepted | 2026-07-22 |
 | 035 | Natural-key upsert & natural-key DELETE | Accepted | 2026-07-23 |
 | 036 | Per-company attr columns + single-PUT upsert (S2a-2) | Accepted | 2026-07-23 |
+| 037 | Synthetic holder companies + positions.details blob (S2b) | Accepted | 2026-07-23 |
 
 ---
 
