@@ -486,9 +486,9 @@ const TABLES = {
   company_todos:         { cols: ['company_id','title','due_date','is_done','sort_order'], hasUpdatedAt: true },
   earnings_timeline:     { cols: ['company_id','year','quarter','is_reported','is_reviewed','report_date'], hasUpdatedAt: true, conflictTarget: 'company_id, year, quarter' },
   filing_tracking:       { cols: ['company_id','filing_type','fiscal_year','fiscal_quarter','is_read','filed_date','notes'], hasUpdatedAt: true, conflictTarget: 'company_id, filing_type, fiscal_year, fiscal_quarter' },
-  company_data_overrides:{ cols: ['company_id','metric_key','original_value','override_value','reason'], hasUpdatedAt: true, conflictTarget: 'company_id, metric_key' },
+  company_data_overrides:{ cols: ['company_id','metric_key','original_value','override_value','reason','deleted_at'], hasUpdatedAt: true, conflictTarget: 'company_id, metric_key' },
   notes:                 { cols: ['company_id','note_type','title','content','note_date','quarter','source_name','source_url','is_pinned','excerpt','action','tags','deleted_at'], hasUpdatedAt: true },
-  note_images:           { cols: ['note_id','filename','mime_type','image_data','sort_order'], hasUpdatedAt: false },
+  note_images:           { cols: ['note_id','filename','mime_type','image_data','sort_order','deleted_at'], hasUpdatedAt: false },
   broker_accounts:       { cols: ['name','currency','is_active'], hasUpdatedAt: true, conflictTarget: 'name' },
   positions:             { cols: ['company_id','account_id','shares','avg_cost','deleted_at','details'], hasUpdatedAt: true, conflictTarget: 'company_id, account_id' },
   transactions:          { cols: ['company_id','account_id','transaction_type','transaction_date','shares','price_per_share','total_amount','fees','currency','notes','deleted_at'], hasUpdatedAt: false },
@@ -496,11 +496,11 @@ const TABLES = {
   snapshot_positions:    { cols: ['snapshot_id','company_id','account_id','shares','price_per_share','market_value','currency','intent'], hasUpdatedAt: false, conflictTarget: 'snapshot_id, company_id, account_id' },
   exchange_rates:        { cols: ['rate_date','from_currency','to_currency','rate'], hasUpdatedAt: false, conflictTarget: 'rate_date, from_currency, to_currency' },
   dividend_history:      { cols: ['company_id','ex_date','pay_date','amount','currency','frequency'], hasUpdatedAt: false, conflictTarget: 'company_id, ex_date' },
-  framework_entries:     { cols: ['category','title','content','sort_order'], hasUpdatedAt: true },
+  framework_entries:     { cols: ['category','title','content','sort_order','deleted_at'], hasUpdatedAt: true },
   checklist_templates:   { cols: ['section_key','title','description','fields_json','sort_order'], hasUpdatedAt: true, conflictTarget: 'section_key' },
   checklist_answers:     { cols: ['company_id','template_id','answer_json','progress','status'], hasUpdatedAt: true, conflictTarget: 'company_id, template_id' },
   reviews:               { cols: ['review_type','review_date','company_id','answers_json','summary','deleted_at'], hasUpdatedAt: true },
-  valuations:            { cols: ['company_id','method','label','currency','scale','inputs_json','results_json','intrinsic_value','upside_pct','is_primary','valuation_date'], hasUpdatedAt: true, conflictTarget: 'company_id, label' },
+  valuations:            { cols: ['company_id','method','label','currency','scale','inputs_json','results_json','intrinsic_value','upside_pct','is_primary','valuation_date','deleted_at'], hasUpdatedAt: true, conflictTarget: 'company_id, label' },
   general_todos:         { cols: ['title','due_date','is_done','sort_order'], hasUpdatedAt: true },
   app_settings:          { cols: ['key','value'], hasUpdatedAt: false, pk: 'key' },
   api_cache:             { cols: ['company_id','data_source','data_json','fetched_at'], hasUpdatedAt: false, conflictTarget: 'company_id, data_source' },
@@ -664,6 +664,16 @@ async function handleCrud(table, method, id, body, url, db, origin) {
       binds.push(v);
     }
     const where = keyCols.map(k => `${k} = ?`).join(' AND ');
+    // Soft-delete (tombstone) when the table tracks deleted_at: the row stays in D1 with
+    // deleted_at set instead of being removed, so a stale second device that still holds the
+    // row live can't resurrect it — the tombstone propagates on that device's next load. A
+    // later live upsert of the same natural key sends deleted_at:null, which un-tombstones it
+    // (re-add works). Hard-delete only for natural-key tables with no deleted_at column.
+    if (cfg.cols.includes('deleted_at')) {
+      const uaClause = cfg.hasUpdatedAt ? `, updated_at = datetime('now')` : '';
+      const res = await db.prepare(`UPDATE ${table} SET deleted_at = ?${uaClause} WHERE ${where}`).bind(new Date().toISOString(), ...binds).run();
+      return jsonResp({ ok: true, softDeleted: res.meta ? res.meta.changes : undefined }, 200, origin);
+    }
     const res = await db.prepare(`DELETE FROM ${table} WHERE ${where}`).bind(...binds).run();
     return jsonResp({ ok: true, deleted: res.meta ? res.meta.changes : undefined }, 200, origin);
   }

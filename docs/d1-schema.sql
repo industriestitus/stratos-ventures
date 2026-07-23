@@ -116,6 +116,7 @@ CREATE TABLE company_data_overrides (
     original_value REAL,
     override_value REAL NOT NULL,
     reason         TEXT NOT NULL DEFAULT '',
+    deleted_at     TEXT DEFAULT NULL,
     created_at     TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at     TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(company_id, metric_key)
@@ -156,6 +157,7 @@ CREATE TABLE note_images (
     mime_type  TEXT NOT NULL DEFAULT 'image/png',
     image_data TEXT NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT DEFAULT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -313,6 +315,7 @@ CREATE TABLE framework_entries (
     title      TEXT NOT NULL,
     content    TEXT NOT NULL DEFAULT '',
     sort_order INTEGER NOT NULL DEFAULT 0,
+    deleted_at TEXT DEFAULT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -385,6 +388,7 @@ CREATE TABLE valuations (
     upside_pct      REAL,
     is_primary      INTEGER NOT NULL DEFAULT 0,
     valuation_date  TEXT NOT NULL DEFAULT (date('now')),
+    deleted_at      TEXT DEFAULT NULL,
     created_at      TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );

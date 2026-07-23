@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v33';
+var APP_VERSION='v34';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -4518,7 +4518,7 @@ function loadData(d){
 }
 let _savedStocksCache=null;
 function _getSavedStocks(){if(_savedStocksCache!==null)return _savedStocksCache;try{_savedStocksCache=JSON.parse(localStorage.getItem('valuation_stocks')||'{}')}catch(e){console.warn('Corrupted valuation_stocks in localStorage');_savedStocksCache={}}return _savedStocksCache}
-function _putSavedStocks(s){_savedStocksCache=s;localStorage.setItem('valuation_stocks',JSON.stringify(s));if(d1Mode){API.scheduleSave('savedStocks',async()=>{const items=(await Promise.all(Object.entries(s).map(async([name,v])=>{const cid=_tickerToD1Id(v.name||name)||_tickerToD1Id(name);if(!cid)return null;return{id:v._d1ValId||undefined,company_id:cid,label:name,method:'combined',currency:v.currency||'USD',scale:v.scale||'M',inputs_json:await encStr(JSON.stringify(v)),results_json:'{}'}}))).filter(Boolean);if(items.length){const r=await API.post('valuations/batch',{items});if(r&&r.results)r.results.forEach((res,i)=>{if(res.id&&items[i]){const key=Object.keys(s).find(k=>{const v=s[k];return(_tickerToD1Id(v.name||k)||_tickerToD1Id(k))===items[i].company_id&&k===items[i].label});if(key)s[key]._d1ValId=res.id}})}})}}
+function _putSavedStocks(s){_savedStocksCache=s;localStorage.setItem('valuation_stocks',JSON.stringify(s));if(d1Mode){API.scheduleSave('savedStocks',async()=>{const items=(await Promise.all(Object.entries(s).map(async([name,v])=>{const cid=_tickerToD1Id(v.name||name)||_tickerToD1Id(name);if(!cid)return null;return{id:v._d1ValId||undefined,company_id:cid,label:name,method:'combined',currency:v.currency||'USD',scale:v.scale||'M',inputs_json:await encStr(JSON.stringify(v)),results_json:'{}',deleted_at:null}}))).filter(Boolean);if(items.length){const r=await API.post('valuations/batch',{items});if(r&&r.results)r.results.forEach((res,i)=>{if(res.id&&items[i]){const key=Object.keys(s).find(k=>{const v=s[k];return(_tickerToD1Id(v.name||k)||_tickerToD1Id(k))===items[i].company_id&&k===items[i].label});if(key)s[key]._d1ValId=res.id}})}})}}
 
 function saveCurrentStock(){
   const name=document.getElementById('stockName').value.trim();
@@ -5680,7 +5680,7 @@ async function bulkDeleteStocks(){
   },()=>{
     const s2=_getSavedStocks();Object.assign(s2,backups);_putSavedStocks(s2);renderSavedStocks();
   },()=>{
-    if(d1Mode){Object.values(backups).forEach(v=>{if(v._d1ValId)API.del('valuations/'+v._d1ValId).catch(e=>console.error('D1 del valuation:',e))})}
+    if(d1Mode){const now=new Date().toISOString();Object.values(backups).forEach(v=>{if(v._d1ValId)API.put('valuations/'+v._d1ValId,{deleted_at:now}).catch(e=>console.error('D1 del valuation:',e))})} // S2c: soft-delete tombstone (see deleteStock; keeps cross-device delete from resurrecting)
   });
 }
 
@@ -8197,7 +8197,7 @@ async function loadResearchNotes(){
     try{
       const ir=await API.get('note_images?limit=100000');
       const byNote={};
-      (ir.data||[]).forEach(row=>{(byNote[row.note_id]=byNote[row.note_id]||[]).push(row)});
+      (ir.data||[]).forEach(row=>{if(row.deleted_at)return;(byNote[row.note_id]=byNote[row.note_id]||[]).push(row)}); // S2c: skip soft-deleted images (excluded from both n.images and the _d1ImageIds diff snapshot)
       const noteById={};
       ['journal','news','market'].forEach(nt=>researchNotes[nt].forEach(n=>{noteById[n.id]=n}));
       for(const nid in byNote){
@@ -8262,7 +8262,7 @@ async function _syncNoteImagesD1(){
       }
     }
   }
-  if(dels.length)await Promise.all(dels.map(id=>API.del('note_images/'+id).catch(e=>console.error('D1 del note_image:',e))));
+  if(dels.length){const now=new Date().toISOString();await Promise.all(dels.map(id=>API.put('note_images/'+id,{deleted_at:now}).catch(e=>console.error('D1 del note_image:',e))))} // S2c: soft-delete tombstone so a removed image can't resurrect from a stale device's re-upload
   let chunk=[],bytes=0;
   for(const it of items){
     const sz=(it.image_data?it.image_data.length:0)+(it.filename?it.filename.length:0)+64;
@@ -11083,7 +11083,7 @@ function saveTrackerStocks(){invalidateScreenerCache();
           filings.push({company_id:cid,filing_type:isQ?'10Q':ftype,fiscal_year:+yr||0,fiscal_quarter:isQ?+ftype.slice(1):0,is_read:v.done?1:0,filed_date:v.filedDate||null,notes:v.note||v.notes||''});
         });
       });
-      Object.entries(s.overriddenData||{}).forEach(([mk,mv])=>overrides.push({company_id:cid,metric_key:mk,original_value:String((s._origData||{})[mk]??''),override_value:String(mv),reason:''}));
+      Object.entries(s.overriddenData||{}).forEach(([mk,mv])=>overrides.push({company_id:cid,metric_key:mk,original_value:String((s._origData||{})[mk]??''),override_value:String(mv),reason:'',deleted_at:null})); // S2c: deleted_at:null un-tombstones on re-add (natural-key upsert)
       if(s.notes&&typeof s.notes==='object'){
         // note_date is OMITTED (not null): the column is NOT NULL DEFAULT date('now'), and
         // SQLite does NOT apply the default when a column is explicitly set to NULL — passing
@@ -11202,6 +11202,7 @@ async function _d1CompanyToTStock(c){
     s.filings[yr][key]={done:!!f.is_read,filedDate:f.filed_date,note:note};
   }
   if(c.overrides)for(const o of c.overrides){
+    if(o.deleted_at)continue; // S2c: skip soft-deleted (cleared) overrides so a stale device's tombstone doesn't re-apply
     let ov=o.override_value,orig=o.original_value; // preserve ciphertext on decrypt failure
     try{ov=await decStr(o.override_value)}catch(e){}
     try{orig=await decStr(o.original_value)}catch(e){}
@@ -13531,7 +13532,7 @@ async function loadFramework(){
     const r=await API.get('framework_entries?limit=500');
     fwData={principles:[],portfolioRules:[],idealTraits:[],avoidList:[],scoringWeights:{cagr:1,conviction:1,risk:1},_nextId:1};
     const catMap={principle:'principles',portfolio_rule:'portfolioRules',ideal_trait:'idealTraits',avoid:'avoidList'};
-    for(const e of (r.data||[])){const arr=catMap[e.category];if(arr&&fwData[arr]){const isList=(arr==='idealTraits'||arr==='avoidList');const content=await decStrSafe(e.content||'');fwData[arr].push({id:e.id,title:e.title,label:isList?e.title:'',content:content,category:isList?content:'',sortOrder:e.sort_order});if(e.id>=fwData._nextId)fwData._nextId=e.id+1}}
+    for(const e of (r.data||[])){if(e.deleted_at)continue;const arr=catMap[e.category];if(arr&&fwData[arr]){const isList=(arr==='idealTraits'||arr==='avoidList');const content=await decStrSafe(e.content||'');fwData[arr].push({id:e.id,title:e.title,label:isList?e.title:'',content:content,category:isList?content:'',sortOrder:e.sort_order});if(e.id>=fwData._nextId)fwData._nextId=e.id+1}}
     const sw=await API.get('app_settings/scoring_weights').catch(()=>null);
     if(sw)fwData.scoringWeights=JSON.parse(sw.value||'{}');
     try{localStorage.setItem('framework_v1',JSON.stringify(fwData))}catch(e){}
@@ -13763,7 +13764,7 @@ async function deleteFwEntry(type,id){
     saveTrackerStocks();
   }
   saveFramework();
-  if(d1Mode)API.del('framework_entries/'+id).catch(e=>console.error('D1 del framework:',e)); // else the saveFramework upsert leaves the D1 row → it resurrects on reload
+  if(d1Mode)API.put('framework_entries/'+id,{deleted_at:new Date().toISOString()}).catch(e=>console.error('D1 del framework:',e)); // S2c: soft-delete tombstone — a stale device can't resurrect it via its saveFramework upsert (the row persists in D1 with deleted_at set and propagates on the other device's next loadFramework)
   const panelMap={principle:'principles',rule:'rules',trait:'traits',avoid:'avoid'};
   renderFwPanel(panelMap[type]);
   showToast(t('db.deleted'),'success');
@@ -15583,7 +15584,7 @@ async function autoLoad(){
       try{
         const vr=await API.get('valuations?limit=500');
         const sv={};
-        for(const v of (vr.data||[])){const label=v.label||'';if(!label)continue;try{const inputs=JSON.parse((await decStr(v.inputs_json))||'{}');inputs.savedAt=v.updated_at||v.created_at;inputs._d1ValId=v.id;sv[label]=inputs}catch(e){}}
+        for(const v of (vr.data||[])){if(v.deleted_at)continue;const label=v.label||'';if(!label)continue;try{const inputs=JSON.parse((await decStr(v.inputs_json))||'{}');inputs.savedAt=v.updated_at||v.created_at;inputs._d1ValId=v.id;sv[label]=inputs}catch(e){}}
         if(Object.keys(sv).length)_savedStocksCache=sv;
       }catch(e){console.error('D1 load valuations:',e)}
     }catch(e){console.error('D1 load error:',e);showToast(t('sync.partialLoadFailed'),'warning')}
