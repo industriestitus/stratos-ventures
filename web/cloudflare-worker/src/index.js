@@ -514,6 +514,16 @@ const NATURAL_DELETE = {
   valuations:             ['company_id', 'label'],
 };
 
+// api_cache 'stock_data' is written as a snapshot of the whole client stock object (fetchYahooData
+// starts from the live tStock), so a cached row can carry plaintext copies of ENCRYPTED/private
+// fields (thesis, notes, checklist, override values) and client-only state. When handleCompanyFull
+// surfaces the cache to hydrate the tracker, strip everything that isn't a market metric so none of
+// that private/stale content is shipped in the /full response. Denylist (keeps market fields by
+// default) so a new market metric is never accidentally dropped. NOTE: the at-rest plaintext copy
+// in api_cache itself is a separate pre-existing concern (the cache WRITE path is unchanged) —
+// tracked for the security pass; this only sanitizes what /full returns.
+const CACHE_STOCK_STRIP = ['thesis','notes','checklist','overriddenData','_origData','overrides','scenarios','valuationHistory','priceAlerts','tags','sellTriggers','learningLog','convictionHistory','followSources','earningsCalendar','todos','filings','earnings','reviews','valuations','positions','sector','currency','exchange','pipeline','pipelineStatus','companyType','sortOrder','archivedAt','dateAdded','dcfMode','evaWacc','idealTraitChecks','avoidChecks'];
+
 async function handleCrud(table, method, id, body, url, db, origin) {
   const cfg = TABLES[table];
   if (!cfg) return jsonResp({ error: 'Unknown table' }, 404, origin);
@@ -690,7 +700,7 @@ async function handleCompanyFull(symbolOrId, db, origin) {
   }
   if (!company) return jsonResp({ error: 'Company not found' }, 404, origin);
   const cid = company.id;
-  const [todos, earnings, filings, overrides, notes, checklist, reviews, valuations, positions, dividends] = await Promise.all([
+  const [todos, earnings, filings, overrides, notes, checklist, reviews, valuations, positions, dividends, cacheRow] = await Promise.all([
     db.prepare('SELECT * FROM company_todos WHERE company_id = ? ORDER BY sort_order').bind(cid).all(),
     db.prepare('SELECT * FROM earnings_timeline WHERE company_id = ? ORDER BY year DESC, quarter DESC').bind(cid).all(),
     db.prepare('SELECT * FROM filing_tracking WHERE company_id = ? ORDER BY fiscal_year DESC').bind(cid).all(),
@@ -701,11 +711,27 @@ async function handleCompanyFull(symbolOrId, db, origin) {
     db.prepare('SELECT * FROM valuations WHERE company_id = ? ORDER BY valuation_date DESC').bind(cid).all(),
     db.prepare('SELECT p.*, ba.name as account_name, ba.currency as account_currency FROM positions p JOIN broker_accounts ba ON p.account_id = ba.id WHERE p.company_id = ?').bind(cid).all(),
     db.prepare('SELECT * FROM dividend_history WHERE company_id = ? ORDER BY ex_date DESC').bind(cid).all(),
+    // Last-cached market metrics for this company (api_cache stock_data). Returned here so the
+    // tracker can hydrate its cells on load WITHOUT a per-stock cache-check request (avoids a
+    // ~34-request burst that tripped the /api rate limit). The blob is a snapshot of the whole
+    // client stock object, so it is sanitized to market-only fields below (CACHE_STOCK_STRIP)
+    // before being returned — it can otherwise contain plaintext private fields.
+    db.prepare("SELECT data_json FROM api_cache WHERE company_id = ? AND data_source = 'stock_data'").bind(cid).first(),
   ]);
   // Fetch note images via JOIN (avoids D1 bind parameter limit)
   const noteImages = await db.prepare(
     `SELECT ni.* FROM note_images ni JOIN notes n ON ni.note_id = n.id WHERE n.company_id = ? ORDER BY ni.sort_order`
   ).bind(cid).all();
+  let cachedStock = null;
+  if (cacheRow && cacheRow.data_json) {
+    try {
+      const parsed = JSON.parse(cacheRow.data_json);
+      if (parsed && typeof parsed === 'object') {
+        for (const k of CACHE_STOCK_STRIP) delete parsed[k];
+        cachedStock = parsed;
+      }
+    } catch (e) { cachedStock = null; }
+  }
   return jsonResp({
     ...company,
     todos: todos.results,
@@ -719,6 +745,7 @@ async function handleCompanyFull(symbolOrId, db, origin) {
     valuations: valuations.results,
     positions: positions.results,
     dividends: dividends.results,
+    cachedStock,
   }, 200, origin);
 }
 

@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v35';
+var APP_VERSION='v36';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -11208,10 +11208,12 @@ async function _d1CompanyToTStock(c){
     try{orig=await decStr(o.original_value)}catch(e){}
     s.overriddenData[o.metric_key]=_coerceOverrideVal(ov);s._origData[o.metric_key]=_coerceOverrideVal(orig); // numeric metrics stored as String() -> restore as Number so arithmetic/scoring stays correct
   }
-  // Apply overrides to the top-level metric fields the tracker cells read (stock.marketCap etc.),
-  // so a manual override shows on a pure D1 reload. _fetchStockDataInner re-applies them after an
-  // API fetch (see ~12021); without this the override is invisible until the next Refresh All.
-  Object.entries(s.overriddenData).forEach(([k,v])=>{s[k]=v});
+  // Hydrate the tracker cells from the last-cached market metrics the /full response carries
+  // (api_cache stock_data), then apply overrides on top (manual edits win) — so a reload shows
+  // metrics + overrides WITHOUT a per-stock fetch/cache-check (the old per-stock hydration fired
+  // ~34 requests and tripped the /api rate limit). Shares _applyMarketData with the live-fetch
+  // path → identical result. cachedStock may be null (never fetched) → only overrides apply.
+  _applyMarketData(s,c.cachedStock);
   if(c.notes){
     let researchMeta=null;const _qMeta={}; // freshest row seen per bucket (dup rows have no natural key)
     for(const n of c.notes){
@@ -11293,12 +11295,9 @@ async function loadTrackerStocks(){
         });
       }})}catch(e){}
     try{localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}catch(e){}
-    // Cache-first metric hydration: D1 keeps live metrics only in api_cache (not on companies), so
-    // a fresh reload would show an empty tracker until a manual Refresh All. Pull each stock's
-    // last-cached metrics from api_cache (cacheOnly → read-only, never hits the live API, so no
-    // quota/rate-limit cost) so the list shows last-known values + overrides on load. Backgrounded
-    // (setTimeout) so it doesn't delay the first paint; persists to localStorage + re-renders when done.
-    setTimeout(()=>{Promise.allSettled(Object.keys(tStocks).map(tk=>fetchStockData(tk,true))).then(()=>{try{localStorage.setItem('tracker_stocks_v1',JSON.stringify(tStocks))}catch(e){}if(typeof renderTracker==='function')renderTracker()})},50);
+    // (Tracker metric hydration now happens inline in _d1CompanyToTStock from the /full response's
+    // cachedStock — no separate per-stock cache-check pass, which previously fired ~34 requests and
+    // tripped the /api rate limit.)
     return;
   }catch(e){console.error('D1 load trackerStocks, falling back to localStorage:',e)}}
   const d=localStorage.getItem('tracker_stocks_v1');
@@ -11810,32 +11809,19 @@ let _lastCacheAge=null;
 let _forceRefresh=false;
 
 const _memCache=new Map();
-async function cachedFetch(ticker,dataSource,fetchFn,cacheOnly){
+async function cachedFetch(ticker,dataSource,fetchFn){
   if(!d1Mode){
     const mkey=ticker+':'+dataSource;
     const mc=_memCache.get(mkey);
     const ttl=(CACHE_TTLS[dataSource]||1)*3600000;
-    if(cacheOnly)return mc?mc.data:null; // cache-only hydration: last-known or nothing, never live-fetch
     if(!_forceRefresh&&mc&&(Date.now()-mc.ts<ttl))return mc.data;
     const fresh=await fetchFn();
     if(fresh!=null)_memCache.set(mkey,{data:fresh,ts:Date.now()});
     return fresh;
   }
   const companyId=_tickerToD1Id(ticker);
-  if(!companyId){return cacheOnly?null:fetchFn()}
+  if(!companyId){return fetchFn()}
   const ttl=CACHE_TTLS[dataSource]||1;
-  // Cache-only hydration (tracker reload): return whatever api_cache holds regardless of age and
-  // NEVER call the live API — so populating the list on load can't burn API quota or rate-limit.
-  if(cacheOnly){
-    try{
-      const cached=await API.get('cache-check/'+companyId+'/'+dataSource);
-      if(cached&&cached.cached){
-        if(dataSource==='stock_data'){const fa=cached.fetched_at;const age=(Date.now()-new Date(/[Z+\-]\d{0,2}:?\d{0,2}$/.test(fa)?fa:fa+'Z').getTime())/3600000;_lastCacheAge={source:dataSource,fetched_at:cached.fetched_at,ageHours:age}}
-        return cached.data;
-      }
-    }catch(e){console.warn('Cache-only check failed for '+dataSource+':',e)}
-    return null;
-  }
   if(!_forceRefresh){
     try{
       const cached=await API.get('cache-check/'+companyId+'/'+dataSource);
@@ -12024,29 +12010,34 @@ async function _fetchStockDataRaw(ticker){
 }
 
 const _fetchStockInFlight=new Map();
-async function fetchStockData(ticker,cacheOnly){
-  const key=ticker+(cacheOnly?':c':''); // cache-only and live fetches must not share an in-flight promise
-  if(_fetchStockInFlight.has(key))return _fetchStockInFlight.get(key);
-  const p=_fetchStockDataInner(ticker,cacheOnly);
-  _fetchStockInFlight.set(key,p);
-  try{return await p}finally{_fetchStockInFlight.delete(key)}
-}
-async function _fetchStockDataInner(ticker,cacheOnly){
-  const stock=tStocks[ticker]||{ticker,name:TNAMES[ticker]||ticker};
-  if(ticker==='ETH'){stock.date=new Date().toISOString().slice(0,10).replace(/-/g,'.');tStocks[ticker]=stock;return stock}
-
-  const data=await cachedFetch(ticker,'stock_data',()=>_fetchStockDataRaw(ticker),cacheOnly);
-  if(data){
-    const preserve=['overriddenData','_d1Id','notes','earnings','filings','pipeline','companyType','todos','valuations','checklist','thesis','sortOrder','dcfMode','evaWacc','sellTriggers','priceAlerts','learningLog','convictionHistory','followSources','earningsCalendar','pipelineStatus','dateAdded','sbc','roic','archivedAt','tags'];
-    Object.keys(data).forEach(k=>{if(!preserve.includes(k))stock[k]=data[k]});
-  }
-  if(stock.price!=null&&(stock.price<0||!isFinite(stock.price))){console.warn('Invalid price for',ticker,stock.price);stock.price=null}
-  if(stock.marketCap!=null&&(stock.marketCap<0||!isFinite(stock.marketCap))){stock.marketCap=null}
+// Fields a market-data merge must NOT overwrite (D1-authoritative or client-only). Shared by
+// _fetchStockDataInner (live/cached fetch) and _d1CompanyToTStock (tracker-load hydration) so both
+// apply cached metrics identically.
+const PRESERVE_FIELDS=['overriddenData','_d1Id','notes','earnings','filings','pipeline','companyType','todos','valuations','checklist','thesis','sortOrder','dcfMode','evaWacc','sellTriggers','priceAlerts','learningLog','convictionHistory','followSources','earningsCalendar','pipelineStatus','dateAdded','sbc','roic','archivedAt','tags'];
+// Merge market data onto a stock, then re-apply manual overrides on top (overrides always win),
+// recomputing the two derived fields when a component is overridden. `data` may be null/absent (no
+// fetch or no cache) — then only the override re-apply runs.
+function _applyMarketData(stock,data){
+  if(data&&typeof data==='object'){Object.keys(data).forEach(k=>{if(!PRESERVE_FIELDS.includes(k))stock[k]=data[k]})}
+  if(stock.price!=null&&(stock.price<0||!isFinite(stock.price)))stock.price=null;
+  if(stock.marketCap!=null&&(stock.marketCap<0||!isFinite(stock.marketCap)))stock.marketCap=null;
   if(stock.overriddenData){Object.entries(stock.overriddenData).forEach(([k,v])=>{stock[k]=v});
     // recompute derived fields when a component is overridden (unless the derived field is itself overridden)
     if(('ocf'in stock.overriddenData||'sbc'in stock.overriddenData)&&!('ocfSbc'in stock.overriddenData))stock.ocfSbc=(stock.ocf||0)-(stock.sbc||0);
     if(('fcf'in stock.overriddenData||'sbc'in stock.overriddenData)&&!('fcfSbc'in stock.overriddenData))stock.fcfSbc=(stock.fcf||0)-(stock.sbc||0);
   }
+}
+async function fetchStockData(ticker){
+  if(_fetchStockInFlight.has(ticker))return _fetchStockInFlight.get(ticker);
+  const p=_fetchStockDataInner(ticker);
+  _fetchStockInFlight.set(ticker,p);
+  try{return await p}finally{_fetchStockInFlight.delete(ticker)}
+}
+async function _fetchStockDataInner(ticker){
+  const stock=tStocks[ticker]||{ticker,name:TNAMES[ticker]||ticker};
+  if(ticker==='ETH'){stock.date=new Date().toISOString().slice(0,10).replace(/-/g,'.');tStocks[ticker]=stock;return stock}
+  const data=await cachedFetch(ticker,'stock_data',()=>_fetchStockDataRaw(ticker));
+  _applyMarketData(stock,data);
   tStocks[ticker]=stock;
   return stock;
 }
