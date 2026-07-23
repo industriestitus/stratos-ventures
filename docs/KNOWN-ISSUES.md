@@ -47,6 +47,11 @@ These were surfaced during the Security v2 (Phase A+B) audit and consciously def
 ### SV.5 — Bearer token in localStorage (LOW/INFO, accepted)
 - `auth_token` is XSS-readable like the sync key always was. Stored SHA-256-hashed server-side, never logged, never in URLs. 180-day TTL. Accepted for a single-user app; revocable via the device manager and revoked on password change.
 
+### SV.6 — `api_cache` stores a plaintext snapshot of encrypted fields (MEDIUM, at-rest; write path deferred)
+- Found during the v36 tracker-hydration QA (BUG-HISTORY Cat 79). `api_cache.data_json` for `data_source='stock_data'` is written as a snapshot of the WHOLE client stock object (`_fetchStockDataRaw` → `fetchYahooData` returns the live `tStocks[ticker]`, `cachedFetch` persists it verbatim with no allowlist), so a cached row holds **plaintext** copies of encrypted fields (thesis, notes text, checklist, override values) + client-only state — partially defeating the Security v2 C2 encryption-at-rest for those duplicated values. **Pre-existing** (the cache write path predates C2, unchanged by Cat 79).
+- ✅ Partially mitigated (`d9c4ad6`): `handleCompanyFull` now STRIPS these fields from `cachedStock` before returning them in `/full` (`CACHE_STOCK_STRIP`), so the plaintext no longer travels in the response.
+- ⏳ Remaining (→ Security v2 C3 / spawned task): sanitize the cache WRITE path so `api_cache` never stores non-market fields, and purge/rewrite existing polluted `stock_data` rows (`DELETE FROM api_cache WHERE data_source='stock_data'` self-repopulates clean on next Refresh All — coordinate with Peter, backup mindset). Also check `historical_charts`/`dividend_history`/`insider_transactions` for the same whole-object-snapshot pattern.
+
 ---
 
 ## Sync Audit — Deferred to S2 Cross-Device Completeness (flagged 2026-07-22)

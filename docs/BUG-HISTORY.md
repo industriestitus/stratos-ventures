@@ -84,8 +84,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 76 | S2b Non-Stock Positions Cross-Device | `b8d5778` | 2026-07-23 | 3 | 0 |
 | 77 | S2c Soft-Delete Tombstones (framework/override/valuation/note_images) | `19faaf4` | 2026-07-23 | 4 | 0 |
 | 78 | Tracker Metric + Override Hydration on D1 Load | `af214e4` | 2026-07-23 | 2 | 0 |
+| 79 | Tracker Hydration Rate-Limit Regression (v35→v36) | `d9c4ad6` | 2026-07-23 | 2 | 0 |
 
-**Total: 470 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 472 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1548,7 +1549,20 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 78.1 | Manual override invisible after reload | Root cause: D1 stores live metrics only in `api_cache` (never on `companies`), and `_d1CompanyToTStock` loaded overrides into `overriddenData` but not onto the top-level metric fields the tracker cells read (`stock.marketCap` etc.) — only `_fetchStockDataInner` (~12021) did, and that runs only on an API fetch. Fix: `_d1CompanyToTStock` now applies `overriddenData` to top-level fields after building it, so an override shows on a pure reload. Tombstoned (`deleted_at`) overrides are still skipped first (S2c intact). | `af214e4` |
 | 78.2 | Tracker list empty until manual Refresh All | Fix: cache-first hydration on load. `cachedFetch`/`_fetchStockDataInner`/`fetchStockData` gain a `cacheOnly` mode that reads `api_cache` **read-only and never calls the live API** (no quota/rate-limit cost); `loadTrackerStocks` backgrounds a `cacheOnly` pass over all stocks (post-paint via `setTimeout`) so the list shows last-known metrics + overrides immediately, matching localStorage-mode behavior. Stale/uncached stocks stay blank until a manual Refresh All (live data is still on-demand by design). | `af214e4` |
 
-**Note:** metrics remain **cache** (`api_cache`, TTL-based), not permanent company columns — market data goes stale by nature. This change only makes the last-cached values visible on load instead of requiring a manual refresh. The `cacheOnly` in-flight promise is keyed separately (`ticker:c`) so it never collides with a concurrent live fetch.
+**Note:** metrics remain **cache** (`api_cache`, TTL-based), not permanent company columns — market data goes stale by nature. This change only makes the last-cached values visible on load instead of requiring a manual refresh. **Superseded by Cat 79** — the per-stock `cache-check` hydration this introduced was replaced (it caused a rate-limit regression).
+
+---
+
+## Category 79 — Tracker Hydration Rate-Limit Regression (2026-07-23)
+
+**Trigger:** the Cat 78 (v35) hydration fired a per-stock `API.get('cache-check/{id}/stock_data')` for all ~34 tracked stocks on every tracker load. A load already makes ~55 `/api/` requests; +34 → ~90. The worker rate-limits `/api/*` at **120 req / 60s per isolate** (`RATE_LIMITS.api`), so a reload / reload+save / 2nd reload within the minute crossed 120 → intermittent **429** (returned as a normal Response → invisible in `wrangler tail`, only visible as a red 429 in the browser Network tab) → *"Cloud save failed (trackerStocks)"* + intermittent metric display. Root-caused via `wrangler tail` (34 `cache-check/N` per load + "sampling mode due to high volume"). Commit `d9c4ad6`, sw.js v36. **Needs `wrangler deploy` (worker) + `git push` (frontend) — worker FIRST.**
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 79.1 | 34-request burst per load → rate-limit 429s | Root cause: D1 keeps live metrics only in `api_cache` (not on `companies`), so v35 hydrated the tracker with 34 per-stock `cache-check` GETs. Fix: fold the cached metrics into the `/full` response the load ALREADY fetches once per company — `handleCompanyFull` returns `cachedStock` (one extra indexed `api_cache` SELECT in the existing `Promise.all`), so hydration needs **ZERO new requests**. Removed the v35 `cache-first` hydration + all `cacheOnly` plumbing. `_d1CompanyToTStock` merges `c.cachedStock` via a shared `_applyMarketData` helper (extracted from `_fetchStockDataInner`, byte-for-byte behavior) then applies overrides on top (S2c tombstones still skipped, overrides win, holders unaffected). Load request count back to ~55 (pre-v35). | `d9c4ad6` |
+| 79.2 | QA-caught: `cachedStock` could ship plaintext private fields | `api_cache` `stock_data` is written as a snapshot of the WHOLE client stock object (`fetchYahooData` returns the live tStock), so a cached row carries plaintext copies of encrypted fields (thesis/notes/checklist/override values) + client-only state. Fix: `handleCompanyFull` sanitizes `cachedStock` to market-only fields (`CACHE_STOCK_STRIP` denylist) before returning it → no private/stale content in `/full`. The at-rest copy in `api_cache` itself (cache WRITE path) is a separate pre-existing concern → KNOWN-ISSUES **SV.6** + spawned task. | `d9c4ad6` |
+
+**QA:** 4 parallel agents (correctness/regression, rate-limit root-cause, data-safety/security, deploy-safety). Correctness — behavior-preserving refactor, 1 cosmetic diff (dropped `console.warn`). Rate-limit — CONFIRMED resolved (34→0 extra requests); residual pre-existing note: 3+ rapid reloads/60s could still approach 120 via the ~34 `/full` alone. Deploy — no hazard either interleaving; worker-first recommended (no blank-tracker window). Data-safety — surfaced 79.2 (fixed via strip); load path itself data-safe (PRESERVE_FIELDS protects user fields, overrides win, tombstones honored, holders excluded).
 
 ---
 
