@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v28';
+var APP_VERSION='v29';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -7158,7 +7158,16 @@ function loadDbWidgetConfig(){
   return dbWidgetConfig;
 }
 function saveDbWidgetConfig(){
+  // Use the batch endpoint (not single PUT): the worker's PUT /api/app_settings/:key is UPDATE-only
+  // and 404s for a brand-new key; batch does INSERT OR REPLACE, creating the row on first save.
+  if(d1Mode){API.scheduleSave('dbWidgetCfg',async()=>{await API.post('app_settings/batch',{items:[{key:'widget_config',value:JSON.stringify(dbWidgetConfig)}]})})}
   try{localStorage.setItem('dashboard_widget_config_v1',JSON.stringify(dbWidgetConfig))}catch(e){showToast(t('toast.storageFull'),'error')}
+}
+// S2a: hydrate widget config from D1 (app_settings) at boot so it syncs cross-device.
+// API.get throws on 404 (key not yet in D1) → caught → localStorage untouched.
+async function loadDbWidgetConfigD1(){
+  if(!d1Mode)return;
+  try{const r=await API.get('app_settings/widget_config');if(r&&r.value){const d=JSON.parse(r.value);if(d&&Array.isArray(d.order)){dbWidgetConfig=null;localStorage.setItem('dashboard_widget_config_v1',JSON.stringify(d))}}}catch(e){console.error('D1 load widget config, keeping localStorage:',e)}
 }
 function applyDbWidgetOrder(){
   const cfg=loadDbWidgetConfig();
@@ -12903,6 +12912,13 @@ function _getScreenerPresets(){
 }
 function _saveScreenerPresets(presets){
   localStorage.setItem('screener_presets_v1',JSON.stringify(presets));
+  // Batch endpoint upserts (creates the row on first save); single PUT is UPDATE-only → 404 on a new key.
+  if(d1Mode){API.scheduleSave('screenerPresets',async()=>{await API.post('app_settings/batch',{items:[{key:'screener_presets',value:JSON.stringify(presets)}]})})}
+}
+// S2a: hydrate screener presets from D1 (app_settings) at boot so they sync cross-device.
+async function loadScreenerPresetsD1(){
+  if(!d1Mode)return;
+  try{const r=await API.get('app_settings/screener_presets');if(r&&r.value){const arr=JSON.parse(r.value);if(Array.isArray(arr))localStorage.setItem('screener_presets_v1',JSON.stringify(arr))}}catch(e){console.error('D1 load screener presets, keeping localStorage:',e)}
 }
 function renderPresetSelect(){
   const sel=document.getElementById('screener-preset-select');if(!sel)return;
@@ -15387,7 +15403,8 @@ async function autoLoad(){
         loadExchangeRates(),loadPortfolioSnapshots(),
         loadDashTodos(),loadDashFiSettings(),loadDashBenchmark(),loadDash52wHighs(),
         loadDividendHistory(),loadDivSettings(),
-        loadFramework(),loadReviews()
+        loadFramework(),loadReviews(),
+        loadDbWidgetConfigD1(),loadScreenerPresetsD1()
       ]);
       // Load saved valuations from D1
       try{
