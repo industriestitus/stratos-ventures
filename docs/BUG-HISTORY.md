@@ -79,8 +79,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 71 | Privacy Mode QA | `` | 2026-07-10 | 5 | 0 |
 | 72 | Field-by-Field Sync Audit & Hardening | `36cf706`…`1d31799` | 2026-07-22 | 21 | 0 |
 | 73 | S2a Cross-Device Sync + SW Auto-Reload | `e8aacb0`+`8803d3c` | 2026-07-23 | 4 | 0 |
+| 74 | S2a-2 Per-Company Attr Sync + Single-PUT Upsert | `aaff465` | 2026-07-23 | 2 | 0 |
 
-**Total: 456 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 458 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1476,11 +1477,30 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 
 ---
 
+## Category 74 — S2a-2 Per-Company Attr Sync + Single-PUT Upsert (2026-07-23)
+
+**Trigger:** S2a-2 — sync `priceAlerts` / `tags` / `idealTraitChecks` / `avoidChecks` cross-device via 4 new `companies` columns, bundled with the systemic single-PUT→upsert worker fix flagged during S2a-1. Commit `aaff465`, sw.js v31. Requires D1 `ALTER` + `wrangler deploy`. Verified: node:sqlite round-trip (10/10) + in-browser load/save round-trip. Adversarial QA verdict SHIP.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 74.1 | Systemic: single `PUT /api/app_settings/:key` was UPDATE-only → 404 on a brand-new key | PUT now upserts for natural-key tables (`pk!=='id'`): `INSERT ... ON CONFLICT(key) DO UPDATE`. Fixes the whole app_settings family on a fresh account (previously only worked because `/migrate` seeded keys). id-based PUT (soft-deletes) unchanged. | `aaff465` |
+| 74.2 | 4 per-company attrs localStorage-only (SA.1) | 4 nullable TEXT cols on `companies` (`price_alerts` encrypted; `tags`/`ideal_trait_checks`/`avoid_checks` plaintext JSON). Save always emits concrete value; NULL = never-synced (localStorage fallback), `'{}'`/`'[]'` = cross-device clear wins. | `aaff465` |
+
+**QA findings (all accepted, no code change):** (a) one-time transition LWW clobber if a secondary device holds richer unsynced state than the primary that saves first — mitigation: save the richest-state device first post-deploy (KNOWN-ISSUES SA.1); (b) locked-DEK reload can briefly resurrect a cleared price alert until unlock (self-heals); (c) deploy-order hazard — `ALTER` MUST precede `wrangler deploy`.
+
+---
+
 ## Deployment Notes
 
-- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), `36cf706` (natural-key upsert conflict targets), `cc3c9a2` (natural-key DELETE route + `NATURAL_DELETE` allowlist + GET cap 100000), and any future Worker changes:
+- **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), `36cf706` (natural-key upsert conflict targets), `cc3c9a2` (natural-key DELETE route + `NATURAL_DELETE` allowlist + GET cap 100000), `aaff465` (S2a-2: companies attr columns + single-PUT upsert — **run the D1 `ALTER` first**, see below), and any future Worker changes:
   ```bash
   cd web/cloudflare-worker && npx wrangler deploy
+  ```
+- **`aaff465` (S2a-2) deploy order is MANDATORY** — add the 4 columns to live D1 BEFORE deploying the worker, else the new `TABLES.companies.cols` make the companies batch INSERT reference missing columns and 500 the whole sync:
+  ```bash
+  cd web/cloudflare-worker
+  npx wrangler d1 execute stratos-ventures-db --remote --command "ALTER TABLE companies ADD COLUMN price_alerts TEXT; ALTER TABLE companies ADD COLUMN tags TEXT; ALTER TABLE companies ADD COLUMN ideal_trait_checks TEXT; ALTER TABLE companies ADD COLUMN avoid_checks TEXT;"
+  npx wrangler deploy
   ```
 - **Service Worker** cache version is `stratos-v3` — browsers auto-update on next visit
 - **GitHub Pages** auto-deploys from `web/` via Actions

@@ -41,7 +41,7 @@ Goal: a field-by-field save/load/cross-device audit (5 QA agents) of every data 
 **Remaining — S2 Cross-Device Completeness** (started; not data-loss, only "shows on device A, not B" gaps)
 - [~] **S2a — localStorage-only fields → D1:** each needs a D1 home.
   - [x] S2a-1 (`e8aacb0`): dashboard widget config + screener presets → `app_settings` (via batch upsert; single PUT is UPDATE-only). Boot hydrators + cross-device sync.
-  - [ ] S2a-2 (needs worker deploy): priceAlerts, tags, idealTrait/avoid checks → new TEXT columns on `companies` + batch payload. Bundle the systemic single-PUT→upsert worker fix here.
+  - [x] S2a-2 (`aaff465`, sw.js v31; needs D1 `ALTER` + worker deploy): priceAlerts (encrypted), tags, idealTrait/avoid checks → 4 new nullable TEXT columns on `companies` + batch payload + `_d1CompanyToTStock` load. Bundled the systemic single-PUT→upsert worker fix (app_settings family now works on a fresh account). NULL = never-synced (localStorage fallback); `'{}'`/`'[]'` = cross-device clear wins.
   - [ ] S2a-3: wire note images to the existing (orphan) `note_images` D1 table.
   - [ ] RE/bond/cash position detail fields — blocked on S2b (non-stock positions have no company row to ride).
 - [ ] **S2b — non-stock positions cross-device:** RE/cash/bond positions via synthetic holder-company rows + `company_type` filtering in tracker/screener/compare. Large regression surface — own session.

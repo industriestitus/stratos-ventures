@@ -53,8 +53,11 @@ These were surfaced during the Security v2 (Phase A+B) audit and consciously def
 
 The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat source (see `docs/BUG-HISTORY.md` Category 71). What remains is **cross-device completeness only** — data that is correct on the device that wrote it but doesn't propagate to a second device. None causes data loss on the originating device. Tracked as the **S2** batch in ROADMAP.md.
 
-### SA.1 — localStorage-only fields never reach D1 (MEDIUM, deferred → S2a)
-- `priceAlerts`, custom `tags`, dashboard widget config, screener presets, idealTrait/avoid checks, real-estate/bond/cash position details, and note images live only in localStorage. They survive reload on the same device but are invisible on any other device. Fix: give each a D1 home (table or `app_settings` key). Cheapest S2 sub-batch — do first.
+### SA.1 — localStorage-only fields never reach D1 (MEDIUM, mostly resolved)
+- ✅ **S2a-1** (`e8aacb0`): dashboard widget config + screener presets → `app_settings`.
+- ✅ **S2a-2** (`aaff465`): `priceAlerts` (encrypted), custom `tags`, idealTrait/avoid checks → 4 new `companies` columns.
+- ⏳ Remaining: note images (S2a-3) and real-estate/bond/cash position detail fields (blocked on S2b — non-stock positions have no company row to ride).
+- **One-time transition caveat (accepted):** because these fields were device-local until now, if a *secondary* device holds trait-checks/tags/alerts the primary device lacks, and the primary saves a company first post-deploy, it writes `'{}'`/`'[]'` and the whole-object last-writer-wins drops the secondary's unsynced values. Mitigation: open + save the device with the richest local state first after deploy so it seeds D1. No merge/tombstone built (single-user, low risk; same class as every other localStorage→D1 migration in this project).
 
 ### SA.2 — Non-stock positions don't sync cross-device (MEDIUM, deferred → S2b)
 - Real-estate/cash/bond positions have no `company_id` anchor, so they can't ride the existing position sync. Fix: synthetic holder-company rows + `company_type` filtering across tracker/screener/compare. Large regression surface — own session.

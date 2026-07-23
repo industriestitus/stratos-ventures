@@ -1068,6 +1068,31 @@ Two related defects surfaced in the field-by-field sync audit. (1) The batch ups
 
 ---
 
+## ADR-036: Per-Company Attrs as Columns + Single-PUT Upsert (S2a-2)
+
+**Status:** Accepted (2026-07-23) — S2a-2 (`aaff465`)
+
+**Context:**  
+Four per-company attributes — `priceAlerts`, `tags`, `idealTraitChecks`, `avoidChecks` — were localStorage-only: correct on the writing device, invisible on any other (SA.1). They needed a D1 home. Separately, the single-item `PUT /api/{table}/:key` was UPDATE-only, so a PUT to a **new** `app_settings` key affected 0 rows → 404; the whole `app_settings` family only worked because keys had been seeded via `/migrate`, and a fresh account would 404 on its first save.
+
+**Decision:**  
+- **Columns, not a side table:** add 4 nullable `TEXT` columns to `companies` (`price_alerts`, `tags`, `ideal_trait_checks`, `avoid_checks`). They ride the existing `companies/batch` upsert (keyed on `symbol`) — no new endpoint, no new load round-trip (the `/full` load already returns the company row). `price_alerts` is encrypted (financial thresholds); the rest are plaintext (labels/booleans).
+- **NULL vs empty semantics:** the client **always** emits a concrete value (`'{}'`/`'[]'`/ciphertext), never omits. `NULL` therefore means "never synced" → the load skips it and the localStorage `mergeKeys` fallback keeps the same-device copy; a concrete empty value means "explicitly cleared" and wins over a stale copy on another device.
+- **Single-PUT upsert:** for natural-key tables (`pk !== 'id'`) the PUT handler now does `INSERT ... ON CONFLICT(pk) DO UPDATE`, creating the row if absent. id-based tables keep UPDATE-only semantics (a PUT to a nonexistent id stays 404), so soft-deletes are unaffected.
+
+**Alternatives Rejected:**
+- **A key-value `app_settings` blob per attribute** (like widget config): companies already have a row and a batch path — columns are cheaper and load for free with `/full`.
+- **A one-time union-merge on first sync** to avoid the transition last-writer-wins: added state and ambiguity for a single-user tool; accepted the documented one-time caveat instead (KNOWN-ISSUES SA.1).
+
+**Consequences:**
+- ✅ The 4 fields sync cross-device; the whole `app_settings` family now works on a fresh account.
+- ⚠️ **Deploy order is mandatory:** `ALTER TABLE companies ADD COLUMN ...` (×4) must run **before** `wrangler deploy`, else the new `TABLES.companies.cols` make the batch INSERT reference missing columns and 500 the whole companies sync. Frontend is safe to go live first (old worker ignores unknown cols).
+- ⚠️ One-time transition LWW clobber possible if a secondary device holds richer unsynced state than the primary (SA.1 caveat). Locked-DEK reload can briefly resurrect a cleared price alert until unlock (self-heals).
+
+**Date:** 2026-07-23 (S2a-2)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1107,6 +1132,7 @@ Two related defects surfaced in the field-by-field sync audit. (1) The batch ups
 | 033 | Master-password auth + device tokens | Accepted | 2026-07-21 |
 | 034 | Collision-resistant client-minted IDs (`_mintId`) | Accepted | 2026-07-22 |
 | 035 | Natural-key upsert & natural-key DELETE | Accepted | 2026-07-23 |
+| 036 | Per-company attr columns + single-PUT upsert (S2a-2) | Accepted | 2026-07-23 |
 
 ---
 

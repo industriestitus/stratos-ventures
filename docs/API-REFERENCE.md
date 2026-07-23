@@ -168,12 +168,14 @@ Client derivation: `masterBits = PBKDF2(password, salt, 600k, SHA-256)` → HKDF
 - **Constraints:** UNIQUE, FOREIGN KEY checked; returns 409 on violation
 - **Line:** cloudflare-worker/src/index.js:191-215
 
-#### PUT (Update row)
+#### PUT (Update / upsert row)
 - **Endpoint:** `PUT /api/{table}/{id}`
 - **Request Body:** JSON object with column values to update
-- **Response:** Updated row object
+- **Response:** Updated/created row object
 - **Auto-Fields:** `updated_at` set to `datetime('now')` if table has it
-- **Line:** cloudflare-worker/src/index.js:217-242
+- **Semantics (changed `aaff465`):**
+  - **id-based tables** (`pk = 'id'`): plain UPDATE. A PUT to a nonexistent id returns 404 (unchanged). Used for soft-deletes (`PUT /positions/{id} {deleted_at}`).
+  - **natural-key tables** (`pk !== 'id'`, i.e. `app_settings`): **UPSERT** — `INSERT ... ON CONFLICT({pk}) DO UPDATE`. A PUT to a brand-new key now CREATES the row instead of 404'ing. Fixes the whole `app_settings` family (fi_settings/benchmark/52w_highs/dividend_settings/scoring_weights/exchange_rates_config), which previously only worked because keys were seeded via `/migrate` and 404'd on a fresh account's first save.
 
 #### DELETE (Remove row by id)
 - **Endpoint:** `DELETE /api/{table}/{id}`

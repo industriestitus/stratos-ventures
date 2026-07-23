@@ -310,7 +310,7 @@ Map of ticker strings to company data objects. This is the central data structur
 | `earningsCalendar` | object[] | Upcoming earnings dates |
 | `filings` | object | 10K/10Q filing tracking |
 | `sellTriggers` | object | Sell trigger conditions |
-| `priceAlerts` | object | {above: number, below: number} |
+| `priceAlerts` | object | {above: number, below: number} — D1: `companies.price_alerts` (encrypted JSON, S2a-2) |
 | `dcfMode` | string | "fcf" or "fcff" DCF mode |
 | `evaWacc` | number | WACC for EVA calculation |
 | `expectedReturn` | object | Expected return breakdown data |
@@ -631,7 +631,7 @@ User configures Worker URL + Sync Secret
 - **Dirty tracking:** localStorage flags (`d1_dirty_*`) prevent re-uploading unchanged data
 - **Retry:** Up to 3 attempts with exponential backoff (2s → 4s → 6s)
 - **IDs:** new rows get collision-resistant ids from `_mintId()` (see §2.3)
-- **Client-only fields:** some fields still live only in localStorage (priceAlerts, tags, widget config, screener presets, idealTrait/avoid checks, RE/bond/cash position details, note images) — correct on the writing device but not yet cross-device. Tracked as the S2 batch (ROADMAP.md) / SA.1 (KNOWN-ISSUES.md). The 2026-07-22 audit ensured these are no longer *wiped on reload*, only not-yet-synced.
+- **Client-only fields:** most now sync cross-device — widget config + screener presets (S2a-1, `app_settings`) and priceAlerts/tags/idealTrait+avoid checks (S2a-2, new `companies` columns). Still localStorage-only: note images and RE/bond/cash position details (blocked on S2b). Tracked as the S2 batch (ROADMAP.md) / SA.1 (KNOWN-ISSUES.md). The 2026-07-22 audit ensured all of these are no longer *wiped on reload*, only not-yet-synced.
 
 ### 6.3 Export/Import (Manual Sync)
 - **Export:** `_gatherAllData()` → JSON file download
