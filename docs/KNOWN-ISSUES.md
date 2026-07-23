@@ -56,14 +56,15 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 ### SA.1 — localStorage-only fields never reach D1 (MEDIUM, mostly resolved)
 - ✅ **S2a-1** (`e8aacb0`): dashboard widget config + screener presets → `app_settings`.
 - ✅ **S2a-2** (`aaff465`): `priceAlerts` (encrypted), custom `tags`, idealTrait/avoid checks → 4 new `companies` columns.
-- ⏳ Remaining: note images (S2a-3) and real-estate/bond/cash position detail fields (blocked on S2b — non-stock positions have no company row to ride).
+- ✅ **S2a-3** (`9c4e6ca`): research-note images → `note_images` table (encrypted, client-minted id upsert).
+- ⏳ Remaining: real-estate/bond/cash position detail fields (blocked on S2b — non-stock positions have no company row to ride).
 - **One-time transition caveat (accepted):** because these fields were device-local until now, if a *secondary* device holds trait-checks/tags/alerts the primary device lacks, and the primary saves a company first post-deploy, it writes `'{}'`/`'[]'` and the whole-object last-writer-wins drops the secondary's unsynced values. Mitigation: open + save the device with the richest local state first after deploy so it seeds D1. No merge/tombstone built (single-user, low risk; same class as every other localStorage→D1 migration in this project).
 
 ### SA.2 — Non-stock positions don't sync cross-device (MEDIUM, deferred → S2b)
 - Real-estate/cash/bond positions have no `company_id` anchor, so they can't ride the existing position sync. Fix: synthetic holder-company rows + `company_type` filtering across tracker/screener/compare. Large regression surface — own session.
 
-### SA.3 — Cross-device delete-resurrection for framework/override/valuation (LOW-MED, deferred → S2c)
-- `cc3c9a2` added a Worker natural-key DELETE so a delete propagates to D1, but these three types are **hard** deletes (no tombstone). A second device holding a stale copy can re-upload the row on its next sync, resurrecting it. Notes/reviews already avoid this via `deleted_at` soft-delete. Fix: extend soft-delete tombstones to framework_entries / company_data_overrides / valuations.
+### SA.3 — Cross-device delete-resurrection for framework/override/valuation/note-images (LOW-MED, deferred → S2c)
+- `cc3c9a2` added a Worker natural-key DELETE so a delete propagates to D1, but these types are **hard** deletes (no tombstone). A second device holding a stale copy can re-upload the row on its next sync, resurrecting it. Notes/reviews already avoid this via `deleted_at` soft-delete. Fix: extend soft-delete tombstones to framework_entries / company_data_overrides / valuations / **note_images** (S2a-3 added the same gap: a `note_images` row deleted on device A can be re-upserted by a stale device B editing the same note's text). Single-device use is unaffected.
 
 ### SA.4 — Collision-resistant ID tail (LOW, accepted)
 - `_mintId` (`0fc3579`) makes client-minted IDs collision-resistant going forward, but any IDs minted by the old short-random scheme before the fix remain as-is. No migration performed; the residual collision probability on legacy IDs is negligible for a single-user dataset. Accepted.

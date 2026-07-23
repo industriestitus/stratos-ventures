@@ -80,8 +80,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 72 | Field-by-Field Sync Audit & Hardening | `36cf706`…`1d31799` | 2026-07-22 | 21 | 0 |
 | 73 | S2a Cross-Device Sync + SW Auto-Reload | `e8aacb0`+`8803d3c` | 2026-07-23 | 4 | 0 |
 | 74 | S2a-2 Per-Company Attr Sync + Single-PUT Upsert | `aaff465` | 2026-07-23 | 2 | 0 |
+| 75 | S2a-3 Research-Note Images → D1 | `9c4e6ca` | 2026-07-23 | 3 | 0 |
 
-**Total: 458 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 461 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1487,6 +1488,20 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 74.2 | 4 per-company attrs localStorage-only (SA.1) | 4 nullable TEXT cols on `companies` (`price_alerts` encrypted; `tags`/`ideal_trait_checks`/`avoid_checks` plaintext JSON). Save always emits concrete value; NULL = never-synced (localStorage fallback), `'{}'`/`'[]'` = cross-device clear wins. | `aaff465` |
 
 **QA findings (all accepted, no code change):** (a) one-time transition LWW clobber if a secondary device holds richer unsynced state than the primary that saves first — mitigation: save the richest-state device first post-deploy (KNOWN-ISSUES SA.1); (b) locked-DEK reload can briefly resurrect a cleared price alert until unlock (self-heals); (c) deploy-order hazard — `ALTER` MUST precede `wrangler deploy`.
+
+---
+
+## Category 75 — S2a-3 Research-Note Images → D1 (2026-07-23)
+
+**Trigger:** S2a-3 — sync research-note images cross-device via the existing (orphan) `note_images` D1 table. Commit `9c4e6ca`, sw.js v32. **Frontend-only** (table + TABLES entry + generic GET/batch/per-id-DELETE already existed — no worker/schema change). Verified: node:sqlite round-trip (6/6) + in-browser save/load round-trip. Adversarial QA verdict SHIP.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 75.1 | Latent bug: D1-mode research-note images vanished on reload | The old D1 load path wrote images to a `_images` key, but render/editor read `images` → `e.images` was always empty after a D1 reload, and the localStorage merge also looked for `_images` (which the editor never writes). Load now populates the canonical `images` field. | `9c4e6ca` |
+| 75.2 | Images localStorage-only (SA.1) → now sync to `note_images` | Save (`_syncNoteImagesD1`) runs after notes exist in D1 (FK), upserts each image by a client-minted id (no dup growth on a keyless table), encrypts `image_data`+`filename`, `sort_order`=array index (markdown refs images by index), size-chunked under the 5MB body limit; removed images deleted by diffing `_d1ImageIds`. Load groups `GET note_images` by note_id, sorts, decrypts, attaches. | `9c4e6ca` |
+| 75.3 | LOW: read-failure reload could re-insert a duplicate image | Image id was minted inside the debounced save, so the synchronous localStorage snapshot held an id-less image; a `note_images` GET failure would restore it without an id and re-insert. Fixed by minting the id at add-time so localStorage always mirrors it. | `9c4e6ca` |
+
+**Known (accepted, deferred → S2c):** cross-device image-delete has no tombstone — a `note_images` row deleted on device A can be re-upserted by a stale device B editing the same note's text. Same class as the framework/override/valuation tombstone gap (SA.3). Single-device unaffected.
 
 ---
 
