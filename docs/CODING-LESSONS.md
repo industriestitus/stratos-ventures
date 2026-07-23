@@ -171,6 +171,26 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 ---
 
+### 10. `window.X` Is Undefined for Top-Level `const`/`let` Globals
+
+**What went wrong:** A Service Worker auto-reload guard checked `if(window.API){ if(API._flushing)... }` to skip reloading during a pending save. But `API` is declared `const API={...}` at the top level (index.html:4967). In a classic script, `const`/`let`/`class` at the top level create a *global lexical binding* accessible by bare name — but they are **not** properties of `window` (only `var` and function declarations are). So `window.API` was `undefined`, the whole guard block was skipped, and the "don't reload mid-save" protection was silently dead. The code looked correct and threw no error.
+
+**Why repeatable:** `var`/`function` globals *do* appear on `window`, so `window.X` works for most legacy globals and lulls you into assuming it works for all of them. The failure is silent — `window.X` is just `undefined`, so a guard degrades to a no-op rather than crashing.
+
+**Rule:** To read a global that may be a `const`/`let`, reference it **bare** with a `typeof` guard (`if(typeof API!=='undefined'&&API)`), not via `window.`. Only use `window.X` for globals you *explicitly* attached to `window` (as this codebase does deliberately for `window._swUpdatePending` etc.).
+
+---
+
+### 11. `offsetParent` Is Always `null` for `position:fixed` — Don't Use It for Visibility
+
+**What went wrong:** A guard tested `el.offsetParent!==null` to decide whether `#lock-screen` / `#recovery-key-modal` were visible. Both are `position:fixed`, and **`offsetParent` is always `null` for a fixed-position element regardless of visibility** (also null for `display:none` and for `<body>`/`<html>`). So the check never returned true even when those full-screen overlays were showing — the guard was dead.
+
+**Why repeatable:** `el.offsetParent!==null` is a widely-cited "is it visible?" shortcut and works fine for normally-positioned elements, so it passes casual testing on non-fixed nodes. Modals/overlays are exactly the elements most likely to be `position:fixed`, which is precisely where it breaks.
+
+**Rule:** For a visibility check that must also cover `position:fixed` elements, test rendered size — `el.offsetWidth>0||el.offsetHeight>0` (both are 0 under `display:none`, non-zero when laid out) — or `getComputedStyle(el).display!=='none'`. Reserve `offsetParent` for offset-position math, not visibility.
+
+---
+
 ## Data Safety
 
 ### 1. D1 Write-Through + Read-Fallback
@@ -404,7 +424,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Domain | Lessons | Bugs Found |
 |--------|---------|-----------|
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
-| JavaScript | 7 | 53+ (Categories 5, 8, 9, 22, 34) |
+| JavaScript | 11 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
 | Data Safety | 6 | 28+ (Categories 15, 72) |
 | API & Caching | 4 | 30+ (Categories 5, 6, 21) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |

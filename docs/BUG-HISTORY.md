@@ -78,8 +78,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 70 | Pre-Production Full QA (A+B+C) | `61488a7` | 2026-07-10 | 7 | 0 |
 | 71 | Privacy Mode QA | `` | 2026-07-10 | 5 | 0 |
 | 72 | Field-by-Field Sync Audit & Hardening | `36cf706`…`1d31799` | 2026-07-22 | 21 | 0 |
+| 73 | S2a Cross-Device Sync + SW Auto-Reload | `e8aacb0`+`8803d3c` | 2026-07-23 | 4 | 0 |
 
-**Total: 452 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 456 fixed, 24 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1457,6 +1458,21 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 72.21 | D1-connected status dot (`margin-left:auto`) pushed the HU/privacy/theme buttons right; theme toggle overflowed the 240px sidebar and was clipped on desktop. | Reduce sidebar-logo gap 10→6px, horizontal padding 20→16px. | `81903d1` |
 
 **Remaining (deferred to S2 cross-device completeness):** see `docs/KNOWN-ISSUES.md` § Sync Audit (SA.1–SA.5) and `docs/ROADMAP.md` § Data Sync Audit — localStorage-only fields → D1, non-stock positions cross-device, and soft-delete tombstones for framework/override/valuation.
+
+---
+
+## Category 73 — S2a Cross-Device Sync + SW Auto-Reload (2026-07-23)
+
+**Trigger:** S2 cross-device completeness work. Two features landed (dashboard widget config + screener presets now sync to D1 via `app_settings`; Service Worker updates now auto-reload with no manual hard-refresh) plus 4 defects caught by adversarial QA agents / browser testing. Commits `e8aacb0` (S2a-1) + `8803d3c` (SW auto-reload). Frontend-only, sw.js v28→v30.
+
+| # | Bug | Fix | Commit |
+|---|-----|-----|--------|
+| 73.1 | New `app_settings` keys (`widget_config`, `screener_presets`) never reached D1: the worker single-item `PUT /api/app_settings/:key` is UPDATE-only (index.js:594) → 0 rows for a brand-new key → 404 → `API.put` throws → "cloud save failed" toast, row never created. (Latent for the whole app_settings family; siblings only work because /migrate seeded their keys.) | Client savers use `POST app_settings/batch` (`INSERT OR REPLACE`, index.js:1059) which creates the row on first save. | `e8aacb0` |
+| 73.2 | SW auto-reload's "pending save" guard was dead: it read `window.API`, but `API` is a top-level `const` (index.html:4967), not a window property → `window.API` is `undefined` → the whole in-flight/pending-save guard was skipped, so an auto-reload could interrupt a debounced D1 save. | Reference `API` bare via `typeof API!=='undefined'`. | `8803d3c` |
+| 73.3 | SW auto-reload's lock/recovery visibility guard was dead: it used `el.offsetParent!==null`, but `offsetParent` is ALWAYS `null` for `position:fixed` elements (`#lock-screen`, `#recovery-key-modal`), so the check never tripped even when those full-screen surfaces were visible. | Test rendered size instead: `el.offsetWidth>0||el.offsetHeight>0`. | `8803d3c` |
+| 73.4 | SW auto-reload could loop during a deploy's CDN propagation window: GitHub Pages edges serving different `sw.js` bytes + `visibilitychange`→`reg.update()` could ping-pong updates → reload loop the user can't escape. | `sessionStorage` 30s throttle (`_swAutoReloadTs`): if an auto-reload fired within 30s, fall back to the clickable toast instead of looping. | `8803d3c` |
+
+**Features (tracked in ROADMAP.md § Data Sync Audit):** S2a-1 widget-config + screener-presets cross-device sync (boot hydrators `loadDbWidgetConfigD1`/`loadScreenerPresetsD1`); SW auto-reload gated on `_swUpdatePending` (never reloads on first install) + `_safeToAutoReload()` (typing / open overlay / lock / pending-save → fall back to toast) + `visibilitychange`→`reg.update()`.
 
 ---
 

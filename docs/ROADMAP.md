@@ -38,14 +38,18 @@ Goal: a field-by-field save/load/cross-device audit (5 QA agents) of every data 
 - [x] Cross-device delete no longer resurrects framework/override/valuation rows — new Worker natural-key DELETE route (`NATURAL_DELETE` allowlist); GET row cap 1000 → 100000 — `cc3c9a2`
 - [x] Stop unbounded `exchange_rates` row growth + stale load (fixed `'latest'` rate_date key) — `1d31799`
 
-**Remaining — S2 Cross-Device Completeness** (NOT started; not data-loss, only "shows on device A, not B" gaps)
-- [ ] **S2a — localStorage-only fields → D1:** priceAlerts, tags, widget-config, screener presets, idealTrait/avoid checks, RE/bond/cash position details, note images each need a D1 home.
+**Remaining — S2 Cross-Device Completeness** (started; not data-loss, only "shows on device A, not B" gaps)
+- [~] **S2a — localStorage-only fields → D1:** each needs a D1 home.
+  - [x] S2a-1 (`e8aacb0`): dashboard widget config + screener presets → `app_settings` (via batch upsert; single PUT is UPDATE-only). Boot hydrators + cross-device sync.
+  - [ ] S2a-2 (needs worker deploy): priceAlerts, tags, idealTrait/avoid checks → new TEXT columns on `companies` + batch payload. Bundle the systemic single-PUT→upsert worker fix here.
+  - [ ] S2a-3: wire note images to the existing (orphan) `note_images` D1 table.
+  - [ ] RE/bond/cash position detail fields — blocked on S2b (non-stock positions have no company row to ride).
 - [ ] **S2b — non-stock positions cross-device:** RE/cash/bond positions via synthetic holder-company rows + `company_type` filtering in tracker/screener/compare. Large regression surface — own session.
 - [ ] **S2c — soft-delete tombstones:** framework/override/valuation deletes are currently hard deletes (no tombstone) → a stale copy on another device can re-write them. Proper fix = `deleted_at` soft-delete (like notes/reviews).
 - Suggested order: S2a (cheap fields) → S2c (tombstones) → S2b (non-stock positions).
 
-**SW-update UX** (small, optional)
-- [ ] Auto-reload on new Service Worker: `controllerchange` → `location.reload()` + auto-`skipWaiting()` on the waiting worker, guarded by "no save in flight". Today a new version shows a click-to-reload toast; a plain reload already suffices (hard reload not required).
+**SW-update UX** (small)
+- [x] Auto-reload on new Service Worker (`8803d3c`): `controllerchange` → `location.reload()` + auto-`skipWaiting()`, gated on `_swUpdatePending` (never first-install) and `_safeToAutoReload()` (typing / open overlay / lock / pending D1 save → fall back to clickable toast), with a 30s sessionStorage throttle against CDN-propagation reload loops + `visibilitychange`→`reg.update()`. No manual hard reload needed after a deploy.
 
 ---
 
