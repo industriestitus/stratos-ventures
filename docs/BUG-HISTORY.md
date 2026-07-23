@@ -88,6 +88,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 80 | api_cache Write-Path Sanitize (SV.6) + tracker-field persistence | `5d5cf69` | 2026-07-23 | 2 | 0 |
 | 81 | /api Rate-Limit Raise + app_settings 404→200-null | `608c102` | 2026-07-23 | 2 | 0 |
 | 82 | Security v2 C3 — Encrypt Existing Cloud Rows + /migrate Gate | `d176a0a` | 2026-07-23 | 5 | 0 |
+| 83 | Security v2 B3a/B3b-1 — Token-Primary Auth + Connection-String Login Removal | `ce69164` | 2026-07-23 | 0 | 0 |
 
 **Total: 481 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
@@ -1612,6 +1613,19 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 82.5 | QA-caught (F5/6a): misleading partial/restore messages | Verify-pass message omitted remaining dup count; restore toast undersold the merge semantics. Fix: `mp.mig.partial` now shows `{fields}/{dups}`; `sync.restoreEncBlocked` states explicitly that cloud rows absent from the backup are kept and may reappear (merge, not replace) — full encrypted clear-and-restore tracked as C3b. | `d176a0a` |
 
 **Accepted/tracked (KNOWN-ISSUES):** server never enforces ciphertext on batch/CRUD — client-enforced invariant until B3 retires the sync key (SV.7); encrypted restore is merge-not-replace until C3b (SV.8); after migration, pre-C2 notes stop matching the (unused) server-side FTS — search is client-side, no user impact.
+
+---
+
+## Category 83 — Security v2 B3a/B3b-1: Token-Primary Auth + Connection-String Login Removal (2026-07-23)
+
+**Not bug fixes — a QA-clean hardening batch** (kept here per the per-batch doc policy). Part of retiring the legacy sync key (Phase B3), phased for safety. Frontend-only; no worker change, no deploy-order hazard.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 83.1 | B3a — token-primary auth headers | `authDataHeaders()` now returns `{X-Auth-Token}` ALONE when a device token exists; the legacy `X-Sync-Key` is sent only as a fallback when no token is present. A provisioned device (Peter's) therefore authenticates token-only against the still-dual-auth Worker — which live-proves token sufficiency before the irreversible B3c drops the sync-key fallback. sw.js v39. | `ce69164` |
+| 83.2 | B3b-1 — remove legacy connection-string login | Deleted the "sign in from another device" flow: `parseConnectionString`/`generateConnectionString`/`shareConnection`, the `#lock-login` lock view, `loginFromDevice()`, the Settings "Share connection" button, the lock-setup "Already have an account?" link, and `'lock-login'` from the `showLockView()` id list. Fully redundant with master-password login (which onboards a fresh device with no sync key; `DEFAULT_WORKER_URL` is baked in). The connection string only ever encoded the sync key. Unused `login.*` + `settings.shareConnection` i18n keys left in place (inert; swept in Phase D). sw.js v40. | `15f2577` |
+
+**QA:** 4 adversarial agents over the full session diff (`b317341..HEAD`, C3 + B3a + B3b-1) — correctness/regression, security posture, live-production/data-safety, boot-lock integrity + B3b-2 de-risk map. All four **SHIP / SOUND, 0 must-fix**: every removed symbol de-referenced, `showLockView` list matches the 7 remaining lock views exactly, all handlers resolve, token-only auth composes cleanly (Worker `authenticate()` accepts either header), C3 still authenticates token-only, security posture strictly better (SV.3 resolved; one fewer sync-key entry surface). The boot-integrity agent produced the precise B3b-2 brick-hazard map (buildMeta→isEncryptionEnabled, autoLoad→showReauthScreen, boot-branch collapse) now recorded in the handoff memory.
 
 ---
 
