@@ -9,7 +9,7 @@ Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and cod
 ## Critical / High Priority
 
 ### ~~P.4 — Worker: No Rate Limiting (FIXED 2026-07-01)~~
-- **Fix applied:** Per-IP rate limiting with in-memory sliding window. Yahoo proxy: 30 req/min, D1 API: 120 req/min. Returns 429 with `Retry-After` header. Auto-cleanup at 1000+ tracked IPs.
+- **Fix applied:** Per-IP rate limiting with in-memory sliding window. Yahoo proxy: 30 req/min, D1 API: **600 req/min** (raised from 120 in `608c102` — a legit tracker load is ~55 `/api` requests, so 120 429'd on 3 rapid reloads; Cat 81), proxy: 60/min, auth: 20/min. Returns 429 with `Retry-After` header. Auto-cleanup at 1000+ tracked IPs.
 
 ### ~~P.1 — No FMP API Call Budget Tracking (FIXED 2026-07-01)~~
 - **Fix applied:** localStorage-persisted daily call counter with auto-reset. Warning toast at 80% (200 calls), hard block at 250 with `rateLimited` return.
@@ -34,6 +34,7 @@ These were surfaced during the Security v2 (Phase A+B) audit and consciously def
 
 ### SV.1 — Per-isolate in-memory rate limiting (MEDIUM, deferred)
 - `checkRateLimit` uses a module-level `Map`, so the `yahoo`/`api`/`proxy` buckets reset per Cloudflare isolate and are trivially bypassed by spreading requests. Only `/auth/login` has durable KV-backed brute-force protection. Mitigation: all rate-limited routes except `/auth/*` require a valid credential, so the blast radius is a credentialed caller (single-user). Fix: back the `proxy`/`api` buckets with KV or a Durable Object. Consider in Phase D.
+- **D1-quota note (Cat 81):** the `api` cap was raised 120→600/min so a legit tracker load (~55 `/api` requests) survives rapid reloads. At 600/min sustained a credentialed caller could theoretically burn the Cloudflare free-tier D1 quota faster (read loop ~9.5M reads/day > 5M cap in ~13h; write loop > 100K/day in ~2.8h). This is a self-inflicted, credential-gated risk only — and because this per-isolate limiter never enforced a hard quota-cap anyway (trivially bypassed across isolates), the raise doesn't change the security calculus. The real backstop is Cloudflare's account-level limits. A durable (KV/DO) limiter in Phase D would let a lower per-window cap coexist with the higher legit-burst tolerance.
 
 ### SV.2 — Sync key is still root; `/auth/setup` silently overwrites the verifier (LOW-MED, resolved by B3)
 - While the sync key exists, a holder can call `/auth/setup` to overwrite the master-password verifier (silent account takeover) — same blast radius the sync key always had, but the password-reset capability is new. Resolved when the sync key is retired in **Phase B3** (which is gated behind Phase C's recovery key). Until then, treat the sync key as a root credential.

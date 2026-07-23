@@ -86,8 +86,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 78 | Tracker Metric + Override Hydration on D1 Load | `af214e4` | 2026-07-23 | 2 | 0 |
 | 79 | Tracker Hydration Rate-Limit Regression (v35→v36) | `d9c4ad6` | 2026-07-23 | 2 | 0 |
 | 80 | api_cache Write-Path Sanitize (SV.6) + tracker-field persistence | `5d5cf69` | 2026-07-23 | 2 | 0 |
+| 81 | /api Rate-Limit Raise + app_settings 404→200-null | `608c102` | 2026-07-23 | 2 | 0 |
 
-**Total: 474 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 476 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
 
 ---
 
@@ -1579,6 +1580,19 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 **Verification:** node:sqlite round-trip using the constants extracted from the actual source (`STOCK_CACHE_FIELDS`, worker `CACHE_STOCK_STRIP`, `PRESERVE_FIELDS`) — asserted (a) **zero** private fields stored at rest, (b) all sampled market metrics survive store→worker-read→hydrate intact, (c) no allowlist field collides with the worker denylist. Plus a `mergeKeys` merge-simulation confirming all 6 fields from 80.2 are rescued on a D1 reload. Inline-script syntax check of the edited `index.html` passed. An **adversarial QA subagent** reviewed 80.1 across 5 dimensions (functional-regression field-by-field, hydration-consumer, write-path bypass, sanitizer correctness, typos) — it surfaced 80.2 (the only confirmed issue); A/C/D/E clean. A live browser round-trip was intentionally NOT run — it would write test rows to production D1 (against the data-safety rules); the in-memory sqlite simulation is the safer equivalent.
 
 **One-time cleanup (PENDING PETER, live D1):** existing polluted rows only self-heal when each stock is next refreshed. Purge all at once: `DELETE FROM api_cache WHERE data_source='stock_data';` (backup first; rows self-repopulate clean on next Refresh All). No worker deploy needed for the fix (frontend-only, `web/index.html`) — ships with the next `git push` + sw.js bump.
+
+---
+
+## Category 81 — /api Rate-Limit Raise + app_settings 404→200-null (2026-07-23)
+
+**Trigger:** two issues surfaced while verifying the Cat 79 tracker-hydration fix live. Worker-only (`web/cloudflare-worker/src/index.js`), commits `608c102` + `3970cae`. **Needs `wrangler deploy` (done by Peter 2026-07-23).** 2 QA agents (correctness + security) — both CLEAN, no follow-up.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 81.1 | 3 rapid reloads still 429'd ("Cloud save failed") | The Cat 79 residual the QA flagged: v36 removed the +34 cache-check burst, but a legit tracker load still fires ~55 `/api` requests (dominated by ~34 per-company `/full`). The `/api` rate limit was **120 req/60s per isolate**, so 3 rapid reloads (~165) crossed it → 429 on the overflow → save-batch fails ("Cloud save failed (trackerStocks)") + some `/full` miss. Fix: raise `RATE_LIMITS.api` 120→**600**/60s (≈10 reloads/min headroom). Only the `api` bucket changed (yahoo/proxy/auth untouched). Single-user, auth-gated → weaker abuse cap accepted (and SV.1's per-isolate limiter never enforced a hard quota-cap anyway). | `608c102` |
+| 81.2 | Optional app_settings keys spam red 404s in the console | Never-customized keys (widget_config, screener_presets, scoring_weights, …) 404'd on every load → red "Failed to load resource: 404" lines (browser-generated, not suppressible from JS) + client `.catch` `console.error`s. Fix: the generic `GET /api/{table}/{id}` returns **200 null** instead of 404 when the row is missing, **scoped to `table==='app_settings'`** (all other tables keep a real 404). Every client app_settings loader already guards the value (`if(r){…}` / `if(r&&r.value){…}` / `.catch(()=>null)`), so 200-null → "use default / keep localStorage" with no throw — which ALSO silences the client-side error logs. QA bonus: `exchange_rates_config`'s old 404-throw used to abort the whole rate-load path → now it doesn't (strictly better). | `3970cae` |
+
+**QA:** 2 agents. Correctness — 200-null safe end-to-end (`API._fetch` parses `"null"`→null, all 8 consumers guard it), scope strict, only `api` bucket changed, `node --check` OK. Security — both changes are behind `authenticate()` (401 before the handler), brute-force `auth` bucket isolated from `api`, no info leak (the 200-vs-value existence oracle already existed via 404-vs-200). One informational note folded into KNOWN-ISSUES SV.1: the higher cap theoretically lowers the bar for a credentialed self-DoS D1-quota burn, but the per-isolate limiter never prevented that — no code change warranted.
 
 ---
 

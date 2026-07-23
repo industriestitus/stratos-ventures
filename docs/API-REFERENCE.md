@@ -424,6 +424,9 @@ Client derivation: `masterBits = PBKDF2(password, salt, 600k, SHA-256)` → HKDF
 
 ## Rate Limiting & Throttling
 
+### Worker per-IP buckets (`RATE_LIMITS`, in-memory sliding window)
+Applied per `CF-Connecting-IP` before routing; returns `429 {error:'Rate limit exceeded'}` + `Retry-After` on overflow. Per-isolate (KNOWN-ISSUES SV.1). Buckets (all /60s): **`api` = 600** (D1 CRUD `/api/*`; raised from 120 in Cat 81 — a tracker load is ~55 requests), `proxy` = 60 (`/proxy/fmp|finnhub`), `yahoo` = 30 (`/quote|batch|chart`), `auth` = 20 (`/auth/*`, plus a durable KV brute-force counter on `/auth/login`).
+
 ### FMP Rate Limiting
 - **Limit:** Depends on API key tier (free ~250 calls/month)
 - **Detection:** HTTP 429 response
