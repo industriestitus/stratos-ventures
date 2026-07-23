@@ -557,7 +557,15 @@ async function handleCrud(table, method, id, body, url, db, origin) {
 
   if (method === 'GET' && id) {
     const row = await db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).bind(id).first();
-    if (!row) return jsonResp({ error: 'Not found' }, 404, origin);
+    if (!row) {
+      // app_settings keys are optional — a missing key just means "use the client default", and
+      // every client loader already guards on a null value (if(r){...}). Return 200 null instead
+      // of 404 so a never-saved setting (widget_config / screener_presets / scoring_weights / …)
+      // doesn't spam the browser console with red "Failed to load resource: 404" lines. All other
+      // tables keep a real 404.
+      if (table === 'app_settings') return jsonResp(null, 200, origin);
+      return jsonResp({ error: 'Not found' }, 404, origin);
+    }
     return jsonResp(row, 200, origin);
   }
 
