@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v38';
+var APP_VERSION='v39';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -3309,11 +3309,16 @@ async function authRecoverCommit(recoveryKey,newSalt,newAuthVerifier,newWrapEnc,
   if(!r.ok){let e='recover HTTP '+r.status;try{e=(await r.json()).error||e}catch(_){}throw new Error(e)}
   return r.json();
 }
-// Auth headers for data requests during the transition: prefer the device token,
-// fall back to the legacy sync key. Both are accepted by the Worker.
+// Auth headers for data requests. B3a (sync-key retirement): the device token is now
+// the PRIMARY (and, on a provisioned device, sole) credential — the legacy sync key is
+// sent ONLY as a fallback when no token exists yet (a device mid-transition). So a
+// logged-in device authenticates token-only, which is what proves the sync key is no
+// longer needed before B3c removes the Worker-side fallback + SYNC_SECRET. The Worker
+// still accepts both during the transition.
 function authDataHeaders(){
   const h={};
-  const tok=getAuthToken();if(tok)h['X-Auth-Token']=tok;
+  const tok=getAuthToken();
+  if(tok){h['X-Auth-Token']=tok;return h;}
   const sk=getSyncKey();if(sk)h['X-Sync-Key']=sk;
   return h;
 }
