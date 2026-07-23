@@ -233,6 +233,8 @@ Peter's D1 is production-only — no staging environment. All investment data is
 
 **Rule:** A field that lives only client-side is a reload-erasure waiting to happen. Either (a) give it a D1 home so the load is authoritative, or (b) add it to the merge whitelist with a `local==null ? d1 : local` guard so the load never clobbers unsynced local data. When adding ANY new per-entity field, decide its persistence home in the same commit — never "it's in localStorage for now."
 
+**Corollary — a field that persists only via a side-channel has NO real persistence.** The `moat`/`risk`/`uncertainty`/`conviction`/`expectedReturn`/`pinned` tracker fields were missing from the whitelist yet *appeared* to survive reloads — because the `api_cache` `stock_data` row was a whole-object snapshot of the live stock, so the field rode back in through the cache-hydration path. That accidental round-trip masked the missing whitelist entry for a long time, and it was stale-prone (only as fresh as the last Refresh). When a security fix sanitized the cache-write path (Category 80, `5d5cf69`), the side-channel vanished and the latent erasure became real. Rule: when you find a client-only field "already persisting," confirm it flows through the *intended* path (D1 column or merge whitelist) — not a cache/snapshot/side-channel that a future change can remove.
+
 ---
 
 ### 5. Client-Minted IDs Must Be Collision-Resistant Across Devices
@@ -282,6 +284,14 @@ Peter's D1 is production-only — no staging environment. All investment data is
 **Problem:** Cache version not bumped after code changes — browsers served stale scripts. API responses cached as if static.
 
 **Rule:** Bump `CACHE_NAME` on every deploy. Never cache API calls (FMP, Yahoo, Finnhub) in Service Worker — only static assets.
+
+---
+
+### 5. Sanitize Cache-Write Paths with an Allowlist, Not a Denylist
+
+**What went wrong:** The `stock_data` cache write persisted the raw fetch result verbatim. That result was built by spreading the *live* stock object (`{...tStocks[ticker]}`), so `api_cache.data_json` accumulated plaintext copies of encrypted/private fields (`thesis`, `notes`, `checklist`, `overriddenData`) and bulky client-only state — sitting at rest in D1 and partially defeating field-level encryption. A read-side denylist (`CACHE_STOCK_STRIP`) cleaned what the API *returned* but not what was *stored*. (Category 80, `5d5cf69`.)
+
+**Rule:** When a cache/serialization write derives from an object that also carries sensitive or unbounded fields, filter to an explicit **allowlist** of the fields that path legitimately owns — never persist the object verbatim, and prefer allowlist over denylist. Allowlist fails **closed**: a newly-added private field can never silently leak; the cost (a new legitimate field must be added to the list) is a visible functional miss, which is the safe failure direction for anything security-adjacent. Sanitize at the WRITE, not only the read — a read-side strip leaves the plaintext at rest.
 
 ---
 
@@ -426,12 +436,12 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
 | JavaScript | 11 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
 | Data Safety | 6 | 28+ (Categories 15, 72) |
-| API & Caching | 4 | 30+ (Categories 5, 6, 21) |
+| API & Caching | 5 | 31+ (Categories 5, 6, 21, 80) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |
 | AI Behavioral | 6 | 100+ (cross-cutting) |
 
-**Total:** 430+ bugs fixed, 33 lessons, 7 domains.
+**Total:** 470+ bugs fixed, 34 lessons, 7 domains.
 
 ## Related Documents
 
