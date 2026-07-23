@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v30';
+var APP_VERSION='v31';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -10916,7 +10916,15 @@ function saveTrackerStocks(){invalidateScreenerCache();
       symbol:ticker,name:s.name||ticker,sector:s.sector||'',currency:s.currency||'USD',
       exchange:s.exchange||'',company_type:s.companyType||'',
       pipeline_status:(s.pipeline||s.pipelineStatus||'watchlist').toLowerCase().replace(/ /g,'_'),thesis:await encStr(s.thesis||''),sort_order:s.sortOrder||0,
-      archived_at:s.archivedAt||null
+      archived_at:s.archivedAt||null,
+      // S2a-2: per-company attrs → D1 columns (cross-device). priceAlerts holds financial
+      // thresholds → encrypted; tags/checks are labels/booleans → plaintext. Always send a
+      // concrete value (never omit) so clearing the last tag/alert propagates '[]'/'{}' and
+      // doesn't resurrect a stale copy on another device.
+      price_alerts:await encStr(JSON.stringify(s.priceAlerts||{})),
+      tags:JSON.stringify(s.tags||[]),
+      ideal_trait_checks:JSON.stringify((s.checklist&&s.checklist.idealTraitChecks)||{}),
+      avoid_checks:JSON.stringify((s.checklist&&s.checklist.avoidChecks)||{})
     })));
     await API.postBatch('companies/batch',companies);
     // Refresh company IDs for any new companies
@@ -11027,6 +11035,14 @@ async function _d1CompanyToTStock(c){
     pipelineStatus:c.pipeline_status||'watchlist',thesis:thesis,sortOrder:c.sort_order||0,
     _d1Id:c.id,todos:[],earnings:{},filings:{},overriddenData:{},_origData:{},notes:{thesis:thesis,research:'',earnings:{}},checklist:{sections:{}}};
   if(c.archived_at)s.archivedAt=c.archived_at;
+  // S2a-2: per-company attrs from D1 columns. Only apply when the column is present (!=null):
+  // during the pre-deploy transition (columns not yet added) these are undefined, so the
+  // localStorage merge in loadTrackerStocks keeps them same-device instead. A concrete
+  // '{}'/'[]' from D1 IS applied (not null) so a cross-device clear wins over a stale local copy.
+  if(c.price_alerts!=null){try{const pa=JSON.parse((await decStrSafe(c.price_alerts))||'{}');if(pa&&typeof pa==='object')s.priceAlerts=pa}catch(e){}}
+  if(c.tags!=null){try{const tg=JSON.parse(c.tags||'[]');if(Array.isArray(tg))s.tags=tg}catch(e){}}
+  if(c.ideal_trait_checks!=null){try{const it=JSON.parse(c.ideal_trait_checks||'{}');if(it&&typeof it==='object')s.checklist.idealTraitChecks=it}catch(e){}}
+  if(c.avoid_checks!=null){try{const av=JSON.parse(c.avoid_checks||'{}');if(av&&typeof av==='object')s.checklist.avoidChecks=av}catch(e){}}
   if(c.todos)for(const t of c.todos){s.todos.push({id:t.id,text:await decStrSafe(t.title),due:t.due_date||'',done:!!t.is_done,sortOrder:t.sort_order})}
   if(c.earnings)c.earnings.forEach(e=>{
     s.earnings[e.year+'Q'+e.quarter]={reported:!!e.is_reported,reviewed:!!e.is_reviewed,reportDate:e.report_date};

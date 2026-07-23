@@ -482,7 +482,7 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
 // company_todos) don't need one. Tables with no natural key (notes, snapshot_positions,
 // note_images) intentionally have none (they insert-only).
 const TABLES = {
-  companies:             { cols: ['symbol','name','sector','currency','exchange','company_type','pipeline_status','thesis','sort_order','archived_at'], hasUpdatedAt: true, conflictTarget: 'symbol' },
+  companies:             { cols: ['symbol','name','sector','currency','exchange','company_type','pipeline_status','thesis','sort_order','archived_at','price_alerts','tags','ideal_trait_checks','avoid_checks'], hasUpdatedAt: true, conflictTarget: 'symbol' },
   company_todos:         { cols: ['company_id','title','due_date','is_done','sort_order'], hasUpdatedAt: true },
   earnings_timeline:     { cols: ['company_id','year','quarter','is_reported','is_reviewed','report_date'], hasUpdatedAt: true, conflictTarget: 'company_id, year, quarter' },
   filing_tracking:       { cols: ['company_id','filing_type','fiscal_year','fiscal_quarter','is_read','filed_date','notes'], hasUpdatedAt: true, conflictTarget: 'company_id, filing_type, fiscal_year, fiscal_quarter' },
@@ -578,6 +578,36 @@ async function handleCrud(table, method, id, body, url, db, origin) {
   }
 
   if (method === 'PUT' && id) {
+    // Natural-key (pk !== 'id') tables — app_settings — UPSERT: a PUT to a key that doesn't
+    // exist yet must CREATE the row. The old UPDATE-only path affected 0 rows → 404, so the
+    // whole app_settings family (fi_settings/benchmark/52w_highs/dividend_settings/
+    // scoring_weights/exchange_rates_config) only worked because those keys had been seeded
+    // via /migrate; a fresh account 404'd on its first save. INSERT ... ON CONFLICT fixes it.
+    // id-based tables keep UPDATE-only semantics (a PUT to a nonexistent id stays a 404).
+    if (pk !== 'id') {
+      const cols = [pk];
+      const vals = [id];
+      const ph = ['?'];
+      for (const col of cfg.cols) {
+        if (col === pk) continue;
+        if (body[col] !== undefined) { cols.push(col); vals.push(body[col]); ph.push('?'); }
+      }
+      if (cols.length < 2) return jsonResp({ error: 'No valid columns to update' }, 400, origin);
+      const updateCols = cols.slice(1);
+      const updates = updateCols.map(c => `${c} = excluded.${c}`).join(',');
+      const updatedAtClause = cfg.hasUpdatedAt ? `, updated_at = datetime('now')` : '';
+      const sql = `INSERT INTO ${table} (${cols.join(',')}) VALUES (${ph.join(',')}) ON CONFLICT(${pk}) DO UPDATE SET ${updates}${updatedAtClause}`;
+      try {
+        await db.prepare(sql).bind(...vals).run();
+        const row = await db.prepare(`SELECT * FROM ${table} WHERE ${pk} = ?`).bind(id).first();
+        return jsonResp(row, 200, origin);
+      } catch (e) {
+        if (e.message.includes('UNIQUE') || e.message.includes('FOREIGN') || e.message.includes('CHECK')) {
+          return jsonResp({ error: 'Constraint violation' }, 409, origin);
+        }
+        throw e;
+      }
+    }
     const sets = [];
     const vals = [];
     for (const col of cfg.cols) {

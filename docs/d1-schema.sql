@@ -34,6 +34,12 @@ CREATE TABLE companies (
     thesis         TEXT NOT NULL DEFAULT '',
     sort_order     INTEGER NOT NULL DEFAULT 0,
     archived_at    TEXT DEFAULT NULL,
+    -- S2a-2: per-company attrs synced cross-device. All nullable JSON TEXT (NULL = never
+    -- synced → client keeps the localStorage copy; '{}'/'[]' = explicitly empty/cleared).
+    price_alerts      TEXT DEFAULT NULL,  -- encrypted JSON {field: threshold} (financial data)
+    tags              TEXT DEFAULT NULL,  -- plaintext JSON array of user tags
+    ideal_trait_checks TEXT DEFAULT NULL, -- plaintext JSON {traitId: bool} (checklist root)
+    avoid_checks      TEXT DEFAULT NULL,  -- plaintext JSON {avoidId: bool} (checklist root)
     created_at     TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
