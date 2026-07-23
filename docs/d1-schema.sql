@@ -40,6 +40,10 @@ CREATE TABLE companies (
     tags              TEXT DEFAULT NULL,  -- plaintext JSON array of user tags
     ideal_trait_checks TEXT DEFAULT NULL, -- plaintext JSON {traitId: bool} (checklist root)
     avoid_checks      TEXT DEFAULT NULL,  -- plaintext JSON {avoidId: bool} (checklist root)
+    -- S2b: marks a SYNTHETIC holder row created only to give a non-stock (cash/RE/bond)
+    -- position a company_id anchor. NULL = a normal tracked company. Non-null holders are
+    -- filtered out of tracker/screener/comparison/dividends/search/dashboard rendering.
+    holder_type    TEXT DEFAULT NULL,     -- NULL | 'cash' | 'real_estate' | 'bond'
     created_at     TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -201,6 +205,11 @@ CREATE TABLE positions (
     shares      REAL NOT NULL DEFAULT 0,
     avg_cost    REAL NOT NULL DEFAULT 0,
     deleted_at  TEXT DEFAULT NULL,
+    -- S2b: encrypted JSON blob of the position's client-only fields — assetType, name,
+    -- currency, currentPrice, notes, and the RE/bond/cash detail fields (reLocation,
+    -- reCurrentValue, bondFaceValue, cashAmount, ...). Lets non-stock positions AND the
+    -- stock currentPrice/notes sync cross-device. NULL for legacy rows (localStorage fallback).
+    details     TEXT DEFAULT NULL,
     created_at  TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(company_id, account_id)

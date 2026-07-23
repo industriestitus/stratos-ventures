@@ -482,7 +482,7 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
 // company_todos) don't need one. Tables with no natural key (notes, snapshot_positions,
 // note_images) intentionally have none (they insert-only).
 const TABLES = {
-  companies:             { cols: ['symbol','name','sector','currency','exchange','company_type','pipeline_status','thesis','sort_order','archived_at','price_alerts','tags','ideal_trait_checks','avoid_checks'], hasUpdatedAt: true, conflictTarget: 'symbol' },
+  companies:             { cols: ['symbol','name','sector','currency','exchange','company_type','pipeline_status','thesis','sort_order','archived_at','price_alerts','tags','ideal_trait_checks','avoid_checks','holder_type'], hasUpdatedAt: true, conflictTarget: 'symbol' },
   company_todos:         { cols: ['company_id','title','due_date','is_done','sort_order'], hasUpdatedAt: true },
   earnings_timeline:     { cols: ['company_id','year','quarter','is_reported','is_reviewed','report_date'], hasUpdatedAt: true, conflictTarget: 'company_id, year, quarter' },
   filing_tracking:       { cols: ['company_id','filing_type','fiscal_year','fiscal_quarter','is_read','filed_date','notes'], hasUpdatedAt: true, conflictTarget: 'company_id, filing_type, fiscal_year, fiscal_quarter' },
@@ -490,7 +490,7 @@ const TABLES = {
   notes:                 { cols: ['company_id','note_type','title','content','note_date','quarter','source_name','source_url','is_pinned','excerpt','action','tags','deleted_at'], hasUpdatedAt: true },
   note_images:           { cols: ['note_id','filename','mime_type','image_data','sort_order'], hasUpdatedAt: false },
   broker_accounts:       { cols: ['name','currency','is_active'], hasUpdatedAt: true, conflictTarget: 'name' },
-  positions:             { cols: ['company_id','account_id','shares','avg_cost','deleted_at'], hasUpdatedAt: true, conflictTarget: 'company_id, account_id' },
+  positions:             { cols: ['company_id','account_id','shares','avg_cost','deleted_at','details'], hasUpdatedAt: true, conflictTarget: 'company_id, account_id' },
   transactions:          { cols: ['company_id','account_id','transaction_type','transaction_date','shares','price_per_share','total_amount','fees','currency','notes','deleted_at'], hasUpdatedAt: false },
   portfolio_snapshots:   { cols: ['snapshot_date','total_value','base_currency','notes'], hasUpdatedAt: false, conflictTarget: 'snapshot_date' },
   snapshot_positions:    { cols: ['snapshot_id','company_id','account_id','shares','price_per_share','market_value','currency','intent'], hasUpdatedAt: false, conflictTarget: 'snapshot_id, company_id, account_id' },

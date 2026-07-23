@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v32';
+var APP_VERSION='v33';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1147,7 +1147,7 @@ var I18N={en:{
 'mp.title':'Master Password','mp.setupHint':'Set one master password to sign in on any device — no sync key needed. Minimum 10 characters (letters and numbers are enough).','mp.status.checkFailed':'Could not reach the server to check status — try again','mp.choose':'Choose a master password','mp.confirm':'Confirm master password','mp.setup':'Set Master Password','mp.change':'Change Master Password','mp.current':'Current master password','mp.new':'New master password','mp.tooShort':'Password must be at least {n} characters','mp.allSame':'Password cannot be a single repeated character','mp.mismatch':'Passwords do not match','mp.setupOk':'Master password set. You can now sign in with it on any device.','mp.changeOk':'Master password changed.','mp.status.set':'✓ Master password is set up','mp.status.notSet':'Not set up yet','mp.status.notReady':'Set your Sync Key first (needed once to set up the master password)','mp.devices':'Signed-in Devices','mp.devicesHint':'Each device that signs in with the master password appears here. Revoke any you no longer use.','mp.thisDevice':'(this device)','mp.revoke':'Revoke','mp.revoked':'Device revoked','mp.noDevices':'No devices signed in yet','mp.needSetup':'Set up a master password first','mp.wrongCurrent':'Current password incorrect','mp.enterCurrent':'Enter your current master password','mp.loginPrompt':'Enter your master password to sign in','mp.signIn':'Sign In','mp.signingIn':'Signing in…','mp.loginFailed':'Sign-in failed','mp.sessionExpired':'Your session expired — please sign in again','mp.enc.title':'Data Encryption','mp.enc.checking':'Checking…','mp.enc.active':'✓ End-to-end encryption is active on this device','mp.enc.needLogin':'Encryption is set up — sign in again on this device to activate it','mp.enc.notSet':'Not set up yet — finish below to protect your data','mp.enc.setupHint':'Enter your master password to generate your data key and one-time recovery key.','mp.enc.enable':'Enable Encryption','mp.enc.nudge':'Finish encryption setup in Settings → Master Password to protect your data.','mp.enc.needKey':'Enter your master password to unlock your encrypted data on this device.','mp.enc.rkTitle':'Save your recovery key','mp.enc.rkBody':'This is the only way to recover your data if you forget your master password. Store it somewhere safe — it is shown only once.','mp.rec.forgot':'Forgot password? Use recovery key','mp.rec.title':'Enter your recovery key and a new master password','mp.rec.keyPlaceholder':'Recovery key (xxxx-xxxx-…)','mp.rec.newPassword':'New master password','mp.rec.reset':'Reset Password','mp.rec.resetting':'Resetting…','mp.rec.back':'Back to sign in','mp.rec.enterKey':'Enter your recovery key','mp.rec.invalidKey':'Invalid recovery key','mp.rec.noEnvelope':'No recovery key is set up for this account','mp.rec.done':'Password reset — signed in with your new password.','mp.rec.resetSignIn':'Password reset — sign in with your new password.','mp.rec.failed':'Reset failed','settings.syncNow':'Sync Now','settings.encNotEnabled':'Encryption is not enabled. Your cloud data is stored in plaintext.','settings.enableEnc':'Enable Encryption','settings.encEnabled':'Encryption is enabled. Cloud data is encrypted with AES-256-GCM.','settings.currentPassword':'Current Password','settings.newPassword':'New Password','settings.changePassword':'Change Password','settings.baseCurrency':'Base Currency','settings.exchangeRates':'Exchange Rates','settings.notFetched':'Not fetched','settings.refreshRates':'Refresh Rates','settings.d1':'Cloud Database (D1)','settings.d1Hint':'Migrate your data from browser storage to Cloudflare D1 for cross-device access.','settings.migrateD1':'Migrate to Cloud Database','settings.d1Connected':'Connected to D1 — all data is stored in your Cloudflare D1 database.','settings.backupHint':'Backup downloads a full snapshot. Restore replaces all data with a backup file.','settings.downloadBackup':'Download Backup','settings.restoreBackup':'Restore from Backup','settings.importHint':'Import merges data without replacing. Export saves individual data types.','settings.importJSON':'Import JSON','settings.exportCSV':'Export CSV','settings.exportXLSX':'Export XLSX','settings.exportMarkdown':'Export Markdown','settings.exportPortfolioPDF':'Portfolio PDF','settings.darkMode':'Dark Mode','settings.lightMode':'Light Mode','settings.autoMode':'Auto',
 'modal.exportData':'Export Data','modal.importData':'Import Data','modal.pasteJSON':'Paste JSON data here...','modal.loadFile':'Load File','modal.downloadJSON':'Download JSON','modal.removeCompany':'Remove Company','modal.archive':'Archive — keep all data','modal.deletePermanently':'Delete permanently',
 'toast.imported':'{count} data section(s) imported','toast.backupDownloaded':'Backup downloaded','toast.backupFailed':'Backup failed: {err}','toast.invalidJSON':'Invalid JSON data.','toast.noImportable':'No importable data found in file.','toast.newerVersion':'This backup was created by a newer app version (v{v}). Please update the app first.','toast.invalidBackup':'Invalid backup file — no version field','toast.restoredLocal':'Restored locally but D1 sync failed','toast.backupRestored':'Backup restored successfully!','toast.restoreFailed':'Restore failed — original data preserved: {err}','toast.restoreError':'Restore failed: {err}','toast.cannotReadFile':'Could not read file','toast.newerData':'Your data was saved by a newer app version. Please update to avoid issues.','toast.noTicker':'No ticker specified','toast.companyNotFound':'Company not found: {ticker}','toast.pageNotFound':'Page not found: #{hash}','toast.storageSaveError':'Storage full — could not save {type}','toast.saved':'Saved','toast.yearExists':'Year {yr} already exists',
-'toast.dateReq':'Date is required','toast.contentReq':'Content is required','toast.excerptReq':'Excerpt or comment is required','toast.tickerReq':'Ticker / identifier is required','toast.accountReq':'Select a valid account','toast.priceReq':'Enter purchase price or current value','toast.cashAmountReq':'Enter a cash amount','toast.sharesReq':'Enter a valid number of shares/units','toast.avgCostReq':'Enter a valid average cost','toast.sharesOrAvg':'Enter shares or average cost','toast.dateReqTx':'Date is required','toast.dateFutureTx':'Date cannot be in the future','toast.tickerReqTx':'Ticker is required','toast.accountReqTx':'Select an account','toast.amountReqTx':'Enter a valid total amount','toast.sharesReqTx':'Enter a valid number of shares',
+'toast.dateReq':'Date is required','toast.contentReq':'Content is required','toast.excerptReq':'Excerpt or comment is required','toast.tickerReq':'Ticker / identifier is required','toast.tickerIsStock':'"{ticker}" is already a tracked stock — use a distinct identifier for this cash/real-estate/bond position (e.g. append -BOND).','toast.tickerIsNonStock':'"{ticker}" is already used by a cash/real-estate/bond position — use a distinct ticker for this stock.','toast.accountReq':'Select a valid account','toast.priceReq':'Enter purchase price or current value','toast.cashAmountReq':'Enter a cash amount','toast.sharesReq':'Enter a valid number of shares/units','toast.avgCostReq':'Enter a valid average cost','toast.sharesOrAvg':'Enter shares or average cost','toast.dateReqTx':'Date is required','toast.dateFutureTx':'Date cannot be in the future','toast.tickerReqTx':'Ticker is required','toast.accountReqTx':'Select an account','toast.amountReqTx':'Enter a valid total amount','toast.sharesReqTx':'Enter a valid number of shares',
 'comp.returnDriversHint':'Fill in the return drivers above, or set them in Checklist → Buy/Sell Decision.','comp.sizingHint':'Set Expected CAGR in the checklist (Buy/Sell Decision) to see position sizing.','comp.convictionHint':'No conviction data yet. Set conviction level in the Psychology checklist or Quarterly Follow-up.','comp.neverReviewed':'Never reviewed','comp.reviewAgo':'Review: {d}d ago',
 'comp.noRevenueData':'No revenue data — load company data first.','comp.probWarning':'Probabilities sum to {pct}% — should be 100%','comp.noValSnapshots':'No snapshots yet. Click "Save Snapshot" to record current valuations.','comp.openCalculator':'Open Full Calculator (DCF tables, charts, sensitivity)','comp.saveSnapshot':'Save Snapshot',
 'comp.todoList':'TODO List','comp.earningsTimeline':'Earnings Timeline','comp.year':'Year','comp.tenKTracking':'10-K / 10-Q Tracking',
@@ -1218,7 +1218,7 @@ var I18N={en:{
 'mp.title':'Mesterjelszó','mp.setupHint':'Állíts be egy mesterjelszót, amivel bármely eszközön beléphetsz — sync key nélkül. Minimum 10 karakter (a betű és szám elég).','mp.status.checkFailed':'Nem sikerült elérni a szervert az állapot ellenőrzéséhez — próbáld újra','mp.choose':'Válassz mesterjelszót','mp.confirm':'Mesterjelszó megerősítése','mp.setup':'Mesterjelszó beállítása','mp.change':'Mesterjelszó megváltoztatása','mp.current':'Jelenlegi mesterjelszó','mp.new':'Új mesterjelszó','mp.tooShort':'A jelszó legalább {n} karakter legyen','mp.allSame':'A jelszó nem állhat egyetlen ismételt karakterből','mp.mismatch':'A jelszavak nem egyeznek','mp.setupOk':'Mesterjelszó beállítva. Mostantól bármely eszközön beléphetsz vele.','mp.changeOk':'Mesterjelszó megváltoztatva.','mp.status.set':'✓ A mesterjelszó be van állítva','mp.status.notSet':'Még nincs beállítva','mp.status.notReady':'Előbb állítsd be a Sync Key-t (egyszer szükséges a mesterjelszó beállításához)','mp.devices':'Bejelentkezett eszközök','mp.devicesHint':'Minden eszköz, amely a mesterjelszóval belép, itt megjelenik. Vond vissza, amit már nem használsz.','mp.thisDevice':'(ez az eszköz)','mp.revoke':'Visszavonás','mp.revoked':'Eszköz visszavonva','mp.noDevices':'Még nincs bejelentkezett eszköz','mp.needSetup':'Előbb állíts be mesterjelszót','mp.wrongCurrent':'A jelenlegi jelszó helytelen','mp.enterCurrent':'Add meg a jelenlegi mesterjelszavad','mp.loginPrompt':'Add meg a mesterjelszavad a belépéshez','mp.signIn':'Belépés','mp.signingIn':'Belépés…','mp.loginFailed':'A belépés sikertelen','mp.sessionExpired':'A munkameneted lejárt — lépj be újra','mp.enc.title':'Adattitkosítás','mp.enc.checking':'Ellenőrzés…','mp.enc.active':'✓ A végpontok közötti titkosítás aktív ezen az eszközön','mp.enc.needLogin':'A titkosítás be van állítva — lépj be újra ezen az eszközön az aktiváláshoz','mp.enc.notSet':'Még nincs beállítva — fejezd be lent az adataid védelméhez','mp.enc.setupHint':'Add meg a mesterjelszavad az adatkulcs és az egyszer megjelenő helyreállítási kulcs létrehozásához.','mp.enc.enable':'Titkosítás engedélyezése','mp.enc.nudge':'Fejezd be a titkosítás beállítását: Beállítások → Mesterjelszó, az adataid védelméhez.','mp.enc.needKey':'Add meg a mesterjelszavad a titkosított adataid feloldásához ezen az eszközön.','mp.enc.rkTitle':'Mentsd el a helyreállítási kulcsod','mp.enc.rkBody':'Ez az egyetlen mód az adataid helyreállítására, ha elfelejted a mesterjelszavad. Tárold biztonságos helyen — csak egyszer jelenik meg.','mp.rec.forgot':'Elfelejtetted a jelszót? Használd a helyreállítási kulcsot','mp.rec.title':'Add meg a helyreállítási kulcsod és egy új mesterjelszót','mp.rec.keyPlaceholder':'Helyreállítási kulcs (xxxx-xxxx-…)','mp.rec.newPassword':'Új mesterjelszó','mp.rec.reset':'Jelszó visszaállítása','mp.rec.resetting':'Visszaállítás…','mp.rec.back':'Vissza a belépéshez','mp.rec.enterKey':'Add meg a helyreállítási kulcsod','mp.rec.invalidKey':'Érvénytelen helyreállítási kulcs','mp.rec.noEnvelope':'Ehhez a fiókhoz nincs helyreállítási kulcs beállítva','mp.rec.done':'Jelszó visszaállítva — beléptél az új jelszavaddal.','mp.rec.resetSignIn':'Jelszó visszaállítva — lépj be az új jelszavaddal.','mp.rec.failed':'A visszaállítás sikertelen','settings.syncNow':'Szinkronizálás','settings.encNotEnabled':'Titkosítás nincs engedélyezve. A felhő adataid titkosítatlanul vannak tárolva.','settings.enableEnc':'Titkosítás engedélyezése','settings.encEnabled':'Titkosítás engedélyezve. A felhő adatok AES-256-GCM titkosítással vannak védve.','settings.currentPassword':'Jelenlegi jelszó','settings.newPassword':'Új jelszó','settings.changePassword':'Jelszó megváltoztatása','settings.baseCurrency':'Alap pénznem','settings.exchangeRates':'Árfolyamok','settings.notFetched':'Nem lekérve','settings.refreshRates':'Árfolyamok frissítése','settings.d1':'Felhő adatbázis (D1)','settings.d1Hint':'Migráld az adataidat a böngésző tárhelyéről Cloudflare D1-be az eszközök közötti hozzáféréshez.','settings.migrateD1':'Migráció felhő adatbázisba','settings.d1Connected':'Csatlakozva a D1-hez — minden adat a Cloudflare D1 adatbázisban van.','settings.backupHint':'Backup teljes pillanatfelvételt tölt le. A visszaállítás felülírja az összes adatot.','settings.downloadBackup':'Backup letöltése','settings.restoreBackup':'Visszaállítás backupból','settings.importHint':'Importálás összefűzi az adatokat felülírás nélkül. Exportálás egyes adattípusokat ment.','settings.importJSON':'JSON importálás','settings.exportCSV':'CSV exportálás','settings.exportXLSX':'XLSX exportálás','settings.exportMarkdown':'Markdown exportálás','settings.exportPortfolioPDF':'Portfólió PDF','settings.darkMode':'Sötét mód','settings.lightMode':'Világos mód','settings.autoMode':'Automatikus',
 'modal.exportData':'Adatok exportálása','modal.importData':'Adatok importálása','modal.pasteJSON':'Illeszd be a JSON adatokat ide...','modal.loadFile':'Fájl betöltése','modal.downloadJSON':'JSON letöltése','modal.removeCompany':'Cég eltávolítása','modal.archive':'Archiválás — adatok megőrzése','modal.deletePermanently':'Végleges törlés',
 'toast.imported':'{count} adatszekció importálva','toast.backupDownloaded':'Backup letöltve','toast.backupFailed':'Backup sikertelen: {err}','toast.invalidJSON':'Érvénytelen JSON adat.','toast.noImportable':'Nem található importálható adat a fájlban.','toast.newerVersion':'Ezt a backupot újabb alkalmazás verzió készítette (v{v}). Kérlek frissítsd az appot.','toast.invalidBackup':'Érvénytelen backup fájl — nincs verzió mező','toast.restoredLocal':'Helyben visszaállítva, de D1 szinkronizálás sikertelen','toast.backupRestored':'Backup sikeresen visszaállítva!','toast.restoreFailed':'Visszaállítás sikertelen — eredeti adatok megőrizve: {err}','toast.restoreError':'Visszaállítás sikertelen: {err}','toast.cannotReadFile':'Fájl olvasása sikertelen','toast.newerData':'Az adataidat újabb alkalmazás verzió mentette. Frissíts a problémák elkerülése érdekében.','toast.noTicker':'Nincs megadva ticker','toast.companyNotFound':'Cég nem található: {ticker}','toast.pageNotFound':'Oldal nem található: #{hash}','toast.storageSaveError':'Tárhely megtelt — nem sikerült menteni: {type}','toast.saved':'Mentve','toast.yearExists':'{yr} év már létezik',
-'toast.dateReq':'Dátum kötelező','toast.contentReq':'Tartalom kötelező','toast.excerptReq':'Kivonat vagy megjegyzés kötelező','toast.tickerReq':'Ticker / azonosító kötelező','toast.accountReq':'Válassz érvényes számlát','toast.priceReq':'Vételár vagy jelenlegi érték kötelező','toast.cashAmountReq':'Add meg a készpénz összeget','toast.sharesReq':'Érvényes darabszám szükséges','toast.avgCostReq':'Érvényes átlagár szükséges','toast.sharesOrAvg':'Adj meg darabszámot vagy átlagárat','toast.dateReqTx':'Dátum kötelező','toast.dateFutureTx':'A dátum nem lehet jövőbeli','toast.tickerReqTx':'Ticker kötelező','toast.accountReqTx':'Válassz egy számlát','toast.amountReqTx':'Érvényes összeg szükséges','toast.sharesReqTx':'Érvényes darabszám szükséges',
+'toast.dateReq':'Dátum kötelező','toast.contentReq':'Tartalom kötelező','toast.excerptReq':'Kivonat vagy megjegyzés kötelező','toast.tickerReq':'Ticker / azonosító kötelező','toast.tickerIsStock':'"{ticker}" már egy követett részvény — használj külön azonosítót ehhez a készpénz/ingatlan/kötvény pozícióhoz (pl. told meg -BOND-dal).','toast.tickerIsNonStock':'"{ticker}" már egy készpénz/ingatlan/kötvény pozícióhoz használt — használj külön tickert ehhez a részvényhez.','toast.accountReq':'Válassz érvényes számlát','toast.priceReq':'Vételár vagy jelenlegi érték kötelező','toast.cashAmountReq':'Add meg a készpénz összeget','toast.sharesReq':'Érvényes darabszám szükséges','toast.avgCostReq':'Érvényes átlagár szükséges','toast.sharesOrAvg':'Adj meg darabszámot vagy átlagárat','toast.dateReqTx':'Dátum kötelező','toast.dateFutureTx':'A dátum nem lehet jövőbeli','toast.tickerReqTx':'Ticker kötelező','toast.accountReqTx':'Válassz egy számlát','toast.amountReqTx':'Érvényes összeg szükséges','toast.sharesReqTx':'Érvényes darabszám szükséges',
 'comp.returnDriversHint':'Töltsd ki a hozam driver-eket fent, vagy állítsd be a Checklist → Vételi/Eladási döntésnél.','comp.sizingHint':'Állítsd be az elvárt CAGR-t a checklistben (Vételi/Eladási döntés) a pozícióméretezés megtekintéséhez.','comp.convictionHint':'Még nincs meggyőződés adat. Állítsd be a meggyőződés szintjét a Pszichológia checklistben vagy a Negyedéves követésnél.','comp.neverReviewed':'Soha nem értékelt','comp.reviewAgo':'Értékelés: {d} napja',
 'comp.noRevenueData':'Nincs bevételi adat — töltsd be először a cég adatait.','comp.probWarning':'Valószínűségek összege {pct}% — 100% kellene','comp.noValSnapshots':'Még nincs pillanatfelvétel. Kattints a "Pillanatfelvétel mentése" gombra az aktuális értékelések rögzítéséhez.','comp.openCalculator':'Teljes kalkulátor megnyitása (DCF táblák, grafikonok, érzékenység)','comp.saveSnapshot':'Pillanatfelvétel mentése',
 'comp.todoList':'TODO lista','comp.earningsTimeline':'Eredmény időszak','comp.year':'Év','comp.tenKTracking':'10-K / 10-Q követés',
@@ -5099,7 +5099,7 @@ const API={
 };
 let d1Mode=false;
 let _d1CompanyMap={};
-function _tickerToD1Id(ticker){const s=tStocks[ticker];if(s&&!s._d1Id)console.warn('_tickerToD1Id: no D1 ID for',ticker);return s&&s._d1Id?s._d1Id:null}
+function _tickerToD1Id(ticker){const s=tStocks[ticker];if(s&&s._d1Id)return s._d1Id;const h=_holderCompanies[ticker];if(h&&h._d1Id)return h._d1Id;if(s&&!s._d1Id)console.warn('_tickerToD1Id: no D1 ID for',ticker);return null}
 
 // Data versioning
 const SCHEMA_VERSION=8;
@@ -5247,14 +5247,35 @@ function savePortfolioAccounts(){
   try{localStorage.setItem('portfolio_accounts_v1',JSON.stringify(pfAccounts))}catch(e){showToast(t('toast.storageSaveError',{type:'accounts'}),'error')}
 }
 async function loadPortfolioPositions(){
-  if(d1Mode){try{const r=await API.get('positions');const d1Pos=await Promise.all((r.data||[]).map(async p=>{const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];return{id:p.id,ticker,name:s?s.name:ticker,accountId:p.account_id,shares:await decNum(p.shares),avgCost:await decNum(p.avg_cost),currency:(s?s.currency:'')||'USD',companyId:p.company_id,deleted_at:p.deleted_at||null}}));
+  if(d1Mode){try{const r=await API.get('positions');const d1Pos=await Promise.all((r.data||[]).map(async p=>{
+      const ticker=_d1CompanyMap[p.company_id]||'';const s=tStocks[ticker];
+      // S2b: client-only fields ride the encrypted `details` JSON blob (assetType, name, currency,
+      // currentPrice, notes + RE/bond/cash details). For a holder-anchored non-stock position
+      // tStocks[ticker] is undefined, so name/currency come from details.
+      let det=null;if(p.details!=null){try{det=JSON.parse((await decStrSafe(p.details))||'null')}catch(e){det=null}}
+      const base={id:p.id,ticker,accountId:p.account_id,shares:await decNum(p.shares),avgCost:await decNum(p.avg_cost),companyId:p.company_id,deleted_at:p.deleted_at||null};
+      if(det&&typeof det==='object'){
+        base.assetType=det.assetType||'stock';
+        base.name=det.name||(s?s.name:ticker);
+        base.currency=det.currency||(s?s.currency:'')||'USD';
+        base.currentPrice=det.currentPrice??null;
+        base.notes=det.notes||'';
+        _RE_DETAIL_KEYS.forEach(k=>{if(det[k]!==undefined)base[k]=det[k]});
+      }else{ // legacy row w/o details → name/currency from tStocks, other fields filled by lsExtra below
+        base.name=s?s.name:ticker;base.currency=(s?s.currency:'')||'USD';
+      }
+      return base;
+    }));
     let lsArr=[];try{const ls=JSON.parse(localStorage.getItem('portfolio_positions_v1'));if(Array.isArray(ls))lsArr=ls}catch(e){}
     const lsExtra={};lsArr.forEach(p=>{if(p.id)lsExtra[p.id]=p});
-    pfPositions=d1Pos.map(p=>{const ex=lsExtra[p.id];if(ex)return{...ex,...p,assetType:ex.assetType||'stock',currentPrice:ex.currentPrice,notes:ex.notes,reLocation:ex.reLocation,rePurchaseDate:ex.rePurchaseDate,rePurchasePrice:ex.rePurchasePrice,reCurrentValue:ex.reCurrentValue,reMonthlyRental:ex.reMonthlyRental,reAnnualCosts:ex.reAnnualCosts,bondType:ex.bondType,bondFaceValue:ex.bondFaceValue,bondCouponRate:ex.bondCouponRate,bondMaturityDate:ex.bondMaturityDate,bondPaymentFreq:ex.bondPaymentFreq,cashAmount:ex.cashAmount};return p});
-    // Preserve localStorage-only positions that D1 doesn't have: non-stock cash/RE/bond (company_id
-    // null → never synced) plus any not-yet-synced rows. Without this the D1-only rebuild would drop
-    // them and overwrite localStorage → permanent same-device loss. Skip locally soft-deleted rows so
-    // deletes are not resurrected.
+    // D1 is authoritative for any field it provided (via details); lsExtra only FILLS fields the D1
+    // row left undefined — i.e. legacy rows whose `details` column is still null (transition). The
+    // ===undefined guard means a D1-provided value (including a cleared '' / 0 / null) is never
+    // clobbered by a stale localStorage copy, so a cross-device edit wins.
+    pfPositions=d1Pos.map(p=>{const ex=lsExtra[p.id];if(!ex)return p;const merged={...p};Object.keys(ex).forEach(k=>{if(merged[k]===undefined)merged[k]=ex[k]});return merged});
+    // Preserve localStorage-only positions that D1 doesn't have yet: a brand-new non-stock position
+    // whose holder company hasn't synced this session, or any not-yet-synced row. Skip locally
+    // soft-deleted rows so deletes aren't resurrected.
     const d1Ids=new Set(d1Pos.map(p=>p.id));
     lsArr.forEach(p=>{if(p.id&&!d1Ids.has(p.id)&&!p.deleted_at)pfPositions.push(p)});
     try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){}return}catch(e){console.error('D1 load positions, falling back to localStorage:',e)}}
@@ -5262,16 +5283,54 @@ async function loadPortfolioPositions(){
 }
 function savePortfolioPositions(){
   if(d1Mode){API.scheduleSave('pfPositions',async()=>{
-    // Non-stock positions (cash/RE/bond) have no D1 company row → company_id resolves to null.
-    // positions.company_id is NOT NULL and db.batch is atomic, so including even ONE null-company_id
-    // row throws → the whole batch 500s → NO position syncs (poison). Exclude them from the D1 batch;
-    // they persist in localStorage and loadPortfolioPositions merges them back on reload. Cross-device
-    // sync for non-stock positions is deferred to S2 (synthetic company rows).
-    const syncable=pfPositions.filter(p=>(p.companyId||_tickerToD1Id(p.ticker)));
-    const items=await Promise.all(syncable.map(async p=>({id:p.id,company_id:p.companyId||_tickerToD1Id(p.ticker),account_id:p.accountId,shares:await encStr(p.shares),avg_cost:await encStr(p.avgCost),deleted_at:p.deleted_at||null})));
-    await API.post('positions/batch',{items});
+    // S2b: non-stock positions (cash/RE/bond) now get a company_id from their synthetic holder
+    // company (_syncHolderCompany), so they sync too. Still guard the batch: a position whose
+    // company_id can't yet resolve (holder company not synced yet this session) is excluded — a
+    // null company_id would 500 the whole atomic batch (the B-position-poison class). It stays in
+    // localStorage and syncs on the next save once the holder id resolves. The client-only fields
+    // (assetType, RE/bond/cash details, currentPrice, notes) ride the encrypted `details` blob.
+    const syncable=[];
+    pfPositions.forEach(p=>{const cid=p.companyId||_tickerToD1Id(p.ticker);if(cid){p.companyId=cid;syncable.push(p)}}); // remember the resolved id so it isn't re-resolved every save
+    const items=await Promise.all(syncable.map(async p=>({id:p.id,company_id:p.companyId,account_id:p.accountId,shares:await encStr(p.shares),avg_cost:await encStr(p.avgCost),deleted_at:p.deleted_at||null,details:await encStr(JSON.stringify(_positionDetails(p)))})));
+    if(items.length)await API.post('positions/batch',{items});
   })}
   try{localStorage.setItem('portfolio_positions_v1',JSON.stringify(pfPositions))}catch(e){showToast(t('toast.storageSaveError',{type:'positions'}),'error')}
+}
+// S2b: the position's client-only fields, serialized into the encrypted `details` D1 column so
+// non-stock positions AND the stock currentPrice/notes sync cross-device. assetType/name/currency/
+// currentPrice/notes always; the RE/bond/cash detail fields only for their type.
+function _positionDetails(p){
+  const d={assetType:p.assetType||'stock',name:p.name||'',currency:p.currency||'',currentPrice:p.currentPrice??null,notes:p.notes||''};
+  if(p.assetType==='real_estate')Object.assign(d,{reLocation:p.reLocation,rePurchaseDate:p.rePurchaseDate,rePurchasePrice:p.rePurchasePrice,reCurrentValue:p.reCurrentValue,reMonthlyRental:p.reMonthlyRental,reAnnualCosts:p.reAnnualCosts});
+  else if(p.assetType==='bond')Object.assign(d,{bondType:p.bondType,bondFaceValue:p.bondFaceValue,bondCouponRate:p.bondCouponRate,bondMaturityDate:p.bondMaturityDate,bondPaymentFreq:p.bondPaymentFreq});
+  else if(p.assetType==='cash')Object.assign(d,{cashAmount:p.cashAmount});
+  return d;
+}
+const _RE_DETAIL_KEYS=['reLocation','rePurchaseDate','rePurchasePrice','reCurrentValue','reMonthlyRental','reAnnualCosts','bondType','bondFaceValue','bondCouponRate','bondMaturityDate','bondPaymentFreq','cashAmount'];
+// S2b: ensure a synthetic holder company exists for a non-stock ticker so its position gets a
+// company_id anchor (positions.company_id is NOT NULL). Kept in _holderCompanies (not tStocks)
+// so it never shows in tracker/screener/etc. saveTrackerStocks writes the row (holder_type set).
+function _syncHolderCompany(ticker,name,assetType,currency){
+  if(!ticker)return;
+  const prev=_holderCompanies[ticker];
+  _holderCompanies[ticker]={ticker,name:name||ticker,currency:currency||'USD',holderType:assetType,_d1Id:(prev&&prev._d1Id)||null};
+  saveTrackerStocks();
+}
+// S2b: one-time-ish migration — ensure a holder company exists for every EXISTING non-stock
+// position (Peter's pre-S2b cash/RE/bond positions were localStorage-only). Run after positions
+// load; saveTrackerStocks creates the holder rows and its re-sync trigger then syncs the
+// positions (with their `details` blob). No-op once all holders exist. d1Mode only.
+function _migrateNonStockHolders(){
+  if(!d1Mode)return;
+  let created=false;
+  getActivePositions().forEach(p=>{
+    const isNonStock=p.assetType==='cash'||p.assetType==='real_estate'||p.assetType==='bond';
+    if(isNonStock&&p.ticker&&!_holderCompanies[p.ticker]){
+      _holderCompanies[p.ticker]={ticker:p.ticker,name:p.name||p.ticker,currency:p.currency||'USD',holderType:p.assetType,_d1Id:null};
+      created=true;
+    }
+  });
+  if(created)saveTrackerStocks();
 }
 async function loadPortfolioTransactions(){
   if(d1Mode){try{const r=await API.get('transactions?limit=10000');pfTransactions=await Promise.all((r.data||[]).map(async tx=>({id:tx.id,ticker:_d1CompanyMap[tx.company_id]||tx.symbol||'',accountId:tx.account_id,type:tx.transaction_type,date:tx.transaction_date,shares:await decNum(tx.shares),pricePerShare:await decNum(tx.price_per_share),totalAmount:await decNum(tx.total_amount),fees:await decNum(tx.fees),currency:tx.currency,notes:await decStrSafe(tx.notes),companyId:tx.company_id,deleted_at:tx.deleted_at||null})));try{localStorage.setItem('portfolio_transactions_v1',JSON.stringify(pfTransactions))}catch(e){}return}catch(e){console.error('D1 load transactions, falling back to localStorage:',e)}}
@@ -5886,6 +5945,13 @@ function savePosition(){
 
   if(!ticker){showToast(t('toast.tickerReq'),'error');return}
   if(!accountId||!pfAccounts.find(a=>a.id===accountId)){showToast(t('toast.accountReq'),'error');return}
+  // S2b: a ticker can be EITHER a tracked stock (in tStocks) OR a non-stock holder — never both,
+  // because companies.symbol is UNIQUE and a shared symbol would fuse the stock and holder rows,
+  // stamping holder_type on the real company and hiding it from every tStocks view. Reject the
+  // collision with a clear message (the user must pick a distinct identifier, e.g. AAPL-BOND).
+  const _isNonStock=assetType==='cash'||assetType==='real_estate'||assetType==='bond';
+  if(_isNonStock&&tStocks[ticker]){showToast(t('toast.tickerIsStock',{ticker}),'error');return}
+  if(!_isNonStock&&_holderCompanies[ticker]){showToast(t('toast.tickerIsNonStock',{ticker}),'error');return}
 
   let extra={};
   if(assetType==='real_estate'){
@@ -5919,9 +5985,13 @@ function savePosition(){
   }else{
     pfPositions.push({id:pfNextId(pfPositions),ticker,name,accountId,assetType,shares,avgCost,currentPrice,currency,notes,...extra,createdAt:now,updatedAt:now});
   }
+  // S2b: ensure the D1 company anchor exists BEFORE saving positions so the position can resolve
+  // its company_id this cycle when possible. Non-stock → synthetic holder company; stock → tracker.
+  const isNonStock=assetType==='cash'||assetType==='real_estate'||assetType==='bond';
+  if(isNonStock)_syncHolderCompany(ticker,name,assetType,currency);
+  else if(shares>0)_syncTickerToCompanies(ticker,name);
+  else if(shares===0)_checkSellAllPositions(ticker);
   savePortfolioPositions();
-  if(shares>0&&assetType!=='cash'&&assetType!=='real_estate'&&assetType!=='bond')_syncTickerToCompanies(ticker,name);
-  else if(shares===0&&assetType!=='cash'&&assetType!=='real_estate'&&assetType!=='bond')_checkSellAllPositions(ticker);
   closeModals();
   renderPositions();
   showToast(editId?t('pf.positionUpdated'):t('pf.positionAdded'),'success');
@@ -10698,6 +10768,11 @@ function proxyFetch(provider,endpoint,params={},ms=15000){
 const TNAMES={AAPL:'Apple',AMZN:'Amazon',GOOGL:'Google',MSFT:'Microsoft',META:'Meta',ASML:'ASML',BKNG:'Booking',BN:'Brookfield',NFLX:'Netflix',V:'Visa',MA:'Mastercard',SPGI:'S&P Global',MCO:"Moody's",EFX:'Equifax',FICO:'FICO',UBER:'Uber','EVO.ST':'Evolution',KSPI:'Kaspi',DUOL:'Duolingo',MELI:'MercadoLibre',IBKR:'IBKR',LMND:'Lemonade',LYFT:'Lyft',TMDX:'TransMedics',ZETA:'Zeta',RACE:'Ferrari','MC.PA':'LVMH',CRM:'Salesforce',NOW:'ServiceNow',ADBE:'Adobe',ETH:'Ethereum'};
 const DEFAULT_TICKERS=Object.keys(TNAMES);
 let tStocks={};
+// S2b: synthetic holder companies (one per non-stock ticker) kept OUT of tStocks so every
+// tracker/screener/comparison/dividend/search/dashboard view that iterates tStocks excludes
+// them automatically. Map ticker → {ticker, name, currency, holderType, _d1Id}. Rebuilt from
+// D1 on load (companies with a non-null holder_type); saved back by saveTrackerStocks.
+let _holderCompanies={};
 let stSort={col:'ticker',dir:'asc'};
 let stPipeFilter=new Set();
 let stTagFilter=new Set();
@@ -10970,7 +11045,7 @@ function checkPriceAlerts(){
   return triggered;
 }
 function saveTrackerStocks(){invalidateScreenerCache();
-  if(d1Mode){const snapshot=JSON.parse(JSON.stringify(tStocks));API.scheduleSave('trackerStocks',async()=>{
+  if(d1Mode){const snapshot=JSON.parse(JSON.stringify(tStocks));const holderSnap=Object.values(_holderCompanies).map(h=>({...h}));API.scheduleSave('trackerStocks',async()=>{
     const companies=await Promise.all(Object.entries(snapshot).map(async([ticker,s])=>({
       symbol:ticker,name:s.name||ticker,sector:s.sector||'',currency:s.currency||'USD',
       exchange:s.exchange||'',company_type:s.companyType||'',
@@ -10985,10 +11060,13 @@ function saveTrackerStocks(){invalidateScreenerCache();
       ideal_trait_checks:JSON.stringify((s.checklist&&s.checklist.idealTraitChecks)||{}),
       avoid_checks:JSON.stringify((s.checklist&&s.checklist.avoidChecks)||{})
     })));
+    // S2b: append synthetic holder-company rows (not in tStocks). Minimal payload — the batch
+    // only writes the columns present, so omitted cols keep their defaults / existing values.
+    holderSnap.forEach(h=>companies.push({symbol:h.ticker,name:h.name||h.ticker,currency:h.currency||'USD',pipeline_status:'owned',holder_type:h.holderType||'cash'}));
     await API.postBatch('companies/batch',companies);
-    // Refresh company IDs for any new companies
+    // Refresh company IDs for any new companies (incl. holders → needed by _tickerToD1Id + position load)
     const cr=await API.get('companies?limit=500');
-    (cr.data||[]).forEach(c=>{_d1CompanyMap[c.id]=c.symbol;if(tStocks[c.symbol])tStocks[c.symbol]._d1Id=c.id;if(snapshot[c.symbol])snapshot[c.symbol]._d1Id=c.id});
+    (cr.data||[]).forEach(c=>{_d1CompanyMap[c.id]=c.symbol;if(tStocks[c.symbol])tStocks[c.symbol]._d1Id=c.id;if(snapshot[c.symbol])snapshot[c.symbol]._d1Id=c.id;if(_holderCompanies[c.symbol])_holderCompanies[c.symbol]._d1Id=c.id});
     // Save sub-entities per company
     const todos=[],earnings=[],filings=[],overrides=[],notes=[],checklist=[];
     Object.entries(snapshot).forEach(([ticker,s])=>{
@@ -11052,6 +11130,12 @@ function saveTrackerStocks(){invalidateScreenerCache();
       if(clItems.length)batch.push(API.postBatch('checklist_answers/batch',clItems));
     }
     if(batch.length)await Promise.all(batch);
+    // S2b: a brand-new holder (or stock) company just got its _d1Id above. If a non-deleted
+    // position was excluded from its own batch this cycle only because its company_id couldn't
+    // resolve yet, re-sync positions now so it isn't stuck until the next manual save. Bounded:
+    // savePortfolioPositions writes p.companyId on success → the predicate goes false, no loop
+    // (positions save never calls saveTrackerStocks).
+    if(pfPositions.some(p=>!p.deleted_at&&!p.companyId&&_tickerToD1Id(p.ticker)))savePortfolioPositions();
   })}
   try{const _transient=['_bsData','_isData','_cfData','_source','_origData'];
     const cleaned={};Object.entries(tStocks).forEach(([k,v])=>{const c={...v};_transient.forEach(t=>delete c[t]);cleaned[k]=c});
@@ -11150,8 +11234,17 @@ async function _d1CompanyToTStock(c){
 async function loadTrackerStocks(){
   if(d1Mode){try{
     const r=await API.get('companies?limit=500');
-    const companies=r.data||[];
+    const allCompanies=r.data||[];
     tStocks={};
+    // S2b: route synthetic holder companies into _holderCompanies (NOT tStocks) so no
+    // tracker/screener/comparison/dividend/search/dashboard view shows them, and skip their
+    // /full fetch (they have no sub-entities). Their id still goes into _d1CompanyMap so a
+    // non-stock position can resolve its ticker/name on load.
+    _holderCompanies={};
+    const companies=allCompanies.filter(c=>{
+      if(c.holder_type){_holderCompanies[c.symbol]={ticker:c.symbol,name:c.name||c.symbol,currency:c.currency||'USD',holderType:c.holder_type,_d1Id:c.id};_d1CompanyMap[c.id]=c.symbol;return false}
+      return true;
+    });
     const fullLoads=companies.map(c=>API.get('companies/'+c.symbol+'/full').then(async full=>{tStocks[c.symbol]=await _d1CompanyToTStock(full)}).catch(e=>{tStocks[c.symbol]={ticker:c.symbol,name:c.name||c.symbol};console.error('D1 load company '+c.symbol+':',e)}));
     await Promise.all(fullLoads);
     // Merge client-only fields from localStorage (not in D1 schema). These are never written
@@ -15471,6 +15564,8 @@ async function autoLoad(){
       // Build company_id→ticker map for dependent loads
       _d1CompanyMap={};
       Object.values(tStocks).forEach(s=>{if(s._d1Id)_d1CompanyMap[s._d1Id]=s.ticker});
+      // S2b: holder companies aren't in tStocks — add them so non-stock positions resolve their ticker
+      Object.values(_holderCompanies).forEach(h=>{if(h._d1Id)_d1CompanyMap[h._d1Id]=h.ticker});
       // Phase 2: load everything else in parallel
       await Promise.all([
         loadResearchNotes(),
@@ -15481,6 +15576,9 @@ async function autoLoad(){
         loadFramework(),loadReviews(),
         loadDbWidgetConfigD1(),loadScreenerPresetsD1()
       ]);
+      // S2b: migrate any pre-existing localStorage-only non-stock positions to D1 (creates their
+      // holder companies; the saveTrackerStocks re-sync trigger then syncs the positions).
+      _migrateNonStockHolders();
       // Load saved valuations from D1
       try{
         const vr=await API.get('valuations?limit=500');
