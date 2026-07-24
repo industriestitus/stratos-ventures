@@ -94,8 +94,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 86 | Security v2 C3b — Encrypted Clear-and-Restore (worker /api/purge) | `feb4b4b` | 2026-07-24 | 1 | 0 |
 | 87 | Security v2 Phase D — Final Security Sweep + Doc/Comment Closeout | `657c553`+ | 2026-07-24 | 0 | 0 |
 | 88 | Purge stale legacy client-encryption verifier from server meta | `39100c8` | 2026-07-24 | 1 | 0 |
+| 89 | Backup restore wiped the auth token (logged out mid-restore, cloud restore skipped) | `17f9845` | 2026-07-24 | 1 | 0 |
 
-**Total: 483 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix.)
+**Total: 484 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix.)
 
 ---
 
@@ -1711,6 +1712,22 @@ Deferred (pre-existing, non-blocking, accepted): SV.1 (per-isolate in-memory rat
 | 88.2 | Stop logging the verifier | Removed `console.log('cloudLoadMeta response:', …)` which printed the meta (incl. the verifier) to the console on every boot. | `39100c8` |
 
 sw.js **v44**, frontend-only (reload triggers the self-heal). **Lesson (CODING-LESSONS):** a security sweep must audit runtime/stored STATE (KV, D1, localStorage), not just the code that writes it — removing the writer doesn't remove data already written.
+
+---
+
+## Category 89 — Backup Restore Wiped the Auth Token (2026-07-24)
+
+**Peter caught it live testing the C3b restore** (`wrangler tail` + console): every restore attempt logged the device out and flooded the console with `D1 save error … API not configured`, and the cloud restore silently did nothing.
+
+**Root cause:** `doRestore()` wipes `localStorage` except a `keepKeys` allowlist (`index.html:4556`) that predated master-password auth and never included the session keys. A restore therefore deleted `auth_token` (+ `dek_cache`/`enc_active`/`d1_migrated`/`meta_version`) → the device was logged out mid-restore → `hasDataAuth()` false → `API.ready()` false → the entire `if(d1Mode && API.ready())` cloud-restore block (incl. the C3b `_c3bClearAndRestore` purge) was **skipped**, and any straggler save threw "API not configured". Pre-existing since master-password auth landed; C3b surfaced it because its purge depends on the token.
+
+**Silver lining:** because the token was gone, the C3b **purge never ran** → D1 was never cleared → re-login showed all data intact. **No data loss** at any point.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 89.1 | Preserve session/auth/mode keys across restore | Added `auth_token`, `dek_cache`, `enc_active`, `d1_migrated`, `meta_version` to `keepKeys`. These are identity, not data — they must survive a data restore. With the token preserved, the C3b clear-and-restore now actually executes (purge → re-encrypt → re-insert) as designed. | `17f9845` |
+
+sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe everything except X" allowlist is a standing liability — every new cross-cutting key (auth tokens, session/mode flags) must be re-checked against it. Prefer wiping only known *data* keys over "wipe all except keep-list".
 
 ---
 
