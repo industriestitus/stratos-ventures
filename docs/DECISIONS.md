@@ -1148,6 +1148,38 @@ ADR-035 made deletes of framework entries / data overrides / valuations propagat
 
 ---
 
+## ADR-039: Retire Legacy Client-Side Encryption + Legacy KV Sync (B3b-2)
+
+**Status:** Accepted (2026-07-24) — B3b-2 (`681354b`, v41)
+
+**Context:**  
+The app carried two overlapping, now-obsolete subsystems from before Security v2:
+1. A **password-based client-side encryption** system (`enc_salt`/`enc_verify`/`enc_recovery` in localStorage, PBKDF2→AES-GCM `encryptPayload`/`decryptPayload`, an idle-lock timer, and the `#lock-unlock`/`#lock-setup`/`#lock-recovery*` gate views).
+2. A **legacy KV `/sync` cloud path** (`cloudSave`/`cloudLoad`/`testSync`/`scheduleCloudSave` against `/sync/save|load`, sync-key-authed).
+
+Both were superseded by Phase B/C: the master-password auth (device token, ADR-033) plus envelope/E2EE encryption (random DEK wrapped by the password- and recovery-key, C1/C2/C3) and D1 CRUD (ADR-005). Keeping the legacy systems meant a second lock UI, a second at-rest crypto scheme, and a sync-key-authed write path — all attack/maintenance surface with no live user. The boot gate branched across both the legacy and the new system, which is fragile: getting it wrong strands the app behind `html.app-locked` (`visibility:hidden` on the whole shell) with no gate to clear it.
+
+**Decision:**  
+- **Remove the legacy client-side encryption system** and its lock UI; boot/auth keys **solely** off `getAuthToken()` + the envelope DEK.
+- **Remove the legacy KV `/sync` client path**; all data flows through D1 CRUD.
+- **Collapse the boot gate:** a pre-paint IIFE unconditionally sets `app-locked`; the async boot clears it only on the token+DEK success path (→`autoLoad`), otherwise routes **every** no-token/no-DEK case to `showMasterLogin()` (which shows a visible gate and keeps `app-locked`). Invariant: **no reachable boot state leaves `app-locked` on with no visible gate.**
+- **Keep, deliberately:** `deriveKey`/`hashKey`/`generateRecoveryKey`/`recoveryWrapKey`/`b64`/`unb64` — the envelope recovery-key flow (`recoveryWrapKey`→`deriveKey`) depends on them; and the token-authed `/sync/meta` path (`cloudSaveMeta`/`cloudLoadMeta`/`buildMeta`/`_metaVersion`) as vestigial-but-harmless (only the dead `/sync/load|save|restore-backup` routes are dropped, in B3c). `buildMeta` now reports `has_encryption:false`, `enc_*:null`.
+
+**Alternatives Rejected:**
+- **Keep the legacy encryption as an offline fallback:** two at-rest crypto schemes on the same data is a correctness/maintenance hazard; envelope E2EE already covers at-rest, and offline reads use the cached DEK.
+- **Remove `/sync/meta` too, now:** it's token-authed and cheap; removing it is a worker change better bundled with B3c's irreversible worker cleanup.
+- **Trust the handoff's removal list verbatim:** it listed `deriveKey` for removal — wrong, since the kept recovery flow needs it. Verified every removed symbol's callers first (the correction is the key lesson).
+
+**Consequences:**
+- ✅ One lock UI, one at-rest crypto scheme, one authenticated data path. −521 lines. Attack/maintenance surface reduced; security posture strictly better.
+- ✅ Boot integrity verified in-browser across every path (no-token, token-invalid-DEK, `autoLoad` body): all land app-visible or on a visible gate (`bricked:false`).
+- ⚠️ Frontend-only, but it changes the **production boot/auth flow** — a token-holding device (the provisioned account) must boot via the token path; a device with only a sync key and no token would now hit the master-login gate (intended end state; the sync key is retired in B3c).
+- ⚠️ The `X-Sync-Key` fallback in `authDataHeaders` + client `setupMasterPassword`/`/auth/setup` are the last remaining client sync-key uses, retired with the Worker branch in **B3c**.
+
+**Date:** 2026-07-24 (B3b-2)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1190,6 +1222,7 @@ ADR-035 made deletes of framework entries / data overrides / valuations propagat
 | 036 | Per-company attr columns + single-PUT upsert (S2a-2) | Accepted | 2026-07-23 |
 | 037 | Synthetic holder companies + positions.details blob (S2b) | Accepted | 2026-07-23 |
 | 038 | Soft-delete tombstones for framework/override/valuation/note_images (S2c) | Accepted | 2026-07-23 |
+| 039 | Retire legacy client-side encryption + legacy KV sync (B3b-2) | Accepted | 2026-07-24 |
 
 ---
 
@@ -1204,4 +1237,4 @@ ADR-035 made deletes of framework entries / data overrides / valuations propagat
 ---
 
 **End of Document**  
-Last updated: 2026-07-23
+Last updated: 2026-07-24

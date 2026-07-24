@@ -1,0 +1,51 @@
+Stratos Ventures — UX Improvement Ideas
+========================================
+Date: 2026-07-03
+Status: Proposed (not yet implemented)
+
+========================================
+CATEGORY A: First-Run & Empty States
+========================================
+
+1. Onboarding / First-run élmény
+   Üres app-pal nyitva a Dashboard csupa "No positions yet" / "Add positions"
+   üzenet. Egy rövid "Getting Started" wizard vagy checklist (3-4 lépés:
+   API key beállítás → első cég hozzáadás → pozíció rögzítés → dashboard kész)
+   sokat segítene az első benyomáson.
+
+2. Dashboard widget-ek üres állapota
+   A 3 egymás melletti üres kártya (Portfolio Quality, Red Flag Alerts,
+   Sell Triggers) mind ugyanazt mondja más szavakkal. Ezeket összevonhatnánk
+   egy "Get started" blokkba amíg nincs adat, és csak akkor jelennének meg
+   külön-külön amikor van tartalmuk.
+
+3. Empty state illusztrációk
+   Az üres oldalak (Portfolio, Research, Framework) egy kicsit "üresek".
+   Egy-egy SVG illusztráció vagy feature preview kép sokat dobna a vizuális
+   élményen.
+
+========================================
+CATEGORY B: Navigation & Context
+========================================
+
+4. Breadcrumb / kontextus a Companies szekción belül
+   A Calculator/Tracker/Charts tab-ok nem mutatják melyik cégről van szó
+   (csak "TEST" az input mezőben). Egy cím/breadcrumb jó lenne:
+   "Companies > AAPL > Calculator".
+
+========================================
+CATEGORY C: Visual Consistency
+========================================
+
+5. Settings Finnhub Test gomb piros
+   A Test gombok zöld/piros keveréke zavaró. Mind legyen ugyanolyan stílusú,
+   a szín csak az eredmény jelzésére szolgáljon (sikeres = zöld,
+   sikertelen = piros).
+
+========================================
+CATEGORY D: Mobile Experience
+========================================
+
+6. Mobile gestures
+   Ez már a ROADMAP-ban van, de a pull-to-refresh és a long-press context
+   menu tényleg sokat adna a mobilos élményhez.

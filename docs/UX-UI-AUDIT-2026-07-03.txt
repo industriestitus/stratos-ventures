@@ -1,0 +1,219 @@
+STRATOS VENTURES — UI/UX AUDIT
+================================
+Dátum: 2026-07-03
+Összesen: 18 megállapítás (5 magas, 8 közepes, 5 alacsony)
+
+
+================================================================================
+A) NAVIGÁCIÓ ÉS FELÉPÍTÉS
+================================================================================
+
+1. [MAGAS] Nincs breadcrumb vagy "vissza" navigáció
+   Kategória: UX
+   Ha a user megnyit egy company profilt, majd onnan a calculatorba ugrik,
+   nincs mód visszalépni. Elveszti a kontextust, honnan jött és hova akart menni.
+   → Javaslat: Breadcrumb sor a main content tetejére (pl. "Companies > AAPL >
+     Calculator"). Profil megnyitásakor "Vissza" gomb a fejlécbe, ami az előző
+     szekcióhoz visz.
+
+2. [KÖZEPES] 7 fő szekció + 5+ tab mindegyikben = túl mélyen van az info
+   Kategória: UX
+   Portfolio 5 tab, Companies 3 tab, Framework 5 tab. A user 2-3 kattintással
+   jut el a keresett adatig. Új user nem tudja hol keressen.
+   → Javaslat: A Dashboard legyen az igazi "hub" — a widgetek legfőbb metrikái
+     legyenek kattinthatóak és vigyenek a részletes nézetbe. Így a user a
+     dashboardról 1 kattintással elér mindent.
+
+
+================================================================================
+B) INFORMÁCIÓ-TÚLCSORDULÁS
+================================================================================
+
+3. [MAGAS] Profil Overview: 30+ metrika egyforma súllyal
+   Kategória: UI
+   Az Overview tabon P/E, P/S, FCF yield, ROIC, gross margin, stb. mind egyforma
+   kártyán, egyforma méretben jelenik meg. Nincs vizuális hierarchia — a user nem
+   tudja azonnal megmondani, mi a fontos.
+   → Javaslat: "Fő mutatószámok" blokk (3-4 kiemelt metrika nagyobb kártyákon,
+     pl. P/E, Revenue Growth, FCF Yield, ROIC) + "Részletes mutatószámok" blokk
+     (kisebb, összecsukhatóan). A Terry Smith pontszám és az ARIA score legyen a
+     profil tetejére emelve mint "összefoglaló."
+
+4. [MAGAS] Tracker tábla 12-15 oszlop — horizontális scroll kell
+   Kategória: UI
+   A tracker tábla ticker, név, ár, szektor, növekedés, margin, P/E, P/S, FCF,
+   DCF, ARIA, score oszlopokat mutat egyszerre. Középképernyőn már scrollozni kell.
+   → Javaslat: Oszlop-választó (column picker), ahol a user maga dönti el, melyik
+     oszlopok látszódjanak. Alapesetben 6-7 fő oszlop, a többi opcionális. Mentett
+     oszlop-konfigurációk (pl. "Értékelési nézet", "Növekedés nézet").
+
+5. [KÖZEPES] Dashboard 14 widget — új user számára kaotikus
+   Kategória: UI
+   A dashboard 14 widgetet mutat egyszerre. Ugyan van "Manage Widgets" gomb, de
+   alapállapotban minden látszik, ami túlterhelhet.
+   → Javaslat: Alapértelmezett nézet 5-6 fő widgettel (hero, allocation, alerts,
+     TODOs, earnings). A többi a "Manage Widgets" panelből bekapcsolható.
+     Drag-and-drop widget-átrendezhetőség.
+
+
+================================================================================
+C) ONBOARDING ÉS FELFEDEZHETŐSÉG
+================================================================================
+
+6. [MAGAS] Nincs "getting started" guide új felhasználóknak
+   Kategória: UX
+   Az app első megnyitásakor a user egy üres dashboardot lát. Nem tudja, hol
+   kezdje: hozzon létre portfoliót? Adjon hozzá részvényt a trackerben? Írjon
+   jegyzetet? Semmi sem vezeti végig.
+   → Javaslat: Első indítás: Welcome card a dashboardon 3-4 lépéssel
+     ("1. Adj hozzá broker számlát → 2. Regisztráld a pozícióidat → 3. Kövess
+     részvényeket → 4. Írd meg az első jegyzeted"). Minden lépés egy CTA gomb,
+     ami odavisz. Kikapcsolható, ha kész.
+
+7. [MAGAS] Rejtett interakciók: dupla kattintás = szerkesztés
+   Kategória: UX
+   A profil Overview-ban bizonyos mezők dupla kattintással szerkeszthetőek
+   (override-ok). Ez sehol nincs jelezve — a user soha nem fog rájönni magától.
+   → Javaslat: Kis ceruza ikon a szerkeszthető mezők mellett (hover-ra jelenik
+     meg). Tooltip: "Kattints a saját érték beállításához". Vagy egy "Edit mode"
+     toggle a profil fejlécben.
+
+8. [ALACSONY] Billentyűparancsok csak a Settingsben láthatóak
+   Kategória: UX
+   Cmd+K, Cmd+1-7, N — hasznos shortcutok, de a user csak a Settings > Keyboard
+   Shortcuts szekcióban találja meg őket.
+   → Javaslat: A "?" billentyűre felugró shortcut-paletta (cheat sheet overlay).
+     A globális keresés (Cmd+K) eredményeiben is látható legyen:
+     "Tip: Cmd+3 = Portfolio".
+
+
+================================================================================
+D) ADATBEVITEL ÉS FORMOK
+================================================================================
+
+9. [KÖZEPES] Ticker input nem mindenhol autocomplete-el
+   Kategória: Workflow
+   A Transaction és Research modalban van datalist a tickerekhez, de a Tracker
+   "Add Stock" inputban nincs. Inkonzisztens élményt ad.
+   → Javaslat: Egységesen minden ticker-input mezőhöz kereső-autocomplete, ami
+     mind a követett, mind az API-ból talált tickereket mutatja. Enter után
+     azonnali hozzáadás.
+
+10. [KÖZEPES] Tranzakció hozzáadásához előbb broker számla kell
+    Kategória: Workflow
+    Ha a user tranzakciót akar rögzíteni, de nincs még broker fiókja, hibaüzenetet
+    kap: "add broker first". De nem viszi oda — a usernek magának kell megkeresni
+    az Accounts tabot.
+    → Javaslat: Az hibaüzenet tartalmazzon egy linket/gombot ami egyből megnyitja
+      az "Account hozzáadás" modalt. Vagy: inline "gyors broker létrehozás" a
+      transaction modalon belül.
+
+11. [KÖZEPES] Árfolyam nem tölti ki automatikusan tranzakció rögzítésnél
+    Kategória: Workflow
+    A tranzakció formalapon a user kézzel írja be az árat. Ha a ticker már a
+    trackerben van, az aktuális árat be lehetne tölteni alapértelmezettnek.
+    → Javaslat: Ticker kiválasztásakor auto-fill az utolsó ismert árral. A user
+      felülírhatja, de nem kell kézzel keresnie az aktuális árat.
+
+12. [ALACSONY] Részvény hozzáadása részleges adattal csendben történik
+    Kategória: Workflow
+    Ha az API nem találja az összes adatot egy tickerhez, "partial add" toast
+    jelenik meg, de a stock hozzáadódik. A user nem tudja, mi hiányzik és hogyan
+    javíthatja.
+    → Javaslat: Részletes státusz: "Ár betöltve, de pénzügyi adatok nem érhetők
+      el (EU tőzsde). Ezeket kézzel póthatod az Overview tabon." + link a profilhoz.
+
+
+================================================================================
+E) KONZISZTENCIA PROBLÉMÁK
+================================================================================
+
+13. [KÖZEPES] Törlés megerősítés háromféleképpen működik
+    Kategória: UI
+    Pozíció törlés: confirm modal. Stock törlés: begépelős megerősítés. Jegyzet
+    törlés: undo toast. Három különböző pattern három különböző szekcióban — zavaros.
+    → Javaslat: Egységes pattern: enyhe törlés (soft delete) mindenhol undo
+      toasttal. Végleges törlés (archiválás, export, stb.) mindenhol confirm
+      dialóggal. A "gépeld be" megerősítés csak tényleg végzetes műveleteknél
+      (teljes adat törlés).
+
+14. [KÖZEPES] Adatbevitel hol modal, hol inline
+    Kategória: UI
+    Pozíció és tranzakció = modal. Price alert = inline a profilban. Sell trigger =
+    inline. Review kérdések = modal. Nincs egységes logika, mikor melyik patternt
+    használjuk.
+    → Javaslat: Fő szabály: ha az adatbevitel 3+ mezőből áll → modal. Ha 1-2
+      mező → inline szerkesztés. Így a user mindig tudja, mire számítson.
+
+
+================================================================================
+F) KERESZTHIVATKOZÁSOK ÉS NAVIGÁCIÓ
+================================================================================
+
+15. [KÖZEPES] Hiányzó keresztlinkek több helyen
+    Kategória: UX
+    Earnings Calendar → nincs link a profilhoz. Research jegyzet tickerről → nincs
+    link a profilhoz. Dashboard price alert → nem szerkeszthető. Tranzakció → nem
+    linkelhető a pozícióhoz.
+    → Javaslat: Minden ticker-megjelenés legyen kattintható link, ami megnyitja az
+      adott részvény profilját. Egységes TickerLink komponens, ami hover-ra preview
+      tooltipet mutat (ár, változás, score).
+
+16. [ALACSONY] Nincs "Recently viewed" vagy "Favorites" gyorselérés
+    Kategória: UX
+    Ha a user rendszeresen 5-6 részvényt követ aktívan, minden alkalommal a
+    tracker-tábla scrollozásával vagy kereséssel kell megtalálni őket.
+    → Javaslat: "Kedvencek" / "Pinned" sor a sidebar alján vagy a tracker tetejére.
+      Legutóbb megtekintett 3-5 részvény gyorselérés a globális keresésben.
+
+17. [ALACSONY] Screener filterek nem menthetők
+    Kategória: UX
+    A user beállíthat 5-6 szűrőt a screener-ben, de ha elhagyja a tabra, minden
+    elvész. Nincs "mentett szűrők" funkció.
+    → Javaslat: "Save filter preset" gomb a screener mellett. Előre definiált
+      filterek is (pl. "High Quality Growth", "Dividend Aristocrats", "Undervalued").
+
+
+================================================================================
+G) ÜRES ÁLLAPOTOK ÉS HIBAKEZELÉS
+================================================================================
+
+18. [ALACSONY] Több helyen hiányzó vagy gyenge üres állapot
+    Kategória: UI
+    Screener: "No stocks match" — de nem javasolja filterek törlését. Compare mode:
+    <2 kiválasztva → gomb disabled, de nincs magyarázat. Conviction/Expected Return
+    chart: üres → üres canvas.
+    → Javaslat: Minden üres állapothoz: (1) magyarázó szöveg, (2) konkrét CTA gomb
+      ami a megoldáshoz vezet, (3) javasolt első lépés. Pl. "Válassz ki legalább 2
+      részvényt az összehasonlításhoz" sor a compare gomb mellett.
+
+
+================================================================================
+ÖSSZEFOGLALÓ
+================================================================================
+
+Prioritás szerinti sorrend az implementációhoz:
+
+  MAGAS (azonnal érdemes):
+    #6  Getting started guide
+    #7  Rejtett interakciók láthatóvá tétele
+    #1  Breadcrumb navigáció
+    #3  Profil metrika hierarchia
+    #4  Tracker oszlop-választó
+
+  KÖZEPES (következő körben):
+    #2  Dashboard mint hub
+    #5  Dashboard widget alapértelmezettek
+    #9  Ticker autocomplete egységesítés
+    #10 Broker fiók hibaüzenet javítás
+    #11 Tranzakció ár auto-fill
+    #13 Törlés megerősítés egységesítés
+    #14 Modal vs inline szabályosítás
+    #15 Keresztlinkek pótlása
+
+  ALACSONY (nice to have):
+    #8  Billentyűparancs-paletta
+    #12 Részleges adat részletes státusz
+    #16 Recently viewed / Favorites
+    #17 Screener filter mentés
+    #18 Üres állapotok javítása

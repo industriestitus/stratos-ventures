@@ -1,7 +1,7 @@
 # Coding Lessons — Stratos Ventures Finance App
 
-**Last Updated:** 2026-07-23
-**Source:** 450+ bug fixes across 25+ QA sessions (Categories 1-72)
+**Last Updated:** 2026-07-24
+**Source:** 450+ bug fixes across 25+ QA sessions (Categories 1-84)
 
 Reference for AI assistants and developers. All lessons are validated patterns from actual bugs found and fixed.
 
@@ -435,6 +435,18 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 - Can multiple call sites invoke this simultaneously? (autoLoad from 4 places)
 - Does the closure capture mutable state that changes during await?
 
+### 7. Verify Every Caller Before Deleting a Symbol — a Removal List Can Be Wrong (B3b-2 / Cat 84)
+
+**Pattern:** A large deletion driven by a prepared list (a handoff, a checklist, "remove all these functions") is only as safe as the list. During B3b-2 the removal list named `deriveKey` for deletion, but the **kept** master-password recovery flow calls `recoveryWrapKey`→`deriveKey`. Deleting it would have silently broken recovery (and any low-level helper shared between removed and kept code is the same trap: `hashKey`, `generateRecoveryKey`, `b64`/`unb64` were all shared).
+
+**Rule:** Before deleting ANY symbol, `grep` every reference and classify each caller as *removed* or *kept*. A symbol is only safe to delete when **all** its callers are in the removal set. For shared low-level helpers, default to keeping them. Never trust a removal list verbatim — it predates the current code.
+
+### 8. Never Leave a Boot Gate That Can Hide the Whole App With No Escape (B3b-2 / Cat 84)
+
+**Pattern:** A pre-paint guard (`html.app-locked` → `visibility:hidden` on the shell) is set before JS decides what to show. If any reachable boot branch neither clears the guard nor shows a visible gate, the app is bricked — blank chrome, no way in — and it looks identical to a crash.
+
+**Rule:** When a pre-paint lock exists, prove that **every** terminal boot state either (a) removes the lock and renders the app, or (b) shows a visible gate (which may keep the lock on). Enumerate the branches (token+DEK, token+no-DEK, no-token online/offline, first-run) and verify each in-browser (`offsetHeight>0` on the gate element; a `bricked` assertion = locked ∧ no gate ∧ no shell). Collapsing branches to a single `showMasterLogin()` fallback is safer than N special-cased screens.
+
 ---
 
 ## Summary
@@ -447,9 +459,9 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | API & Caching | 5 | 31+ (Categories 5, 6, 21, 80) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |
-| AI Behavioral | 6 | 100+ (cross-cutting) |
+| AI Behavioral | 8 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate) |
 
-**Total:** 481+ bugs fixed, 35 lessons, 7 domains.
+**Total:** 481+ bugs fixed, 37 lessons, 7 domains.
 
 ## Related Documents
 

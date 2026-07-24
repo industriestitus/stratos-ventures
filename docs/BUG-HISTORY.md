@@ -89,8 +89,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 81 | /api Rate-Limit Raise + app_settings 404→200-null | `608c102` | 2026-07-23 | 2 | 0 |
 | 82 | Security v2 C3 — Encrypt Existing Cloud Rows + /migrate Gate | `d176a0a` | 2026-07-23 | 5 | 0 |
 | 83 | Security v2 B3a/B3b-1 — Token-Primary Auth + Connection-String Login Removal | `ce69164` | 2026-07-23 | 0 | 0 |
+| 84 | Security v2 B3b-2 — Remove Legacy Client-Encryption + Legacy KV Sync (token-only boot) | `681354b` | 2026-07-24 | 0 | 0 |
 
-**Total: 481 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations
+**Total: 481 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84 are QA-clean hardening batches, 0 fixes — do not change the running total.)
 
 ---
 
@@ -1626,6 +1627,22 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 83.2 | B3b-1 — remove legacy connection-string login | Deleted the "sign in from another device" flow: `parseConnectionString`/`generateConnectionString`/`shareConnection`, the `#lock-login` lock view, `loginFromDevice()`, the Settings "Share connection" button, the lock-setup "Already have an account?" link, and `'lock-login'` from the `showLockView()` id list. Fully redundant with master-password login (which onboards a fresh device with no sync key; `DEFAULT_WORKER_URL` is baked in). The connection string only ever encoded the sync key. Unused `login.*` + `settings.shareConnection` i18n keys left in place (inert; swept in Phase D). sw.js v40. | `15f2577` |
 
 **QA:** 4 adversarial agents over the full session diff (`b317341..HEAD`, C3 + B3a + B3b-1) — correctness/regression, security posture, live-production/data-safety, boot-lock integrity + B3b-2 de-risk map. All four **SHIP / SOUND, 0 must-fix**: every removed symbol de-referenced, `showLockView` list matches the 7 remaining lock views exactly, all handlers resolve, token-only auth composes cleanly (Worker `authenticate()` accepts either header), C3 still authenticates token-only, security posture strictly better (SV.3 resolved; one fewer sync-key entry surface). The boot-integrity agent produced the precise B3b-2 brick-hazard map (buildMeta→isEncryptionEnabled, autoLoad→showReauthScreen, boot-branch collapse) now recorded in the handoff memory.
+
+---
+
+## Category 84 — Security v2 B3b-2: Remove Legacy Client-Encryption + Legacy KV Sync (2026-07-24)
+
+**Not bug fixes — the riskiest hardening batch in the project** (kept here per the per-batch doc policy). Retires the deprecated password-based client-side encryption system AND the legacy KV `/sync` cloud path; the boot/lock gate now keys **solely** off the master-password auth token + envelope DEK (Security v2 Phase B/C). Frontend-only; no worker/schema change. sw.js **v41**. Net **−521 lines**.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 84.1 | Remove legacy client-side encryption | Deleted `encryptPayload`/`decryptPayload`/`isEncryptedBlob`, `encryptVerify`/`verifyPassword`/`verifyPasswordWithMeta`/`isEncryptionEnabled`, `_encPass`, and the idle-lock timers (`_autoLockTimer`/`_encIdleTimer`/`_resetEncIdleTimer` + `AUTO_LOCK_DELAY`/`ENC_IDLE_TIMEOUT`). **KEPT** `deriveKey`/`hashKey`/`generateRecoveryKey`/`recoveryWrapKey`/`b64`/`unb64` — the handoff removal list was wrong here: the kept envelope/recovery-key auth calls `recoveryWrapKey`→`deriveKey`, so removing `deriveKey` would have broken master-password recovery. | `681354b` |
+| 84.2 | Remove legacy KV sync path | Deleted `cloudSave`/`cloudLoad`/`testSync`/`scheduleCloudSave`, `autoLoad`'s `!d1Mode` KV-load tail, `autoSave`'s `scheduleCloudSave` branch, and the `visibilitychange` idle-lock block. **KEPT** the token-authed (vestigial) `/sync/meta` path: `cloudSaveMeta`/`cloudLoadMeta`/`cloudSaveMetaRetry`/`buildMeta`/`_metaVersion`. `buildMeta` reworked to report `has_encryption:false`, `enc_salt/verify/recovery:null` (it no longer references the removed `isEncryptionEnabled`). The dead `/sync/load|save|restore-backup` routes are removed worker-side in B3c. | `681354b` |
+| 84.3 | Rework boot/lock gate (brick-critical) | Pre-paint IIFE now **unconditionally** adds `app-locked`; the async boot IIFE clears it only on the token+DEK path (→`autoLoad`), else routes every no-token case to `showMasterLogin()` (mpInit true/false/null). Removed the legacy `lock-unlock`/`lock-setup` boot branches + the `autoLoad` password-reauth check (`showReauthScreen`). Every reachable boot state ends in either app-visible or a visible master-login/recovery gate — **never** stuck behind hidden `app-locked` chrome. Verified in-browser across no-token, token-invalid-DEK, and `autoLoad`-body paths (`bricked:false` on all). | `681354b` |
+| 84.4 | Remove legacy lock/encryption UI | Deleted `unlockApp`/`setupEncryption`/`skipEncryption`/`finishSetup`/`recoverWithKey`, `changeEncPassword`/`updateEncStatus`, `showReauthScreen`/`handleReauth`; the `#lock-unlock`/`#lock-setup`/`#lock-recovery-key`/`#lock-recovery`/`#lock-reauth` views; the `#settings-encryption` card + its Settings-nav pill. `showLockView` now toggles only `lock-masterlogin`/`lock-mprecovery`. | `681354b` |
+| 84.5 | Cosmetic `getSyncKey()` → `hasDataAuth()` | Converted display/gate guards that were sync-key-only to token-or-sync-key: `fetchInsiderTrading`, `renderInsiderTrading`, `renderApiUsage` (3× `key:hasDataAuth()`; used only as `!!api.key`), `updateD1UI`, `testFinnhub`, `testFmp`. The "Sync Now" button → `testD1()` unconditionally. The `authDataHeaders`/`setupMasterPassword`/`renderMasterPassword` sync-key references are intentionally left for B3c. | `681354b` |
+
+**QA:** 1 adversarial agent over the working-tree diff (8-point brick-hazard checklist) = **SHIP, 0 defects**. Independently verified: all 22 removed symbols return grep-count 0 (remaining `cloudSave` hits are i18n keys + the D1 `API.scheduleSave` retry path); no `onclick/onkeydown` references a removed fn; `showLockView` only ever called with the 2 kept views; brace/paren balance intact (6/6 inline `<script>` blocks parse clean); `buildMeta` caller works; boot IIFE has no gate-less terminal state; `hasDataAuth()` swaps coherent. Also verified in-browser: sw.js **v41** loads, master-login gate renders, recovery view toggles.
 
 ---
 
