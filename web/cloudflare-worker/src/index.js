@@ -503,9 +503,9 @@ const NATURAL_DELETE = {
 // fields (thesis, notes, checklist, override values) and client-only state. When handleCompanyFull
 // surfaces the cache to hydrate the tracker, strip everything that isn't a market metric so none of
 // that private/stale content is shipped in the /full response. Denylist (keeps market fields by
-// default) so a new market metric is never accidentally dropped. NOTE: the at-rest plaintext copy
-// in api_cache itself is a separate pre-existing concern (the cache WRITE path is unchanged) —
-// tracked for the security pass; this only sanitizes what /full returns.
+// default) so a new market metric is never accidentally dropped. This is a READ-side second layer:
+// the WRITE side is now also sanitized (client `_sanitizeStockCache` fail-closed allowlist
+// `STOCK_CACHE_FIELDS`, SV.6/Cat 80), so api_cache no longer stores those private fields at rest.
 const CACHE_STOCK_STRIP = ['thesis','notes','checklist','overriddenData','_origData','overrides','scenarios','valuationHistory','priceAlerts','tags','sellTriggers','learningLog','convictionHistory','followSources','earningsCalendar','todos','filings','earnings','reviews','valuations','positions','sector','currency','exchange','pipeline','pipelineStatus','companyType','sortOrder','archivedAt','dateAdded','dcfMode','evaWacc','idealTraitChecks','avoidChecks'];
 
 async function handleCrud(table, method, id, body, url, db, origin) {

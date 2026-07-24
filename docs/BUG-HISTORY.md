@@ -92,6 +92,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 84 | Security v2 B3b-2 — Remove Legacy Client-Encryption + Legacy KV Sync (token-only boot) | `681354b` | 2026-07-24 | 0 | 0 |
 | 85 | Security v2 B3c — Retire the Sync Key (worker token-only auth + client cleanup) | `2ba0019` | 2026-07-24 | 0 | 0 |
 | 86 | Security v2 C3b — Encrypted Clear-and-Restore (worker /api/purge) | `feb4b4b` | 2026-07-24 | 1 | 0 |
+| 87 | Security v2 Phase D — Final Security Sweep + Doc/Comment Closeout | `657c553`+ | 2026-07-24 | 0 | 0 |
 
 **Total: 482 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85 are QA-clean hardening batches, 0 fixes; Cat 86 = 1 QA-caught fix.)
 
@@ -1680,6 +1681,22 @@ Fixes **SV.8**: with encryption active, "Restore from Backup" REPLACED-vs-MERGED
 | 86.4 (QA-fix) | Strip ALL stale company-id caches, not just positions | **Adversarial QA CRITICAL:** `_stripD1Refs` initially stripped `_d1*` + `pfPositions[].companyId` but MISSED the identical non-prefixed `companyId` cache on `pfTransactions`, `researchNotes[*]`, and `rvData.entries`. Since `companies.id` has no AUTOINCREMENT, post-purge re-inserts get fresh rowids → a stale cached `company_id` → the atomic `transactions/notes/reviews` batch hits an FK violation → **the whole batch 500s and is dropped** → on next reload the D1-load overwrites localStorage → permanent loss of all transactions / company-linked notes/reviews. Fixed: strip `companyId` on all four; `saveResearchNotes` gained a `_tickerToD1Id(ticker)` fallback (transactions/reviews already had one) so company-linked notes keep their link. | `feb4b4b` |
 
 **Verified:** worker `node --check` + `node:sqlite` purge dry-run (cascade clears all 11 parent/child tables; `app_settings` preserved); 6/6 inline client scripts parse; in-browser `_stripD1Refs`/`cancelPending`/`flushAllAwait` behavior (incl. the 86.4 re-verify: `companyId` stripped on all four, `ticker`/`companyTicker` preserved). Adversarial QA agent: 1 CRITICAL (86.4) → fixed + re-verified; data-safety invariant ("never reads D1→local; worst case D1-incomplete, not data-loss") confirmed. **Deploy:** `cd web/cloudflare-worker && npx wrangler deploy` (frontend v43 already live; until the worker deploys, an encrypted restore's `/api/purge` 400s → caught → falls back to the old merge + "restored locally" warning — safe degrade).
+
+---
+
+## Category 87 — Security v2 Phase D: Final Security Sweep + Closeout (2026-07-24)
+
+**Closes Security v2.** A final holistic adversarial security sweep over the whole end-state (auth model, E2EE, no-sync-key) produced a **clean sign-off — no must-fix gaps**: zero unauthenticated data routes (every `/api/*`, `/proxy/*`, Yahoo, `/sync/meta`, `/auth/dek|devices|revoke|change` gated by token `authenticate()`; only salt/login/recover/health public), no live sync-key credential or `SYNC_SECRET` read anywhere, `/auth/change`+`/auth/recover` sound (prove old password / recovery key, revoke all tokens), brute-force limiter on login+recover keyed on edge-set `CF-Connecting-IP`, `encStr` fails closed (throws when DEK required but absent → can't write plaintext), full saver encryption coverage vs the `C3_TABLES` manifest, api_cache write-path sanitized (SV.6), and clean secrets hygiene (no key/token logged or in a URL).
+
+Applied the 4 nice-to-have cleanups the sweep flagged (no behavior change):
+| # | Item | Detail |
+|---|------|--------|
+| 87.1 | `wrangler.toml` | Removed the stale "`SYNC_SECRET` — auth key for /sync endpoints (Required)" secret line (unused post-B3c). |
+| 87.2 | worker `api_cache` comment | Corrected the `CACHE_STOCK_STRIP` comment that said the cache WRITE path was "unchanged / plaintext concern open" — the write path IS sanitized now (client `_sanitizeStockCache` allowlist, SV.6). |
+| 87.3 | `API-REFERENCE.md` Security Notes | Replaced the false "API keys sent in query parameters" + "sync key timing-safe" lines with the current model (server-side keys via proxy, token auth, envelope E2EE at rest). |
+| 87.4 | docs | ROADMAP Phase D closed + Security v2 marked COMPLETE; ARCHITECTURE §7 / KNOWN-ISSUES SV.* confirmed accurate. |
+
+Deferred (pre-existing, non-blocking, accepted): SV.1 (per-isolate in-memory rate limiting — the *auth* brute-force limiter is already KV-durable), SV.4 (CORS localhost origins), SV.5 (bearer token in localStorage — device-trust posture).
 
 ---
 

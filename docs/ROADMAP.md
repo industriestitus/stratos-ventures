@@ -1,8 +1,8 @@
 # Stratos Ventures — Roadmap
 
-## In Progress: Security v2 Overhaul
-Goal: single master password, no sync key, server-side API keys, E2E encryption.
-Full plan in `memory/project_security-v2-plan.md`. Stop + multi-agent QA after each task.
+## ✅ COMPLETE: Security v2 Overhaul (2026-07-24)
+Goal: single master password, no sync key, server-side API keys, E2E encryption — **all achieved.**
+Phases A (server-side API keys), B (master-password auth + sync-key retirement B3a/b/c), C (envelope E2EE + C3 migration + C3b clear-and-restore), D (docs + final security QA) all done. A final holistic adversarial security sweep (2026-07-24) signed off: **zero unauthenticated data routes, no live sync-key credential, fail-safe E2EE, complete endpoint auth coverage, clean secrets hygiene — no must-fix gaps.** Full plan in `memory/project_security-v2-plan.md`.
 
 **Phase A — Server-side API keys**
 - [x] A1: Worker `/proxy/fmp/*` + `/proxy/finnhub/*` routes; keys as secrets (FMP_KEY, FINNHUB_KEY); SSRF/traversal/key-injection guards; body-scrub; 60/min rate limit. QA: 3 agents, hardening applied (redirect:manual, case-insensitive strip, Object.hasOwn, body-scrub). (2026-07-21)
@@ -25,7 +25,10 @@ Full plan in `memory/project_security-v2-plan.md`. Stop + multi-agent QA after e
 - [x] C3b: encrypted clear-and-restore flow (`feb4b4b`, v43; needs `wrangler deploy`). Worker `POST /api/purge` (token-authed, FK-cascade clear) + client `_c3bClearAndRestore` (cancel→purge→strip→2-phase re-save, no D1→local read). SV.8 RESOLVED. Adversarial QA = 1 CRITICAL (stale companyId strip) fixed + re-verified.
 
 **Phase B3 — retire sync key** (UNBLOCKED — recovery key live; next after C3 is run in prod)
-**Phase D — Cleanup, durable rate limiting, docs, final security QA** (not started)
+**Phase D — Cleanup, docs, final security QA** ✅ DONE (2026-07-24)
+- [x] Security-model docs refreshed: ADR-039/040/041, ARCHITECTURE §7.1-7.3, API-REFERENCE (token-only + /api/purge, /sync retired), DEPLOYMENT (SYNC_SECRET unset), KNOWN-ISSUES SV.2/3/6/7/8 all resolved/downgraded.
+- [x] Final adversarial security sweep — clean sign-off, no must-fix gaps; 4 nice-to-have stale doc/comment cleanups applied (wrangler.toml SYNC_SECRET line, api_cache write-path comment, API-REFERENCE security notes).
+- Deferred (pre-existing, non-blocking): SV.1 per-isolate in-memory rate limiting (durable KV limiter is a future nice-to-have; the auth brute-force limiter IS already KV-durable). SV.4 CORS localhost origins. SV.5 bearer token in localStorage (accepted device-trust posture).
 
 ---
 

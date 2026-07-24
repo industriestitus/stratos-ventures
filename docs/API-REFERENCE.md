@@ -473,8 +473,9 @@ function stSettings() {
 - **Worker URL:** Verified at app startup with `GET {URL}/health`
 
 ### Security Notes
-- Keys are sent in query parameters (not ideal for production; consider using headers or server proxies)
-- Sync key uses timing-safe comparison in worker to prevent timing attacks
+- FMP/Finnhub API keys are **server-side only** (Worker secrets, reached via `/proxy/*`) — never sent from the client or placed in URLs (Phase A). The proxy strips any client-supplied key param and scrubs the secret from the response body.
+- Data auth is a master-password **device token** (`X-Auth-Token`); the legacy sync key was retired in B3c. Password/recovery verifiers use timing-safe comparison in the worker to prevent timing attacks.
+- Sensitive D1 columns are client-side encrypted (envelope E2EE, Phase C) — the server only ever holds ciphertext for them.
 
 ---
 
