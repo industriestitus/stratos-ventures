@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v44';
+var APP_VERSION='v45';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -4553,7 +4553,13 @@ function doRestore(){
         if(!d.version){showToast(t('toast.invalidBackup'),'error');return}
         if(d.version>SCHEMA_VERSION){showToast(t('toast.newerVersion',{v:d.version}),'error');return}
         if(!await showConfirm(t('confirm.backupRestore'),t('confirm.backupRestoreMsg'),{okLabel:t('confirm.backupRestoreOk'),typeToConfirm:'RESTORE'}))return;
-        const keepKeys=['enc_salt','enc_verify','enc_recovery','enc_skipped','schema_version','tracker_settings'];
+        // Session/auth/mode keys MUST survive a data restore — they are identity, not
+        // data. Wiping auth_token logs the device out mid-restore → every D1 save (incl.
+        // the C3b purge) throws "API not configured" and the cloud restore silently fails.
+        // dek_cache/enc_active keep the silent token boot + encryption working; d1_migrated
+        // keeps D1 mode; meta_version feeds /sync/meta. (Pre-existing bug since master-
+        // password auth landed — the keepKeys list predated it.)
+        const keepKeys=['auth_token','dek_cache','enc_active','d1_migrated','meta_version','enc_salt','enc_verify','enc_recovery','enc_skipped','schema_version','tracker_settings'];
         const snapshot={};
         Object.keys(localStorage).forEach(k=>{snapshot[k]=localStorage.getItem(k)});
         const memSnapshot={tStocks:tStocks,researchNotes,pfAccounts,pfPositions,pfTransactions,pfSnapshots,pfExchangeRates,dbTodos,dbFiSettings,dbBenchmark,db52wHighs,divHistory,divSettings,fwData,rvData};
