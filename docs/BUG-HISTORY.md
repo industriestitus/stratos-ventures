@@ -93,8 +93,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 85 | Security v2 B3c — Retire the Sync Key (worker token-only auth + client cleanup) | `2ba0019` | 2026-07-24 | 0 | 0 |
 | 86 | Security v2 C3b — Encrypted Clear-and-Restore (worker /api/purge) | `feb4b4b` | 2026-07-24 | 1 | 0 |
 | 87 | Security v2 Phase D — Final Security Sweep + Doc/Comment Closeout | `657c553`+ | 2026-07-24 | 0 | 0 |
+| 88 | Purge stale legacy client-encryption verifier from server meta | `39100c8` | 2026-07-24 | 1 | 0 |
 
-**Total: 482 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85 are QA-clean hardening batches, 0 fixes; Cat 86 = 1 QA-caught fix.)
+**Total: 483 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix.)
 
 ---
 
@@ -1697,6 +1698,19 @@ Applied the 4 nice-to-have cleanups the sweep flagged (no behavior change):
 | 87.4 | docs | ROADMAP Phase D closed + Security v2 marked COMPLETE; ARCHITECTURE §7 / KNOWN-ISSUES SV.* confirmed accurate. |
 
 Deferred (pre-existing, non-blocking, accepted): SV.1 (per-isolate in-memory rate limiting — the *auth* brute-force limiter is already KV-durable), SV.4 (CORS localhost origins), SV.5 (bearer token in localStorage — device-trust posture).
+
+---
+
+## Category 88 — Purge Stale Legacy Encryption Verifier from Server Meta (2026-07-24)
+
+**Runtime-state finding (Peter spotted it in the browser console), not caught by the code-only Phase D sweep.** The `/sync/meta` response still carried the pre-B3b-2 legacy client-encryption fields — `has_encryption:true` + `enc_salt`/`enc_verify`/`enc_recovery`. That system was removed in B3b-2 and `buildMeta()` now nulls those fields, but the old values were still sitting in KV `user_meta` because nothing had overwritten it since. `enc_verify` is an AES-GCM verifier of a known plaintext under the legacy password-derived key → an **offline-brute-forceable verifier for the (legacy) password, at rest in KV**. `/sync/meta` is token-authed now (only an authenticated device reads it), so LOW severity, but stale sensitive state worth purging.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 88.1 | Self-heal the stale meta | `autoLoad` now overwrites `user_meta` with the clean `buildMeta()` (nulled enc fields) when the loaded meta still has `has_encryption`/`enc_*` set. One-time + self-terminating (next boot sees nulls → no-op). | `39100c8` |
+| 88.2 | Stop logging the verifier | Removed `console.log('cloudLoadMeta response:', …)` which printed the meta (incl. the verifier) to the console on every boot. | `39100c8` |
+
+sw.js **v44**, frontend-only (reload triggers the self-heal). **Lesson (CODING-LESSONS):** a security sweep must audit runtime/stored STATE (KV, D1, localStorage), not just the code that writes it — removing the writer doesn't remove data already written.
 
 ---
 

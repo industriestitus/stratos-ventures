@@ -203,6 +203,15 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 - Prefer `INTEGER PRIMARY KEY AUTOINCREMENT` if rowids must be stable across delete+reinsert — or design the flow to not depend on rowid stability (resolve by natural key).
 - Keep the local store as the source of truth during the operation: never read D1→local mid-flow, so a partial failure can't overwrite good local data.
 
+### 0b. Removing the Writer Doesn't Remove Already-Written State (Cat 88)
+
+**What went wrong:** B3b-2 removed the legacy client-side encryption and made `buildMeta()` stop writing `enc_salt`/`enc_verify`/`enc_recovery`. But the OLD values (a brute-forceable password verifier) stayed in KV `user_meta` because nothing overwrote them. The final code-only security sweep missed it — it audited the code, not the stored state. Peter caught it in the browser console.
+
+**Rule:**
+- When you retire a field/table/credential, also **migrate or purge the data already written** — deleting the writer leaves stale (possibly sensitive) state at rest.
+- A security review must sweep runtime/stored STATE (KV, D1, localStorage, backups), not just the code paths. Grep the actual stored values, not only the savers.
+- Prefer a self-healing overwrite on next boot (idempotent, self-terminating) over a one-off manual cleanup, so every device converges.
+
 ### 1. D1 Write-Through + Read-Fallback
 
 **What went wrong:** Save functions had `if(d1Mode) { scheduleSave(); return; }` — skipped localStorage entirely. TODOs disappeared after refresh because D1 sync was slow and localStorage wasn't written.
