@@ -1236,6 +1236,35 @@ The original backend authenticated every data request with a single shared "sync
 
 ---
 
+## ADR-042: Encrypted Backup with a Standalone Passphrase (Batch A)
+
+**Status:** Accepted (2026-07-24) — Batch A (`6e5735f`, v47)
+
+**Context:**  
+Security v2 put all D1 data behind envelope E2EE, but the "Download Backup" export was still a **plaintext** `.json` — the one artifact that leaves the encryption envelope. If it lands in a cloud-sync folder, an email, or a lost drive, the whole E2EE posture is bypassed (theses, notes, positions, amounts in cleartext).
+
+**Decision:**  
+- The **default** backup is now encrypted: prompt for a passphrase → PBKDF2-SHA256-600k → AES-256-GCM → download a `{v,format,kdf,cipher,salt,iv,ct}` blob as `.enc.json`. Reuses the existing `deriveKey`/`b64`/`unb64` primitives — no new crypto. Fresh 16-byte salt + 12-byte IV per export.
+- **Standalone passphrase, NOT the master password.** A backup must stay restorable after a master-password change; coupling it to the master password (or the DEK) would strand old backups. Decoupling costs the user one remembered secret but is the robust choice for a disaster-recovery artifact. Min length 10 (matches the master password; the encrypted file is offline-brute-forceable, unlike the online-only master password).
+- **Plaintext export retained** behind a separate button + explicit "unencrypted — handle with care" confirm (CSV/XLSX/PDF interop still needs it).
+- **Restore auto-detects** the encrypted shape and decrypts **before any destructive mutation or version check**; wrong/cancelled passphrase → clean early return, data untouched (AES-GCM tag mismatch throws).
+
+**Alternatives Rejected:**
+- **Couple to master password / DEK:** a password change or DEK rotation would make prior backups undecryptable — the opposite of what a backup is for.
+- **Encrypt only on cloud upload, keep local export plaintext:** the local file is precisely the leak vector; encrypting elsewhere misses it.
+- **Keep plaintext default, add encrypted as an option:** leaves the security gap one click away; the whole point is to close it by default.
+
+**Consequences:**
+- ✅ The last plaintext data path is closed; a leaked backup file is now just ciphertext.
+- ✅ Reusable `showPasswordPrompt()` (confirm field + min-length) for future passphrase prompts.
+- ⚠️ A forgotten backup passphrase = an unrecoverable backup (stated in the prompt copy). This is inherent to client-side encryption with a standalone secret.
+- ⚠️ Encrypted base64 is ~1.33x larger — the restore file-size guard was raised 10MB → 50MB (a real image-bearing backup produced a 10.7MB ciphertext).
+- Adversarial QA folded 5 fixes into the feature (see BUG-HISTORY Cat 91); the notable one: `b64()`'s `String.fromCharCode(...bytes)` spread overflowed on large buffers (CODING-LESSONS JS #12).
+
+**Date:** 2026-07-24 (Batch A)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1281,6 +1310,7 @@ The original backend authenticated every data request with a single shared "sync
 | 039 | Retire legacy client-side encryption + legacy KV sync (B3b-2) | Accepted | 2026-07-24 |
 | 040 | Retire the sync key — token-only auth (B3c) | Accepted | 2026-07-24 |
 | 041 | Encrypted clear-and-restore via client-driven purge (C3b) | Accepted | 2026-07-24 |
+| 042 | Encrypted backup with a standalone passphrase (Batch A) | Accepted | 2026-07-24 |
 
 ---
 

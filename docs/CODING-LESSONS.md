@@ -1,7 +1,7 @@
 # Coding Lessons — Stratos Ventures Finance App
 
 **Last Updated:** 2026-07-24
-**Source:** 450+ bug fixes across 25+ QA sessions (Categories 1-84)
+**Source:** 495+ bug fixes across 25+ QA sessions (Categories 1-91)
 
 Reference for AI assistants and developers. All lessons are validated patterns from actual bugs found and fixed.
 
@@ -188,6 +188,16 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 **Why repeatable:** `el.offsetParent!==null` is a widely-cited "is it visible?" shortcut and works fine for normally-positioned elements, so it passes casual testing on non-fixed nodes. Modals/overlays are exactly the elements most likely to be `position:fixed`, which is precisely where it breaks.
 
 **Rule:** For a visibility check that must also cover `position:fixed` elements, test rendered size — `el.offsetWidth>0||el.offsetHeight>0` (both are 0 under `display:none`, non-zero when laid out) — or `getComputedStyle(el).display!=='none'`. Reserve `offsetParent` for offset-position math, not visibility.
+
+---
+
+### 12. `btoa(String.fromCharCode(...bytes))` Is a Latent Large-Input Bomb (Cat 91)
+
+**What went wrong:** `b64(buf)` was `btoa(String.fromCharCode(...new Uint8Array(buf)))`. The spread passes every byte as a separate function argument, and once the arg count is high enough the call throws `RangeError: Maximum call stack size exceeded` (engine-dependent, roughly tens-to-hundreds of KB). It had only ever been fed small per-field values in the envelope crypto; the encrypted-backup feature was the first to push a whole dataset (with base64 note images) through it — so the **default** backup path would throw for exactly the users with the most data.
+
+**Why repeatable:** Small-sample tests pass cleanly — the round-trip test used a tiny object and went green. The failure is a pure function of input size, so it stays invisible until real data hits it in production. `Uint8Array.from(atob(s), c=>c.charCodeAt(0))` (the decode side) has no spread and is already large-safe, which makes the asymmetry easy to miss.
+
+**Rule:** Never spread a large/unbounded array into a function. Encode base64 in chunks: iterate the `Uint8Array` in ~32KB `subarray` slices, `String.fromCharCode.apply(null, slice)` per chunk, then `btoa`. Whenever a helper's input grows from "always small" to "possibly large", re-check every `...spread`, `String.fromCharCode`, `Math.max(...arr)`, and `apply` in it, and test at realistic size (MBs), not with a toy sample.
 
 ---
 

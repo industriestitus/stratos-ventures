@@ -96,8 +96,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 88 | Purge stale legacy client-encryption verifier from server meta | `39100c8` | 2026-07-24 | 1 | 0 |
 | 89 | Backup restore wiped the auth token (logged out mid-restore, cloud restore skipped) | `17f9845` | 2026-07-24 | 1 | 0 |
 | 90 | Security v2 Phase-D final sweep — C3b restore data-loss paths (CRITICAL + 2 HIGH + 3 MEDIUM) | `cc485c8` | 2026-07-24 | 6 | 0 |
+| 91 | Encrypted Backup (Batch A) — feature + adversarial QA fixes (b64 overflow, size guard, min-length, version guard) | `6e5735f` | 2026-07-24 | 5 | 0 |
 
-**Total: 490 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep.)
+**Total: 495 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature.)
 
 ---
 
@@ -1753,6 +1754,26 @@ sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe e
 **Deferred / accepted (documented, not fixed here):** notes full-text search now runs over encrypted title/content → searches ciphertext (functional, KNOWN-ISSUES); a schema-valid-but-WRONG backup still purges+replaces (no different-account detection); CSP pin means a user-set custom worker URL on a different host is blocked (fine for the default deployment); defense-in-depth — the v44 legacy-meta-verifier purge is client-runtime-dependent, closeable with a one-off `wrangler kv` `user_meta` overwrite.
 
 **Lesson (CODING-LESSONS):** a helper that swallows errors (`.catch()` + `Promise.allSettled`) turns a failure into a silent success — lethal when a guard/rollback decision keys off "did it throw?". Make such helpers report success explicitly.
+
+---
+
+## Category 91 — Encrypted Backup (Batch A of the backup safety-net) (2026-07-24)
+
+**Feature:** the exported backup `.json` was the ONLY place data left the E2EE envelope (plaintext theses/notes/positions/amounts). The default **🔒 Download Backup** now prompts for a **standalone** passphrase (decoupled from the master password, so a backup survives a password change) → PBKDF2-SHA256-600k → AES-256-GCM → downloads a `{v,format,kdf,cipher,salt,iv,ct}` blob as `stratos-backup-YYYY-MM-DD.enc.json`. Reuses the existing `deriveKey`/`b64`/`unb64` crypto — no new primitives. Plaintext export kept behind a separate button + explicit "unencrypted — handle with care" confirm. Restore auto-detects the encrypted shape and decrypts **before any destructive mutation**; a wrong or cancelled passphrase leaves all data untouched (AES-GCM tag mismatch → clean error). New reusable `showPasswordPrompt()` (optional confirm field + min-length validation, reuses `mp.tooShort`/`mp.mismatch`). i18n EN+HU. sw.js **v47**.
+
+**Verified in-browser (small + 6MB datasets):** lossless round-trip incl. Unicode, wrong passphrase throws, random salt+iv per encryption (no nonce reuse), no plaintext leak in ciphertext, modal validation + submit/cancel.
+
+| # | Sev | Item (found by adversarial QA agent) | Fix | Commit |
+|---|-----|------|-----|--------|
+| 91.1 | HIGH | `b64()` was `btoa(String.fromCharCode(...bytes))` — the spread throws `RangeError` on large buffers. A real backup with embedded note images passes the whole ciphertext through it → the **default** encrypted path would throw for exactly the users who need it (round-trip test passed only because the sample was small). | `b64` rewritten chunked (32KB `subarray` + `String.fromCharCode.apply`); `unb64` already spread-free. Verified on a 6MB buffer (was RangeError). | `6e5735f` |
+| 91.2 | MEDIUM | Restore file-size guard was 10MB; an encrypted backup is ~1.33x (base64) — a real image-bearing backup produced a **10.7MB** ciphertext → valid backup rejected on restore. | guard 10MB → 50MB. | `6e5735f` |
+| 91.3 | LOW | Backup passphrase min-length 8 < master password's 10, and the encrypted file is offline-brute-forceable (it leaves the envelope). | minLength 8 → 10; the min is now stated in the prompt copy. | `6e5735f` |
+| 91.4 | NIT | `_decryptBackup` ignored `blob.v` — a future format would decrypt with silently-wrong params. | throws on unknown `blob.v` (forward-safety). | `6e5735f` |
+| 91.5 | NIT | Corrupt file and wrong passphrase showed the same "wrong passphrase" toast. | copy now reads "Wrong passphrase or corrupt file". | `6e5735f` |
+
+**Lesson (CODING-LESSONS):** `btoa(String.fromCharCode(...bytes))` is a latent large-input bomb — the spread's arg-count limit makes it throw only once a buffer is big, so small-sample tests pass. Encode base64 in chunks. See CODING-LESSONS.
+
+**Still pending (this batch was A only):** Batch B (auto pre-restore safety backup + richer restore confirm summary), Batch D (UX polish: danger affordance on Restore, backup-age indicator, verify-backup, export grouping), Batch C (D1 monthly snapshot table + picker). See `memory/project_backup-safety-net.md`.
 
 ---
 
