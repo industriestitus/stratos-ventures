@@ -1,4 +1,4 @@
-const CACHE_NAME = 'stratos-v42';
+const CACHE_NAME = 'stratos-v43';
 const LOCAL_ASSETS = ['./index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 const CDN_ASSETS = [
   'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js',

@@ -763,6 +763,17 @@ async function handleNotesSearch(query, db, origin) {
   }
 }
 
+// Tables whose DELETE clears all user-entity data; child tables (todos, positions,
+// note_images, checklist_answers, dividend_history, …) go via ON DELETE CASCADE.
+// Shared by handleMigrate (plaintext import) and the C3b /api/purge route (encrypted
+// clear-and-restore). `includeSettings` also wipes app_settings (except schema_version).
+const USER_DATA_CLEAR_TABLES = ['companies','notes','broker_accounts','portfolio_snapshots','exchange_rates','general_todos','framework_entries','reviews','valuations'];
+function userDataClearStmts(db, includeSettings) {
+  const stmts = USER_DATA_CLEAR_TABLES.map(t => db.prepare(`DELETE FROM ${t}`));
+  if (includeSettings) stmts.push(db.prepare("DELETE FROM app_settings WHERE key NOT IN ('schema_version')"));
+  return stmts;
+}
+
 async function handleMigrate(body, db, origin) {
   const stats = { companies: 0, todos: 0, notes: 0, accounts: 0, positions: 0, transactions: 0, snapshots: 0, dividends: 0, framework: 0, reviews: 0, valuations: 0, settings: 0 };
   const errors = [];
@@ -770,10 +781,7 @@ async function handleMigrate(body, db, origin) {
   const accountIdMap = {};
 
   // Clear existing data (FK cascades handle child tables)
-  const clearTables = ['companies','notes','broker_accounts','portfolio_snapshots','exchange_rates','general_todos','framework_entries','reviews','valuations'];
-  const clearStmts = clearTables.map(t => db.prepare(`DELETE FROM ${t}`));
-  clearStmts.push(db.prepare("DELETE FROM app_settings WHERE key NOT IN ('schema_version')"));
-  try { await db.batch(clearStmts); } catch(e) { console.error('Clear tables failed:', e); }
+  try { await db.batch(userDataClearStmts(db, true)); } catch(e) { console.error('Clear tables failed:', e); }
 
   // 1. Companies from trackerStocks
   const trackerStocks = body.trackerStocks || {};
@@ -1085,6 +1093,22 @@ async function handleApi(path, method, url, request, env, origin) {
     if (!company_id || !data_source || !data_json) return jsonResp({ error: 'Missing company_id, data_source, or data_json' }, 400, origin);
     await db.prepare("INSERT INTO api_cache (company_id, data_source, data_json, fetched_at) VALUES (?, ?, ?, datetime('now')) ON CONFLICT(company_id, data_source) DO UPDATE SET data_json = excluded.data_json, fetched_at = excluded.fetched_at").bind(company_id, data_source, JSON.stringify(data_json)).run();
     return jsonResp({ ok: true }, 200, origin);
+  }
+  if (table === 'purge' && method === 'POST') {
+    // C3b: token-authed full clear of user-entity data so an ENCRYPTED restore can
+    // REPLACE (not merge) the cloud — the client then repopulates via its normal
+    // encrypted savers. Single-tenant DB, so this clears this account's data. Leaves
+    // app_settings untouched (key-value config is upserted by key, no resurrection
+    // problem). api_cache is cleared via the companies FK cascade — fine, it's
+    // regenerable market cache (Tracker "Refresh All" repopulates). Irreversible — client gates
+    // it behind a typed RESTORE confirm + a "back up first" warning.
+    try {
+      await db.batch(userDataClearStmts(db, false));
+      return jsonResp({ ok: true, cleared: USER_DATA_CLEAR_TABLES }, 200, origin);
+    } catch (e) {
+      console.error('Purge failed:', e.message);
+      return jsonResp({ error: 'Purge failed' }, 500, origin);
+    }
   }
   if (table === 'migrate' && method === 'POST') {
     // C3: once the E2EE envelope exists (auth_config.wrapEnc), every sensitive field

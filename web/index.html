@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v42';
+var APP_VERSION='v43';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -4488,6 +4488,58 @@ function downloadBackup(){
   }catch(e){showToast(t('toast.backupFailed',{err:e.message}),'error')}
 }
 
+// C3b: strip every cached D1 row-id reference from the in-memory data so a post-purge
+// re-save INSERTS fresh rows (an id-based saver would otherwise PUT to a now-deleted id
+// and lose the row; a stale numeric company_id would 500 the positions batch on the FK).
+// Covers the `_d1*` convention (_d1Id/_d1ValId/_d1ImageIds) plus positions' non-prefixed
+// `companyId` cache. localStorage is NOT touched here — it stays the source of truth.
+function _stripD1Refs(){
+  const strip=o=>{if(!o||typeof o!=='object')return;
+    if(Array.isArray(o)){o.forEach(strip);return}
+    for(const k of Object.keys(o)){if(k.slice(0,3)==='_d1')delete o[k];else if(o[k]&&typeof o[k]==='object')strip(o[k])}};
+  Object.values(tStocks).forEach(strip);
+  strip(researchNotes);pfAccounts.forEach(strip);pfPositions.forEach(strip);
+  pfTransactions.forEach(strip);pfSnapshots.forEach(strip);
+  strip(divHistory);strip(fwData);strip(rvData);
+  Object.values(_savedStocksCache||{}).forEach(strip);
+  // Non-`_d1`-prefixed caches of the D1 company row id — stale after the companies purge.
+  // Their savers re-resolve via _tickerToD1Id(ticker) once cleared (transactions/reviews
+  // already fall back on the ticker; saveResearchNotes gets a ticker fallback below).
+  // Missing any of these → a stale company_id → the atomic FK batch 500s → the whole
+  // transactions/notes/reviews batch is dropped (the SV.8-class data-loss bug).
+  pfPositions.forEach(p=>{delete p.companyId});
+  pfTransactions.forEach(p=>{delete p.companyId});
+  ['journal','news','market'].forEach(k=>(researchNotes[k]||[]).forEach(n=>{delete n.companyId}));
+  (rvData.entries||[]).forEach(e=>{delete e.companyId});
+  Object.values(_holderCompanies||{}).forEach(h=>{if(h)h._d1Id=null});
+  _d1CompanyMap={};
+}
+// C3b encrypted clear-and-restore: REPLACE the cloud with the just-restored local data
+// (fixes the SV.8 merge-resurrection). The worker has no DEK, so the client re-encrypts
+// via the normal savers. Ordering: cancel the merge-writes the first saver pass scheduled
+// → purge cloud → strip stale ids → phase 1 (companies/accounts) → recapture new company
+// ids → phase 2 (everything that references them). No reload and no D1→local read, so if a
+// stage fails the local data is still intact and re-syncs on the next normal save.
+async function _c3bClearAndRestore(){
+  API.cancelPending();
+  await API.post('purge',{});
+  _stripD1Refs();
+  // Phase 1 — parents. companies get fresh D1 auto-ids; broker_accounts carry client ids.
+  saveTrackerStocks();savePortfolioAccounts();
+  await API.flushAllAwait();
+  try{
+    const cr=await API.get('companies?limit=100000');
+    _d1CompanyMap={};
+    (cr.data||[]).forEach(c=>{_d1CompanyMap[c.id]=c.symbol;const st=tStocks[c.symbol];if(st)st._d1Id=c.id;const h=_holderCompanies[c.symbol];if(h)h._d1Id=c.id});
+  }catch(e){console.error('C3b id recapture:',e)}
+  // Phase 2 — children that resolve their FK from the recaptured company ids.
+  saveResearchNotes();savePortfolioPositions();savePortfolioTransactions();savePortfolioSnapshots();
+  saveExchangeRates();saveDashTodos();saveDashFiSettings();saveDashBenchmark();saveDash52wHighs();
+  saveDividendHistory();saveDivSettings();saveFramework();saveReviews();
+  _putSavedStocks(_getSavedStocks());
+  await API.flushAllAwait();
+}
+
 function doRestore(){
   const input=document.createElement('input');
   input.type='file';input.accept='.json';
@@ -4535,12 +4587,15 @@ function doRestore(){
         if(d.reviewsData&&typeof d.reviewsData==='object'){rvData=d.reviewsData;rvData._nextId=Math.max(rvData._nextId||0,...(rvData.entries||[]).map(x=>x.id||0),0)+1;saveReviews()}
         localStorage.setItem('schema_version',String(SCHEMA_VERSION));
         if(d1Mode&&API.ready()){
-          // C3: /migrate writes raw plaintext into D1 (the worker has no DEK and also
-          // blocks it server-side once the envelope exists). With encryption active the
-          // restored data still reaches the cloud ENCRYPTED via the savers invoked above —
-          // as a merge (upserts), without first clearing the cloud. An encrypted
-          // clear-and-restore flow is tracked as C3b in KNOWN-ISSUES.
-          if(_encRequired){showToast(t('sync.restoreEncBlocked'),'warning',12000)}
+          // C3: /migrate writes raw plaintext into D1 (the worker has no DEK and blocks it
+          // server-side once the envelope exists). C3b: with encryption active, do an
+          // encrypted CLEAR-and-restore instead — purge the cloud, then re-encrypt+re-insert
+          // the restored local data via the savers (a true replace, no SV.8 resurrection).
+          // On failure the local data is intact (never overwritten from D1) → keep the backup.
+          if(_encRequired){
+            try{await _c3bClearAndRestore()}
+            catch(e){console.error('C3b clear-and-restore:',e);showToast(t('toast.restoredLocal'),'warning',12000)}
+          }
           else try{await API.post('migrate',{trackerStocks:d.trackerStocks||tStocks,researchNotes:d.researchNotes||researchNotes,
             portfolioAccounts:d.portfolioAccounts||pfAccounts,portfolioPositions:d.portfolioPositions||pfPositions,
             portfolioTransactions:d.portfolioTransactions||pfTransactions,portfolioSnapshots:d.portfolioSnapshots||pfSnapshots,
@@ -4892,6 +4947,29 @@ const API={
     });
     if(promises.length){Promise.allSettled(promises).then(()=>{this._keepalive=false;this._flushing=false})}
     else{this._keepalive=false;this._flushing=false}
+  },
+  // Awaitable flush: send every pending/scheduled D1 write NOW and resolve when they
+  // settle. Used by the C3b encrypted clear-and-restore so the fresh inserts are on the
+  // server before we rebuild the id map / reload.
+  async flushAllAwait(){
+    const keys=Object.keys(this._timers).concat(Object.keys(this._pendingFns));
+    const seen=new Set();const promises=[];
+    keys.forEach(k=>{
+      if(seen.has(k))return;seen.add(k);
+      if(this._timers[k]){clearTimeout(this._timers[k]);this._timers[k]=null}
+      if(this._pendingFns[k]){
+        const fn=this._pendingFns[k];delete this._pendingFns[k];this._localFallback(k);
+        try{promises.push(fn().catch(e=>console.error('flushAllAwait('+k+'):',e)))}catch(e){console.error('flushAllAwait sync('+k+'):',e)}
+      }
+    });
+    await Promise.allSettled(promises);
+  },
+  // Drop every scheduled/pending D1 write WITHOUT sending it (localStorage already holds
+  // the truth). Used before a C3b purge so the merge-upserts scheduled by the restore's
+  // first saver pass don't race the clear-and-reinsert.
+  cancelPending(){
+    Object.keys(this._timers).forEach(k=>{if(this._timers[k]){clearTimeout(this._timers[k]);this._timers[k]=null}});
+    this._pendingFns={};this._timers={};
   },
   _localFallback(key){
     try{
@@ -8070,7 +8148,7 @@ function saveResearchNotes(){
     for(const noteType of ['journal','news','market']){
       const items=await Promise.all((researchNotes[noteType]||[]).map(async n=>{
         const body=noteType==='news'?(n.comment||''):(n.content||'');   // news body lives in .comment; journal/market in .content
-        return{id:n.id||undefined,company_id:n.companyId||null,note_type:noteType,title:await encStr(n.title||''),content:await encStr(body),note_date:n.date||new Date().toISOString().slice(0,10),source_name:await encStr(n.sourceName||n.source||''),source_url:await encStr(n.sourceUrl||''),is_pinned:n.pinned?1:0,quarter:n.quarter||null,
+        return{id:n.id||undefined,company_id:n.companyId||(n.ticker?_tickerToD1Id(n.ticker):null),note_type:noteType,title:await encStr(n.title||''),content:await encStr(body),note_date:n.date||new Date().toISOString().slice(0,10),source_name:await encStr(n.sourceName||n.source||''),source_url:await encStr(n.sourceUrl||''),is_pinned:n.pinned?1:0,quarter:n.quarter||null,
           excerpt:noteType==='news'?await encStr(n.excerpt||''):null,
           action:noteType==='journal'?await encStr(n.action||''):null,
           tags:noteType==='market'?await encStr(JSON.stringify(n.tags||[])):null,
