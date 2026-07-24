@@ -99,8 +99,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 91 | Encrypted Backup (Batch A) — feature + adversarial QA fixes (b64 overflow, size guard, min-length, version guard) | `6e5735f` | 2026-07-24 | 5 | 0 |
 | 92 | Backup Batch B — restore guardrails + completeness (pre-restore backup, richer confirm, market-cache rehydrate, auto-refresh-stale) + QA collision-id guard | `d2f857a` | 2026-07-24 | 1 | 0 |
 | 93 | Backup Batch D — Data Management UX polish (verify backup, last-backup indicator, restore danger cue) + QA nits | `45f0a01` | 2026-07-24 | 3 | 0 |
+| 94 | Backup Batch E1a — offline-readable HTML archive export + QA completeness fixes | `4cc0615` | 2026-07-24 | 2 | 0 |
 
-**Total: 499 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch.)
+**Total: 501 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export.)
 
 ---
 
@@ -1817,6 +1818,21 @@ sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe e
 | 93.3 | NIT | EN indicator showed "Last backup: 1 days ago." | New singular `backup.lastBackupDay` key; `days===1` branch. | `45f0a01` |
 
 **Accepted (browser limitation):** `_markBackupNow` marks "backup done" on `a.click()`, which fires even if the OS save dialog is cancelled — there's no reliable "download completed" signal, same as the existing "Backup downloaded" toast.
+
+---
+
+## Category 94 — Backup Batch E1a: Offline-Readable HTML Archive (2026-07-24)
+
+**Feature (backup safety-net Batch E1a).** A new "📄 Archive (HTML)" export (`exportHtmlArchive`) writes a self-contained `stratos-archive-YYYY-MM-DD.html` you can open in ANY browser WITHOUT the app — Peter's "interpret it even if the app is gone" goal. Renders ALL data (portfolio accounts/positions/transactions, companies with metrics + manual overrides + thesis + checklist, research notes, framework, reviews, dividends) styled like the app (inline `_ARCH_CSS`, dark theme). Read-only; source = the same in-memory globals as the backup. sw.js **v51**. (Batch E1b = extend the XLSX export to a full dump, still to come.)
+
+**Security:** the file opens as a top-level document, so an un-escaped value would be stored XSS. EVERY user value — including object keys used as labels (override metric keys, checklist section/field keys, review field keys) — is `escH()`-wrapped. A dedicated QA agent audited it field-by-field: escaping complete, no gap. Verified in-browser with injection payloads (a company name `<img onerror>`, a thesis `</style><script>…</script>`, a tag `"><svg onload>`, a note `<script>…</script>`) — all rendered escaped.
+
+| # | Sev | Item | Fix | Commit |
+|---|-----|------|-----|--------|
+| 94.1 | LOW | The checklist + review renderers filtered `typeof v==='string'`, so numeric answers (target price, CAGR, scores) and boolean checkboxes were dropped from a "full data" archive. | New `_archVal` — strings trimmed, finite numbers formatted, `true`→"Yes", `false`/empty skipped (so unchecked boxes don't flood the file). | `4cc0615` |
+| 94.2 | NIT | `toast.archiveFailed` showed "undefined" if a non-`Error` was thrown. | `(e&&e.message)||String(e)`. | `4cc0615` |
+
+**Accepted:** review `extra` uses a denylist (not an allowlist), so a future unknown string field would show with its raw key as a (harmless, escaped) label — cosmetic only. Self-caught before QA: a duplicate review `summary` (shown in both the main div and the extra fields) — `summary` added to the extra-field exclusion list.
 
 ---
 
