@@ -98,8 +98,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 90 | Security v2 Phase-D final sweep — C3b restore data-loss paths (CRITICAL + 2 HIGH + 3 MEDIUM) | `cc485c8` | 2026-07-24 | 6 | 0 |
 | 91 | Encrypted Backup (Batch A) — feature + adversarial QA fixes (b64 overflow, size guard, min-length, version guard) | `6e5735f` | 2026-07-24 | 5 | 0 |
 | 92 | Backup Batch B — restore guardrails + completeness (pre-restore backup, richer confirm, market-cache rehydrate, auto-refresh-stale) + QA collision-id guard | `d2f857a` | 2026-07-24 | 1 | 0 |
+| 93 | Backup Batch D — Data Management UX polish (verify backup, last-backup indicator, restore danger cue) + QA nits | `45f0a01` | 2026-07-24 | 3 | 0 |
 
-**Total: 496 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch.)
+**Total: 499 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch.)
 
 ---
 
@@ -1796,6 +1797,26 @@ sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe e
 **Accepted (documented, not fixed):** the "safety backup saved" toast can fire even if the browser silently blocked the automatic download (same `a.click()` pattern as every other export; copy softened to "downloaded — keep it until the restore looks right"). Reusing the restore file's passphrase to encrypt the pre-restore backup was flagged as a minor UX surprise; Peter chose to keep the reuse (no second prompt) and the success toast now states "encrypted with the passphrase you just entered" (v49) so it's no longer silent. On a stale restore, rehydrate + the immediate `refreshAllStocks()` double-write the same rows (harmless; rehydrate kept as the safe floor in case the refresh fails).
 
 **Lesson (CODING-LESSONS):** a restore that only replaces the AUTHORITATIVE rows leaves DERIVED/regenerable caches (here `api_cache` market metrics) empty — so the app looks like it lost data after the next reload. A complete restore must rehydrate the derived caches too, and any FK id resolved from restored data must be re-validated against the freshly-rebuilt id map before it's used as a write target.
+
+---
+
+## Category 93 — Backup Batch D: Data Management UX Polish (2026-07-24)
+
+**Feature (backup safety-net Batch D).** Polish for the Data Management card. sw.js **v50**.
+- **Verify backup** (`verifyBackup`) — a NON-destructive button: opens a backup file, decrypts it (prompts for the passphrase if encrypted), and shows its contents summary via a plain info dialog. Never restores or mutates anything (QA-confirmed strictly read-only — shares none of `doRestore`'s wipe logic). This is the safe way to check a file / confirm a passphrase without restoring.
+- **Last-backup awareness** — a "Last backup: N days ago" line under the backup buttons, with a stale nudge (> 14 days → amber, never/invalid → red). Tracked in `last_backup_at`, set on every explicit backup download (`_markBackupNow`); NOT set by the automatic pre-restore backup (it's an artifact, not a user backup).
+- **Restore danger affordance** — the Restore button now has a ⚠ + red-tinted border/text so a destructive action doesn't look identical to the benign exports.
+- **Copy/icon polish** — 🔓 on the plaintext button; REPLACES / MERGES uppercased in the helper copy (`applyI18n` sets `textContent`, so HTML bold isn't available — uppercase is the textContent-safe emphasis). HTML hardcoded defaults synced to the new i18n values so no stale text flashes before `applyI18n`.
+
+**QA (agent):** `verifyBackup` verified strictly read-only (every path traced; cancel/wrong-pass/invalid-file all exit clean; summary rendered via `textContent` so no XSS); i18n complete in EN+HU; `updateLastBackupIndicator` null-guarded so the `showSection` hook can't throw; `_markBackupNow` correctly skipped when the download throws.
+
+| # | Sev | Item | Fix | Commit |
+|---|-----|------|-----|--------|
+| 93.1 | NIT | A garbage/non-ISO `last_backup_at` (tampering/migration) rendered "Last backup: NaN days ago." | `isNaN(parsed)` → falls back to the "no backup yet" (red) state. | `45f0a01` |
+| 93.2 | NIT | `toast.fileTooLarge` copy said "max 10MB" but the guard was raised to 50MB (Batch A) — a 10–50MB file was rejected with a wrong number (pre-existing in `doRestore`, second call site added here). | Copy → "max 50MB" (EN+HU). | `45f0a01` |
+| 93.3 | NIT | EN indicator showed "Last backup: 1 days ago." | New singular `backup.lastBackupDay` key; `days===1` branch. | `45f0a01` |
+
+**Accepted (browser limitation):** `_markBackupNow` marks "backup done" on `a.click()`, which fires even if the OS save dialog is cancelled — there's no reliable "download completed" signal, same as the existing "Backup downloaded" toast.
 
 ---
 
