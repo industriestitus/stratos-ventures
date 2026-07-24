@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v43';
+var APP_VERSION='v44';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -15165,7 +15165,6 @@ async function cloudLoadMeta(){
     const r=await fetch(url+'/sync/meta',{headers:authDataHeaders()});
     if(!r.ok){console.warn('cloudLoadMeta: HTTP',r.status);return null}
     const d=await r.json();
-    console.log('cloudLoadMeta response:',JSON.stringify(d));
     return d.ok?d.meta:null;
   }catch(e){console.warn('cloudLoadMeta error:',e.message);return null}
 }
@@ -15234,6 +15233,13 @@ async function autoLoad(){
         const meta=await cloudLoadMeta();
         if(meta&&meta.mode==='kv'&&d1Mode){
           d1Mode=false;localStorage.removeItem('d1_migrated');
+        }
+        // One-time hygiene self-heal: pre-B3b-2 the server user_meta stored the legacy
+        // client-encryption verifier (enc_salt/enc_verify/enc_recovery) + has_encryption.
+        // That system is gone; buildMeta() now nulls those. If a stale copy is still in KV
+        // (offline-brute-forceable password verifier), overwrite it with the clean meta.
+        if(meta&&(meta.has_encryption||meta.enc_salt||meta.enc_verify||meta.enc_recovery)){
+          cloudSaveMeta(buildMeta()).catch(()=>{});
         }
       }catch(e){}
     }
