@@ -1265,6 +1265,34 @@ Security v2 put all D1 data behind envelope E2EE, but the "Download Backup" expo
 
 ---
 
+## ADR-043: Restore Completeness — Rehydrate Derived Caches + Pre-Restore Safety Backup (Batch B)
+
+**Status:** Accepted (2026-07-24) — Batch B (`d2f857a`, v48)
+
+**Context:**  
+A restore re-inserts the authoritative `companies` rows but the tracker's market metrics live in the regenerable `api_cache` (ADR — STOCK_CACHE), which the C3b purge empties. So after a restore the metrics reappeared only via a live API re-fetch — and when the external FMP API drifted, the re-fetch failed and the tracker showed only the persistent overrides (looked like data loss; the metrics were actually in the backup). Peter asked for the backup to be a complete, offline-interpretable snapshot of the whole app. Separately, a restore is destructive with only an in-memory rollback (lost on reload/crash).
+
+**Decision:**  
+- **Rehydrate derived caches on restore.** `_rehydrateStockCache()` re-populates `api_cache` `stock_data` from the restored `tStocks`, so a reload re-shows metrics without the live APIs. Store MARKET-ONLY data: `_stockMarketOnly` runs the `STOCK_CACHE_FIELDS` allowlist and backs manual overrides out via `_origData`, so the cache stays pure market data and no private field (thesis/notes) leaks into it.
+- **Validate resolved FK ids against the fresh id map.** Each cache-upsert is gated on `_d1CompanyMap[cid]===ticker` so a stale/colliding autoincrement id (from a failed migrate id-recapture, carrying another device's id) can't write onto the wrong company.
+- **Auto pre-restore safety backup.** Before the wipe, download an ENCRYPTED snapshot of current data, reusing the restore file's passphrase when the restore is encrypted (zero extra prompts) else prompting skippably. Best-effort — never aborts the restore.
+- **Richer confirm + auto-refresh-stale.** Show a content summary in the `RESTORE` confirm (catch a valid-but-wrong file); if the restored backup is > 7 days old and APIs are reachable, fire `refreshAllStocks()` over the rehydrated cache.
+
+**Alternatives Rejected:**
+- **Persist market metrics into the authoritative `companies` row:** conflates regenerable cache with authoritative data, bloats the row, and re-introduces the at-rest-encryption surface the STOCK_CACHE design deliberately separated.
+- **Add market fields to the localStorage hydration merge:** changes hydration semantics globally (every reload), risking stale-metric resurrection; the targeted cache-rehydrate touches only the restore path.
+- **Plaintext pre-restore backup (no passphrase):** re-opens the plaintext-leak gap ADR-042 just closed.
+
+**Consequences:**
+- ✅ A restore is now a true complete snapshot — metrics survive a reload even during an API outage (within the 1h cache TTL; a live refresh renews it).
+- ✅ A destructive restore always leaves an encrypted rollback artifact.
+- ⚠️ ~N sequential `cache-upsert` PUTs (throttled 80ms) on restore; swallowed on rate-limit (regenerable).
+- ⚠️ Only tracker market metrics are rehydrated; bulky historical charts + insider stay cache-only and API-regenerable (folding them into the backup is deferred to Batch E, opt-in).
+
+**Date:** 2026-07-24 (Batch B)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1311,6 +1339,7 @@ Security v2 put all D1 data behind envelope E2EE, but the "Download Backup" expo
 | 040 | Retire the sync key — token-only auth (B3c) | Accepted | 2026-07-24 |
 | 041 | Encrypted clear-and-restore via client-driven purge (C3b) | Accepted | 2026-07-24 |
 | 042 | Encrypted backup with a standalone passphrase (Batch A) | Accepted | 2026-07-24 |
+| 043 | Restore completeness — rehydrate derived caches + pre-restore safety backup (Batch B) | Accepted | 2026-07-24 |
 
 ---
 

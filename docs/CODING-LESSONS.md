@@ -1,7 +1,7 @@
 # Coding Lessons — Stratos Ventures Finance App
 
 **Last Updated:** 2026-07-24
-**Source:** 495+ bug fixes across 25+ QA sessions (Categories 1-91)
+**Source:** 496+ bug fixes across 25+ QA sessions (Categories 1-92)
 
 Reference for AI assistants and developers. All lessons are validated patterns from actual bugs found and fixed.
 
@@ -296,6 +296,16 @@ Peter's D1 is production-only — no staging environment. All investment data is
 **What went wrong:** The C3 migration's first design updated single columns by sending `{id, changed_col}` through the batch upsert (`INSERT ... ON CONFLICT(id) DO UPDATE`). SQLite evaluates **NOT NULL (and CHECK) constraints on the candidate row BEFORE conflict resolution** — `ON CONFLICT` only rescues uniqueness failures — so any NOT NULL column missing from the item (`companies.symbol`, `notes.note_date`, …) aborted the whole batch with a constraint error even though the target row existed. Caught by the node:sqlite dry-run before it ever touched live data. (Category 82, `d176a0a`.)
 
 **Rule:** An upsert-shaped write is an INSERT first. To do a partial update through an upsert endpoint, either send the **whole row** (fetch → mutate → send back; the worker's column allowlist drops extras) or use a true `UPDATE` path (the PUT-by-id route). And dry-run any bulk write against the real schema — this class of bug is invisible in code review and fatal against live data.
+
+---
+
+### 8. A Restore Must Rehydrate DERIVED Caches, Not Just Authoritative Rows (Cat 92)
+
+**What went wrong:** Restore re-inserted the authoritative `companies` rows (user data + overrides) but left the regenerable `api_cache` (tracker market metrics — price, marketCap, margins, ROIC…) empty, because those live in the cache, not the row. Immediately after restore the in-memory data still showed the metrics, so it looked fine — but the **next reload** hydrated the market cells from the now-empty cache and they vanished, leaving only the persistent overrides. It read as data loss (it wasn't — the metrics were in the backup all along) and was masked until an external API drift meant the live re-fetch couldn't silently repopulate the cache.
+
+**Why repeatable:** "The backup has the data and the restore ran" feels complete, and the gap only shows on a later reload (not right after restore) — the two events are far enough apart that testing the restore itself passes. Any value the app treats as a regenerable cache (derived metrics, computed rollups, fetched marks) is invisible to a row-level restore.
+
+**Rule:** A "complete restore" must re-populate every DERIVED/regenerable cache from the restored data, not only the authoritative rows — otherwise the app self-heals only when the source (API) is up. And when a restore resolves a foreign-key id from restored data (which may carry another device's stale autoincrement id), **re-validate that id against the freshly-rebuilt id map before using it as a write target** (`idMap[cid]===key`) — a stale/colliding id would otherwise write onto the wrong parent's cache.
 
 ---
 

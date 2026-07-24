@@ -97,8 +97,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 89 | Backup restore wiped the auth token (logged out mid-restore, cloud restore skipped) | `17f9845` | 2026-07-24 | 1 | 0 |
 | 90 | Security v2 Phase-D final sweep — C3b restore data-loss paths (CRITICAL + 2 HIGH + 3 MEDIUM) | `cc485c8` | 2026-07-24 | 6 | 0 |
 | 91 | Encrypted Backup (Batch A) — feature + adversarial QA fixes (b64 overflow, size guard, min-length, version guard) | `6e5735f` | 2026-07-24 | 5 | 0 |
+| 92 | Backup Batch B — restore guardrails + completeness (pre-restore backup, richer confirm, market-cache rehydrate, auto-refresh-stale) + QA collision-id guard | `d2f857a` | 2026-07-24 | 1 | 0 |
 
-**Total: 495 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature.)
+**Total: 496 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch.)
 
 ---
 
@@ -1774,6 +1775,27 @@ sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe e
 **Lesson (CODING-LESSONS):** `btoa(String.fromCharCode(...bytes))` is a latent large-input bomb — the spread's arg-count limit makes it throw only once a buffer is big, so small-sample tests pass. Encode base64 in chunks. See CODING-LESSONS.
 
 **Still pending (this batch was A only):** Batch B (auto pre-restore safety backup + richer restore confirm summary), Batch D (UX polish: danger affordance on Restore, backup-age indicator, verify-backup, export grouping), Batch C (D1 monthly snapshot table + picker). See `memory/project_backup-safety-net.md`.
+
+---
+
+## Category 92 — Backup Batch B: Restore Guardrails + Completeness (2026-07-24)
+
+**Feature (backup safety-net Batch B).** The restore path (data-critical: wipes local + C3b-purges D1) gained four guardrails, prompted by a real incident — Peter's Batch-A restore test blanked the tracker's market metrics (the C3b purge cleared the regenerable `api_cache`, and the FMP drift meant the live re-fetch couldn't repopulate it; only the persistent companies-row overrides survived). sw.js **v48**.
+
+1. **Auto pre-restore safety backup** (`_preRestoreSafetyBackup`) — before the wipe, downloads an ENCRYPTED snapshot of the CURRENT data. Reuses the restore file's passphrase when the restore is encrypted (no 2nd prompt); else prompts skippably. Best-effort — a throw or cancel never aborts the restore.
+2. **Richer confirm** (`_backupSummary`) — the `RESTORE` type-to-confirm now shows what the file contains (N companies/positions/transactions/notes/reviews + date) so a valid-but-WRONG backup is caught before anything is touched.
+3. **Complete restore** (`_rehydrateStockCache`) — re-populates `api_cache` `stock_data` from the restored `tStocks` so a reload re-shows tracker metrics **even when the live APIs are down**. `_stockMarketOnly` sanitizes to market fields (`STOCK_CACHE_FIELDS` allowlist) and BACKS OUT manual overrides via `_origData` so the cache holds pure market data; thesis/notes can never reach it. Directly addresses Peter's "make the backup a complete snapshot" ask.
+4. **Auto-refresh-stale** — if the restored backup's `exportedAt` is > 7 days old and d1Mode + `hasDataAuth()`, fires `refreshAllStocks()` over the rehydrated cache.
+
+**QA (adversarial data-safety agent):** the PRIMARY concern (data-loss/ordering) came back CLEAN — the safety backup runs on fully-intact data strictly before the wipe; if `_c3bClearAndRestore` throws, `_stripD1Refs` already nulled every id so rehydrate no-ops (no writes against a half-purged D1); override back-out and the market-only allowlist prevent private-data leakage into the cache; age-calc is safe on missing/invalid dates; `refreshAllStocks()` is safe to fire off-view.
+
+| # | Sev | Item | Fix | Commit |
+|---|-----|------|-----|--------|
+| 92.1 | MEDIUM | In the non-encrypted **migrate** branch, if the id-recapture GET throws, `st._d1Id` keeps the SOURCE device's stale id (auto-inc ids collide across devices) → `_rehydrateStockCache` could write market data onto a DIFFERENT company's cache. | Guard each upsert with `_d1CompanyMap[cid]===ticker` — only write when the freshly-rebuilt id map confirms the id belongs to this ticker. Verified with a collision test (stale/colliding/absent ids all skipped, only the matching ticker written). | `d2f857a` |
+
+**Accepted (documented, not fixed):** the "safety backup saved" toast can fire even if the browser silently blocked the automatic download (same `a.click()` pattern as every other export; copy softened to "downloaded — keep it until the restore looks right"). Reusing the restore file's passphrase to encrypt the pre-restore backup is a minor UX surprise (the user just typed it) — accepted. On a stale restore, rehydrate + the immediate `refreshAllStocks()` double-write the same rows (harmless; rehydrate kept as the safe floor in case the refresh fails).
+
+**Lesson (CODING-LESSONS):** a restore that only replaces the AUTHORITATIVE rows leaves DERIVED/regenerable caches (here `api_cache` market metrics) empty — so the app looks like it lost data after the next reload. A complete restore must rehydrate the derived caches too, and any FK id resolved from restored data must be re-validated against the freshly-rebuilt id map before it's used as a write target.
 
 ---
 
