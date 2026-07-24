@@ -102,7 +102,7 @@ wrangler tail --format json | grep /api/    # filter by path
 
 | Variable | Type | Required | Purpose |
 |----------|------|----------|---------|
-| `SYNC_SECRET` | Secret | Yes | Auth key for all API/sync endpoints (X-Sync-Key header) |
+| `SYNC_SECRET` | Secret | ~~Yes~~ **RETIRED (B3c)** | Was the legacy sync-key auth. B3c makes `authenticate()` token-only and unsets this secret. No longer referenced by the Worker. |
 | `FMP_KEY` | Secret | No* | FMP API key for `/proxy/fmp/*` (server-side, never sent to client) |
 | `FINNHUB_KEY` | Secret | No* | Finnhub API key for `/proxy/finnhub/*` (server-side, never sent to client) |
 | `ALLOWED_ORIGINS` | Secret | No | Extra CORS origins (comma-separated) |
@@ -123,6 +123,25 @@ wrangler secret list                  # verify
 ```
 
 For local `wrangler dev` testing, put the same keys in `web/cloudflare-worker/.dev.vars` (git-ignored) instead of using `wrangler secret put`.
+
+### B3c — Retiring the sync key (`SYNC_SECRET`), one-time, IRREVERSIBLE
+
+Since B3c (`2ba0019`, v42) the Worker authenticates data requests ONLY by a
+master-password device token (`X-Auth-Token`). `SYNC_SECRET` is no longer read by
+any code path. Deploy order (do NOT unset the secret before every active device
+has a token, and keep the recovery key — it's the lockout backstop):
+
+```bash
+cd web/cloudflare-worker
+npx wrangler deploy                    # 1. ship the token-only worker
+# 2. verify: reload the app on a token device, confirm it loads + a save succeeds
+npx wrangler secret delete SYNC_SECRET # 3. remove the now-unused secret
+```
+
+Any device that held ONLY a sync key (no token) will 401 after step 1. New devices
+sign in via `POST /auth/login` (public); a forgotten password resets via
+`POST /auth/recover` (recovery key). Existing device tokens live in KV and are
+independent of `SYNC_SECRET`, so they survive the deletion.
 
 Never commit secrets to git. They are encrypted in Cloudflare's vault.
 

@@ -1,6 +1,6 @@
 # Stratos Ventures Finance App - API Reference
 
-**Last Updated:** 2026-07-01
+**Last Updated:** 2026-07-24 (B3c — token-only auth, sync key retired)
 **App Version:** Multi-platform (Web with Cloudflare Worker backend)
 **Base URL:** Configured per API provider
 
@@ -32,7 +32,7 @@
 
 ### Yahoo Finance Quote - Single Symbol
 - **Endpoint:** `GET /quote/{SYMBOL}`
-- **Auth:** Required - `X-Sync-Key` header (timing-safe comparison)
+- **Auth:** Required - `X-Auth-Token` header (timing-safe comparison)
 - **Query Parameters:**
   - `modules` (optional): Comma-separated list of data modules to fetch
     - Default: `price,financialData,incomeStatementHistory,cashflowStatementHistory,defaultKeyStatistics,balanceSheetHistory`
@@ -47,7 +47,7 @@
 
 ### Yahoo Finance Quote - Batch
 - **Endpoint:** `GET /batch?symbols=AAPL,GOOGL,MSFT`
-- **Auth:** Required - `X-Sync-Key` header
+- **Auth:** Required - `X-Auth-Token` header
 - **Query Parameters:**
   - `symbols`: Comma-separated ticker list (required)
   - `modules` (optional): Same as single quote endpoint
@@ -60,7 +60,7 @@
 
 ### Yahoo Finance Chart Data
 - **Endpoint:** `GET /chart/{SYMBOL}`
-- **Auth:** Required - `X-Sync-Key` header
+- **Auth:** Required - `X-Auth-Token` header
 - **Query Parameters:**
   - `range` (optional): `1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max` (default: `1y`)
   - `interval` (optional): `1m, 5m, 15m, 30m, 60m, 1d, 1wk, 1mo, 3mo` (default: `1wk`)
@@ -74,7 +74,7 @@
 - **Endpoint:** `GET /proxy/{provider}/{endpoint}`
   - `provider`: `fmp` or `finnhub`
   - `endpoint`: upstream API path (e.g. `profile`, `stock/insider-transactions`)
-- **Auth:** Required - `X-Sync-Key` header (timing-safe comparison)
+- **Auth:** Required - `X-Auth-Token` header (timing-safe comparison)
 - **Method:** GET only (others → 405)
 - **Query Parameters:** Forwarded to the upstream API. The client's `apikey`/`token`/keyParam values are stripped (case-insensitive) and replaced with the Worker's server-side secret.
 - **Response:** Upstream JSON passed through verbatim, with the secret scrubbed from the body as defense-in-depth. Upstream status codes (401/403/429) surface unchanged.
@@ -87,64 +87,41 @@
 - **Line:** cloudflare-worker/src/index.js — `handleProxy`, `PROXY_UPSTREAMS`, `/proxy/` dispatch
 
 ### Master-Password Auth (`/auth/*`) — Security v2 / Phase B
-Token-based auth derived from a single master password. Runs alongside the legacy
-sync key during the transition: **all data endpoints accept `X-Sync-Key` OR `X-Auth-Token`** (`authenticate()` helper, dual-auth).
+Token-based auth derived from a single master password. **Since B3c the device token
+is the SOLE data credential: all data endpoints require `X-Auth-Token`** (`authenticate()`
+helper, token-only). The legacy sync key (`X-Sync-Key` + the `SYNC_SECRET` env secret)
+was retired.
 
 Client derivation: `masterBits = PBKDF2(password, salt, 600k, SHA-256)` → HKDF-Expand into `authKey` (info `stratos-auth-v1`, sent to server) and `encKey` (info `stratos-enc-v1`, never leaves the device; used for Phase C E2EE). Server stores only `SHA-256(authKey)` as the verifier.
 
 - **`GET /auth/salt`** — public. Returns `{salt, initialized}` so the client can derive its authKey before login.
-- **`POST /auth/setup`** — one-time bootstrap, **gated by `X-Sync-Key`** (only the existing owner can establish auth). Body `{salt, authVerifier}`. Allows overwrite (re-setup) while the sync key exists.
 - **`POST /auth/login`** — public, brute-force limited. Body `{authKey, device}`. On match issues a 256-bit bearer token (stored hashed in KV, 180-day TTL). Returns `{token, device}`.
-- **`POST /auth/change`** — change master password. Requires a live session (`X-Auth-Token`/`X-Sync-Key`) **AND** proof of the current password (`oldAuthKey`). Body `{oldAuthKey, salt, authVerifier}`. **Revokes ALL device tokens** (deletes every `token_*` key) so a compromised token cannot survive a password change — every device must sign in again. The client re-logs-in immediately to refresh the current device's token. This is the recovery/rotation path that keeps the account changeable after the sync key is retired.
-- **`GET /auth/devices`** — list active device tokens (requires auth). Returns opaque ids (token-hash prefixes), never the tokens.
-- **`POST /auth/revoke`** — revoke a device token by id (requires auth). Body `{id}`.
+- **`POST /auth/change`** — change master password. Requires a live session (`X-Auth-Token`) **AND** proof of the current password (`oldAuthKey`). Body `{oldAuthKey, salt, authVerifier}`. **Revokes ALL device tokens** (deletes every `token_*` key) so a compromised token cannot survive a password change — every device must sign in again. The client re-logs-in immediately to refresh the current device's token.
+- **`POST /auth/recover`** — public, brute-force limited. Recovery-key password reset (Phase C1b). Phase 1 `{proof}` returns `wrapRec`; phase 2 `{proof, salt, authVerifier, newWrapEnc, newWrapRec, newRecVerifier}` commits. This is the lockout backstop now that the sync key is gone.
+- **`GET /auth/devices`** — list active device tokens (requires `X-Auth-Token`). Returns opaque ids (token-hash prefixes), never the tokens.
+- **`POST /auth/revoke`** — revoke a device token by id (requires `X-Auth-Token`). Body `{id}`.
+- **`GET|PUT /auth/dek`** — envelope (wrapped DEK) read/write (Phase C1), requires `X-Auth-Token`.
+- **Retired in B3c:** `POST /auth/setup` (was sync-key-gated one-time bootstrap → no in-app new-account provisioning anymore; the single account already exists).
 - **Brute-force:** per-IP KV counter (`authfail_<ip>`), 10 fails → 15-min lockout; plus a 20/min per-IP rate-limit bucket. `CF-Connecting-IP` is edge-set (not spoofable).
-- **KV keys:** `auth_config` (salt + verifier), `token_<sha256(token)>` (device tokens), `authfail_<ip>` (brute-force). Reuses the existing `SYNC_DATA` binding — no new secret required.
+- **KV keys:** `auth_config` (salt + verifier), `token_<sha256(token)>` (device tokens), `authfail_<ip>` (brute-force). Reuses the existing `SYNC_DATA` binding.
 - **Line:** cloudflare-worker/src/index.js — `handleAuth`, `authenticate`, `/auth/` dispatch
 
-### Data Sync - Load
-- **Endpoint:** `GET /sync/load`
-- **Auth:** Required - `X-Sync-Key` header
-- **Response:** `{ok: true, data: {...} | null}`
-- **Storage:** Cloudflare KV binding (`SYNC_DATA`)
-- **Line:** cloudflare-worker/src/index.js:788-796
-- **Use:** Loads user data from KV storage (async sync)
-
-### Data Sync - Save
-- **Endpoint:** `POST /sync/save`
-- **Auth:** Required - `X-Sync-Key` header
-- **Request Body:** JSON object with user state
-- **Response:** `{ok: true, savedAt: "ISO-8601-timestamp"}`
-- **Line:** cloudflare-worker/src/index.js:797-809
-- **Implementation:**
-  - Backup existing data to `user_data_backup` before overwrite
-  - Stores to `user_data` key in KV
-
-### Sync Meta (Encryption Metadata)
+### Sync Meta (version/mode marker) — the only surviving `/sync/*` route
+The legacy KV blob path (`/sync/load`, `/sync/save`, `/sync/restore-backup`) was **retired in B3c** — all data now flows through D1 CRUD (`/api/*`). Only `/sync/meta` remains (token-authed, vestigial version/mode marker used by the client's `buildMeta`/`cloudSaveMeta`/`cloudLoadMeta`).
 - **Endpoint:** `GET /sync/meta`
-- **Auth:** Required - `X-Sync-Key` header
-- **Response:** `{ok: true, meta: {meta_version, mode, has_encryption, enc_salt, enc_verify, enc_recovery}}`
+- **Auth:** Required - `X-Auth-Token` header
+- **Response:** `{ok: true, meta: {meta_version, mode, has_encryption, enc_salt, enc_verify, enc_recovery}}` (post-B3b-2 the enc_* fields are always null / has_encryption false)
 - **Note:** Returns `null` meta if no metadata exists yet
 
 - **Endpoint:** `POST /sync/meta`
-- **Auth:** Required - `X-Sync-Key` header
+- **Auth:** Required - `X-Auth-Token` header
 - **Request Body:** `{meta: {...}, expected_version: N}` — expected_version enables optimistic locking (409 on conflict)
 - **Response:** `{ok: true, savedAt: "ISO-8601-timestamp"}` or `{error: "Version conflict", current_version: N}` (409)
 
-### Sync Restore Backup
-- **Endpoint:** `POST /sync/restore-backup`
-- **Auth:** Required - `X-Sync-Key` header
-- **Response:** `{ok: true, restoredAt: "ISO-8601-timestamp"}` or `{error: "No backup available"}` (404)
-- **Note:** Restores `user_data` from `user_data_backup` (created automatically on each /sync/save)
-
-### Sync Save — enc_version Guard
-- `/sync/save` now accepts optional `enc_version` field in the request body
-- If `enc_version < meta.meta_version`, the save is rejected with 409 (prevents overwriting with stale encryption)
-
 ### D1 Database CRUD - Generic API
 - **Endpoint:** `GET|POST|PUT|DELETE /api/{table}[/{id}]`
-- **Auth:** Required - `X-Sync-Key` header (timing-safe comparison)
-- **Base Path:** cloudflare-worker/src/index.js:831-838
+- **Auth:** Required - `X-Auth-Token` header (device token lookup in KV)
+- **Base Path:** cloudflare-worker/src/index.js — `handleD1` / `/api/` dispatch
 
 #### GET (List all rows)
 - **Endpoint:** `GET /api/{table}`
@@ -416,10 +393,11 @@ Client derivation: `masterBits = PBKDF2(password, salt, 600k, SHA-256)` → HKDF
 - Batch operations support (max 1000 items)
 - Upsert via INSERT ... ON CONFLICT(...) DO UPDATE
 
-### Data Sync via KV
-- **Load Endpoint:** `GET /sync/load` — reads `user_data` key
-- **Save Endpoint:** `POST /sync/save` — writes to `user_data`, backs up to `user_data_backup`
-- **Use Case:** Backup user state to cloud (optional async sync)
+### Data Sync via KV — RETIRED (B3c)
+The legacy KV blob sync (`/sync/load`, `/sync/save`, `/sync/restore-backup`; KV keys
+`user_data` / `user_data_backup`) was removed in B3c. All user state now syncs through
+D1 CRUD (`/api/*`). Only `/sync/meta` (a token-authed version/mode marker) survives.
+The orphaned `user_data` / `user_data_backup` KV entries are inert (no code reads them).
 
 ---
 
@@ -647,21 +625,18 @@ function stSettings() {
 | Service | Method | Path | Purpose | Auth |
 |---------|--------|------|---------|------|
 | **Worker** | GET | `/health` | Health check | None |
-| **Worker** | GET | `/quote/{SYMBOL}` | Yahoo quote data | X-Sync-Key |
-| **Worker** | GET | `/batch?symbols=A,B,C` | Yahoo batch quotes | X-Sync-Key |
-| **Worker** | GET | `/chart/{SYMBOL}` | Yahoo chart data | X-Sync-Key |
-| **Worker** | GET/POST | `/sync/load` | Load sync data | X-Sync-Key |
-| **Worker** | POST | `/sync/save` | Save sync data (enc_version guard) | X-Sync-Key |
-| **Worker** | GET | `/sync/meta` | Load encryption metadata | X-Sync-Key |
-| **Worker** | POST | `/sync/meta` | Save encryption metadata (optimistic lock) | X-Sync-Key |
-| **Worker** | POST | `/sync/restore-backup` | Restore data from backup | X-Sync-Key |
-| **D1 API** | GET/POST/PUT/DELETE | `/api/{table}` | CRUD operations | X-Sync-Key |
-| **D1 API** | POST | `/api/{table}/batch` | Batch upsert | X-Sync-Key |
-| **D1 API** | GET | `/api/companies/{symbol}/full` | Company full profile | X-Sync-Key |
-| **D1 API** | POST | `/api/notes/search?q={query}` | Notes search | X-Sync-Key |
-| **D1 API** | GET | `/api/cache-check/{cid}/{source}` | Cache status | X-Sync-Key |
-| **D1 API** | PUT | `/api/cache-upsert` | Cache update | X-Sync-Key |
-| **D1 API** | POST | `/api/migrate` | Data migration | X-Sync-Key |
+| **Worker** | GET | `/quote/{SYMBOL}` | Yahoo quote data | X-Auth-Token |
+| **Worker** | GET | `/batch?symbols=A,B,C` | Yahoo batch quotes | X-Auth-Token |
+| **Worker** | GET | `/chart/{SYMBOL}` | Yahoo chart data | X-Auth-Token |
+| **Worker** | GET | `/sync/meta` | Load encryption metadata | X-Auth-Token |
+| **Worker** | POST | `/sync/meta` | Save encryption metadata (optimistic lock) | X-Auth-Token |
+| **D1 API** | GET/POST/PUT/DELETE | `/api/{table}` | CRUD operations | X-Auth-Token |
+| **D1 API** | POST | `/api/{table}/batch` | Batch upsert | X-Auth-Token |
+| **D1 API** | GET | `/api/companies/{symbol}/full` | Company full profile | X-Auth-Token |
+| **D1 API** | POST | `/api/notes/search?q={query}` | Notes search | X-Auth-Token |
+| **D1 API** | GET | `/api/cache-check/{cid}/{source}` | Cache status | X-Auth-Token |
+| **D1 API** | PUT | `/api/cache-upsert` | Cache update | X-Auth-Token |
+| **D1 API** | POST | `/api/migrate` | Data migration | X-Auth-Token |
 | **FMP** | GET | `/profile?symbol={TICKER}` | Company profile | apikey |
 | **FMP** | GET | `/income-statement?symbol={TICKER}` | Income data | apikey |
 | **FMP** | GET | `/cash-flow-statement?symbol={TICKER}` | Cash flow data | apikey |

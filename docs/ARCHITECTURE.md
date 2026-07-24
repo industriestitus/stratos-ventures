@@ -28,9 +28,9 @@ Stratos Ventures is a single-page investment management app with a **local-first
 │       │         /web/cloudflare-worker/src/index.js       │
 │       │                │                                  │
 │  ┌────┴──────┐   ┌─────┴──────┐   ┌──────────────────┐  │
-│  │ Yahoo     │   │ D1 CRUD    │   │ KV Sync          │  │
-│  │ Proxy     │   │ /api/*     │   │ /sync/load|save  │  │
-│  │ /quote/*  │   │ 22 tables  │   │ (legacy backup)  │  │
+│  │ Yahoo     │   │ D1 CRUD    │   │ Auth + Meta      │  │
+│  │ Proxy     │   │ /api/*     │   │ /auth/* (token)  │  │
+│  │ /quote/*  │   │ 22 tables  │   │ /sync/meta       │  │
 │  │ /chart/*  │   └─────┬──────┘   └──────────────────┘  │
 │  │ /batch    │         │                                  │
 │  └────┬──────┘   ┌─────┴──────┐                          │
@@ -80,8 +80,8 @@ No build process, no frameworks, no npm — vanilla JS with CDN libraries.
 ### 1.2 Backend — Cloudflare Worker (~1340 lines)
 Serverless edge compute handling:
 - Yahoo Finance proxy (CORS workaround + crumb/cookie auth)
-- D1 database CRUD API (22 tables)
-- KV sync endpoints (legacy)
+- D1 database CRUD API (22 tables), token-authed
+- Master-password auth (`/auth/*`) + `/sync/meta` marker (legacy KV blob sync retired in B3c)
 - Data migration (localStorage → D1)
 
 ### 1.3 Database — Cloudflare D1 (SQLite)
@@ -644,23 +644,22 @@ User configures Worker URL + Sync Secret
 
 ## 7. Security
 
+> **Note:** This section was refreshed for Security v2 (Phases A–C + B3). A deeper
+> end-to-end security-model writeup is the remaining Phase D docs task.
+
 ### 7.1 API Key Storage
-All API keys stored in localStorage only (never in source code):
-- `st-apikey` — FMP API key
-- `st-finnhub` — Finnhub API key
-- `st-worker` — Worker URL
-- `st-sync-secret` — Sync authentication secret
+- **FMP + Finnhub keys are server-side only** (Worker secrets `FMP_KEY`/`FINNHUB_KEY`), reached via the `/proxy/*` routes — never in the browser, source, or URLs (Phase A). Only the Worker URL (`st-worker`) is kept locally.
+- The legacy in-browser API-key fields were removed; any stale `apiKey`/`finnhubKey` in localStorage is purged on load.
 
-### 7.2 Worker Authentication
-- All D1/sync endpoints require `X-Sync-Key` header
-- Timing-safe comparison (`timingSafeEqual()`) prevents timing attacks
-- CORS restricted to configured origins + `ALLOWED_ORIGINS` env var
+### 7.2 Worker Authentication (token-only since B3c)
+- **All data endpoints (`/api/*`, `/proxy/*`, Yahoo `/quote|batch|chart`, `/sync/meta`) require a master-password device token (`X-Auth-Token`)** — looked up in KV as `token_<sha256>`. The legacy shared sync key (`X-Sync-Key` + `SYNC_SECRET`) was retired in B3c (ADR-040).
+- Public auth routes: `GET /auth/salt`, `POST /auth/login`, `POST /auth/recover` (brute-force limited: per-IP KV counter, 10 fails → 15-min lockout, + 20/min bucket).
+- Password derivation: PBKDF2(600k) → HKDF split into `authKey` (server stores only its SHA-256) and `encKey` (never leaves device). CORS restricted to configured origins + `ALLOWED_ORIGINS`.
 
-### 7.3 Optional Encryption
-- Password-based encryption for entire app (Web Crypto API)
-- Scheme: PBKDF2 (key derivation) + AES-GCM (256-bit encryption)
-- Recovery key available (SHA-256 hash)
-- Encrypts localStorage data only (D1 data is unencrypted)
+### 7.3 Encryption at Rest (envelope E2EE — Phase C)
+- **Every sensitive D1 column is encrypted client-side (AES-GCM) before upload** (Phase C2 a–d; C3 migrated the pre-existing plaintext rows). The server only ever holds ciphertext.
+- **Envelope model:** a random 256-bit Data Encryption Key (DEK) encrypts the fields; the DEK is wrapped by `encKey` (from the master password) and by a recovery key, both stored server-side as ciphertext. The DEK never leaves the client.
+- Recovery key resets a forgotten password without data loss (`/auth/recover`). Accepted-plaintext columns (queryable keys, public per-share dividend amounts) are documented in KNOWN-ISSUES SV.7. localStorage on a trusted device stays plaintext (device-trust posture).
 
 ### 7.4 Content Security Policy
 ```

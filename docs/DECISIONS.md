@@ -1180,6 +1180,34 @@ Both were superseded by Phase B/C: the master-password auth (device token, ADR-0
 
 ---
 
+## ADR-040: Retire the Sync Key — Token-Only Auth (B3c)
+
+**Status:** Accepted (2026-07-24) — B3c (`2ba0019`, v42). Completes Phase B.
+
+**Context:**  
+The original backend authenticated every data request with a single shared "sync key" (`X-Sync-Key` header, compared against the `SYNC_SECRET` Worker secret). Security v2 replaced it with per-device master-password tokens (ADR-033) + envelope E2EE (ADR-039), but kept `authenticate()` **dual-auth** (sync key OR token) through the transition (B1/B2/B3a/B3b) so nothing broke mid-migration. While the sync key remained valid it was a root credential: one static secret granting full data access, and — via the sync-key-gated `POST /auth/setup` — the ability to overwrite the master-password verifier (silent account takeover; KNOWN-ISSUES SV.2). B3a proved a provisioned device authenticates token-only; B3b-1/B3b-2 removed the client's sync-key entry UI and legacy client-enc/KV path. B3c is the final, **irreversible** cut.
+
+**Decision:**  
+- **Worker `authenticate()` is token-only:** a request authenticates solely by a valid `X-Auth-Token` (KV `token_<sha256>` lookup). The `X-Sync-Key`/`SYNC_SECRET` branch is removed; `SYNC_SECRET` is unset after deploy.
+- **Remove `POST /auth/setup`** (sync-key-gated one-time bootstrap) and the legacy KV blob routes `/sync/load|save|restore-backup`. **Keep `/sync/meta`** (token-authed, vestigial). Drop `X-Sync-Key` from CORS.
+- **Client is token-only:** `authDataHeaders`/`hasDataAuth`/`API._fetch` use the token alone; remove `authSetup`/`setupMasterPassword`/`getSyncKey` + the sync-key Settings field.
+- **Accepted, recorded per Peter's request:** removing `/auth/setup` means **there is no in-app from-scratch new-account provisioning anymore.** The single account is already provisioned; password *changes* go through `/auth/change` and forgotten-password *recovery* through `/auth/recover` (recovery key). Re-enabling new-account bootstrap in the future would require restoring a `/auth/setup` (or equivalent) route.
+
+**Alternatives Rejected:**
+- **Keep dual-auth indefinitely:** leaves a static root secret and the SV.2 takeover path alive forever — defeats the purpose of Phase B.
+- **Keep `/auth/setup` behind a token instead of the sync key:** a token-gated setup is circular (you need an account to get a token) and serves no one for a single provisioned account; dropping it is simpler and closes the verifier-overwrite path.
+- **Also delete `/sync/meta` now:** it's token-authed and cheap; the client still calls it (buildMeta/cloudSaveMeta/cloudLoadMeta). Left as vestigial rather than doing a coordinated client+worker removal.
+
+**Consequences:**
+- ✅ No static root credential; SV.2 resolved, SV.7 downgraded to LOW. One auth mechanism (device token) across the whole surface.
+- ⚠️ **IRREVERSIBLE + lockout-sensitive:** any device holding only a sync key (no token) 401s instantly after deploy. Mitigated by confirming every active device is token-authed first; `/auth/login` and `/auth/recover` stay public, and existing KV device tokens are independent of `SYNC_SECRET` (they survive the secret unset). Recovery key is the ultimate backstop.
+- ⚠️ **Deploy order (Peter):** `wrangler deploy` → verify the token device still loads/saves → `wrangler secret delete SYNC_SECRET`. Frontend (v42) auto-deploys via GitHub Pages and is safe against the pre-deploy dual-auth worker.
+- ⚠️ No in-app new-account bootstrap (see Decision). Orphaned KV `user_data`/`user_data_backup` entries are inert.
+
+**Date:** 2026-07-24 (B3c)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1223,6 +1251,7 @@ Both were superseded by Phase B/C: the master-password auth (device token, ADR-0
 | 037 | Synthetic holder companies + positions.details blob (S2b) | Accepted | 2026-07-23 |
 | 038 | Soft-delete tombstones for framework/override/valuation/note_images (S2c) | Accepted | 2026-07-23 |
 | 039 | Retire legacy client-side encryption + legacy KV sync (B3b-2) | Accepted | 2026-07-24 |
+| 040 | Retire the sync key — token-only auth (B3c) | Accepted | 2026-07-24 |
 
 ---
 

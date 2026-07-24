@@ -90,8 +90,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 82 | Security v2 C3 — Encrypt Existing Cloud Rows + /migrate Gate | `d176a0a` | 2026-07-23 | 5 | 0 |
 | 83 | Security v2 B3a/B3b-1 — Token-Primary Auth + Connection-String Login Removal | `ce69164` | 2026-07-23 | 0 | 0 |
 | 84 | Security v2 B3b-2 — Remove Legacy Client-Encryption + Legacy KV Sync (token-only boot) | `681354b` | 2026-07-24 | 0 | 0 |
+| 85 | Security v2 B3c — Retire the Sync Key (worker token-only auth + client cleanup) | `2ba0019` | 2026-07-24 | 0 | 0 |
 
-**Total: 481 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84 are QA-clean hardening batches, 0 fixes — do not change the running total.)
+**Total: 481 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85 are QA-clean hardening batches, 0 fixes — do not change the running total.)
 
 ---
 
@@ -1643,6 +1644,26 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 | 84.5 | Cosmetic `getSyncKey()` → `hasDataAuth()` | Converted display/gate guards that were sync-key-only to token-or-sync-key: `fetchInsiderTrading`, `renderInsiderTrading`, `renderApiUsage` (3× `key:hasDataAuth()`; used only as `!!api.key`), `updateD1UI`, `testFinnhub`, `testFmp`. The "Sync Now" button → `testD1()` unconditionally. The `authDataHeaders`/`setupMasterPassword`/`renderMasterPassword` sync-key references are intentionally left for B3c. | `681354b` |
 
 **QA:** 1 adversarial agent over the working-tree diff (8-point brick-hazard checklist) = **SHIP, 0 defects**. Independently verified: all 22 removed symbols return grep-count 0 (remaining `cloudSave` hits are i18n keys + the D1 `API.scheduleSave` retry path); no `onclick/onkeydown` references a removed fn; `showLockView` only ever called with the 2 kept views; brace/paren balance intact (6/6 inline `<script>` blocks parse clean); `buildMeta` caller works; boot IIFE has no gate-less terminal state; `hasDataAuth()` swaps coherent. Also verified in-browser: sw.js **v41** loads, master-login gate renders, recovery view toggles.
+
+---
+
+## Category 85 — Security v2 B3c: Retire the Sync Key (2026-07-24)
+
+**Not bug fixes — the final, IRREVERSIBLE step of Phase B** (kept here per the per-batch doc policy). The master-password device token is now the SOLE data credential; the legacy sync key (`X-Sync-Key` header + the `SYNC_SECRET` Worker secret) is gone from both the Worker and the client. sw.js **v42**. Net **−108 lines**.
+
+**Preconditions confirmed with Peter before deploy:** his device is on v41+ and boots by token (B3b-2 token-boot verified), and the recovery key is saved — the two backstops against lockout. Removing `/auth/setup` means **no in-app new-account bootstrap anymore** (accepted: single provisioned account; recorded here and in ADR-040).
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 85.1 | Worker `authenticate()` token-only | Dropped the `X-Sync-Key`/`SYNC_SECRET` branch → a request authenticates only with a valid `X-Auth-Token` (KV `token_<sha256>` lookup). | `2ba0019` |
+| 85.2 | Worker remove `/auth/setup` | The sync-key-gated one-time bootstrap route is gone (dead post-provision; would 401 anyway once `SYNC_SECRET` is unset). | `2ba0019` |
+| 85.3 | Worker remove legacy KV blob sync | Deleted `/sync/load`, `/sync/save`, `/sync/restore-backup` (+ their `user_data`/`user_data_backup` writes). **KEPT `/sync/meta`** (GET+POST, token-authed, vestigial version/mode marker still used by the client). CORS `Allow-Headers` dropped `X-Sync-Key`. | `2ba0019` |
+| 85.4 | Client token-only auth | `authDataHeaders()` → `{X-Auth-Token}` or `{}`; `hasDataAuth()` → `!!getAuthToken()`; `API._fetch` guard token-only; `API._key` removed. | `2ba0019` |
+| 85.5 | Client remove sync-key surface | Deleted `authSetup()`/`setupMasterPassword()` + the `#mp-setup-form` Settings UI; `renderMasterPassword()` reworked to not depend on it; replaced the `#st-synckey` field with a "Cloud Sync — authenticated by your master password" note (kept Test-D1 + status); dropped `syncKey` from `stSettings`/`loadTrackerSettings`; removed `getSyncKey()`. i18n `settings.cloudSync`/`tokenAuthNote` (EN+HU); corrected the stale `settings.apiKeysNote` "Only your Sync Key is kept locally" copy. | `2ba0019` |
+
+**Deploy (Peter, IRREVERSIBLE — order below):** (1) `cd web/cloudflare-worker && npx wrangler deploy`; (2) verify the app still loads + saves on his token device; (3) `npx wrangler secret delete SYNC_SECRET`. Frontend (v42) already auto-deploys via GitHub Pages and is safe against the pre-deploy dual-auth worker (his device is token-authed). Lockout backstop: `/auth/login` + `/auth/recover` stay public; existing device tokens are independent of `SYNC_SECRET`.
+
+**QA:** 1 adversarial agent over the worker+client diff (8-point checklist incl. lockout hunt) = **SHIP, 0 defects**. Verified: no worker path references `X-Sync-Key`/`SYNC_SECRET`/`/sync/load|save`/`action==='setup'` (only comments); `/sync/meta` intact + brace-balanced; `/auth/login`+`/auth/recover` still public (no lockout); existing tokens survive the secret unset; client has zero live refs to removed symbols; `renderMasterPassword` works without the setup form. Worker + 6/6 inline client scripts `node --check` clean. In-browser: token-only headers (no `X-Sync-Key`), `hasDataAuth` false w/o token & true w/ token, `renderMasterPassword` renders, remote worker `initialized:true`.
 
 ---
 
