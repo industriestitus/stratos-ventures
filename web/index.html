@@ -1095,11 +1095,11 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 <body>
 <script>
 (function(){var s=localStorage.getItem('app_theme');if(s==='light')document.documentElement.setAttribute('data-theme','light');else if(s==='auto'||!s){if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:light)').matches)document.documentElement.setAttribute('data-theme','light')}})();
-(function(){var enc=localStorage.getItem('enc_salt'),skip=localStorage.getItem('enc_skipped');if(enc||!skip)document.documentElement.classList.add('app-locked')})();
+(function(){document.documentElement.classList.add('app-locked')})();
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v40';
+var APP_VERSION='v41';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1254,13 +1254,6 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     <h1 style="font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Stratos Ventures</h1>
     <p data-i18n="lock.subtitle" style="color:var(--text2);font-size:13px;margin-bottom:32px">Encrypted investment platform</p>
 
-    <div id="lock-unlock">
-      <input type="password" id="lock-pass" data-i18n-placeholder="lock.password" placeholder="Encryption password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:12px;outline:none" onkeydown="if(event.key==='Enter')unlockApp()">
-      <div id="lock-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
-      <button data-i18n="lock.unlock" onclick="unlockApp()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px">Unlock</button>
-      <button data-i18n="lock.forgot" onclick="showLockView('recovery')" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline">Forgot password? Use recovery key</button>
-    </div>
-
     <div id="lock-masterlogin" style="display:none">
       <p data-i18n="mp.loginPrompt" style="color:var(--text);font-size:14px;margin-bottom:16px">Enter your master password to sign in</p>
       <input type="password" id="ml-pass" data-i18n-placeholder="mp.title" placeholder="Master password" autocomplete="current-password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:12px;outline:none" onkeydown="if(event.key==='Enter')loginWithMasterPassword()">
@@ -1278,40 +1271,6 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
       <button data-i18n="mp.rec.back" onclick="showLockView('masterlogin')" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline">Back to sign in</button>
     </div>
 
-    <div id="lock-setup" style="display:none">
-      <p data-i18n="lock.setup" style="color:var(--text);font-size:14px;margin-bottom:16px">Set up encryption to protect your data</p>
-      <input type="password" id="setup-pass" data-i18n-placeholder="lock.choosePassword" placeholder="Choose a password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:10px;outline:none">
-      <input type="password" id="setup-pass2" data-i18n-placeholder="lock.confirmPassword" placeholder="Confirm password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:10px;outline:none" onkeydown="if(event.key==='Enter')setupEncryption()">
-      <div id="setup-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
-      <button data-i18n="lock.enable" onclick="setupEncryption()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer">Enable Encryption</button>
-      <button data-i18n="lock.skip" onclick="skipEncryption()" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;margin-top:12px;text-decoration:underline">Skip for now</button>
-    </div>
-
-    <div id="lock-recovery-key" style="display:none">
-      <p data-i18n="lock.enabled" style="color:var(--green);font-size:14px;margin-bottom:8px;font-weight:600">Encryption enabled!</p>
-      <p data-i18n="lock.saveKey" style="color:var(--text);font-size:13px;margin-bottom:16px">Save this recovery key somewhere safe. You'll need it if you forget your password.</p>
-      <div id="recovery-key-display" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;font-family:monospace;font-size:15px;color:var(--orange);word-break:break-all;margin-bottom:16px;user-select:all"></div>
-      <button data-i18n="lock.copyKey" onclick="(async()=>{try{await navigator.clipboard.writeText(document.getElementById('recovery-key-display').textContent);this.textContent=t('toast.copiedShort')}catch(e){showToast(t('toast.copyFailed'),'warning')};setTimeout(()=>this.textContent=t('lock.copyKey'),2000)})()" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer;margin-bottom:10px">Copy Recovery Key</button>
-      <label style="display:flex;align-items:center;gap:8px;color:var(--text2);font-size:12px;margin-bottom:16px;cursor:pointer"><input type="checkbox" id="recovery-saved-check"> <span data-i18n="lock.keySaved">I have saved my recovery key</span></label>
-      <button id="recovery-continue-btn" data-i18n="lock.continue" onclick="finishSetup()" disabled style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;opacity:0.5">Continue to App</button>
-    </div>
-
-    <div id="lock-recovery" style="display:none">
-      <p data-i18n="lock.enterKey" style="color:var(--text);font-size:14px;margin-bottom:16px">Enter your recovery key to reset your password</p>
-      <input type="text" id="recovery-key-input" placeholder="xxxx-xxxx-xxxx-xxxx-..." style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;font-family:monospace;margin-bottom:10px;outline:none">
-      <input type="password" id="recovery-new-pass" data-i18n-placeholder="lock.newPassword" placeholder="New password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:10px;outline:none">
-      <div id="recovery-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
-      <button data-i18n="lock.reset" onclick="recoverWithKey()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:12px">Reset Password</button>
-      <button data-i18n="lock.backToLogin" onclick="showLockView('unlock')" style="background:none;border:none;color:var(--text2);font-size:12px;cursor:pointer;text-decoration:underline">Back to password login</button>
-    </div>
-
-    <div id="lock-reauth" style="display:none">
-      <p data-i18n="login.reauthTitle" style="color:var(--text);font-size:16px;font-weight:600;margin-bottom:4px">Password changed</p>
-      <p data-i18n="login.reauthSubtitle" style="color:var(--text2);font-size:13px;margin-bottom:16px">Your password was changed on another device. Enter the new password to continue.</p>
-      <input type="password" id="reauth-password" data-i18n-placeholder="login.newPassword" placeholder="New password" style="width:100%;padding:12px 16px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:15px;margin-bottom:10px;outline:none" onkeydown="if(event.key==='Enter')handleReauth()">
-      <div id="reauth-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none"></div>
-      <button id="reauth-btn" data-i18n="login.authenticate" onclick="handleReauth()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;cursor:pointer">Authenticate</button>
-    </div>
   </div>
 </div>
 
@@ -2167,7 +2126,6 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
 <div id="settings-nav" style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 0 14px;position:sticky;top:0;z-index:50;background:var(--bg)">
   <button class="settings-pill" onclick="scrollToCard('settings-connections')" data-i18n="settings.connections">Connections</button>
-  <button class="settings-pill" onclick="scrollToCard('settings-encryption')" data-i18n="settings.encryption">Encryption</button>
   <button class="settings-pill" onclick="scrollToCard('settings-portfolio')" data-i18n="settings.portfolioSettings">Portfolio</button>
   <button class="settings-pill" onclick="scrollToCard('api-usage-card')" data-i18n="settings.apiUsage">API Usage</button>
   <button class="settings-pill" onclick="scrollToCard('settings-data')" data-i18n="settings.dataManagement">Data</button>
@@ -2212,7 +2170,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
       <label for="st-synckey" data-i18n="settings.syncKey">Sync Key</label>
       <input type="text" id="st-synckey" placeholder="Enter sync key" oninput="saveTrackerSettings()">
     </div>
-    <button class="conn-btn conn-btn--sync" onclick="d1Mode?testD1():testSync()" id="sync-btn" data-i18n="settings.syncNow">Sync Now</button>
+    <button class="conn-btn conn-btn--sync" onclick="testD1()" id="sync-btn" data-i18n="settings.syncNow">Sync Now</button>
     <div class="conn-status" id="sync-status"></div>
   </div>
 </div>
@@ -2278,29 +2236,6 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
       <p style="color:var(--text2);font-size:12px;margin-bottom:10px" data-i18n="mp.devicesHint">Each device that signs in with the master password appears here.</p>
       <div id="mp-devices-list" style="font-size:13px"></div>
     </div>
-  </div>
-</div>
-
-<div class="card" id="settings-encryption">
-  <div class="card-title" data-i18n="settings.encryption">Encryption</div>
-  <div id="enc-status-off" style="display:none">
-    <p style="color:var(--text2);font-size:13px;margin-bottom:12px" data-i18n="settings.encNotEnabled">Encryption is <span style="color:var(--red);font-weight:600">not enabled</span>. Your cloud data is stored in plaintext.</p>
-    <button onclick="showLockView('setup');document.getElementById('lock-screen').style.display='flex'" style="padding:8px 16px;border-radius:6px;border:none;background:var(--accent);color:#fff;font-size:13px;cursor:pointer" data-i18n="settings.enableEnc">Enable Encryption</button>
-  </div>
-  <div id="enc-status-on" style="display:none">
-    <p style="color:var(--text2);font-size:13px;margin-bottom:16px" data-i18n="settings.encEnabled">Encryption is <span style="color:var(--green);font-weight:600">enabled</span>. Cloud data is encrypted with AES-256-GCM.</p>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
-      <div class="input-group" style="flex:1;min-width:140px">
-        <label data-i18n="settings.currentPassword">Current Password</label>
-        <input type="password" id="enc-old-pass" placeholder="Current password" data-i18n-placeholder="settings.currentPassword">
-      </div>
-      <div class="input-group" style="flex:1;min-width:140px">
-        <label data-i18n="settings.newPassword">New Password</label>
-        <input type="password" id="enc-new-pass" placeholder="New password" data-i18n-placeholder="settings.newPassword">
-      </div>
-    </div>
-    <div id="enc-change-error" style="color:var(--red);font-size:12px;margin:8px 0;display:none"></div>
-    <button onclick="changeEncPassword()" style="margin-top:10px;padding:8px 16px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer" data-i18n="settings.changePassword">Change Password</button>
   </div>
 </div>
 
@@ -2940,24 +2875,8 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
 
 <script>
 // ====== E2E ENCRYPTION ======
-let _encPass=null;
+// _metaVersion feeds the vestigial (token-authed) /sync/meta path kept after B3b-2.
 let _metaVersion=parseInt(localStorage.getItem('meta_version')||'0',10);
-let _autoLockTimer=null;
-let _encIdleTimer=null;
-const AUTO_LOCK_DELAY=5*60*1000;
-const ENC_IDLE_TIMEOUT=15*60*1000;
-function _resetEncIdleTimer(){
-  if(!_encPass||!isEncryptionEnabled())return;
-  clearTimeout(_encIdleTimer);
-  _encIdleTimer=setTimeout(()=>{
-    _encPass=null;
-    document.getElementById('lock-screen').style.display='flex';
-    showLockView('unlock');
-    document.getElementById('lock-pass').value='';
-    showToast(t('lock.sessionLocked'),'info',4000);
-  },ENC_IDLE_TIMEOUT);
-}
-['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,_resetEncIdleTimer,{passive:true}));
 
 function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)))}
 function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0)).buffer}
@@ -2969,22 +2888,6 @@ async function deriveKey(pass,salt){
   return crypto.subtle.deriveKey({name:'PBKDF2',salt:new Uint8Array(salt),iterations:600000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
 }
 
-async function encryptPayload(pass,obj){
-  const salt=crypto.getRandomValues(new Uint8Array(16));
-  const iv=crypto.getRandomValues(new Uint8Array(12));
-  const key=await deriveKey(pass,salt);
-  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(JSON.stringify(obj)));
-  return {v:1,salt:b64(salt),iv:b64(iv),ct:b64(ct)};
-}
-
-async function decryptPayload(pass,blob){
-  const key=await deriveKey(pass,new Uint8Array(unb64(blob.salt)));
-  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(unb64(blob.iv))},key,new Uint8Array(unb64(blob.ct)));
-  return JSON.parse(new TextDecoder().decode(pt));
-}
-
-function isEncryptedBlob(d){return d&&d.v===1&&d.ct}
-
 function generateRecoveryKey(){
   const bytes=crypto.getRandomValues(new Uint8Array(16));
   const hex=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
@@ -2994,35 +2897,6 @@ function generateRecoveryKey(){
 async function hashKey(s){
   const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
   return b64(h);
-}
-
-async function encryptVerify(pass,salt){
-  const key=await deriveKey(pass,new Uint8Array(unb64(salt)));
-  const iv=crypto.getRandomValues(new Uint8Array(12));
-  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode('stratos-ok'));
-  return {iv:b64(iv),ct:b64(ct)};
-}
-
-async function verifyPassword(pass){
-  const salt=localStorage.getItem('enc_salt');
-  let verify;try{verify=JSON.parse(localStorage.getItem('enc_verify')||'null')}catch(e){return false}
-  if(!salt||!verify)return false;
-  try{
-    const key=await deriveKey(pass,new Uint8Array(unb64(salt)));
-    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(unb64(verify.iv))},key,new Uint8Array(unb64(verify.ct)));
-    return new TextDecoder().decode(pt)==='stratos-ok';
-  }catch(e){return false}
-}
-
-function isEncryptionEnabled(){return !!localStorage.getItem('enc_salt')}
-
-async function verifyPasswordWithMeta(pass,meta){
-  if(!meta||!meta.enc_salt||!meta.enc_verify)return false;
-  try{
-    const key=await deriveKey(pass,new Uint8Array(unb64(meta.enc_salt)));
-    const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(unb64(meta.enc_verify.iv))},key,new Uint8Array(unb64(meta.enc_verify.ct)));
-    return new TextDecoder().decode(pt)==='stratos-ok';
-  }catch(e){return false}
 }
 
 // ====== Master-password auth (Security v2 / Phase B) ======
@@ -3799,159 +3673,9 @@ async function setupMasterPassword(){
 }
 
 function showLockView(view){
-  ['lock-unlock','lock-masterlogin','lock-mprecovery','lock-setup','lock-recovery-key','lock-recovery','lock-reauth'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
+  ['lock-masterlogin','lock-mprecovery'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none'});
   const el=document.getElementById('lock-'+view);if(el)el.style.display='block';
   document.getElementById('lock-error')&&(document.getElementById('lock-error').style.display='none');
-}
-
-async function unlockApp(){
-  const pass=document.getElementById('lock-pass').value;
-  if(!pass)return;
-  const err=document.getElementById('lock-error');
-  const ok=await verifyPassword(pass);
-  if(!ok){err.textContent='Wrong password';err.style.display='block';return}
-  _encPass=pass;
-  document.getElementById('lock-screen').style.display='none';
-  document.documentElement.classList.remove('app-locked');
-  autoLoad();
-}
-
-async function setupEncryption(){
-  const p1=document.getElementById('setup-pass').value;
-  const p2=document.getElementById('setup-pass2').value;
-  const err=document.getElementById('setup-error');
-  if(p1.length<6){err.textContent='Password must be at least 6 characters';err.style.display='block';return}
-  if(p1!==p2){err.textContent='Passwords do not match';err.style.display='block';return}
-  const salt=b64(crypto.getRandomValues(new Uint8Array(16)));
-  const verify=await encryptVerify(p1,salt);
-  const rk=generateRecoveryKey();
-  const rkHash=await hashKey(rk);
-  localStorage.setItem('enc_salt',salt);
-  localStorage.setItem('enc_verify',JSON.stringify(verify));
-  localStorage.setItem('enc_recovery',rkHash);
-  _encPass=p1;
-  _metaVersion=1;
-  localStorage.setItem('meta_version','1');
-  cloudSaveMeta(buildMeta()).catch(()=>{});
-  document.getElementById('recovery-key-display').textContent=rk;
-  document.getElementById('recovery-saved-check').onchange=function(){
-    const btn=document.getElementById('recovery-continue-btn');
-    btn.disabled=!this.checked;btn.style.opacity=this.checked?'1':'0.5';
-  };
-  showLockView('recovery-key');
-}
-
-function skipEncryption(){
-  localStorage.setItem('enc_skipped','1');
-  _metaVersion=1;
-  localStorage.setItem('meta_version','1');
-  cloudSaveMeta(buildMeta()).catch(()=>{});
-  document.getElementById('lock-screen').style.display='none';
-  document.documentElement.classList.remove('app-locked');
-  autoLoad();
-}
-
-function finishSetup(){
-  document.getElementById('lock-screen').style.display='none';
-  document.documentElement.classList.remove('app-locked');
-  autoLoad();
-  updateEncStatus();
-  cloudSave().catch(()=>{});
-}
-
-async function recoverWithKey(){
-  const rk=document.getElementById('recovery-key-input').value.trim();
-  const newPass=document.getElementById('recovery-new-pass').value;
-  const err=document.getElementById('recovery-error');
-  if(!rk||!newPass){err.textContent='Fill in both fields';err.style.display='block';return}
-  if(newPass.length<6){err.textContent='Password must be at least 6 characters';err.style.display='block';return}
-  const storedHash=localStorage.getItem('enc_recovery');
-  const inputHash=await hashKey(rk);
-  if(inputHash!==storedHash){err.textContent='Invalid recovery key';err.style.display='block';return}
-  const salt=b64(crypto.getRandomValues(new Uint8Array(16)));
-  const verify=await encryptVerify(newPass,salt);
-  const newRk=generateRecoveryKey();
-  const newRkHash=await hashKey(newRk);
-  localStorage.setItem('enc_salt',salt);
-  localStorage.setItem('enc_verify',JSON.stringify(verify));
-  localStorage.setItem('enc_recovery',newRkHash);
-  _encPass=newPass;
-  // Load local data only (cloud data encrypted with old password is unrecoverable)
-  loadTrackerSettings();
-  loadTrackerStocks();
-  initTodoCounter();
-  const l=localStorage.getItem('valuation_last_v2');
-  if(l){try{loadData(JSON.parse(l))}catch(e){}}
-  recalcAll();
-  updateEncStatus();
-  // Re-encrypt local data to cloud with new password
-  cloudSave().catch(()=>{});
-  // Show new recovery key before continuing
-  document.getElementById('recovery-key-display').textContent=newRk;
-  document.getElementById('recovery-saved-check').checked=false;
-  document.getElementById('recovery-continue-btn').disabled=true;
-  document.getElementById('recovery-continue-btn').style.opacity='0.5';
-  document.getElementById('recovery-saved-check').onchange=function(){
-    const btn=document.getElementById('recovery-continue-btn');
-    btn.disabled=!this.checked;btn.style.opacity=this.checked?'1':'0.5';
-  };
-  showLockView('recovery-key');
-}
-
-async function changeEncPassword(){
-  const oldP=document.getElementById('enc-old-pass').value;
-  const newP=document.getElementById('enc-new-pass').value;
-  const err=document.getElementById('enc-change-error');
-  if(!oldP||!newP){err.textContent=t('lock.fillBoth');err.style.display='block';return}
-  if(newP.length<6){err.textContent=t('lock.newMinChars');err.style.display='block';return}
-  const ok=await verifyPassword(oldP);
-  if(!ok){err.textContent=t('lock.currentWrong');err.style.display='block';return}
-  const prevSalt=localStorage.getItem('enc_salt');
-  const prevVerify=localStorage.getItem('enc_verify');
-  const prevVersion=_metaVersion;
-  const salt=b64(crypto.getRandomValues(new Uint8Array(16)));
-  const verify=await encryptVerify(newP,salt);
-  localStorage.setItem('enc_salt',salt);
-  localStorage.setItem('enc_verify',JSON.stringify(verify));
-  _encPass=newP;
-  err.style.display='none';
-  document.getElementById('enc-old-pass').value='';
-  document.getElementById('enc-new-pass').value='';
-  try{
-    await cloudSave();
-    const newVersion=prevVersion+1;
-    const metaCandidate=Object.assign(buildMeta(),{meta_version:newVersion});
-    const metaResult=await cloudSaveMetaRetry(metaCandidate,prevVersion);
-    if(metaResult&&metaResult.conflict){
-      _metaVersion=prevVersion;
-      localStorage.setItem('meta_version',String(prevVersion));
-      showToast(t('login.metaConflict'),'warning');
-    }else{
-      _metaVersion=newVersion;
-      localStorage.setItem('meta_version',String(newVersion));
-    }
-    showToast(t('lock.passwordChanged'),'success');
-  }catch(e){
-    localStorage.setItem('enc_salt',prevSalt);
-    localStorage.setItem('enc_verify',prevVerify);
-    _encPass=oldP;
-    _metaVersion=prevVersion;
-    localStorage.setItem('meta_version',String(prevVersion));
-    try{
-      const url=getSyncUrl();const key=getSyncKey();
-      if(url&&key)await fetch(url+'/sync/restore-backup',{method:'POST',headers:{'Content-Type':'application/json','X-Sync-Key':key}});
-    }catch(re){}
-    err.textContent=t('lock.cloudFailed');
-    err.style.display='block';
-  }
-}
-
-function updateEncStatus(){
-  const on=isEncryptionEnabled();
-  const elOff=document.getElementById('enc-status-off');
-  const elOn=document.getElementById('enc-status-on');
-  if(elOff)elOff.style.display=on?'none':'block';
-  if(elOn)elOn.style.display=on?'block':'none';
 }
 
 // ====== TOAST & LOADING ======
@@ -9239,7 +8963,7 @@ function renderScoreBreakdown(ticker){
 let _insiderCache={};
 
 async function fetchInsiderTrading(ticker){
-  if(!getSyncKey())return null;
+  if(!hasDataAuth())return null;
   const memCached=_insiderCache[ticker];
   if(memCached&&Date.now()-memCached.ts<3600000)return memCached.data;
   const data=await cachedFetch(ticker,'insider_transactions',async()=>{
@@ -9258,7 +8982,7 @@ async function fetchInsiderTrading(ticker){
 
 async function renderInsiderTrading(ticker){
   const el=document.getElementById('cp-insider-content');
-  if(!getSyncKey()){
+  if(!hasDataAuth()){
     el.innerHTML='<div class="card"><p style="color:var(--text2)">'+t('login.noConnectionData')+'</p></div>';
     return;
   }
@@ -11027,9 +10751,9 @@ function renderApiUsage(){
   const fmpPct=Math.round(fmpBudget/FMP_DAILY_LIMIT*100);
   const fmpColor=fmpPct>=80?'var(--red)':fmpPct>=50?'var(--yellow)':'var(--green)';
   const apis=[
-    {name:'FMP',key:getSyncKey(),limit:FMP_DAILY_LIMIT,period:t('settings.apiPerDay'),used:fmpBudget,remaining:fmpRemaining,pct:fmpPct,color:fmpColor,tracked:true,data:t('settings.apiFmpData'),cache:'1-24h'},
-    {name:'Yahoo Finance',key:getSyncKey(),limit:30,period:t('settings.apiPerMin'),used:null,remaining:null,pct:null,color:null,tracked:false,data:t('settings.apiYahooData'),cache:'1-24h'},
-    {name:'Finnhub',key:getSyncKey(),limit:60,period:t('settings.apiPerMin'),used:null,remaining:null,pct:null,color:null,tracked:false,data:t('settings.apiFinnhubData'),cache:'12h'}
+    {name:'FMP',key:hasDataAuth(),limit:FMP_DAILY_LIMIT,period:t('settings.apiPerDay'),used:fmpBudget,remaining:fmpRemaining,pct:fmpPct,color:fmpColor,tracked:true,data:t('settings.apiFmpData'),cache:'1-24h'},
+    {name:'Yahoo Finance',key:hasDataAuth(),limit:30,period:t('settings.apiPerMin'),used:null,remaining:null,pct:null,color:null,tracked:false,data:t('settings.apiYahooData'),cache:'1-24h'},
+    {name:'Finnhub',key:hasDataAuth(),limit:60,period:t('settings.apiPerMin'),used:null,remaining:null,pct:null,color:null,tracked:false,data:t('settings.apiFinnhubData'),cache:'12h'}
   ];
   let h=`<p style="color:var(--text2);font-size:12px;margin-bottom:14px">${t('settings.apiUsageHint')}</p>`;
   h+='<div style="display:flex;flex-direction:column;gap:12px">';
@@ -15270,8 +14994,6 @@ function deleteReview(id){
 
 // ====== CLOUD SYNC & CONNECTION TESTS ======
 function getSyncKey(){return stSettings().syncKey||''}
-let syncTimer=null;
-let lastSyncTs=0;
 
 function getSyncUrl(){
   const s=stSettings();
@@ -15291,7 +15013,7 @@ function updateD1UI(){
   const card=document.getElementById('d1-migration-card');
   if(!card)return;
   const hasUrl=getSyncUrl();
-  const hasKey=getSyncKey();
+  const hasKey=hasDataAuth();
   card.style.display=(hasUrl&&hasKey)?'':'none';
   if(d1Mode){
     document.getElementById('d1-not-migrated').style.display='none';
@@ -15378,7 +15100,7 @@ async function testWorker(ev){
 }
 
 async function testFinnhub(ev){
-  if(!getSyncKey()){setStatus('finnhub-status','Set Sync Key first',false);return}
+  if(!hasDataAuth()){setStatus('finnhub-status','Not signed in',false);return}
   const btn=ev?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
   setStatus('finnhub-status','Testing...','');
   try{
@@ -15391,7 +15113,7 @@ async function testFinnhub(ev){
 }
 
 async function testFmp(ev){
-  if(!getSyncKey()){setStatus('fmp-status','Set Sync Key first',false);return}
+  if(!hasDataAuth()){setStatus('fmp-status','Not signed in',false);return}
   const btn=ev?.target;if(btn){btn.disabled=true;btn.textContent='Testing...'}
   setStatus('fmp-status','Testing...','');
   try{
@@ -15412,33 +15134,6 @@ async function testD1(){
     const r=await API.get('companies?limit=1');
     setStatus('sync-status','D1 Connected ✓',true);
   }catch(e){setStatus('sync-status','D1 error: '+e.message,false)}finally{btn.disabled=false;btn.textContent='Test D1'}
-}
-
-async function testSync(){
-  const url=getSyncUrl();
-  const key=getSyncKey();
-  const btn=document.getElementById('sync-btn');
-  if(!url){setStatus('sync-status','Worker URL missing',false);return}
-  if(!key){setStatus('sync-status','Sync Key missing',false);return}
-  btn.disabled=true;btn.textContent='Syncing...';
-  setStatus('sync-status','','');
-  try{
-    await cloudSave();
-    const r=await fetch(url+'/sync/load',{headers:{'X-Sync-Key':key}});
-    if(r.status===401){setStatus('sync-status','Wrong sync key',false);return}
-    if(!r.ok){setStatus('sync-status','Server error ('+r.status+')',false);return}
-    const d=await r.json();
-    if(d.ok){
-      const loaded=await cloudLoad();
-      if(loaded){recalcAll();renderTracker();renderSavedStocks()}
-      const when=d.data?.ts?new Date(d.data.ts).toLocaleTimeString():'now';
-      setStatus('sync-status','Synced ✓ ('+when+')',true);
-    }else{
-      setStatus('sync-status','No data yet — saved!',true);
-    }
-  }catch(e){
-    setStatus('sync-status','Connection failed',false);
-  }finally{btn.disabled=false;btn.textContent='Sync Now'}
 }
 
 async function cloudLoadMeta(){
@@ -15465,13 +15160,16 @@ async function cloudSaveMeta(meta,expectedVersion){
 }
 
 function buildMeta(){
+  // Legacy client-side encryption was removed in B3b-2; the envelope/E2EE system no
+  // longer writes enc_salt/enc_verify/enc_recovery. The /sync/meta path is kept
+  // (token-authed, vestigial) so these fields are reported as absent.
   return{
     meta_version:_metaVersion,
     mode:d1Mode?'d1':'kv',
-    has_encryption:isEncryptionEnabled(),
-    enc_salt:localStorage.getItem('enc_salt')||null,
-    enc_verify:JSON.parse(localStorage.getItem('enc_verify')||'null'),
-    enc_recovery:localStorage.getItem('enc_recovery')||null
+    has_encryption:false,
+    enc_salt:null,
+    enc_verify:null,
+    enc_recovery:null
   };
 }
 
@@ -15484,164 +15182,6 @@ async function cloudSaveMetaRetry(meta,expectedVersion,maxRetries){
     if(i<maxRetries-1)await new Promise(res=>setTimeout(res,2000));
   }
   return false;
-}
-
-async function handleReauth(){
-  // Legacy sync-password reauth. It cannot derive the DEK, so for an encrypted account
-  // route to the master-password gate instead of loading data blind (which would show
-  // gaps / risk a keyless save).
-  if(_encRequired){showMasterLogin(t('mp.enc.needKey'));return}
-  const passInput=document.getElementById('reauth-password');
-  const err=document.getElementById('reauth-error');
-  const btn=document.getElementById('reauth-btn');
-  if(!passInput||!passInput.value){err.textContent=t('login.enterPassword');err.style.display='block';return}
-  err.style.display='none';
-  btn.disabled=true;
-
-  try{
-    const meta=await cloudLoadMeta();
-    if(!meta){err.textContent=t('login.failed');err.style.display='block';return}
-    const ok=await verifyPasswordWithMeta(passInput.value,meta);
-    if(!ok){err.textContent=t('lock.wrongPassword');err.style.display='block';return}
-    _encPass=passInput.value;
-    localStorage.setItem('enc_salt',meta.enc_salt);
-    localStorage.setItem('enc_verify',JSON.stringify(meta.enc_verify));
-    if(meta.enc_recovery)localStorage.setItem('enc_recovery',meta.enc_recovery);
-    _metaVersion=meta.meta_version;
-    localStorage.setItem('meta_version',String(_metaVersion));
-    document.getElementById('lock-screen').style.display='none';
-    document.documentElement.classList.remove('app-locked');
-    autoLoad();
-  }catch(e){
-    err.textContent=t('login.failed');err.style.display='block';
-  }finally{btn.disabled=false;btn.textContent=t('login.authenticate')}
-}
-
-let _cloudSaving=false;
-async function cloudSave(){
-  if(_cloudSaving)return;
-  _cloudSaving=true;
-  const url=getSyncUrl();
-  if(!url||!getSyncKey()){_cloudSaving=false;return}
-  const payload={
-    ts:Date.now(),
-    stocks:tStocks,
-    settings:(()=>{const st=stSettings();return{g1:st.g1,g2:st.g2,g3:st.g3,dr:st.dr,tg:st.tg,em:st.em,fade:st.fade}})(),
-    calculator:getAllData(),
-    savedStocks:_getSavedStocks(),
-    researchNotes:researchNotes,
-    portfolioAccounts:pfAccounts,
-    portfolioPositions:pfPositions,
-    portfolioTransactions:pfTransactions,
-    portfolioExchangeRates:pfExchangeRates,
-    portfolioSnapshots:pfSnapshots,
-    dashboardTodos:dbTodos,
-    dashboardFiSettings:dbFiSettings,
-    dashboardBenchmark:dbBenchmark,
-    dashboard52wHighs:db52wHighs,
-    dividendHistory:divHistory,
-    dividendSettings:divSettings,
-    frameworkData:fwData,
-    reviewsData:rvData
-  };
-  let body=payload;
-  if(_encPass&&isEncryptionEnabled()){
-    try{body=await encryptPayload(_encPass,payload)}catch(e){console.warn('Encrypt failed',e);_cloudSaving=false;return}
-  }
-  if(typeof body==='object'&&body!==null)body.enc_version=_metaVersion;
-  try{
-    const r=await fetch(url+'/sync/save',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','X-Sync-Key':getSyncKey()},
-      body:JSON.stringify(body)
-    });
-    if(r.status===409){setStatus('sync-status',t('login.passwordChangedElsewhere'),false);_cloudSaving=false;showReauthScreen();return}
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    lastSyncTs=payload.ts;
-    setStatus('sync-status','Saved ✓ '+new Date().toLocaleTimeString(),true);
-    cloudLoadMeta().then(ex=>{if(!ex)cloudSaveMeta(buildMeta())}).catch(()=>{});
-  }catch(e){setStatus('sync-status','Save failed',false);console.warn('Cloud save failed',e);throw e}finally{_cloudSaving=false}
-}
-
-function showReauthScreen(){
-  document.getElementById('lock-screen').style.display='flex';
-  document.documentElement.classList.add('app-locked');
-  showLockView('reauth');
-}
-
-let _kvRetryCount=0;
-function scheduleCloudSave(delay=3000){
-  if(syncTimer)clearTimeout(syncTimer);
-  syncTimer=setTimeout(()=>cloudSave().then(()=>{_kvRetryCount=0}).catch(e=>{
-    _kvRetryCount++;
-    if(_kvRetryCount<=3){
-      const backoff=Math.min(_kvRetryCount*3000,10000);
-      showToast(t('toast.cloudSaveRetry',{key:'KV',sec:Math.round(backoff/1000)}),'warning',3000);
-      scheduleCloudSave(backoff);
-    }else{
-      showToast(t('toast.cloudSaveFailed',{key:'KV'}),'error',8000);
-      _kvRetryCount=0;
-    }
-  }),delay);
-}
-
-async function cloudLoad(){
-  const url=getSyncUrl();
-  const key=getSyncKey();
-  if(!url||!key)return false;
-  try{
-    const meta=await cloudLoadMeta();
-    if(meta){
-      if(meta.meta_version&&meta.meta_version>_metaVersion){
-        showReauthScreen();return false;
-      }
-      if(meta.mode==='d1'&&!d1Mode){
-        showToast(t('login.modeChanged'),'warning');
-        localStorage.setItem('d1_migrated','1');
-        API.init();d1Mode=true;
-        location.reload();return false;
-      }
-    }
-    const r=await fetch(url+'/sync/load',{headers:{'X-Sync-Key':key}});
-    if(!r.ok)return false;
-    const d=await r.json();
-    if(!d.ok||!d.data)return false;
-    let cloud=d.data;
-    if(isEncryptedBlob(cloud)){
-      if(!_encPass){console.warn('Cloud data encrypted but no password');return false}
-      try{cloud=await decryptPayload(_encPass,cloud)}catch(e){console.warn('Decrypt failed',e);setStatus('sync-status','Decryption failed — wrong password?',false);showToast(t('sync.decryptionFailed'),'error');return false}
-    }
-    const localTs=parseInt(localStorage.getItem('sync_ts')||'0',10);
-    if(cloud.ts&&cloud.ts>localTs){
-      if(cloud.stocks){tStocks=cloud.stocks;saveTrackerStocks()}
-      if(cloud.settings){
-        const map={apiKey:'st-apikey',finnhubKey:'st-finnhub',workerUrl:'st-worker',syncKey:'st-synckey',g1:'st-g1',g2:'st-g2',g3:'st-g3',dr:'st-dr',tg:'st-tg',em:'st-em',fade:'st-fade'};
-        Object.keys(map).forEach(k=>{if(cloud.settings[k]!=null){const el=document.getElementById(map[k]);if(el)el.value=cloud.settings[k]}});
-        saveTrackerSettings();
-      }
-      if(cloud.calculator)loadData(cloud.calculator);
-      if(cloud.savedStocks)localStorage.setItem('valuation_stocks',JSON.stringify(cloud.savedStocks));
-      if(cloud.researchNotes){mergeResearchNotes(cloud.researchNotes);saveResearchNotes()}
-      if(cloud.portfolioAccounts){pfAccounts=cloud.portfolioAccounts;savePortfolioAccounts()}
-      if(cloud.portfolioPositions){pfPositions=cloud.portfolioPositions;savePortfolioPositions()}
-      if(cloud.portfolioTransactions){pfTransactions=cloud.portfolioTransactions;savePortfolioTransactions()}
-      if(cloud.portfolioExchangeRates){pfExchangeRates=cloud.portfolioExchangeRates;saveExchangeRates()}
-      if(cloud.portfolioSnapshots){pfSnapshots=cloud.portfolioSnapshots;savePortfolioSnapshots()}
-      if(cloud.dashboardTodos&&Array.isArray(cloud.dashboardTodos)){dbTodos=cloud.dashboardTodos;saveDashTodos()}
-      if(cloud.dashboardFiSettings&&typeof cloud.dashboardFiSettings==='object'){Object.assign(dbFiSettings,cloud.dashboardFiSettings);saveDashFiSettings()}
-      if(cloud.dashboardBenchmark&&typeof cloud.dashboardBenchmark==='object'){dbBenchmark=cloud.dashboardBenchmark;saveDashBenchmark()}
-      if(cloud.dashboard52wHighs&&typeof cloud.dashboard52wHighs==='object'){db52wHighs=cloud.dashboard52wHighs;saveDash52wHighs()}
-      if(cloud.dividendHistory&&typeof cloud.dividendHistory==='object'){divHistory=cloud.dividendHistory;saveDividendHistory()}
-      if(cloud.dividendSettings&&typeof cloud.dividendSettings==='object'){Object.assign(divSettings,cloud.dividendSettings);saveDivSettings()}
-      if(cloud.frameworkData&&typeof cloud.frameworkData==='object'){fwData=cloud.frameworkData;saveFramework()}
-      if(cloud.reviewsData&&typeof cloud.reviewsData==='object'){rvData=cloud.reviewsData;saveReviews()}
-      localStorage.setItem('sync_ts',String(cloud.ts));
-      lastSyncTs=cloud.ts;
-      console.log('Cloud sync loaded',new Date(cloud.ts).toLocaleTimeString());
-      return true;
-    }
-    return false;
-  }catch(e){console.warn('Cloud load failed',e);return false}
 }
 
 // Auto save/load
@@ -15667,10 +15207,9 @@ async function autoLoad(){
     if(dot)dot.style.display='';
     if(navigator.onLine){
       try{
+        // Legacy cross-device kv-downgrade check on the (vestigial) /sync/meta path.
+        // The password-reauth branch was removed in B3b-2 (envelope auth handles keys).
         const meta=await cloudLoadMeta();
-        if(meta&&meta.meta_version&&meta.meta_version>_metaVersion&&meta.has_encryption&&meta.mode!=='d1'){
-          showReauthScreen();_autoLoadRunning=false;return;
-        }
         if(meta&&meta.mode==='kv'&&d1Mode){
           d1Mode=false;localStorage.removeItem('d1_migrated');
         }
@@ -15738,20 +15277,7 @@ async function autoLoad(){
   const l=localStorage.getItem('valuation_last_v2');
   if(l){try{loadData(JSON.parse(l))}catch(e){}}
   recalcAll();
-  updateEncStatus();
   updateD1UI();
-
-  if(!d1Mode){
-    // Legacy KV sync (only when not in D1 mode)
-    const loaded=await cloudLoad();
-    if(loaded){recalcAll();renderSavedStocks();renderResearch();renderTracker();
-      const vis=SECTIONS.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
-      if(vis==='portfolio')renderPortfolioOverview();
-      if(vis==='dashboard')renderDashboard();
-      if(vis==='framework')renderFramework();
-      if(vis==='reviews')renderReviews();
-    }
-  }
 
   const bcSel=document.getElementById('pf-base-currency');
   if(bcSel)bcSel.value=pfExchangeRates.baseCurrency||'HUF';
@@ -15766,7 +15292,6 @@ async function autoLoad(){
 function autoSave(){
   try{
     localStorage.setItem('valuation_last_v2',JSON.stringify(getAllData()));
-    if(!d1Mode){localStorage.setItem('sync_ts',String(Date.now()));scheduleCloudSave()}
   }catch(e){
     console.error('autoSave failed:',e);
     if(e.name==='QuotaExceededError')showToast(t('sync.storageFull'),'error',8000);
@@ -15782,16 +15307,6 @@ window.addEventListener('beforeunload',()=>{
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
     if(d1Mode)API.flushAll();
-    if(isEncryptionEnabled()&&_encPass){
-      _autoLockTimer=setTimeout(()=>{
-        _encPass=null;
-        document.getElementById('lock-screen').style.display='flex';
-        showLockView('unlock');
-        document.getElementById('lock-pass').value='';
-      },AUTO_LOCK_DELAY);
-    }
-  }else{
-    if(_autoLockTimer){clearTimeout(_autoLockTimer);_autoLockTimer=null}
   }
 });
 window.addEventListener('online',()=>{
@@ -16791,25 +16306,12 @@ window.addEventListener('load',()=>{
       autoLoad();
       return;
     }
-    // No token: does a master-password account exist that requires login?
+    // No token: route to the master-password gate, which stays visible (app-locked on)
+    // until the user signs in. This covers an existing account (mpInit true), a first
+    // provision (false), and an offline/unreachable worker (null → retry message).
     let mpInit=null;
     try{mpInit=(await authGetSalt(8000)).initialized}catch(e){mpInit=null}
-    if(mpInit===true){showMasterLogin();return}
-    // Legacy encryption unlock for users who already enabled it.
-    if(isEncryptionEnabled()){
-      document.getElementById('lock-screen').style.display='flex';
-      showLockView('unlock');
-    }else if(mpInit===null&&!localStorage.getItem('enc_skipped')){
-      // Couldn't reach the server on an un-provisioned device — show the master-login
-      // gate (retry) rather than the deprecated encryption-setup screen.
-      showMasterLogin(t('mp.status.checkFailed'));
-    }else if(!localStorage.getItem('enc_skipped')){
-      document.getElementById('lock-screen').style.display='flex';
-      showLockView('setup');
-    }else{
-      document.documentElement.classList.remove('app-locked');
-      autoLoad();
-    }
+    showMasterLogin(mpInit===null?t('mp.status.checkFailed'):undefined);
   })();
 });
 </script>
