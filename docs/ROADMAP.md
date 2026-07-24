@@ -22,7 +22,7 @@ Full plan in `memory/project_security-v2-plan.md`. Stop + multi-agent QA after e
 - [x] C1 (a+b): envelope (random DEK wrapped by encKey + recovery key, atomic in `auth_config`), recovery reset flow with key rotation. Deployed + provisioned in production 2026-07-21.
 - [x] C2 (a+b+c+d): field-level encryption of every sensitive column — reviews/valuations/thesis, remaining TEXT cols, notes, REAL numerics via `decNum` — plus FI settings + todo titles (`5bc8b52`). All live in prod.
 - [x] C3 (`d176a0a`, sw.js v38, 2026-07-23): one-time migration of pre-C2 plaintext D1 rows → ciphertext (Settings → Data Encryption → Scan/Encrypt, in-place upsert by id + verify pass), purge of orphaned duplicate company-note rows, and a worker 403 gate on `POST /api/migrate` while the envelope exists (plaintext import would undo encryption). 61/61 node:sqlite dry-run on the real code+schema; 2 QA agents SHIP. BUG-HISTORY Cat 82. **Deploy: worker FIRST, then push; Peter runs backup + the in-app migration.**
-- [ ] C3b: encrypted clear-and-restore flow (restore in encrypted mode is currently a merge — see KNOWN-ISSUES SV.8).
+- [x] C3b: encrypted clear-and-restore flow (`feb4b4b`, v43; needs `wrangler deploy`). Worker `POST /api/purge` (token-authed, FK-cascade clear) + client `_c3bClearAndRestore` (cancel→purge→strip→2-phase re-save, no D1→local read). SV.8 RESOLVED. Adversarial QA = 1 CRITICAL (stale companyId strip) fixed + re-verified.
 
 **Phase B3 — retire sync key** (UNBLOCKED — recovery key live; next after C3 is run in prod)
 **Phase D — Cleanup, durable rate limiting, docs, final security QA** (not started)

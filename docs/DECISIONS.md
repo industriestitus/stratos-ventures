@@ -1208,6 +1208,34 @@ The original backend authenticated every data request with a single shared "sync
 
 ---
 
+## ADR-041: Encrypted Clear-and-Restore via a Client-Driven Purge (C3b)
+
+**Status:** Accepted (2026-07-24) — C3b (`feb4b4b`, v43)
+
+**Context:**  
+"Restore from Backup" should REPLACE the user's data. In plaintext mode it does — `POST /api/migrate` clears the tables server-side then re-inserts. But once E2EE is active, `/migrate` is blocked (403; the worker has no DEK and would write plaintext), so the encrypted restore fell back to pushing the backup through the normal savers as **upserts** — a MERGE. Cloud rows absent from the backup were never deleted and resurrected after a reload (KNOWN-ISSUES SV.8). A true encrypted replace needs a clear step, but the worker can't do the re-insert (no key) and the client can't reuse `/migrate`.
+
+**Decision:**  
+- **Split the operation:** the worker only CLEARS (it needs no key for that); the client RE-INSERTS via its normal encrypted savers.
+- **New token-authed `POST /api/purge`** deletes the user-entity tables (`companies`, `notes`, `broker_accounts`, `portfolio_snapshots`, `exchange_rates`, `general_todos`, `framework_entries`, `reviews`, `valuations`); child tables cascade via `ON DELETE CASCADE`. It leaves `app_settings` (key-value config, upserted by key — no resurrection problem) and lets `api_cache` clear via the companies cascade (regenerable). Shared `userDataClearStmts()` is the same clear `handleMigrate` already used.
+- **Client `_c3bClearAndRestore()`**: cancel the scheduled merge-writes → purge → `_stripD1Refs()` (drop cached D1 row ids so re-saves INSERT fresh and re-resolve FKs) → phase 1 (companies/accounts) → GET /companies to recapture the new ids → phase 2 (children).
+- **Data-safety invariant:** the flow NEVER reads D1→local and never rolls back localStorage. localStorage stays the source of truth throughout, so a mid-flow failure leaves the restored data intact (worst case = D1 incomplete, re-syncs on next save) — strictly better than the old merge, never data-loss.
+
+**Alternatives Rejected:**
+- **Pre-encrypt the payload + a "tolerant" `/migrate`:** would require duplicating the worker's field→column mapping on the client to know which nested payload fields to encrypt — fragile and easy to drift from the C2 column set.
+- **Purge then `location.reload()` to re-migrate:** a reload re-runs autoLoad which loads D1→local; if the re-insert were incomplete the reload would overwrite local with the partial cloud → data loss. Rejected in favor of no-reload, local-as-truth.
+- **Per-row client DELETE instead of a purge route:** thousands of requests, tombstone interactions, slow and fragile.
+
+**Consequences:**
+- ✅ Encrypted restore is a true replace; SV.8 resolved.
+- ✅ Reusable token-authed purge primitive; `handleMigrate` and purge share one clear helper (can't drift).
+- ⚠️ **`companies.id` has no AUTOINCREMENT** → post-purge re-inserts get fresh rowids, so EVERY cached numeric `company_id` must be stripped before re-save or the atomic FK batch 500s and drops the whole batch. The QA pass caught the initial strip missing `companyId` on transactions/notes/reviews (only positions was covered) — a real data-loss path, fixed. Lesson: enumerate every cached FK id, not just the obvious one.
+- ⚠️ Worker needs `wrangler deploy`. Until then `/api/purge` 400s → the client catches it and safely degrades to the old merge + a "restored locally" warning. Destructive op, gated behind the existing typed-`RESTORE` confirm + "back up first" warning.
+
+**Date:** 2026-07-24 (C3b)
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1252,6 +1280,7 @@ The original backend authenticated every data request with a single shared "sync
 | 038 | Soft-delete tombstones for framework/override/valuation/note_images (S2c) | Accepted | 2026-07-23 |
 | 039 | Retire legacy client-side encryption + legacy KV sync (B3b-2) | Accepted | 2026-07-24 |
 | 040 | Retire the sync key — token-only auth (B3c) | Accepted | 2026-07-24 |
+| 041 | Encrypted clear-and-restore via client-driven purge (C3b) | Accepted | 2026-07-24 |
 
 ---
 

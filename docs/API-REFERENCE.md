@@ -206,8 +206,15 @@ The legacy KV blob path (`/sync/load`, `/sync/save`, `/sync/restore-backup`) was
 - **Endpoint:** `POST /api/migrate`
 - **Request Body:** Legacy app state (trackerStocks, researchNotes, portfolioAccounts, etc.)
 - **Response:** `{ok: true, stats: {companies: X, todos: Y, ...}, errors?: [...]}`
-- **403 when encryption is active (C3, Cat 82):** if the E2EE envelope exists (KV `auth_config.wrapEnc`), returns `{error: "Encryption is active — plaintext migrate/restore is disabled"}` BEFORE the clear-tables step — this endpoint writes raw client JSON (the worker has no DEK), so a plaintext import would silently undo field encryption. Fail-closed: a KV read error returns 500, never proceeds. Encrypted restore flow tracked as C3b (KNOWN-ISSUES SV.8).
-- **Line:** cloudflare-worker/src/index.js:643-650, 322-609
+- **403 when encryption is active (C3, Cat 82):** if the E2EE envelope exists (KV `auth_config.wrapEnc`), returns `{error: "Encryption is active — plaintext migrate/restore is disabled"}` BEFORE the clear-tables step — this endpoint writes raw client JSON (the worker has no DEK), so a plaintext import would silently undo field encryption. Fail-closed: a KV read error returns 500, never proceeds. Encrypted accounts use `/api/purge` + client-side re-insert instead (C3b).
+
+**Purge (C3b — encrypted clear-and-restore):**
+- **Endpoint:** `POST /api/purge`
+- **Auth:** Required - `X-Auth-Token` header
+- **Request Body:** none
+- **Response:** `{ok: true, cleared: [table names]}`
+- **Behavior:** `DELETE FROM` the user-entity tables (`companies`, `notes`, `broker_accounts`, `portfolio_snapshots`, `exchange_rates`, `general_todos`, `framework_entries`, `reviews`, `valuations`); child tables cascade via `ON DELETE CASCADE`. Leaves `app_settings` (key-value config, upserted by key); `api_cache` clears via the companies cascade (regenerable). Used by the client's encrypted clear-and-restore so a restore REPLACES rather than merges the cloud — the client then re-encrypts + re-inserts via the normal savers (the worker has no DEK). Shares `userDataClearStmts()` with `/api/migrate`. Irreversible; the client gates it behind a typed-`RESTORE` confirm.
+- **Line:** cloudflare-worker/src/index.js — `handleApi` `table === 'purge'` branch
 
 ---
 
@@ -636,7 +643,8 @@ function stSettings() {
 | **D1 API** | POST | `/api/notes/search?q={query}` | Notes search | X-Auth-Token |
 | **D1 API** | GET | `/api/cache-check/{cid}/{source}` | Cache status | X-Auth-Token |
 | **D1 API** | PUT | `/api/cache-upsert` | Cache update | X-Auth-Token |
-| **D1 API** | POST | `/api/migrate` | Data migration | X-Auth-Token |
+| **D1 API** | POST | `/api/migrate` | Data migration (plaintext; 403 when encrypted) | X-Auth-Token |
+| **D1 API** | POST | `/api/purge` | Clear user-entity tables (C3b encrypted restore) | X-Auth-Token |
 | **FMP** | GET | `/profile?symbol={TICKER}` | Company profile | apikey |
 | **FMP** | GET | `/income-statement?symbol={TICKER}` | Income data | apikey |
 | **FMP** | GET | `/cash-flow-statement?symbol={TICKER}` | Cash flow data | apikey |

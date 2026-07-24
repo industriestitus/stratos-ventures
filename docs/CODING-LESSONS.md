@@ -193,6 +193,16 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 ## Data Safety
 
+### 0. Before a Purge-and-Reinsert, Strip EVERY Cached FK Row-Id (C3b / Cat 86)
+
+**What went wrong:** C3b clears the cloud then re-inserts local data. `companies.id` has no `AUTOINCREMENT`, so re-inserted rows get fresh rowids. Objects that cached the OLD numeric `company_id` (positions, transactions, notes, reviews) would re-insert with a stale FK → the atomic batch hits an `ON DELETE`/FK violation → **the whole batch 500s and every row in it is dropped** → the next reload's D1→local load overwrites localStorage → permanent data loss. The first implementation stripped the id cache on positions but MISSED transactions/notes/reviews (a QA agent caught it).
+
+**Rule:**
+- Before purging + re-inserting, enumerate **every** place a resolved FK row-id is cached — not just the obvious one. Grep the savers for `.companyId`/`.accountId`/`_d1Id`/`_d1ValId` assignments.
+- Strip them all so the re-save re-resolves via a STABLE key (ticker/natural key), not a volatile rowid. Give every dependent saver a natural-key fallback (`_tickerToD1Id(ticker)`) so a stripped cache resolves instead of inserting a null/broken FK.
+- Prefer `INTEGER PRIMARY KEY AUTOINCREMENT` if rowids must be stable across delete+reinsert — or design the flow to not depend on rowid stability (resolve by natural key).
+- Keep the local store as the source of truth during the operation: never read D1→local mid-flow, so a partial failure can't overwrite good local data.
+
 ### 1. D1 Write-Through + Read-Fallback
 
 **What went wrong:** Save functions had `if(d1Mode) { scheduleSave(); return; }` — skipped localStorage entirely. TODOs disappeared after refresh because D1 sync was slow and localStorage wasn't written.
@@ -455,7 +465,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 |--------|---------|-----------|
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
 | JavaScript | 11 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
-| Data Safety | 7 | 33+ (Categories 15, 72, 82) |
+| Data Safety | 8 | 34+ (Categories 15, 72, 82, 86) |
 | API & Caching | 5 | 31+ (Categories 5, 6, 21, 80) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |

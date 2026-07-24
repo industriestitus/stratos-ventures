@@ -91,8 +91,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 83 | Security v2 B3a/B3b-1 — Token-Primary Auth + Connection-String Login Removal | `ce69164` | 2026-07-23 | 0 | 0 |
 | 84 | Security v2 B3b-2 — Remove Legacy Client-Encryption + Legacy KV Sync (token-only boot) | `681354b` | 2026-07-24 | 0 | 0 |
 | 85 | Security v2 B3c — Retire the Sync Key (worker token-only auth + client cleanup) | `2ba0019` | 2026-07-24 | 0 | 0 |
+| 86 | Security v2 C3b — Encrypted Clear-and-Restore (worker /api/purge) | `feb4b4b` | 2026-07-24 | 1 | 0 |
 
-**Total: 481 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85 are QA-clean hardening batches, 0 fixes — do not change the running total.)
+**Total: 482 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85 are QA-clean hardening batches, 0 fixes; Cat 86 = 1 QA-caught fix.)
 
 ---
 
@@ -1664,6 +1665,21 @@ Calculated historical portfolio value chart from transactions + FMP API prices. 
 **Deploy (Peter, IRREVERSIBLE — order below):** (1) `cd web/cloudflare-worker && npx wrangler deploy`; (2) verify the app still loads + saves on his token device; (3) `npx wrangler secret delete SYNC_SECRET`. Frontend (v42) already auto-deploys via GitHub Pages and is safe against the pre-deploy dual-auth worker (his device is token-authed). Lockout backstop: `/auth/login` + `/auth/recover` stay public; existing device tokens are independent of `SYNC_SECRET`.
 
 **QA:** 1 adversarial agent over the worker+client diff (8-point checklist incl. lockout hunt) = **SHIP, 0 defects**. Verified: no worker path references `X-Sync-Key`/`SYNC_SECRET`/`/sync/load|save`/`action==='setup'` (only comments); `/sync/meta` intact + brace-balanced; `/auth/login`+`/auth/recover` still public (no lockout); existing tokens survive the secret unset; client has zero live refs to removed symbols; `renderMasterPassword` works without the setup form. Worker + 6/6 inline client scripts `node --check` clean. In-browser: token-only headers (no `X-Sync-Key`), `hasDataAuth` false w/o token & true w/ token, `renderMasterPassword` renders, remote worker `initialized:true`.
+
+---
+
+## Category 86 — Security v2 C3b: Encrypted Clear-and-Restore (2026-07-24)
+
+Fixes **SV.8**: with encryption active, "Restore from Backup" REPLACED-vs-MERGED. Previously the encrypted restore upserted the backup via the savers without clearing the cloud, so D1 rows absent from the backup survived and could resurrect after a reload. C3b clears the cloud first, then re-encrypts + re-inserts. Worker needs `wrangler deploy` (new route, no schema change). sw.js **v43**.
+
+| # | Item | Detail | Commit |
+|---|------|--------|--------|
+| 86.1 | Worker `POST /api/purge` | Token-authed full clear of user-entity tables (`companies`/`notes`/`broker_accounts`/`portfolio_snapshots`/`exchange_rates`/`general_todos`/`framework_entries`/`reviews`/`valuations`); children cascade via `ON DELETE CASCADE`. Leaves `app_settings` (key-value config, upserted — no resurrection); `api_cache` clears via the companies cascade (regenerable). Shared `userDataClearStmts()` refactored out of `handleMigrate` (its behavior unchanged). | `feb4b4b` |
+| 86.2 | Client `_c3bClearAndRestore()` | cancelPending → purge → `_stripD1Refs()` → phase 1 (companies/accounts) → recapture new company D1 ids → phase 2 (children resolve FKs via the recaptured ids). **No reload and no D1→local read** → a mid-flow failure leaves local data intact and re-syncs on the next normal save (worst case = D1 incomplete, never data loss). | `feb4b4b` |
+| 86.3 | `API.cancelPending()` + `flushAllAwait()` | Queue primitives: cancel drops scheduled merge-writes without sending; awaitable flush sends all pending and resolves when they settle. | `feb4b4b` |
+| 86.4 (QA-fix) | Strip ALL stale company-id caches, not just positions | **Adversarial QA CRITICAL:** `_stripD1Refs` initially stripped `_d1*` + `pfPositions[].companyId` but MISSED the identical non-prefixed `companyId` cache on `pfTransactions`, `researchNotes[*]`, and `rvData.entries`. Since `companies.id` has no AUTOINCREMENT, post-purge re-inserts get fresh rowids → a stale cached `company_id` → the atomic `transactions/notes/reviews` batch hits an FK violation → **the whole batch 500s and is dropped** → on next reload the D1-load overwrites localStorage → permanent loss of all transactions / company-linked notes/reviews. Fixed: strip `companyId` on all four; `saveResearchNotes` gained a `_tickerToD1Id(ticker)` fallback (transactions/reviews already had one) so company-linked notes keep their link. | `feb4b4b` |
+
+**Verified:** worker `node --check` + `node:sqlite` purge dry-run (cascade clears all 11 parent/child tables; `app_settings` preserved); 6/6 inline client scripts parse; in-browser `_stripD1Refs`/`cancelPending`/`flushAllAwait` behavior (incl. the 86.4 re-verify: `companyId` stripped on all four, `ticker`/`companyTicker` preserved). Adversarial QA agent: 1 CRITICAL (86.4) → fixed + re-verified; data-safety invariant ("never reads D1→local; worst case D1-incomplete, not data-loss") confirmed. **Deploy:** `cd web/cloudflare-worker && npx wrangler deploy` (frontend v43 already live; until the worker deploys, an encrypted restore's `/api/purge` 400s → caught → falls back to the old merge + "restored locally" warning — safe degrade).
 
 ---
 
