@@ -94,6 +94,9 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 
 ## Medium Priority
 
+### P.17 — Notes full-text search runs over encrypted content (functional, from Phase-D sweep 2026-07-24)
+- **Status:** Open, accepted trade-off of E2EE. Since Phase C encrypted `notes.title`/`content`, the worker's FTS/LIKE search (`handleNotesSearch`) now matches **ciphertext**, so content search returns nothing useful for encrypted notes. Not a leak (the sweep confirmed no plaintext exposure) — a functionality cost of at-rest encryption. **Fix direction (future):** client-side search (decrypt in memory + filter) since the app already loads all notes, OR a client-maintained encrypted search index. Tracked with [[fmp-api-migration]]/[[backup-safety-net]] as non-security follow-ups.
+
 ### P.3 — FMP `/profile` Missing Debt/Cash Data (ACCEPTED)
 - **Status:** Won't fix — external API limitation. Yahoo Finance data provides debt/cash when available. FMP free tier doesn't expose balance sheet in `/profile`. Separate API call would consume too much quota.
 

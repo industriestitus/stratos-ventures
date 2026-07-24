@@ -95,8 +95,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 87 | Security v2 Phase D — Final Security Sweep + Doc/Comment Closeout | `657c553`+ | 2026-07-24 | 0 | 0 |
 | 88 | Purge stale legacy client-encryption verifier from server meta | `39100c8` | 2026-07-24 | 1 | 0 |
 | 89 | Backup restore wiped the auth token (logged out mid-restore, cloud restore skipped) | `17f9845` | 2026-07-24 | 1 | 0 |
+| 90 | Security v2 Phase-D final sweep — C3b restore data-loss paths (CRITICAL + 2 HIGH + 3 MEDIUM) | `cc485c8` | 2026-07-24 | 6 | 0 |
 
-**Total: 484 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix.)
+**Total: 490 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep.)
 
 ---
 
@@ -1728,6 +1729,30 @@ sw.js **v44**, frontend-only (reload triggers the self-heal). **Lesson (CODING-L
 | 89.1 | Preserve session/auth/mode keys across restore | Added `auth_token`, `dek_cache`, `enc_active`, `d1_migrated`, `meta_version` to `keepKeys`. These are identity, not data — they must survive a data restore. With the token preserved, the C3b clear-and-restore now actually executes (purge → re-encrypt → re-insert) as designed. | `17f9845` |
 
 sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe everything except X" allowlist is a standing liability — every new cross-cutting key (auth tokens, session/mode flags) must be re-checked against it. Prefer wiping only known *data* keys over "wipe all except keep-list".
+
+---
+
+## Category 90 — Security v2 Phase-D Final Sweep: C3b Restore Data-Loss Paths (2026-07-24)
+
+**Final adversarial security sweep of the whole Security v2 end-state — 5 parallel agents** (auth/authorization, crypto/E2EE, data-at-rest/leakage, client/XSS, destructive-flow data-safety). **The security surface came back essentially clean** (see the ✅ notes below); the real findings were **data-loss paths in the C3b encrypted clear-and-restore** — latent in Peter's successful live test (small data, no failures) but live under a mid-restore failure or >1000-row tables. sw.js **v46**.
+
+**Security dimensions — clean:** Auth/authorization ✅ (every route token-gated, zero sync-key residue, password-proof required for change/recover, brute-force not spoofable, no SSRF/open-proxy). Crypto/E2EE ✅ (fresh IV everywhere, PBKDF2 600k, encKey⊥authKey one-way, DEK never leaves client, recovery double-hash, encStr/decStr never blanks on failed decrypt). Data-at-rest ✅ (all ~24 sensitive write paths encStr'd, api_cache both-side sanitize, /migrate 403-gated fail-closed, no sensitive console/URL leakage). Client/XSS ✅ (marked→DOMPurify + escH everywhere; no working payload; no secrets in source).
+
+| # | Sev | Item | Fix | Commit |
+|---|-----|------|-----|--------|
+| 90.1 | CRITICAL | Partial C3b + reload = silent total loss (next-boot autoLoad reads partial D1 → overwrites intact local; reconcile runs after loaders) | `c3b_incomplete` guard set before purge, cleared only on full success; new autoLoad recovery branch loads localStorage (not partial D1) + re-pushes via shared `_c3bResaveToD1()` | `cc485c8` |
+| 90.2 | CRITICAL(follow-up, QA-caught) | `flushAllAwait` swallowed save rejections → `_c3bResaveToD1` never threw on a network drop → guard cleared over a purged D1 (still lost the DB) | `flushAllAwait` now returns success; `_c3bResaveToD1` throws on any failure → flag persists → recovery | `cc485c8` |
+| 90.3 | HIGH | Unchunked batches hit the worker 1000-item cap → whole batch 400s → data type dropped | positions/transactions/portfolio_snapshots/snapshot_positions/dividend_history/notes/valuations → chunked `postBatch` | `cc485c8` |
+| 90.4 | HIGH | `savePortfolioTransactions` sent unresolvable-FK rows → null company_id → NOT NULL → whole atomic batch 500s (ALL transactions dropped) | filter to syncable rows (resolved company_id + account_id), mirroring positions | `cc485c8` |
+| 90.5 | MEDIUM | `cancelPending` didn't drain in-flight saves before purge (race → duplicates) | await `_inFlight` before purge | `cc485c8` |
+| 90.6 | MEDIUM | recapture/load caps `limit=500/1000` could drop rows above the cap | raised to `100000` (worker GET cap) | `cc485c8` |
+| 90.7 | MEDIUM | CSP `connect-src https://*.workers.dev` — anyone can register a worker → stolen-token exfil target | pinned to the exact worker host | `cc485c8` |
+
+**QA:** the destructive-flow finder agent produced the CRITICAL/HIGH map; a dedicated QA agent then verified the fix batch **SHIP on #3–#7 and caught 90.2** (the `flushAllAwait`-swallows-errors hole in the CRITICAL fix), which was then fixed + re-verified in-browser (flushAllAwait returns true/false correctly).
+
+**Deferred / accepted (documented, not fixed here):** notes full-text search now runs over encrypted title/content → searches ciphertext (functional, KNOWN-ISSUES); a schema-valid-but-WRONG backup still purges+replaces (no different-account detection); CSP pin means a user-set custom worker URL on a different host is blocked (fine for the default deployment); defense-in-depth — the v44 legacy-meta-verifier purge is client-runtime-dependent, closeable with a one-off `wrangler kv` `user_meta` overwrite.
+
+**Lesson (CODING-LESSONS):** a helper that swallows errors (`.catch()` + `Promise.allSettled`) turns a failure into a silent success — lethal when a guard/rollback decision keys off "did it throw?". Make such helpers report success explicitly.
 
 ---
 

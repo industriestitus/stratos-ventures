@@ -212,6 +212,15 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 - A security review must sweep runtime/stored STATE (KV, D1, localStorage, backups), not just the code paths. Grep the actual stored values, not only the savers.
 - Prefer a self-healing overwrite on next boot (idempotent, self-terminating) over a one-off manual cleanup, so every device converges.
 
+### 0c. A Helper That Swallows Errors Turns Failure Into Silent Success (Cat 90.2)
+
+**What went wrong:** the C3b restore guard was "clear the `c3b_incomplete` flag only after a fully successful re-save; if it throws, keep the flag → recover next boot." Correct in principle — but the re-save ran through `flushAllAwait`, which did `fn().catch(e=>console.error(e))` + `Promise.allSettled(...)`, so it **always resolved even when every save rejected** (network drop). The guard cleared over a purged-but-empty D1 → total loss, with a green "success" toast.
+
+**Rule:**
+- When a **guard, rollback, or commit decision keys off "did it throw?"**, every step it awaits must actually propagate failure. Audit the awaited helpers: a `.catch()` that only logs, `Promise.allSettled`, `try{}catch{/*ignore*/}`, or a fire-and-forget `.catch(()=>{})` all convert failure into a resolved promise.
+- Make such helpers **report success explicitly** (`return !anyFailed`) and have the caller act on it, rather than relying on rejection.
+- Test the failure path directly (inject a rejecting operation and assert the guard/flag survives) — the happy path passing tells you nothing about the recovery contract.
+
 ### 1. D1 Write-Through + Read-Fallback
 
 **What went wrong:** Save functions had `if(d1Mode) { scheduleSave(); return; }` — skipped localStorage entirely. TODOs disappeared after refresh because D1 sync was slow and localStorage wasn't written.
