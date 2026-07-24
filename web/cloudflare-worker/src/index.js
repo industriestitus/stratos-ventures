@@ -70,8 +70,8 @@ function timingSafeEqual(a, b) {
 // ====== Master-password auth (Security v2 / Phase B) ======
 // The client derives an authKey from the master password (PBKDF2 + HKDF) and
 // sends it to /auth/login. The server stores only SHA-256(authKey) and issues a
-// per-device bearer token. All data endpoints accept EITHER the legacy sync key
-// (X-Sync-Key) OR a valid device token (X-Auth-Token) during the transition.
+// per-device bearer token. Since B3c, all data endpoints authenticate ONLY by a
+// valid device token (X-Auth-Token); the legacy sync-key credential was retired.
 
 async function sha256b64(s) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
@@ -87,10 +87,9 @@ const TOKEN_TTL_SECONDS = 180 * 24 * 60 * 60; // 180 days
 const AUTH_LOCK_MAX = 10;                       // failed attempts before lockout
 const AUTH_LOCK_WINDOW_MS = 15 * 60 * 1000;     // 15-minute lockout window
 
-// True if the request carries a valid sync key OR a live device token.
+// True if the request carries a live device token. B3c retired the legacy sync-key
+// credential: master-password device tokens are now the sole data-auth mechanism.
 async function authenticate(request, env) {
-  const syncKey = request.headers.get('X-Sync-Key');
-  if (syncKey && env.SYNC_SECRET && timingSafeEqual(syncKey, env.SYNC_SECRET)) return true;
   const token = request.headers.get('X-Auth-Token');
   if (token && env.SYNC_DATA) {
     try {
@@ -139,7 +138,7 @@ function cors(allowedOrigin) {
   return {
     'Access-Control-Allow-Origin': allowedOrigin || '',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-Sync-Key, X-Auth-Token',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token',
     'Access-Control-Max-Age': '86400',
     'Content-Type': 'application/json'
   };
@@ -287,25 +286,10 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
     return jsonResp({ ok: true, salt: cfg ? cfg.salt : null, initialized: !!cfg }, 200, allowedOrigin);
   }
 
-  // POST /auth/setup — one-time bootstrap. Gated by the legacy sync key so only
-  // the existing owner can establish master-password auth. Body: {salt, authVerifier}.
-  if (action === 'setup' && request.method === 'POST') {
-    const syncKey = request.headers.get('X-Sync-Key');
-    if (!syncKey || !env.SYNC_SECRET || !timingSafeEqual(syncKey, env.SYNC_SECRET)) {
-      return jsonResp({ error: 'Setup requires the sync key' }, 401, allowedOrigin);
-    }
-    let body;
-    try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
-    if (!body.salt || !body.authVerifier) return jsonResp({ error: 'salt and authVerifier required' }, 400, allowedOrigin);
-    const existing = await env.SYNC_DATA.get('auth_config', 'json');
-    // Allow overwrite (password change / re-setup) since the caller proved the sync key.
-    await env.SYNC_DATA.put('auth_config', JSON.stringify({
-      salt: body.salt, authVerifier: body.authVerifier,
-      created: existing ? existing.created : new Date().toISOString(),
-      updated: new Date().toISOString(),
-    }));
-    return jsonResp({ ok: true, replaced: !!existing }, 200, allowedOrigin);
-  }
+  // POST /auth/setup was retired in B3c: it was gated by the legacy sync key (now
+  // removed) and only served the one-time from-scratch account bootstrap. The single
+  // provisioned account already exists; there is no in-app new-account provisioning
+  // anymore. Password changes go through /auth/change, resets through /auth/recover.
 
   // POST /auth/login — public but brute-force limited. Body: {authKey, device}.
   // On success issues a per-device bearer token.
@@ -316,7 +300,7 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
     let body;
     try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
     const cfg = await env.SYNC_DATA.get('auth_config', 'json');
-    if (!cfg) return jsonResp({ error: 'No account — run setup first' }, 404, allowedOrigin);
+    if (!cfg) return jsonResp({ error: 'No account configured' }, 404, allowedOrigin);
     if (!body.authKey) return jsonResp({ error: 'authKey required' }, 400, allowedOrigin);
     const verifier = await sha256b64(body.authKey);
     if (!timingSafeEqual(verifier, cfg.authVerifier)) {
@@ -333,17 +317,17 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
   }
 
   // POST /auth/change — change the master password. Requires a live session
-  // (token or sync key) AND proof of the current password (oldAuthKey), so a
+  // (a valid device token) AND proof of the current password (oldAuthKey), so a
   // stolen bearer token alone cannot change it. Body: {oldAuthKey, salt, authVerifier}.
-  // This is the recovery path that keeps the account changeable after the sync
-  // key is retired in Phase B3.
+  // This is the path that keeps the account changeable now that the sync key is
+  // retired (B3c); a forgotten password is recovered via /auth/recover.
   if (action === 'change' && request.method === 'POST') {
     if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
     let body;
     try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
     if (!body.oldAuthKey || !body.salt || !body.authVerifier) return jsonResp({ error: 'oldAuthKey, salt and authVerifier required' }, 400, allowedOrigin);
     const cfg = await env.SYNC_DATA.get('auth_config', 'json');
-    if (!cfg) return jsonResp({ error: 'No account — run setup first' }, 404, allowedOrigin);
+    if (!cfg) return jsonResp({ error: 'No account configured' }, 404, allowedOrigin);
     const oldVerifier = await sha256b64(body.oldAuthKey);
     if (!timingSafeEqual(oldVerifier, cfg.authVerifier)) {
       await authRecordFail(env, clientIP);
@@ -455,7 +439,7 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
     try { body = await request.json(); } catch (e) { return jsonResp({ error: 'Invalid JSON' }, 400, allowedOrigin); }
     if (!body.wrapEnc || !body.wrapRec || !body.recVerifier || !body.authProof) return jsonResp({ error: 'wrapEnc, wrapRec, recVerifier and authProof required' }, 400, allowedOrigin);
     const cfg = await env.SYNC_DATA.get('auth_config', 'json');
-    if (!cfg) return jsonResp({ error: 'No account — run setup first' }, 404, allowedOrigin);
+    if (!cfg) return jsonResp({ error: 'No account configured' }, 404, allowedOrigin);
     if (!timingSafeEqual(await sha256b64(body.authProof), cfg.authVerifier)) {
       await authRecordFail(env, clientIP);
       return jsonResp({ error: 'Password proof invalid' }, 401, allowedOrigin);
@@ -469,7 +453,7 @@ async function handleAuth(action, request, url, env, allowedOrigin, clientIP) {
     return jsonResp({ ok: true }, 200, allowedOrigin);
   }
 
-  return jsonResp({ error: 'Use GET /auth/salt, POST /auth/setup, POST /auth/login, POST /auth/change, POST /auth/recover, GET /auth/devices, POST /auth/revoke, GET|PUT /auth/dek' }, 400, allowedOrigin);
+  return jsonResp({ error: 'Use GET /auth/salt, POST /auth/login, POST /auth/change, POST /auth/recover, GET /auth/devices, POST /auth/revoke, GET|PUT /auth/dek' }, 400, allowedOrigin);
 }
 
 // ====== D1 CRUD API ======
@@ -1274,7 +1258,7 @@ export default {
       return jsonResp({ status: 'ok', ts: new Date().toISOString() }, 200, allowedOrigin);
     }
 
-    // Auth: /auth/salt, /auth/setup, /auth/login, /auth/devices, /auth/revoke
+    // Auth: /auth/salt, /auth/login, /auth/change, /auth/recover, /auth/devices, /auth/revoke, /auth/dek
     if (path.startsWith('/auth/')) {
       return handleAuth(path.slice(6), request, url, env, allowedOrigin, clientIP);
     }
@@ -1310,7 +1294,9 @@ export default {
       }
     }
 
-    // Sync: GET /sync/load or POST /sync/save
+    // Sync: only /sync/meta survives. The legacy KV blob path (/sync/load|save|
+    // restore-backup) was retired in B3c — all data now flows through D1 CRUD. The
+    // token-authed meta path is kept (vestigial version/mode marker).
     if (path.startsWith('/sync/')) {
       if (!(await authenticate(request, env))) return jsonResp({ error: 'Unauthorized' }, 401, allowedOrigin);
 
@@ -1342,45 +1328,7 @@ export default {
           return jsonResp({ error: 'Failed to save meta' }, 500, allowedOrigin);
         }
       }
-      if (action === 'load' && request.method === 'GET') {
-        try {
-          const data = await env.SYNC_DATA.get('user_data', 'json');
-          return jsonResp({ ok: true, data: data || null }, 200, allowedOrigin);
-        } catch (e) {
-          console.error('Sync load error:', e.message);
-          return jsonResp({ error: 'Failed to load sync data' }, 500, allowedOrigin);
-        }
-      }
-      if (action === 'save' && request.method === 'POST') {
-        try {
-          const body = await request.json();
-          if (typeof body.enc_version === 'number') {
-            const meta = await env.SYNC_DATA.get('user_meta', 'json');
-            if (meta && typeof meta.meta_version === 'number' && body.enc_version < meta.meta_version) {
-              return jsonResp({ error: 'Stale encryption version', current_meta_version: meta.meta_version }, 409, allowedOrigin);
-            }
-          }
-          const prev = await env.SYNC_DATA.get('user_data', 'text');
-          if (prev) await env.SYNC_DATA.put('user_data_backup', prev);
-          await env.SYNC_DATA.put('user_data', JSON.stringify(body));
-          return jsonResp({ ok: true, savedAt: new Date().toISOString() }, 200, allowedOrigin);
-        } catch (e) {
-          console.error('Sync save error:', e.message);
-          return jsonResp({ error: 'Failed to save sync data' }, 500, allowedOrigin);
-        }
-      }
-      if (action === 'restore-backup' && request.method === 'POST') {
-        try {
-          const backup = await env.SYNC_DATA.get('user_data_backup', 'text');
-          if (!backup) return jsonResp({ error: 'No backup available' }, 404, allowedOrigin);
-          await env.SYNC_DATA.put('user_data', backup);
-          return jsonResp({ ok: true, restoredAt: new Date().toISOString() }, 200, allowedOrigin);
-        } catch (e) {
-          console.error('Sync restore error:', e.message);
-          return jsonResp({ error: 'Failed to restore backup' }, 500, allowedOrigin);
-        }
-      }
-      return jsonResp({ error: 'Use GET /sync/load, POST /sync/save, GET|POST /sync/meta, or POST /sync/restore-backup' }, 400, allowedOrigin);
+      return jsonResp({ error: 'Use GET|POST /sync/meta' }, 400, allowedOrigin);
     }
 
     // Chart: GET /chart/AAPL?range=1y&interval=1wk
