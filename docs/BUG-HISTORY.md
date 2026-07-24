@@ -100,8 +100,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 92 | Backup Batch B — restore guardrails + completeness (pre-restore backup, richer confirm, market-cache rehydrate, auto-refresh-stale) + QA collision-id guard | `d2f857a` | 2026-07-24 | 1 | 0 |
 | 93 | Backup Batch D — Data Management UX polish (verify backup, last-backup indicator, restore danger cue) + QA nits | `45f0a01` | 2026-07-24 | 3 | 0 |
 | 94 | Backup Batch E1a — offline-readable HTML archive export + QA completeness fixes | `4cc0615` | 2026-07-24 | 2 | 0 |
+| 95 | Backup Batch E1b — full-dump XLSX + unencrypted-export warning; QA found 4 more ungated sensitive exports | `7557158` | 2026-07-24 | 4 | 0 |
 
-**Total: 501 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export.)
+**Total: 505 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA.)
 
 ---
 
@@ -1833,6 +1834,27 @@ sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe e
 | 94.2 | NIT | `toast.archiveFailed` showed "undefined" if a non-`Error` was thrown. | `(e&&e.message)||String(e)`. | `4cc0615` |
 
 **Accepted:** review `extra` uses a denylist (not an allowlist), so a future unknown string field would show with its raw key as a (harmless, escaped) label — cosmetic only. Self-caught before QA: a duplicate review `summary` (shown in both the main div and the extra fields) — `summary` added to the extra-field exclusion list.
+
+---
+
+## Category 95 — Backup Batch E1b: Full-Dump XLSX + Unencrypted-Export Warning (2026-07-24)
+
+**Feature (backup safety-net Batch E1b).** Two parts. sw.js **v52**.
+1. **Full-dump XLSX** — `exportXlsxAll` now writes **9 sheets** (was 5): added **Companies** (all metrics + manual overrides + thesis), **Checklist** (flattened section/field/answer via `_archVal` — so numeric/boolean answers appear, `false` checkboxes skipped), **Valuations** (bear/base/bull scenario inputs), **Dividends** (per-ticker history). Completes Peter's "both formats" ask (HTML in E1a + XLSX here).
+2. **Unencrypted-export warning** (Peter's ask) — new `_confirmSensitiveExport()` blocking confirm ("Unencrypted export — this file will contain your data in cleartext…") gated before EVERY export that writes sensitive data unencrypted. The gate is the FIRST statement (before any button-disable/try), so Cancel aborts cleanly with no file and no stuck button. Encrypted backup stays ungated; plaintext backup keeps its own stronger warning (no double-dialog). i18n EN+HU (`export.warn*`).
+
+**QA (agent) — found 4 sensitive exports the first pass MISSED** (the batch gated the 6 Settings-page exporters; these bypass them):
+
+| # | Sev | Ungated export | Fix | Commit |
+|---|-----|------|-----|--------|
+| 95.1 | CRITICAL | `downloadExport()` — the "Download JSON" button dumps the ENTIRE dataset as plaintext JSON, no warning | async + `_confirmSensitiveExport` gate | `7557158` |
+| 95.2 | HIGH | `generatePdf(ticker)` — per-company PDF (thesis/notes/checklist), only had the privacy-mode toast | gate after the section-select validation | `7557158` |
+| 95.3 | HIGH | `bulkExportPositions()` — inline plaintext CSV of selected positions (built its own blob, bypassed `_downloadCsv`) | async + gate | `7557158` |
+| 95.4 | HIGH | `bulkExportTransactions()` — same inline-CSV pattern for transactions | async + gate | `7557158` |
+
+**Accepted / documented decision:** the per-chart `⤓` PNG download (`_dlChartPng`) is left ungated — charts are often public company financials and gating every chart image is high-friction; the portfolio/allocation charts it can also capture make this a judgment call flagged for Peter. The confirm's OK button renders red (`btn-danger`, since `danger` isn't set to false) — matches the plaintext-backup caution precedent, kept intentionally.
+
+**Lesson (CODING-LESSONS):** when adding a cross-cutting guard "before every X", enumerate X by grepping the low-level primitive (here every `a.download=`/`doc.save(`), not by listing the obvious call sites — inline/bulk variants and a full-dump modal button bypassed the shared helpers and would have shipped ungated.
 
 ---
 

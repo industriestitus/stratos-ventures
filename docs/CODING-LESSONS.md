@@ -1,7 +1,7 @@
 # Coding Lessons — Stratos Ventures Finance App
 
 **Last Updated:** 2026-07-24
-**Source:** 501+ bug fixes across 25+ QA sessions (Categories 1-94)
+**Source:** 505+ bug fixes across 25+ QA sessions (Categories 1-95)
 
 Reference for AI assistants and developers. All lessons are validated patterns from actual bugs found and fixed.
 
@@ -494,6 +494,12 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 **Pattern:** A pre-paint guard (`html.app-locked` → `visibility:hidden` on the shell) is set before JS decides what to show. If any reachable boot branch neither clears the guard nor shows a visible gate, the app is bricked — blank chrome, no way in — and it looks identical to a crash.
 
 **Rule:** When a pre-paint lock exists, prove that **every** terminal boot state either (a) removes the lock and renders the app, or (b) shows a visible gate (which may keep the lock on). Enumerate the branches (token+DEK, token+no-DEK, no-token online/offline, first-run) and verify each in-browser (`offsetHeight>0` on the gate element; a `bricked` assertion = locked ∧ no gate ∧ no shell). Collapsing branches to a single `showMasterLogin()` fallback is safer than N special-cased screens.
+
+### 9. A Cross-Cutting Guard "Before Every X" — Enumerate X by the PRIMITIVE, Not the Call Sites (Cat 95)
+
+**Pattern:** Adding a required gate "before every sensitive export" (an unencrypted-export warning), the obvious pass gated the six Settings-page exporters — and missed four others: a full-dataset "Download JSON" (CRITICAL), a per-company PDF, and two portfolio bulk-CSV exporters that built their own blob inline instead of going through the shared `_downloadCsv`. Listing the call sites you can think of always under-counts; inline/bulk variants and one-off modal buttons bypass the shared helpers.
+
+**Rule:** Find every site by grepping the LOW-LEVEL primitive the action must funnel through — here `a.download=` / `doc.save(` / `URL.createObjectURL` — then classify each as gated / intentionally-ungated (with a reason) / gap. Gate at the shared choke point when one exists (`_downloadCsv`), and for the inline hold-outs add the gate directly. The same method applies to any "before every write/delete/network-call" guard: enumerate by the primitive, not by memory.
 
 ---
 
