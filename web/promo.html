@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stratos Ventures — Investment Management Platform</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --sv-bg:#0f1117;--sv-surface:#1a1d27;--sv-surface2:#22253a;
+  --sv-accent:#6c5ce7;--sv-accent-light:#a29bfe;
+  --sv-green:#00b894;--sv-red:#e24b4a;
+  --sv-text:#e4e7f1;--sv-text-muted:#8b8fa3;--sv-gold:#f0c674;
+  --sv-border:rgba(255,255,255,0.06);
+}
+body{background:var(--sv-bg);color:var(--sv-text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.6;overflow-x:hidden}
+a{color:var(--sv-accent-light);text-decoration:none}
+.container{max-width:900px;margin:0 auto;padding:0 1.5rem}
+
+/* Hero */
+.hero{text-align:center;padding:4rem 1rem 2.5rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:700px;height:700px;background:radial-gradient(circle,rgba(108,92,231,0.15) 0%,transparent 70%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:6px 16px;border-radius:20px;border:1px solid rgba(108,92,231,0.4);color:var(--sv-accent-light);margin-bottom:1.5rem}
+.hero h1{font-size:clamp(32px,6vw,52px);font-weight:700;margin-bottom:0.75rem;line-height:1.15}
+.hero h1 span{background:linear-gradient(135deg,#6c5ce7,#a29bfe,#6c5ce7);background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradient 4s ease infinite}
+@keyframes gradient{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero p{font-size:18px;color:var(--sv-text-muted);max-width:600px;margin:0 auto;line-height:1.7}
+.stats-row{display:flex;justify-content:center;gap:3rem;margin:2.5rem 0 0;flex-wrap:wrap}
+.stat{text-align:center}
+.stat-num{font-size:36px;font-weight:700;background:linear-gradient(135deg,var(--sv-accent-light),var(--sv-green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:13px;color:var(--sv-text-muted);margin-top:4px}
+
+/* App mockup */
+.app-mock{margin:2.5rem auto;max-width:800px;background:var(--sv-bg);border-radius:16px;border:1px solid var(--sv-border);overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.4)}
+.app-bar{display:flex;align-items:center;gap:8px;padding:12px 18px;background:#13151d;border-bottom:1px solid var(--sv-border)}
+.app-dot{width:12px;height:12px;border-radius:50%}
+.app-dot.r{background:#e24b4a}.app-dot.y{background:#f0c674}.app-dot.g{background:#00b894}
+.app-url{margin-left:16px;font-size:12px;color:var(--sv-text-muted);background:rgba(255,255,255,0.04);padding:5px 16px;border-radius:6px;flex:1;text-align:center}
+.app-body{display:flex;min-height:340px}
+.app-sidebar{width:170px;background:#13151d;padding:16px 0;border-right:1px solid var(--sv-border);flex-shrink:0}
+.app-logo{padding:0 16px 16px;font-size:15px;font-weight:600;color:var(--sv-accent-light);display:flex;align-items:center;gap:8px}
+.app-logo i{font-size:20px}
+.app-nav-item{padding:9px 16px;font-size:13px;color:var(--sv-text-muted);display:flex;align-items:center;gap:10px;transition:all .2s}
+.app-nav-item i{font-size:16px;width:20px;text-align:center}
+.app-nav-item.active{background:rgba(108,92,231,0.15);color:var(--sv-accent-light);border-left:3px solid var(--sv-accent)}
+.app-content{flex:1;padding:20px;overflow:hidden}
+.mock-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mock-card{background:var(--sv-surface);border-radius:10px;padding:14px 16px;border:1px solid var(--sv-border)}
+.mock-card-label{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--sv-text-muted);margin-bottom:6px}
+.mock-card-value{font-size:22px;font-weight:600;color:var(--sv-text)}
+.mock-card-sub{font-size:11px;color:var(--sv-text-muted);margin-top:3px}
+.mock-chart{margin-top:12px;height:90px;display:flex;align-items:flex-end;gap:4px;padding:0 4px}
+.mock-chart-bar{flex:1;border-radius:4px 4px 0 0;transition:height .6s ease}
+
+/* Sections */
+.section{padding:3rem 0}
+.section-header{text-align:center;margin-bottom:2rem}
+.section-header h2{font-size:28px;font-weight:600;margin-bottom:0.5rem}
+.section-header p{font-size:16px;color:var(--sv-text-muted)}
+.section-divider{width:60px;height:3px;background:linear-gradient(90deg,var(--sv-accent),var(--sv-accent-light));border-radius:2px;margin:0 auto 2rem}
+
+/* Feature cards */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.feature-card{background:var(--sv-surface);border-radius:14px;padding:1.5rem;border:1px solid var(--sv-border);transition:border-color .3s,transform .3s}
+.feature-card:hover{border-color:rgba(108,92,231,0.3);transform:translateY(-2px)}
+.feature-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;font-size:20px}
+.feature-icon.purple{background:rgba(108,92,231,0.12);color:#a29bfe}
+.feature-icon.teal{background:rgba(0,184,148,0.12);color:#00b894}
+.feature-icon.amber{background:rgba(240,198,116,0.12);color:#f0c674}
+.feature-icon.coral{background:rgba(216,90,48,0.12);color:#f09780}
+.feature-icon.blue{background:rgba(55,138,221,0.12);color:#85b7eb}
+.feature-icon.pink{background:rgba(212,83,126,0.12);color:#ed93b1}
+.feature-card h3{font-size:16px;font-weight:600;margin-bottom:6px}
+.feature-card p{font-size:13px;color:var(--sv-text-muted);line-height:1.6}
+
+/* Module sections */
+.module-section{margin-bottom:2.5rem;background:var(--sv-surface);border-radius:14px;padding:1.5rem 2rem;border:1px solid var(--sv-border)}
+.module-header{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;padding-bottom:12px;border-bottom:1px solid var(--sv-border)}
+.module-header i{font-size:22px;color:var(--sv-accent-light)}
+.module-header h3{font-size:18px;font-weight:600;flex:1}
+.module-header .count{font-size:12px;color:var(--sv-accent-light);background:rgba(108,92,231,0.12);padding:4px 12px;border-radius:12px;font-weight:500}
+.feature-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:4px 24px}
+.feature-item{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--sv-text-muted);padding:5px 0;line-height:1.5}
+.feature-item i{color:var(--sv-green);font-size:14px;margin-top:3px;flex-shrink:0}
+
+/* Tech bar */
+.tech-bar{display:flex;justify-content:center;gap:2rem;flex-wrap:wrap;padding:1.25rem 1rem;margin:1.5rem 0;background:var(--sv-surface);border-radius:14px;border:1px solid var(--sv-border)}
+.tech-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sv-text-muted)}
+.tech-item i{font-size:18px;color:var(--sv-accent-light)}
+
+/* API cards */
+.api-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:640px){.api-grid{grid-template-columns:1fr}}
+
+/* CTA */
+.cta-section{text-align:center;padding:3rem 2rem;background:linear-gradient(135deg,rgba(108,92,231,0.08),rgba(0,184,148,0.05));border-radius:16px;margin:2rem 0 3rem;border:1px solid var(--sv-border)}
+.cta-section h2{font-size:24px;font-weight:600;margin-bottom:0.5rem}
+.cta-section p{font-size:15px;color:var(--sv-text-muted);margin-bottom:1.5rem;max-width:500px;margin-left:auto;margin-right:auto}
+.cta-badges{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin-top:1.5rem}
+.cta-badge{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--sv-text-muted)}
+.cta-badge i{font-size:16px;color:var(--sv-accent-light)}
+
+/* Footer */
+.footer{text-align:center;padding:2rem 0;border-top:1px solid var(--sv-border);color:var(--sv-text-muted);font-size:12px}
+
+/* Responsive */
+@media(max-width:768px){
+  .app-sidebar{width:50px;overflow:hidden}
+  .app-nav-item span,.app-logo span{display:none}
+  .app-logo{padding:0 12px 12px;justify-content:center}
+  .app-nav-item{justify-content:center;padding:9px}
+  .stats-row{gap:1.5rem}
+  .stat-num{font-size:28px}
+  .module-section{padding:1.25rem}
+  .features-grid{grid-template-columns:1fr}
+}
+</style>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">
+      <i class="ti ti-chart-line" aria-hidden="true"></i> Investment management platform
+    </div>
+    <h1><span>Stratos Ventures</span></h1>
+    <p>Professzionalis befektetes-kezelo platform maganbefektetoknek. Ceg-elemzes, portfolio-tracking, ertekelesi kalkulatorok, kutatasi naplo — egy helyen.</p>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">18</div><div class="stat-label">fejlesztesi fazis</div></div>
+      <div class="stat"><div class="stat-num">171+</div><div class="stat-label">javitott bug</div></div>
+      <div class="stat"><div class="stat-num">100+</div><div class="stat-label">feature</div></div>
+      <div class="stat"><div class="stat-num">0 Ft</div><div class="stat-label">havi koltseg</div></div>
+    </div>
+  </div>
+
+  <!-- App mockup -->
+  <div class="app-mock">
+    <div class="app-bar">
+      <div class="app-dot r"></div><div class="app-dot y"></div><div class="app-dot g"></div>
+      <div class="app-url">stratosventures.pages.dev</div>
+    </div>
+    <div class="app-body">
+      <div class="app-sidebar">
+        <div class="app-logo"><i class="ti ti-chart-dots-3" aria-hidden="true"></i> <span>SV</span></div>
+        <div class="app-nav-item active"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> <span>Dashboard</span></div>
+        <div class="app-nav-item"><i class="ti ti-building" aria-hidden="true"></i> <span>Companies</span></div>
+        <div class="app-nav-item"><i class="ti ti-wallet" aria-hidden="true"></i> <span>Portfolio</span></div>
+        <div class="app-nav-item"><i class="ti ti-search" aria-hidden="true"></i> <span>Research</span></div>
+        <div class="app-nav-item"><i class="ti ti-list-check" aria-hidden="true"></i> <span>Framework</span></div>
+        <div class="app-nav-item"><i class="ti ti-clipboard-check" aria-hidden="true"></i> <span>Reviews</span></div>
+      </div>
+      <div class="app-content">
+        <div class="mock-cards">
+          <div class="mock-card">
+            <div class="mock-card-label">Portfolio value</div>
+            <div class="mock-card-value">$127,450</div>
+            <div class="mock-card-sub" style="color:#00b894">+12.4% YTD</div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-card-label">Quality score</div>
+            <div class="mock-card-value" style="color:#a29bfe">82/100</div>
+            <div class="mock-card-sub">Terry Smith weighted</div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-card-label">Dividend income</div>
+            <div class="mock-card-value" style="color:#00b894">$3,240/yr</div>
+            <div class="mock-card-sub">12 paying positions</div>
+          </div>
+          <div class="mock-card">
+            <div class="mock-card-label">Red flags</div>
+            <div class="mock-card-value" style="color:#e24b4a">2</div>
+            <div class="mock-card-sub">margin drop detected</div>
+          </div>
+        </div>
+        <div class="mock-chart" id="mockChart"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 main modules -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Minden, ami a befekteteseidhez kell</h2>
+      <p>6 fo modul, egymassal osszekapcsolva</p>
+    </div>
+    <div class="section-divider"></div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon purple"><i class="ti ti-layout-dashboard" aria-hidden="true"></i></div>
+        <h3>Dashboard</h3>
+        <p>Portfolio osszertek, minosegi mutatok, benchmark, riasztasok, dip finder, FI tracker, TODO lista — egy kepernyon</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon teal"><i class="ti ti-building" aria-hidden="true"></i></div>
+        <h3>Company profiles</h3>
+        <p>30 eves historikus adatok, DCF kalkulator, 14 szekciobol allo checklist, insider trading, quality scores</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon amber"><i class="ti ti-wallet" aria-hidden="true"></i></div>
+        <h3>Portfolio</h3>
+        <p>Multi-broker, multi-deviza, reszveny + ETF + kotveny + kripto + ingatlan + keszpenz, TWR/XIRR, netto vagyon</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon coral"><i class="ti ti-notebook" aria-hidden="true"></i></div>
+        <h3>Research & notes</h3>
+        <p>Befektetesi naplo, earnings notes, hir-jegyzetek, piaci naplo, Markdown szerkeszto, kep-tamogatas</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon blue"><i class="ti ti-list-check" aria-hidden="true"></i></div>
+        <h3>Framework</h3>
+        <p>Befektetesi elvek, portfolio szabalyok, idealis ceg tulajdonsagok, piros zaszlok, pozicio scoring</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon pink"><i class="ti ti-clipboard-check" aria-hidden="true"></i></div>
+        <h3>Reviews</h3>
+        <p>Heti, havi, negyedeves review sablonok, conviction tracker, pszichologiai check, tanulasi naplo</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detailed feature list -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Reszletes feature lista</h2>
+      <p>Mindent felsorolva, modulonkent</p>
+    </div>
+    <div class="section-divider"></div>
+
+    <!-- Dashboard -->
+    <div class="module-section">
+      <div class="module-header">
+        <i class="ti ti-layout-dashboard" aria-hidden="true"></i>
+        <h3>Dashboard</h3>
+        <span class="count">12 widget</span>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Portfolio osszertek devizavaltassal</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Pie chartek: ticker, szamla, deviza, szektor, eszkozosztaly</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Terry Smith mutatok (P/E, P/S, P/FCF, ROE, ROIC)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> S&P 500 / MSCI World benchmark</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Red flag riasztasok (margin drop, debt rise)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Dip Finder (52 hetes melyponttol)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Penzugyi Fuggetlenseg tracker</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Netto vagyon widget (osszes eszkozosztaly)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Sell trigger monitoring dashboard</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Earnings calendar (kozelgo earnings datumok)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> TODO osszesito (cegenkenti + altalanos)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Price alert widget</div>
+      </div>
+    </div>
+
+    <!-- Company profiles -->
+    <div class="module-section">
+      <div class="module-header">
+        <i class="ti ti-building" aria-hidden="true"></i>
+        <h3>Company profiles</h3>
+        <span class="count">50+ feature</span>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> 30 eves historikus grafikonok (bevetel, FCF, EPS, margin)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> DCF kalkulator (perpetuity + exit multiple)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Reverse DCF (implied growth rate)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> ARIA fair value becsles</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Money Back kalkulator</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> 10cap kalkulator (Phil Town)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> EVA (Economic Value Added)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> FCFF / FCF toggle a DCF-ben</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Bear / Base / Bull scenario builder</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Valuation history (snapshot + osszehasonlitas)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> 14 szekciobol allo elemzesi checklist</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> 22 penzugyi threshold auto-ellenorzessel</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Yellow flag automatikus eszleles</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Cash flow deep dive (10 mutato)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Balance sheet deep dive (11 mutato)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> 4 pilleru stock score (0-100)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Ceg-osszehasonlitas (30+ mutato, korlatlan ceg)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Screener (22 szuresi dimenzio)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Insider trading (Finnhub API)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Pipeline status (Watchlist &rarr; Owned)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Ceg tipus tag (slow/fast/cyclical/turnaround)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Metric tooltipek (keplet, benchmark, forras)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Adat override (API ertek feluliras)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> 7 external research link (Finviz, SeekingAlpha, SEC...)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Expected return breakdown (4 driver)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Position sizing ajanlas + Kelly Criterion</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Conviction tracker timeline chart</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> PDF export (10 szekcio, Stratos branding)</div>
+      </div>
+    </div>
+
+    <!-- Checklist -->
+    <div class="module-section">
+      <div class="module-header">
+        <i class="ti ti-list-check" aria-hidden="true"></i>
+        <h3>Elemzesi checklist (14 szekcio)</h3>
+        <span class="count">200+ mezo</span>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Company details (30+ kerdes: uzleti modell, TAM, moat)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Moat analysis (12+ moat tipus, fake moat check)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Management (founder-led, insider buying, M&A track)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Industry &amp; competitors (HHI, supplier/buyer power)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Risks (status: ON TRACK / BROKEN / UNCLEAR)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Financial analysis (auto-fill API-bol, 22 threshold)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Valuation (DCF, PE, PEG, ARIA, 10cap, EVA)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Buy/sell decision (thesis, edge, anti-thesis, sell events)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Research sources (10K guide, earnings, YouTube, Reddit)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Psychology check (FOMO, anchoring, conviction, emotion)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Quarterly follow-up (14 strukturalt mezo, auto-carry)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> SWOT + SPLEEN analysis</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Learning log ("Where I was wrong")</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Change tracking (audit trail, soha nem torol)</div>
+      </div>
+    </div>
+
+    <!-- Portfolio -->
+    <div class="module-section">
+      <div class="module-header">
+        <i class="ti ti-wallet" aria-hidden="true"></i>
+        <h3>Portfolio management</h3>
+        <span class="count">15+ feature</span>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Multi-broker fiok kezeles</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Multi-deviza (elo arfolyamok)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Reszveny, ETF, kripto, kotveny poziciok</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Ingatlan kezeles (berleti hozam, koltsegek)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Allamkotvenyek (kupon, lejarat, hozam)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Keszpenz poziciok</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> CSV/Excel import (IBKR, Degiro)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Tranzakcio naplo (buy/sell/dividend)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Havi snapshot-ok</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> TWR (benchmark osszehasonlitas)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> MWR/XIRR (szemelyes teljesitmeny)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> P&L pozicionkent es osszesitve</div>
+      </div>
+    </div>
+
+    <!-- Dividends -->
+    <div class="module-section">
+      <div class="module-header">
+        <i class="ti ti-coin" aria-hidden="true"></i>
+        <h3>Dividend tracking</h3>
+        <span class="count">5 feature</span>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Osztalek history per ceg (FMP + Yahoo)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Hozam, kifizetesi rata, novekedes</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Fizetesi naptar</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Havi/negyedeves bevetel elorejelzes</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Teljes portfolio osztalek osszesites</div>
+      </div>
+    </div>
+
+    <!-- Research -->
+    <div class="module-section">
+      <div class="module-header">
+        <i class="ti ti-notebook" aria-hidden="true"></i>
+        <h3>Research &amp; notes</h3>
+        <span class="count">7 feature</span>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Befektetesi naplo (miert vettem/adtam el)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Earnings notes (per ceg, per negyedev)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Hir jegyzetek (forras + kommentar)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Piaci naplo (makro jegyzetek)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Kereses az osszes jegyzetben</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Markdown szerkeszto</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Kep tamogatas (screenshot, chart)</div>
+      </div>
+    </div>
+
+    <!-- Framework & Reviews -->
+    <div class="module-section">
+      <div class="module-header">
+        <i class="ti ti-clipboard-check" aria-hidden="true"></i>
+        <h3>Framework &amp; reviews</h3>
+        <span class="count">12 feature</span>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Befektetesi alapelvek rendszere</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Portfolio szabalyok (sizing, sell rules)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Idealis ceg tulajdonsagok (30+ trait)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Piros zaszlok / kerulendo jellemzok</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Position scoring calculator</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Heti review sablon (9 kerdes)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Havi review sablon (11 kerdes)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Negyedeves review sablon (13 kerdes)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Conviction tracker (timeline chart)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Price alerts (celar riasztas)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Follow sources (IR, SeekingAlpha, Twitter)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Learning log (hibak es tanulsagok)</div>
+      </div>
+    </div>
+
+    <!-- Data & Export -->
+    <div class="module-section">
+      <div class="module-header">
+        <i class="ti ti-database" aria-hidden="true"></i>
+        <h3>Data &amp; export</h3>
+        <span class="count">10 feature</span>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Cloudflare D1 felho szinkron (21 tabla)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> D1 API cache (FMP/Finnhub/Yahoo valaszok)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> JSON full backup/restore</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> CSV export (5 fajl, UTF-8)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Markdown export (notes + framework)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> PDF export (per ceg, 10 szekcio)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Hash-based routing (browser back/forward)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Data versioning &amp; migration (v8)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Service Worker (offline PWA)</div>
+        <div class="feature-item"><i class="ti ti-check" aria-hidden="true"></i> Dark / light theme toggle</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tech stack -->
+  <div class="tech-bar">
+    <div class="tech-item"><i class="ti ti-code" aria-hidden="true"></i> Vanilla JS</div>
+    <div class="tech-item"><i class="ti ti-cloud" aria-hidden="true"></i> Cloudflare Workers</div>
+    <div class="tech-item"><i class="ti ti-database" aria-hidden="true"></i> D1 (SQLite)</div>
+    <div class="tech-item"><i class="ti ti-chart-bar" aria-hidden="true"></i> Chart.js</div>
+    <div class="tech-item"><i class="ti ti-api" aria-hidden="true"></i> FMP + Finnhub + Yahoo</div>
+    <div class="tech-item"><i class="ti ti-device-mobile" aria-hidden="true"></i> PWA</div>
+    <div class="tech-item"><i class="ti ti-brand-github" aria-hidden="true"></i> GitHub Pages</div>
+  </div>
+
+  <!-- API section -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Adat API-k</h2>
+      <p>3 ingyenes adat-forras, 30+ ev historikus adat</p>
+    </div>
+    <div class="section-divider"></div>
+    <div class="api-grid">
+      <div class="feature-card">
+        <div class="feature-icon teal"><i class="ti ti-chart-line" aria-hidden="true"></i></div>
+        <h3>FMP</h3>
+        <p>Fundamentalis adatok, 30+ ev historikus, penzugyi kimutatasok, DCF inputok, earnings calendar</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon amber"><i class="ti ti-bolt" aria-hidden="true"></i></div>
+        <h3>Finnhub</h3>
+        <p>Valos ideju arak, insider trading tranzakciok, hirek, piaci adatok</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon blue"><i class="ti ti-world" aria-hidden="true"></i></div>
+        <h3>Yahoo Finance</h3>
+        <p>Europai reszvenyek, backup adat-forras, Cloudflare Worker proxyn keresztul</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <h2>Teljesen ingyenes, self-hosted</h2>
+    <p>Nincs havi dij, nincs elofizetes. A te adataid, a te szervered. Cloudflare free tier + GitHub Pages.</p>
+    <div class="cta-badges">
+      <div class="cta-badge"><i class="ti ti-lock" aria-hidden="true"></i> E2E titkositas</div>
+      <div class="cta-badge"><i class="ti ti-device-mobile" aria-hidden="true"></i> Mobile responsive</div>
+      <div class="cta-badge"><i class="ti ti-moon" aria-hidden="true"></i> Dark &amp; light theme</div>
+      <div class="cta-badge"><i class="ti ti-wifi-off" aria-hidden="true"></i> Offline PWA</div>
+      <div class="cta-badge"><i class="ti ti-file-type-pdf" aria-hidden="true"></i> PDF export</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>Stratos Ventures &copy; 2026 &mdash; Built with vanilla JS, powered by Cloudflare</p>
+  </div>
+
+</div>
+
+<script>
+// Animated chart bars
+const chart = document.getElementById('mockChart');
+const heights = [40, 50, 45, 60, 55, 70, 80];
+const opacities = [0.4, 0.5, 0.55, 0.65, 0.7, 0.85, 1];
+heights.forEach((h, i) => {
+  const bar = document.createElement('div');
+  bar.className = 'mock-chart-bar';
+  bar.style.cssText = `height:0;background:#6c5ce7;opacity:${opacities[i]}`;
+  chart.appendChild(bar);
+  setTimeout(() => { bar.style.height = h + '%'; }, 300 + i * 100);
+});
+
+// Animate stats on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.module-section').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  observer.observe(el);
+});
+</script>
+</html>
