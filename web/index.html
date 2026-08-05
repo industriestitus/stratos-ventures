@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v54';
+var APP_VERSION='v55';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1127,7 +1127,7 @@ var I18N={en:{
 'comp.summary':'Summary','comp.overview':'Overview','comp.financials':'Financials','comp.valuation':'Valuation','comp.notes':'Notes','comp.checklist':'Checklist','comp.dividendsTab':'Dividends','comp.scores':'Scores','comp.insider':'Insider',
 'comp.noHistorical':'No historical data available','comp.failedHistorical':'Failed to load historical data',
 'comp.highQuality':'High Quality','comp.fair':'Fair','comp.weak':'Weak','comp.belowAverage':'Below Average','comp.pillar':'pillar','comp.pillars':'pillars',
-'comp.insiderKeyMissing':'Finnhub API key not set — go to Settings to add your free key from finnhub.io','comp.insiderFailed':'Failed to load insider data.','comp.insiderRateLimit':'Finnhub rate limit reached — try again in a minute.','comp.insiderNoData':'No insider trading data available for {ticker}','comp.insiderSummary':'Insider Trading Summary','comp.totalTxns':'Total Transactions','comp.buysSells':'Buys / Sells','comp.netShares':'Net Shares','comp.last90d':'Last 90 Days','comp.keyInsiders':'Key Insiders','comp.txnHistory':'Transaction History','comp.showAll':'Show all {count} transactions','comp.showingTop':'Showing top 20 of {count} insiders',
+'comp.historicalTrends':'Historical Trends','comp.historicalTrendsN':'Historical Trends ({n} Year)','comp.insiderKeyMissing':'Finnhub API key not set — go to Settings to add your free key from finnhub.io','comp.insiderFailed':'Failed to load insider data.','comp.insiderRateLimit':'Finnhub rate limit reached — try again in a minute.','comp.insiderNoData':'No insider trading data available for {ticker}','comp.insiderSummary':'Insider Trading Summary','comp.totalTxns':'Total Transactions','comp.buysSells':'Buys / Sells','comp.netShares':'Net Shares','comp.last90d':'Last 90 Days','comp.keyInsiders':'Key Insiders','comp.txnHistory':'Transaction History','comp.showAll':'Show all {count} transactions','comp.showingTop':'Showing top 20 of {count} insiders',
 'pf.overview':'Overview','pf.accounts':'Accounts','pf.positionsTab':'Positions','pf.transactionsTab':'Transactions','pf.dividendsTab':'Dividends','pf.portfolioOverview':'Portfolio Overview','pf.portfolioValueTime':'Portfolio Value Over Time','pf.allocationTitle':'Allocation','pf.snapshots':'Snapshots','pf.takeSnapshot':'Take Snapshot','pf.returns':'Returns','pf.brokerAccounts':'Broker Accounts','pf.addAccount':'+ Add Account','pf.addPosition':'+ Add Position','pf.logTransaction':'+ Log Transaction','pf.importCSV':'Import CSV','pf.dividendIncome':'Dividend Income','pf.taxPct':'Tax %','pf.fetchData':'Fetch Data','pf.monthlyForecast':'Monthly Income Forecast','pf.paymentCalendar':'Payment Calendar','pf.incomeBreakdown':'Income Breakdown',
 'pf.allAccounts':'All Accounts','pf.allTypes':'All Types','pf.stocks':'Stocks','pf.etfs':'ETFs','pf.crypto':'Crypto','pf.bonds':'Bonds','pf.realEstate':'Real Estate','pf.savings':'Savings','pf.cash':'Cash','pf.other':'Other','pf.filterTicker':'Filter ticker...',
 'pf.noAccounts':'No broker accounts yet.\nAdd your first account to start tracking positions.','pf.position':'{count} position','pf.positions':'{count} positions','pf.inactive':'(inactive)','pf.editAccount':'Edit Account','pf.addAccountTitle':'Add Account','pf.accountRequired':'Account name is required','pf.accountExists':'Account name already exists','pf.accountUpdated':'Account updated','pf.accountAdded':'Account added','pf.accountDeleted':'Account deleted','pf.addBrokerFirst':'Add a broker account first',
@@ -1198,7 +1198,7 @@ var I18N={en:{
 'comp.summary':'Összefoglaló','comp.overview':'Áttekintés','comp.financials':'Pénzügyek','comp.valuation':'Értékelés','comp.notes':'Jegyzetek','comp.checklist':'Checklist','comp.dividendsTab':'Osztalékok','comp.scores':'Pontszámok','comp.insider':'Bennfentes',
 'comp.noHistorical':'Nincs elérhető historikus adat','comp.failedHistorical':'Historikus adatok betöltése sikertelen',
 'comp.highQuality':'Kiváló minőség','comp.fair':'Elfogadható','comp.weak':'Gyenge','comp.belowAverage':'Átlag alatti','comp.pillar':'pillér','comp.pillars':'pillér',
-'comp.insiderKeyMissing':'Finnhub API kulcs nincs beállítva — menj a Beállításokba és add hozzá az ingyenes kulcsot a finnhub.io-ról','comp.insiderFailed':'Bennfentes adatok betöltése sikertelen.','comp.insiderRateLimit':'Finnhub korlát elérve — próbáld újra egy perc múlva.','comp.insiderNoData':'Nincs bennfentes kereskedési adat ehhez: {ticker}','comp.insiderSummary':'Bennfentes kereskedési összefoglaló','comp.totalTxns':'Összes tranzakció','comp.buysSells':'Vételek / Eladások','comp.netShares':'Nettó részvények','comp.last90d':'Utolsó 90 nap','comp.keyInsiders':'Kulcs bennfentesek','comp.txnHistory':'Tranzakció előzmények','comp.showAll':'Összes {count} tranzakció mutatása','comp.showingTop':'{count} bennfentesből a top 20',
+'comp.historicalTrends':'Historikus trendek','comp.historicalTrendsN':'Historikus trendek ({n} év)','comp.insiderKeyMissing':'Finnhub API kulcs nincs beállítva — menj a Beállításokba és add hozzá az ingyenes kulcsot a finnhub.io-ról','comp.insiderFailed':'Bennfentes adatok betöltése sikertelen.','comp.insiderRateLimit':'Finnhub korlát elérve — próbáld újra egy perc múlva.','comp.insiderNoData':'Nincs bennfentes kereskedési adat ehhez: {ticker}','comp.insiderSummary':'Bennfentes kereskedési összefoglaló','comp.totalTxns':'Összes tranzakció','comp.buysSells':'Vételek / Eladások','comp.netShares':'Nettó részvények','comp.last90d':'Utolsó 90 nap','comp.keyInsiders':'Kulcs bennfentesek','comp.txnHistory':'Tranzakció előzmények','comp.showAll':'Összes {count} tranzakció mutatása','comp.showingTop':'{count} bennfentesből a top 20',
 'pf.overview':'Áttekintés','pf.accounts':'Számlák','pf.positionsTab':'Pozíciók','pf.transactionsTab':'Tranzakciók','pf.dividendsTab':'Osztalékok','pf.portfolioOverview':'Portfólió áttekintés','pf.portfolioValueTime':'Portfólió értéke az idő során','pf.allocationTitle':'Elosztás','pf.snapshots':'Pillanatfelvételek','pf.takeSnapshot':'Pillanatfelvétel','pf.returns':'Hozamok','pf.brokerAccounts':'Bróker számlák','pf.addAccount':'+ Számla hozzáadása','pf.addPosition':'+ Pozíció hozzáadása','pf.logTransaction':'+ Tranzakció rögzítése','pf.importCSV':'CSV importálás','pf.dividendIncome':'Osztalék bevétel','pf.taxPct':'Adó %','pf.fetchData':'Adatok lekérése','pf.monthlyForecast':'Havi bevétel előrejelzés','pf.paymentCalendar':'Kifizetési naptár','pf.incomeBreakdown':'Bevétel bontás',
 'pf.allAccounts':'Összes számla','pf.allTypes':'Összes típus','pf.stocks':'Részvények','pf.etfs':'ETF-ek','pf.crypto':'Kriptó','pf.bonds':'Kötvények','pf.realEstate':'Ingatlan','pf.savings':'Megtakarítás','pf.cash':'Készpénz','pf.other':'Egyéb','pf.filterTicker':'Ticker szűrés...',
 'pf.noAccounts':'Még nincs bróker számlád.\nAdd hozzá az első számládat a pozíciók követéséhez.','pf.position':'{count} pozíció','pf.positions':'{count} pozíció','pf.inactive':'(inaktív)','pf.editAccount':'Számla szerkesztése','pf.addAccountTitle':'Számla hozzáadása','pf.accountRequired':'A számlanév kötelező','pf.accountExists':'Ez a számlanév már létezik','pf.accountUpdated':'Számla frissítve','pf.accountAdded':'Számla hozzáadva','pf.accountDeleted':'Számla törölve','pf.addBrokerFirst':'Először adj hozzá egy bróker számlát',
@@ -7221,10 +7221,10 @@ async function fetchHistoricalPricesForChart(tickers){
     const statusEl=document.getElementById('pf-chart-status');
     if(statusEl){statusEl.style.display='';statusEl.textContent=t('pf.chartLoading')+' ('+toFetch.length+' tickers)'}
     for(const tk of toFetch){
-      const data=await fmpFetch('historical-price-full/'+encodeURIComponent(tk),{});
-      if(data&&data.historical&&data.historical.length){
+      const rows=await fmpHistoricalPrices(tk);
+      if(rows.length){
         const priceMap={};
-        data.historical.forEach(d=>{priceMap[d.date]=d.close});
+        rows.forEach(d=>{priceMap[d.date]=_fmpClose(d)});
         results[tk]=priceMap;
         _pfHistPriceCache[tk]=priceMap;
       }else{
@@ -7238,13 +7238,15 @@ async function fetchHistoricalPricesForChart(tickers){
 }
 
 async function fetchSpyForChart(fromDate,toDate){
-  if(_pfHistSpyCache&&_pfHistSpyCache.from<=fromDate&&_pfHistSpyCache.to>=toDate)return _pfHistSpyCache.prices;
-  const data=await fmpFetch('historical-price-full/SPY',{from:fromDate,to:toDate});
-  if(!data||!data.historical)return null;
+  if(_pfHistSpyCache&&_pfHistSpyCache.from<=fromDate&&_pfHistSpyCache.to>=toDate)
+    return Object.keys(_pfHistSpyCache.prices||{}).length?_pfHistSpyCache.prices:null;
+  const rows=await fmpHistoricalPrices('SPY',fromDate,toDate);
   const prices={};
-  data.historical.forEach(d=>{prices[d.date]=d.close});
+  rows.forEach(d=>{prices[d.date]=_fmpClose(d)});
+  // Cache even an empty result: this runs on every period switch and asset-filter click, so a
+  // failed/empty SPY fetch would otherwise re-request on each interaction and drain the budget.
   _pfHistSpyCache={from:fromDate,to:toDate,prices};
-  return prices;
+  return rows.length?prices:null;
 }
 
 function calcHistoricalValues(timeline,prices,base){
@@ -8430,9 +8432,11 @@ async function fetchBenchmarkData(){
     const sorted=[...pfSnapshots].sort((a,b)=>a.date.localeCompare(b.date));
     const from=sorted[0].date;
     const to=sorted[sorted.length-1].date;
-    const data=await fmpFetch('historical-price-full/SPY',{from,to});
-    if(!data||!data.historical||!data.historical.length){showToast(t('db.benchmarkFailed'),'error');return}
-    dbBenchmark={ticker:'SPY',prices:data.historical.map(d=>({date:d.date,close:d.close})).reverse(),fetchedAt:new Date().toISOString()};
+    const rows=await fmpHistoricalPrices('SPY',from,to);
+    if(!rows.length){showToast(t('db.benchmarkFailed'),'error');return}
+    // FMP returns newest-first; the chart expects oldest-first. Sort explicitly instead of
+    // reversing — the client-side range filter can leave the order unspecified.
+    dbBenchmark={ticker:'SPY',prices:rows.map(d=>({date:d.date,close:_fmpClose(d)})).sort((a,b)=>a.date.localeCompare(b.date)),fetchedAt:new Date().toISOString()};
     saveDashBenchmark();
     renderDbBenchmark();
     showToast(t('db.benchmarkUpdated'),'success');
@@ -8519,13 +8523,42 @@ async function fetchDipData(){
   if(el)showSkeleton(el,'table');
   const batchSize=20;
   try{
-    for(let i=0;i<tickers.length;i+=batchSize){
-      const batch=tickers.slice(i,i+batchSize).join(',');
-      const data=await fmpFetch('quote/'+batch);
-      if(data&&Array.isArray(data)){
-        data.forEach(q=>{
-          if(q.symbol&&q.yearHigh)db52wHighs[q.symbol]={high52:q.yearHigh,fetchedAt:new Date().toISOString()};
-        });
+    // /stable's `quote` documents a SINGLE `symbol`, but many stable endpoints accept a comma
+    // list. Probe it ONCE per run: if the first batch answers for more than one ticker the list
+    // works and every later group costs 1 call; if not, fall back to per-symbol. Without the
+    // probe flag a plan that ignores the list would silently cost 1+N calls PER GROUP.
+    let batchWorks=null;
+    const today=new Date().toISOString().slice(0,10);
+    let stop=false;
+    for(let i=0;i<tickers.length&&!stop;i+=batchSize){
+      const group=tickers.slice(i,i+batchSize);
+      const seen=new Set();
+      const take=rows=>(rows||[]).forEach(q=>{
+        if(q&&q.symbol&&q.yearHigh!=null){db52wHighs[q.symbol]={high52:q.yearHigh,fetchedAt:new Date().toISOString()};seen.add(q.symbol)}
+      });
+      if(batchWorks!==false){
+        const batched=await fmpFetch('quote',{symbol:group.join(',')});
+        if(batched&&batched.rateLimited){stop=true;break}
+        take(_fmpRows(batched));
+        if(batchWorks===null&&group.length>1)batchWorks=seen.size>1;
+      }
+      if(batchWorks===false||seen.size<group.length){
+        for(const tk of group){
+          // Skip anything already answered this run, and anything we already probed TODAY —
+          // symbols FMP's US plan can't quote (EVO.ST, MC.PA, …) would otherwise burn one
+          // wasted call on every single refresh, forever.
+          if(seen.has(tk))continue;
+          const prev=db52wHighs[tk];
+          if(prev&&String(prev.fetchedAt||'').slice(0,10)===today)continue;
+          const one=await fmpFetch('quote',{symbol:tk});
+          if(one&&one.rateLimited){stop=true;break}
+          const before=seen.size;
+          take(_fmpRows(one));
+          // Negative-cache a symbol this plan can't quote (high52 null → the renderer skips it)
+          // so the next refresh doesn't pay for it again.
+          if(seen.size===before)db52wHighs[tk]={high52:null,fetchedAt:new Date().toISOString()};
+          await new Promise(r=>setTimeout(r,300)); // pace like the other per-ticker loops
+        }
       }
     }
     saveDash52wHighs();
@@ -8719,7 +8752,9 @@ async function fetchEarningsCalendar(){
   try{
     for(const ticker of tickers){
       try{
-        const data=await fmpFetch('earning-calendar',{symbol:ticker});
+        // /stable renamed the endpoint (earning- → earnings-) AND the result fields
+        // (eps → epsActual, revenue → revenueActual). Read both so a cached row still maps.
+        const data=await fmpFetch('earnings-calendar',{symbol:ticker});
         if(data&&Array.isArray(data)&&data.length>0){
           const today=new Date().toISOString().slice(0,10);
           const upcoming=data.filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date))[0];
@@ -8730,10 +8765,10 @@ async function fetchEarningsCalendar(){
             const prev=tStocks[ticker].earningsCalendar;
             tStocks[ticker].earningsCalendar={
               date:best.date,
-              eps:best.eps,
-              epsEstimated:best.epsEstimated,
-              revenue:best.revenue,
-              revenueEstimated:best.revenueEstimated,
+              eps:(best.epsActual!=null?best.epsActual:best.eps)??null,
+              epsEstimated:best.epsEstimated??null,
+              revenue:(best.revenueActual!=null?best.revenueActual:best.revenue)??null,
+              revenueEstimated:best.revenueEstimated??null,
               reviewed:prev.date===best.date?prev.reviewed:false,
               listened:prev.date===best.date?prev.listened:false
             };
@@ -10590,7 +10625,9 @@ function renderFinancials(ticker){
   }
   h+='</div></div>';
 
-  h+='<div class="card"><div class="card-title">Historical Trends (10 Year)</div>';
+  // Span is filled in by fetchHistoricalCharts once we know how many years came back
+  // (the free FMP plan caps statements at FMP_MAX_LIMIT years — see the clamp in fmpFetch).
+  h+='<div class="card"><div class="card-title" id="cp-hist-title">'+t('comp.historicalTrends')+'</div>';
   h+='<div id="cp-hist-loading" class="cp-hist-loading"><div class="skel-grid skel-grid--2" style="margin:20px 0">'+'<div class="skel" style="height:140px;border-radius:8px"></div>'.repeat(4)+'</div></div>';
   h+='<div class="cp-hist-charts" id="cp-hist-charts" style="display:none">';
   h+='<div class="cp-hist-chart"><canvas id="cp-hist-rev"></canvas></div>';
@@ -10609,10 +10646,16 @@ async function fetchHistoricalCharts(ticker){
   try{
     const histRaw=await cachedFetch(ticker,'historical_charts',async()=>{
       const [inc,cf,bs]=await Promise.all([
-        fmpFetch('income-statement',{symbol:ticker,limit:10}),
-        fmpFetch('cash-flow-statement',{symbol:ticker,limit:10}),
-        fmpFetch('balance-sheet-statement',{symbol:ticker,limit:3})
+        fmpFetch('income-statement',{symbol:ticker,limit:FMP_MAX_LIMIT}),
+        fmpFetch('cash-flow-statement',{symbol:ticker,limit:FMP_MAX_LIMIT}),
+        fmpFetch('balance-sheet-statement',{symbol:ticker,limit:FMP_MAX_LIMIT})
       ]);
+      // cachedFetch only refuses to store null / the rateLimited sentinel — a wrapper object
+      // around three failed calls looks like a valid payload and would be cached for the full
+      // 24h TTL, so a fetch that failed (or was rate-limited) reads as "no data" long after the
+      // cause is gone. Surface the failure instead of caching it.
+      if([inc,cf,bs].some(x=>x&&x.rateLimited))return {rateLimited:true};
+      if(!inc?.length&&!cf?.length&&!bs?.length)return null;
       return {incData:inc,cfData:cf,bsData:bs};
     });
     const incData=histRaw?.incData;
@@ -10632,6 +10675,10 @@ async function fetchHistoricalCharts(ticker){
     const inc=(incData||[]).slice().reverse();
     const cf=(cfData||[]).slice().reverse();
     const years=inc.map(d=>d.calendarYear||d.date?.slice(0,4)||'');
+    // Label the card with the span we ACTUALLY got (the free FMP plan caps statements at
+    // FMP_MAX_LIMIT years) instead of a hardcoded promise of 10.
+    const titleEl=document.getElementById('cp-hist-title');
+    if(titleEl&&years.length)titleEl.textContent=t('comp.historicalTrendsN',{n:years.length});
     const cfMap=Object.fromEntries(cf.map(d=>[d.calendarYear||d.date?.slice(0,4),d.freeCashFlow]));
     const accent=cv('--accent');const green=cv('--green');const blue=cv('--blue');const orange=cv('--orange');
     function mkChart(cid,key,label,data,color,type='bar'){
@@ -12110,9 +12157,10 @@ function calcDivMetrics(history,ticker){
 }
 
 async function fetchDividendHistory(ticker){
-  const data=await cachedFetch(ticker,'dividend_history',()=>fmpFetch('historical-price-full/stock_dividend/'+encodeURIComponent(ticker),{}));
-  if(data?.historical?.length){
-    const hist=data.historical.map(d=>({
+  const data=await cachedFetch(ticker,'dividend_history',()=>fmpFetch('dividends',{symbol:ticker}));
+  const rows=_fmpRows(data);
+  if(rows.length){
+    const hist=rows.map(d=>({
       date:d.date,paymentDate:d.paymentDate||d.date,recordDate:d.recordDate||'',
       declarationDate:d.declarationDate||'',adjDividend:d.adjDividend||d.dividend||0,dividend:d.dividend||0
     }));
@@ -12485,15 +12533,56 @@ function _fmpBudgetInc(){
   if(b.count>=FMP_DAILY_LIMIT)showToast(`FMP API daily limit reached (${FMP_DAILY_LIMIT})`,'error');
   return b.count;
 }
+// ====== FMP /stable migration ======
+// FMP retired the v3 path style; the worker proxy already points at /stable, so what broke for us
+// is (a) the PATH — `historical-price-full/{sym}` → `historical-price-eod/light?symbol=`,
+// `historical-price-full/stock_dividend/{sym}` → `dividends?symbol=` — and (b) the SHAPE: /stable
+// returns a FLAT array where v3 wrapped rows in `{symbol, historical:[…]}`. `_fmpRows` accepts
+// BOTH so an api_cache row written before this migration still parses instead of reading as empty.
+function _fmpRows(d){return Array.isArray(d)?d:(d&&Array.isArray(d.historical)?d.historical:[])}
+// `light` rows carry `price`; `full` and legacy v3 carry `close`.
+function _fmpClose(r){return r&&r.close!=null?r.close:(r?r.price:null)}
+// Daily closes for a symbol, oldest-to-newest order NOT guaranteed (FMP returns newest first).
+// `from`/`to` are documented as plan-gated on the stable EOD endpoints, so: ask for the range
+// (a smaller response is cheaper), and if that comes back empty, retry without it and window the
+// rows client-side — the caller gets exactly the range it asked for either way.
+async function fmpHistoricalPrices(symbol,from,to){
+  const p={symbol};
+  if(from)p.from=from;
+  if(to)p.to=to;
+  let d=await fmpFetch('historical-price-eod/light',p);
+  if(d&&d.rateLimited)return [];
+  let rows=_fmpRows(d);
+  // Retry ONLY on a successful-but-empty response (the plan ignored/rejected the range).
+  // `d==null` means the request itself failed — retrying just burns a second call and a
+  // second 15s timeout for something that cannot succeed.
+  if(d!=null&&!rows.length&&(from||to)){
+    d=await fmpFetch('historical-price-eod/light',{symbol});
+    if(d&&d.rateLimited)return [];
+    rows=_fmpRows(d);
+  }
+  if(from)rows=rows.filter(r=>r&&r.date>=from);
+  if(to)rows=rows.filter(r=>r&&r.date<=to);
+  return rows;
+}
+
+// FMP's free plan rejects `limit` above 5 with a 402 "Premium Query Parameter" — the whole
+// request fails, it does not degrade. Clamp centrally so no call site can reintroduce the 402
+// (fix the system, not the symptom): 5 years is simply what this plan returns.
+const FMP_MAX_LIMIT=5;
 async function fmpFetch(endpoint,params){
   if(!hasDataAuth()){showToast(t('db.fmpKeyMissing'),'warning');return null}
+  if(params&&params.limit!=null&&Number(params.limit)>FMP_MAX_LIMIT){
+    console.warn('FMP limit '+params.limit+' > '+FMP_MAX_LIMIT+' (free plan) — clamped for '+endpoint);
+    params=Object.assign({},params,{limit:FMP_MAX_LIMIT});
+  }
   const b=_fmpBudget();
   if(b.count>=FMP_DAILY_LIMIT){showToast(`FMP API daily limit reached (${FMP_DAILY_LIMIT}) — try again tomorrow`,'error');return {rateLimited:true}}
   for(let attempt=0;attempt<2;attempt++){
     try{
       const r=await proxyFetch('fmp',endpoint,params||{});
       _fmpBudgetInc();
-      if(r.status===429){showToast(t('comp.fmpRateLimit'),'warning');return null}
+      if(r.status===429){showToast(t('comp.fmpRateLimit'),'warning');return {rateLimited:true}}
       if(r.status===401||r.status===403){showToast(t('comp.fmpInvalid'),'error');return null}
       if(!r.ok){console.warn('FMP HTTP',r.status,'for',endpoint);return null}
       let d;try{d=await r.json()}catch(je){console.warn('FMP invalid JSON for',endpoint);return null}
