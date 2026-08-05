@@ -1,6 +1,6 @@
 # Stratos Ventures — Known Issues & Tech Debt
 
-**Last Updated:** 2026-07-23
+**Last Updated:** 2026-08-05
 
 Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and code review.
 
@@ -142,6 +142,20 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 
 ### ~~P.18 — Screener Filter Score Cache Missing (FIXED 2026-07-01)~~
 - **Fix applied:** `_screenerScoreCache` Map caches scores per ticker. Invalidated on `saveTrackerStocks()`.
+
+### P.20 — Restored Historical Data Is Stamped Fresh (ACCEPTED, Batch E2 / Cat 96)
+- **Where:** `_restoreHistoricalCache` → worker `cache-upsert` sets `fetched_at = datetime('now')`.
+- **Effect:** history from an old backup reads as current until its TTL expires (24h charts/dividends, 12h insider). The `fetched_at` captured in the backup file is informational only. The stale-restore auto-refresh (Cat 92) refreshes `stock_data` only, so it never shortens this window.
+- **Decision:** intended — the point of the opt-in snapshot is that it works while the APIs are down. Bounded and self-healing after one TTL. Revisit only if a restore is ever used to "freeze" deliberately stale data.
+
+### P.21 — Historical Gather Is One Un-Paginated Request Per Source (LOW, Batch E2 / Cat 96)
+- **Where:** `_gatherHistoricalCache` → `api_cache?filter=data_source&filter_value=…&limit=100000`.
+- **Risk:** a very large `historical_charts` set could exceed the Worker's response budget → 500 → the whole gather throws.
+- **Mitigation in place:** best-effort — the backup is still written, without historical, and the user is warned. Add `offset` pagination if it ever trips.
+
+### P.22 — The Plaintext Backup Has No Historical Option (BY DESIGN, Batch E2)
+- **Where:** `downloadBackupPlaintext` uses `_gatherAllData()` directly; only `downloadBackup` (encrypted) offers the checkbox.
+- **Decision:** the encrypted download is the default and the intended complete-snapshot path; the plaintext export exists as an escape hatch, not as the archival format.
 
 ---
 

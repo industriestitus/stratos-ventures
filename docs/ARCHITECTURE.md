@@ -640,6 +640,13 @@ User configures Worker URL + Sync Secret
 - **Export:** `_gatherAllData()` → JSON file download
 - **Import:** Parse JSON → merge via `_mergeArrayById()` → save to localStorage + D1
 
+#### Backup file format
+The default backup is ENCRYPTED (Batch A): `{v:1, format:'stratos-backup-encrypted', kdf:'PBKDF2-SHA256-600000', cipher:'AES-256-GCM', exportedAt, salt, iv, ct}` — `ct` is the AES-GCM ciphertext of the plaintext payload below. `_isEncryptedBackup()` shape-detects it on restore; a plaintext export (same payload, unwrapped) is still available behind its own warning.
+
+Plaintext payload = `_gatherAllData()`: `{version, format:'backup', exportedAt, current, savedStocks, researchNotes, trackerStocks, portfolio*, dashboard*, dividend*, frameworkData, reviewsData}` — everything that lives in localStorage/D1 as USER data.
+
+- **`historicalCache` (optional, Batch E2)** — present only when the user ticks "Include historical data". Shape: `{TICKER: {historical_charts|insider_transactions|dividend_history: {data, fetched_at}}}`. This is the only part of the backup sourced from `api_cache` rather than from user data, and it is keyed by **ticker** because D1 company ids are re-minted on restore. `stock_data` is deliberately excluded — those market metrics already ride on `trackerStocks` and are re-inserted by `_rehydrateStockCache`. On restore, `_restoreHistoricalCache` upserts them back into `api_cache` (fail-closed on `data_source`, guarded by `_d1CompanyMap[cid]===ticker`) and stamps them fresh, so the app is fully readable offline even while the source APIs are broken.
+
 ---
 
 ## 7. Security

@@ -101,8 +101,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 93 | Backup Batch D — Data Management UX polish (verify backup, last-backup indicator, restore danger cue) + QA nits | `45f0a01` | 2026-07-24 | 3 | 0 |
 | 94 | Backup Batch E1a — offline-readable HTML archive export + QA completeness fixes | `4cc0615` | 2026-07-24 | 2 | 0 |
 | 95 | Backup Batch E1b — full-dump XLSX + unencrypted-export warning; QA found 4 more ungated sensitive exports | `7557158` | 2026-07-24 | 4 | 0 |
+| 96 | Backup Batch E2 — opt-in historical data in the encrypted backup + chart-PNG export gate; QA found a false success signal, a silent no-op tick and a render-blocking restore step | `5f3ab13` | 2026-08-05 | 8 | 0 |
 
-**Total: 505 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA.)
+**Total: 513 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch.)
 
 ---
 
@@ -1855,6 +1856,33 @@ sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe e
 **Accepted / documented decision:** the per-chart `⤓` PNG download (`_dlChartPng`) is left ungated — charts are often public company financials and gating every chart image is high-friction; the portfolio/allocation charts it can also capture make this a judgment call flagged for Peter. The confirm's OK button renders red (`btn-danger`, since `danger` isn't set to false) — matches the plaintext-backup caution precedent, kept intentionally.
 
 **Lesson (CODING-LESSONS):** when adding a cross-cutting guard "before every X", enumerate X by grepping the low-level primitive (here every `a.download=`/`doc.save(`), not by listing the obvious call sites — inline/bulk variants and a full-dump modal button bypassed the shared helpers and would have shipped ungated.
+
+---
+
+## Category 96 — Backup Batch E2: Opt-in Historical Data in the Backup + Chart-PNG Gate (2026-08-05)
+
+**Feature (backup safety-net Batch E2 — the last E item).** sw.js **v53**. Two parts.
+
+1. **Opt-in historical data in the encrypted backup.** Historical charts, insider transactions and dividend history are CACHE-ONLY — they live in D1 `api_cache` (or `_memCache` offline), never on `tStocks`, so a normal backup never carried them. New **"Include historical data"** checkbox on the encrypted-backup passphrase prompt (`showPasswordPrompt` gained an optional `opts.checkbox`; with it the resolved value becomes `{value,checked}` instead of a bare string — the other 4 callers are unaffected). When ticked, `_gatherHistoricalCache()` reads the three `api_cache` data_sources with **server-side filtered** GETs (`api_cache?filter=data_source&filter_value=…`, so the bulky `stock_data` rows never cross the wire) and folds them into the backup as `historicalCache`, **keyed by TICKER** — D1 ids are re-minted on restore. `stock_data` is deliberately excluded: those market metrics already ride on `trackerStocks` and are re-inserted by `_rehydrateStockCache` (Cat 92). OFF by default (size). Restore (`_restoreHistoricalCache`) pushes them back via `cache-upsert` behind the same `_d1CompanyMap[cid]===ticker` collision guard as the stock-metric rehydrate, fail-closed on `data_source` (a tampered backup cannot write an arbitrary source), throttled 80ms. **No worker change — `api_cache` is already in the generic `TABLES` CRUD, so nothing to deploy.**
+2. **Chart `⤓` PNG gate (Peter's decision, reversing the Cat 95 "accepted" note).** `exportChartPng` is now async and gated behind `_confirmSensitiveExport()`, which gained an optional `msgKey` — the PNG gets chart-specific copy ("this image may contain personal financial data (allocation, net worth, amounts)") instead of the theses/notes wording. **Every sensitive download in the app is now gated.**
+
+**QA (agent, adversarial) — categories A (data loss / collision poisoning), B (return-shape change across all 5 `showPasswordPrompt` callers) and C (privacy: can `historicalCache` carry plaintext user content) came back CLEAN and verified. 8 fixes folded in:**
+
+| # | Sev | Issue | Fix |
+|---|-----|-------|-----|
+| 96.1 | MEDIUM | Ticking the box could be a **silent no-op**: offline mode reads `_memCache`, which is cold until profiles are browsed, and an expired token fails `API.ready()` → empty gather, but the user still saw the plain success toast | empty result now warns (`toast.historicalNothingCached`) instead of passing as success |
+| 96.2 | MEDIUM | **False success signal**: `ok++` counted `_memCache` writes even in d1Mode, where `cachedFetch` never reads `_memCache` — "restored for N companies" was reported even when zero rows reached D1 (e.g. after a failed C3b, when the id map is empty) | count only what lands where it will be read (D1 upserts in d1Mode, `_memCache` offline), report the real count, and warn when the file had entries but none landed |
+| 96.3 | MEDIUM | The awaited restore step **blocked the post-restore render** — up to 3 throttled upserts per ticker (minutes at 40+ companies) with the pre-restore DOM still on screen and no progress | moved after `handleRoute()` and fire-and-forget; nothing on screen needs historical until a profile is opened |
+| 96.4 | LOW | A 401 mid-loop signs the device out (`API._fetch` drops the token) and the loop kept grinding through doomed requests | `if(!API.ready())return ok` — stop as soon as auth is gone |
+| 96.5 | LOW | Size asymmetry: no cap on write, but `doRestore`/`verifyBackup` reject >50MB → an **unrestorable** backup | warn at write time with the actual MB (`toast.backupTooBigToRestore`) |
+| 96.6 | LOW | The **pre-restore safety backup** (the one artifact that can undo a bad restore) carried no historical — yet the C3b purge drops `api_cache` via the companies FK cascade | `_preRestoreSafetyBackup` now always includes it, best-effort |
+| 96.7 | NIT | `_memCache` was seeded for tickers that no longer exist locally | folded into 96.2 (`_memCache` written only when `!d1Mode`) |
+| 96.8 | NIT | No re-entrancy guard — a second click during the (slow) PBKDF2+AES run started a parallel backup, or stacked a second passphrase dialog | `_backupBusy` set **before** the prompt, cleared in `finally` / on cancel |
+
+**Accepted / documented decisions:**
+- **Restored rows are stamped fresh.** `cache-upsert` sets `fetched_at = now`, so restored history reads as current until its TTL (24h charts/dividends, 12h insider) expires. That is the point of an offline snapshot; the `fetched_at` captured in the file is informational (forward-compat), not applied. The stale-restore auto-refresh (Cat 92) only refreshes `stock_data`.
+- **The gather is one un-paginated GET per source** (`limit=100000`). A very large result could 500; it degrades correctly to the best-effort warning toast and a historical-less backup.
+- **The plaintext backup has no historical option** — the encrypted download is the default and the intended complete-snapshot path.
 
 ---
 

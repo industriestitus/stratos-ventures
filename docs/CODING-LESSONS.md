@@ -501,6 +501,12 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 **Rule:** Find every site by grepping the LOW-LEVEL primitive the action must funnel through — here `a.download=` / `doc.save(` / `URL.createObjectURL` — then classify each as gated / intentionally-ungated (with a reason) / gap. Gate at the shared choke point when one exists (`_downloadCsv`), and for the inline hold-outs add the gate directly. The same method applies to any "before every write/delete/network-call" guard: enumerate by the primitive, not by memory.
 
+### 10. Count Success Where the Data Will Actually Be READ From (Cat 96)
+
+**Pattern:** A restore helper reported "historical data restored for N companies" by incrementing its counter right after writing an in-memory cache — but in D1 mode that in-memory cache is never consulted (`cachedFetch` only reads `_memCache` when `!d1Mode`). So after a failed cloud step (empty id map → every upsert skipped) the user got a green success toast for data that had landed nowhere, then reloaded to empty charts. The same batch had a second flavour: an opt-in checkbox that silently produced nothing when the source cache was cold, still reporting plain success.
+
+**Rule:** A success counter must increment at the point where the write reaches the store that the READ path uses, per mode — not at the first plausible write. And "zero results" from an operation the user explicitly asked for is a WARNING, never a silent success: if the user ticked a box and nothing came of it, say so. Green toasts that overstate what happened are worse than errors — they stop the user from taking the recovery action they still could.
+
 ---
 
 ## Summary
@@ -513,9 +519,9 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | API & Caching | 5 | 31+ (Categories 5, 6, 21, 80) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |
-| AI Behavioral | 8 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate) |
+| AI Behavioral | 9 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting) |
 
-**Total:** 481+ bugs fixed, 37 lessons, 7 domains.
+**Total:** 513+ bugs fixed, 38 lessons, 7 domains.
 
 ## Related Documents
 

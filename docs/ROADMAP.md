@@ -286,6 +286,16 @@ Status: COMPLETE (2026-06-27)
 - [x] XLSX Export — SheetJS lazy-loaded, 5-sheet workbook (2026-07-02): Positions (with market value, P&L, P&L%), Transactions, Notes, Reviews, Framework. Auto-sized columns, async with error handling.
 - [x] Portfolio Summary PDF — jsPDF portfolio overview report (2026-07-02): Stratos branding, Portfolio Overview (value/cost/P&L/TWR/XIRR), Broker Accounts, Positions table (sorted by value), Allocation by Asset Type, Recent Transactions (last 20), Dividend Income breakdown with per-ticker stats.
 
+### Backup Safety-Net (2026-07-24 → 2026-08-05)
+Making the backup a complete, offline-interpretable snapshot of the whole app. One shippable batch at a time, each with an adversarial QA pass + docs.
+- [x] **A — Encrypted backup** (v47, Cat 91, ADR-042): passphrase prompt → PBKDF2-600k + AES-256-GCM → `.enc.json`. Default action; plaintext kept behind its own warning. Standalone passphrase (survives a master-password change).
+- [x] **B — Restore guardrails + completeness** (v48, Cat 92, ADR-043): auto pre-restore safety backup, richer restore confirm summary, market-metric rehydrate into `api_cache` (fixes the blank tracker after restore), auto-refresh when the backup is >7 days old.
+- [x] **D — Awareness + UX polish** (v50, Cat 93): non-destructive "Verify backup", "last backup N days ago" indicator + stale nudge, restore danger cue, 🔒/🔓 affordances.
+- [x] **E1a — Offline-readable HTML archive** (v51, Cat 94): self-contained app-styled `.html` with all data, opens in any browser without the app.
+- [x] **E1b — Full-dump XLSX + unencrypted-export warning** (v52, Cat 95): 9-sheet workbook; a blocking confirm before every sensitive export.
+- [x] **E2 — Opt-in historical data in the backup** (v53, Cat 96): checkbox on the encrypted-backup prompt folds the cache-only history (charts/insider/dividends) into the file and back into `api_cache` on restore — a backup that stays complete even while the APIs are down. Chart `⤓` PNG downloads gated too, so every sensitive download now warns.
+- [ ] **C — D1 snapshots:** `backups` table `{id, created_at, label, blob(encrypted export)}`, auto-monthly + "Snapshot now", keep last 6–12, "Restore from snapshot" picker. In-app rollback without a file. (Schema + worker + client + UI — its own batch.)
+
 ### UX Review & Default Tab Fix (2026-07-04)
 - [x] UX/investor workflow review — comprehensive audit of user and investor workflows, scored 7.5/10 UX, 8.5/10 investor workflow, 9.5/10 feature completeness
 - [x] Companies default tab changed from Calculator to Tracker — more intuitive entry point for new users, sessionStorage preserves last-used tab for returning users
