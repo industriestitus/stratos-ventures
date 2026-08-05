@@ -521,6 +521,12 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 **Corollary — never cache a failure.** A fetch wrapper that returns `{a:null,b:null,c:null}` when all its calls failed looks like a valid payload to a TTL cache, so the outage gets frozen in for the full TTL and the fix appears not to work. Distinguish `null` (the request failed → don't cache, don't retry) from `[]` (it succeeded with nothing → cacheable) at every layer.
 
+### 13. A 200 With the Right Shape Can Still Be the Wrong Data — Verify API Migrations Live (Cat 99)
+
+**Pattern:** An FMP migration shipped after unit tests (stubbed responses), an adversarial QA agent, and a documentation review. Running the migrated code against the REAL API in the browser immediately exposed that `/stable/earnings-calendar?symbol=AAPL` returns HTTP 200, a well-formed array, the exact expected fields — and **other companies' rows**. It is the market-wide calendar; `symbol` is silently ignored. The app would have stamped an unrelated company's earnings date, EPS and revenue onto every tracked ticker and synced it to the cloud.
+
+**Rule:** Stubs verify your parsing; only a live call verifies the API's *semantics*. After any external-API migration, execute each migrated call against the real service and assert on the CONTENT, not just the status and shape — "did I get rows for the entity I asked about?" Add the identity filter to the client too (`filter(e=>e.symbol===ticker)`): a parameter the server ignores today may be ignored again tomorrow, and the cost of the guard is one line.
+
 ---
 
 ## Summary
@@ -530,12 +536,12 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
 | JavaScript | 11 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
 | Data Safety | 8 | 34+ (Categories 15, 72, 82, 86) |
-| API & Caching | 6 | 39+ (Categories 5, 6, 21, 80, 98) |
+| API & Caching | 7 | 40+ (Categories 5, 6, 21, 80, 98, 99) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |
 | AI Behavioral | 10 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 527+ bugs fixed, 40 lessons, 7 domains.
+**Total:** 528+ bugs fixed, 41 lessons, 7 domains.
 
 ## Related Documents
 

@@ -104,8 +104,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 96 | Backup Batch E2 — opt-in historical data in the encrypted backup + chart-PNG export gate; QA found a false success signal, a silent no-op tick and a render-blocking restore step | `5f3ab13` | 2026-08-05 | 8 | 0 |
 | 97 | Backup Batch C — D1 cloud snapshots; QA found a CRITICAL function-name collision with the portfolio `deleteSnapshot` + 5 more | `d38500a` | 2026-08-05 | 6 | 0 |
 | 98 | FMP `/stable` migration — 5 broken endpoints restored (financials, portfolio history, benchmark, dividends, earnings); QA found a HIGH 24h cache-poisoning path + 7 more | `5a30b3e` | 2026-08-05 | 8 | 0 |
+| 99 | FMP live-browser verification — `earnings-calendar` ignores `symbol` and returned ANOTHER company's earnings (HTTP 200, wrong data) | `HEAD` | 2026-08-05 | 1 | 0 |
 
-**Total: 527 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch; Cat 98 = 8 adversarial-QA fixes folded into the FMP /stable migration.)
+**Total: 528 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch; Cat 98 = 8 adversarial-QA fixes folded into the FMP /stable migration; Cat 99 = 1 wrong-data endpoint caught only by live-browser verification.)
 
 ---
 
@@ -1951,6 +1952,24 @@ Confirmed still working on this plan (so deliberately untouched): `profile`, `fi
 | 98.6 | MEDIUM | The card promised "Historical Trends (10 Year)" while the plan now caps at 5 — a half-window trend presented as the full one (and a hardcoded English string) | `comp.historicalTrendsN` i18n key, filled from the actual row count after the fetch |
 | 98.7 | LOW | Upcoming earnings stored `undefined` (dropped by `JSON.stringify`) instead of `null` | `?? null` |
 | 98.8 | NIT | Inner `break` on the sentinel leaked one extra call+toast per group; the fallback loop had no throttle while every sibling loop paces itself | `stop` flag + 300ms pacing |
+
+---
+
+## Category 99 — FMP Live Verification: `earnings-calendar` Returns the Wrong Company (2026-08-05)
+
+**Found by running the migrated code against the real API in the user's own browser**, after Cat 98 had already shipped and passed unit tests + an adversarial QA agent. sw.js **v56**.
+
+**The bug:** `/stable/earnings-calendar?symbol=AAPL` returns **HTTP 200 with rows for other companies** — the live check came back with PLTR data. It is the MARKET-WIDE calendar; the `symbol` parameter is silently ignored. `fetchEarningsCalendar` takes the first row at/after today and writes it to `tStocks[ticker].earningsCalendar`, so **every tracked company would have been given some unrelated company's earnings date, EPS and revenue** — then synced to D1 and shown in the dashboard's earnings widget as if it were theirs.
+
+**Fix:** use `/stable/earnings?symbol={TICKER}` — the per-company endpoint (verified live: 165 rows, all AAPL, same `epsActual`/`revenueActual` fields). Plus a defensive `filter(e=>!e.symbol||e.symbol===ticker)` so a response that ever ignores the filter again cannot write another company's numbers.
+
+**Why nothing earlier caught it:** the endpoint returned 200 with a well-formed array of exactly the expected shape. Unit tests stub the response, and a code reviewer (human or agent) cannot see that a live API ignores a query parameter. Only a real call with real data exposes a *wrong-but-valid* response.
+
+**Also measured live in the same pass (documented in API-REFERENCE, no code change needed):**
+- `quote?symbol=AAPL,MSFT,NVDA` (comma list) → **402**, and a non-US single symbol (`EVO.ST`) → **402**. Both are plan gates rather than empty results, so the dip finder's per-symbol fallback + day-long negative cache (Cat 98.2) is what actually runs — behaviour is correct, now confirmed against reality.
+- Confirmed working end-to-end on the live account: `historical-price-eod/light` (1253 rows), the same with `from`/`to` (11 rows for a 2-week window), `dividends` (92 rows), and the `limit` clamp (asked for 10 → returned 5 years, HTTP 200).
+
+**Lesson (CODING-LESSONS #13):** an external-API migration is not verified until it has run against the live API. A 200 with the right *shape* can still be the wrong *data*.
 
 ---
 

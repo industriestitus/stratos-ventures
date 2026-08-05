@@ -300,9 +300,10 @@ The legacy KV blob path (`/sync/load`, `/sync/save`, `/sync/restore-backup`) was
 - **Response:** Flat array `[{symbol, date, recordDate, paymentDate, declarationDate, adjDividend, dividend, yield, frequency}]`, newest first
 - **Usage:** Dividend history; calculates yield, growth rates, payout ratio
 
-### Earnings Calendar
-- **Endpoint:** `GET /earnings-calendar?symbol={TICKER}` *(was `earning-calendar` → now 404)*
-- **Response:** `[{symbol, date, epsActual, epsEstimated, revenueActual, revenueEstimated}]` — v3 called these `eps`/`revenue`; the client reads both
+### Earnings (per company)
+- **Endpoint:** `GET /earnings?symbol={TICKER}` *(was `earning-calendar` → now 404)*
+- **Response:** `[{symbol, date, epsActual, epsEstimated, revenueActual, revenueEstimated, lastUpdated}]`, both past and future rows — v3 called these fields `eps`/`revenue`; the client reads both
+- **⚠️ NOT `earnings-calendar`:** that is the MARKET-WIDE calendar and **silently ignores `symbol`** — a live `earnings-calendar?symbol=AAPL` request returned PLTR rows with HTTP 200. Using it would write another company's earnings date onto every tracked ticker. The client also filters the response by `symbol` defensively.
 - **Usage:** Earnings dates for company tracking
 
 ### Historical Prices (portfolio history + SPY benchmark)
@@ -315,6 +316,7 @@ The legacy KV blob path (`/sync/load`, `/sync/save`, `/sync/restore-backup`) was
 - **Endpoint:** `GET /quote?symbol={TICKER}` *(the v3 path batch `quote/{A},{B},{C}` is dead)*
 - **Response:** Array `[{symbol, name, price, change, changePercentage, volume, dayLow, dayHigh, yearHigh, yearLow, marketCap, ...}]`
 - **Client:** the 52-week-high dip finder probes a comma-separated `symbol` list ONCE per run and falls back to per-symbol calls only if the list isn't honoured; symbols this plan can't quote are negative-cached for the day so they aren't re-requested on every refresh.
+- **Measured on the free tier:** a comma list (`symbol=AAPL,MSFT,NVDA`) returns **402**, and so does a non-US symbol (`EVO.ST`) — both are plan gates, not empty results. So in practice the per-symbol path runs, and non-US tickers are negative-cached.
 - **Usage:** 52-week highs for the dip finder
 
 ### Error Handling

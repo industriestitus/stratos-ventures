@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v55';
+var APP_VERSION='v56';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -8752,13 +8752,18 @@ async function fetchEarningsCalendar(){
   try{
     for(const ticker of tickers){
       try{
-        // /stable renamed the endpoint (earning- → earnings-) AND the result fields
-        // (eps → epsActual, revenue → revenueActual). Read both so a cached row still maps.
-        const data=await fmpFetch('earnings-calendar',{symbol:ticker});
-        if(data&&Array.isArray(data)&&data.length>0){
+        // /stable split this in two: `earnings-calendar` is the MARKET-WIDE calendar and
+        // silently IGNORES `symbol` (a live check returned PLTR rows for a symbol=AAPL request —
+        // it would have written another company's earnings date onto every tracked ticker).
+        // `earnings?symbol=` is the per-company one. Fields were renamed too
+        // (eps → epsActual, revenue → revenueActual); read both so a cached row still maps.
+        const data=await fmpFetch('earnings',{symbol:ticker});
+        // Defensive: only ever accept rows for the ticker we asked for.
+        const own=Array.isArray(data)?data.filter(e=>!e.symbol||e.symbol===ticker):data;
+        if(own&&Array.isArray(own)&&own.length>0){
           const today=new Date().toISOString().slice(0,10);
-          const upcoming=data.filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date))[0];
-          const recent=data.filter(e=>e.date<today).sort((a,b)=>b.date.localeCompare(a.date))[0];
+          const upcoming=own.filter(e=>e.date>=today).sort((a,b)=>a.date.localeCompare(b.date))[0];
+          const recent=own.filter(e=>e.date<today).sort((a,b)=>b.date.localeCompare(a.date))[0];
           const best=upcoming||recent;
           if(best){
             if(!tStocks[ticker].earningsCalendar)tStocks[ticker].earningsCalendar={};
