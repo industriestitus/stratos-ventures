@@ -47,11 +47,44 @@ docs/
 - Never commit .env files or credentials
 - The FMP API key in settings.local.json must NOT be copied into source code
 - Sync secrets go in Cloudflare Worker environment variables, not source
+- **If a secret is ever committed, ROTATE it.** Deleting it in a later commit does not remove
+  it from history, and this repo is public — the old value stays fetchable forever
 
 ## Git
 - Commit messages in English, concise
-- One feature per commit
-- Branch per major feature: `feature/portfolio`, `feature/notes`, etc.
+- One batch per commit — one shippable change, never a grab bag
+- **Trunk-based: commit straight to `main`.** No feature branches — solo dev, no CI gates,
+  no reviewers; the version-bump rule below is the safety gate instead
+- **Conventional prefix, always:** `feat:` `fix:` `refactor:` `chore:` `perf:` `revert:` `docs:`.
+  A `docs:` commit must contain *only* doc changes — the docs-pass audit relies on it,
+  and `docs/check.sh` enforces both the prefix list and the purity
+- **Deploy commits end with the version:** `fix: … (v56)`. This is how a commit is traced
+  to a service-worker cache generation
+- End commit messages with `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`
+
+## Shipping a Batch
+A batch is one shippable change — usually one feature, sometimes a coherent fix set.
+
+**Deploy ordering — backend before frontend, and schema before both.** A push to `main`
+auto-deploys the frontend within a minute, so any batch that also changes the Worker must land
+in this order or a stale client will hit a backend that does not yet match it:
+1. **Run the schema DDL on live D1 FIRST** (BUG-HISTORY → Deployment Notes has the exact
+   commands; record the date it was actually run)
+2. **Then `cd web/cloudflare-worker && npx wrangler deploy`**
+3. **Only then commit and push the frontend**
+
+**Then, for the batch itself:**
+4. **Code commit** — conventional prefix, `(vNN)` if it deploys. **Bump `APP_VERSION`
+   (`web/index.html`) and `CACHE_NAME` (`web/sw.js`) TOGETHER in that same commit.** If they
+   diverge, the service worker serves stale code and your edits appear not to apply. The
+   version is visible in the sidebar so a reload can be confirmed — that visibility is the
+   whole reason this rule never drifts, and it is the model for `docs/check.sh`
+5. **QA agent** over the batch before reporting done (`memory/feedback_qa-agent-review.md`)
+6. **Verify live in the browser** for anything on a data path or visible in the UI. Code
+   review does not catch a 200 response carrying another company's data (Cat 99) or a
+   stale-cache render — repeatedly, the only thing that caught those was opening the app
+7. **`bash docs/check.sh`** — run it with the doc edits still uncommitted; must exit 0
+8. **Docs commit** (see below), then push
 
 ## Documentation Maintenance
 Do a **docs pass at the end of every batch** (each shippable feature/fix, not just once per session) — a dedicated `docs:` commit right after the code commit, so the repo is never left in a code-without-docs state (see `memory/feedback_doc-maintenance.md` for full rules):
@@ -60,6 +93,36 @@ Do a **docs pass at the end of every batch** (each shippable feature/fix, not ju
 - **Architecture changes:** ARCHITECTURE.md, API-REFERENCE.md, DECISIONS.md (new ADR + summary-table row), DEPLOYMENT.md
 - **Schema changes:** d1-schema.sql, ARCHITECTURE.md § 5, and add the exact `ALTER … BEFORE wrangler deploy` commands to BUG-HISTORY Deployment Notes
 
+Run `bash docs/check.sh` before the docs commit — it verifies the hand-maintained facts that
+drift (version bumps, doc counters, BUG-HISTORY table/body integrity, secrets, stray worktrees).
+
+**No one-off audit dumps in `docs/`.** Audit and review output goes straight to its owner:
+open items → ROADMAP.md · fixed → BUG-HISTORY.md · accepted/deferred → KNOWN-ISSUES.md.
+The raw dump stays in the scratchpad. Six stray `.txt` dumps once orphaned ~16 open items,
+including "there is not a single automated test", which then went untracked for a month.
+
+## Session Status & Handoff
+**There is exactly one status file: `memory/STATUS.md`.** Rewrite it *in place* at the end of
+every session — never create a dated copy, never leave two files claiming to describe "now".
+Anything historical belongs in the relevant plan memory under `## History`.
+
+Required sections, in this order:
+1. **Current state** — live version, tree vs `origin/main`, and **pending deploys, stated
+   explicitly as "none" when there are none**
+2. **Shipped this batch** — table: Cat / batch / version / commits
+3. **Verified live** — what was actually exercised in the browser or against prod, as opposed
+   to only reviewed. Keep the two apart; this is the section that earns trust
+4. **Open threads** — numbered, each with a proposed next batch and why it is not blocking
+5. **Operational facts** — deploy model, hard external constraints, anything a fresh session
+   would otherwise rediscover the hard way
+
+Rules: status lives **only** here — no version numbers, commit hashes or "PENDING" markers in
+any other memory, because those are what go stale. `MEMORY.md` line 1 is always
+`- [Current status](STATUS.md) — READ FIRST.` and never changes. A handoff is a claim about
+reality: never write "verified" for something only read, and never carry a pending item forward
+without re-checking that it is still pending.
+
 ## Project Status
-See `docs/ROADMAP.md` for current phase, tasks, and progress.
+See `memory/STATUS.md` for where things stand right now.
+See `docs/ROADMAP.md` for phases, tasks, and the backlog.
 See `.claude/projects/*/memory/` for detailed plans, API strategy, competitor analysis.
