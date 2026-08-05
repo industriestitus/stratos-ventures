@@ -294,7 +294,7 @@ Making the backup a complete, offline-interpretable snapshot of the whole app. O
 - [x] **E1a — Offline-readable HTML archive** (v51, Cat 94): self-contained app-styled `.html` with all data, opens in any browser without the app.
 - [x] **E1b — Full-dump XLSX + unencrypted-export warning** (v52, Cat 95): 9-sheet workbook; a blocking confirm before every sensitive export.
 - [x] **E2 — Opt-in historical data in the backup** (v53, Cat 96): checkbox on the encrypted-backup prompt folds the cache-only history (charts/insider/dividends) into the file and back into `api_cache` on restore — a backup that stays complete even while the APIs are down. Chart `⤓` PNG downloads gated too, so every sensitive download now warns.
-- [ ] **C — D1 snapshots:** `backups` table `{id, created_at, label, blob(encrypted export)}`, auto-monthly + "Snapshot now", keep last 6–12, "Restore from snapshot" picker. In-app rollback without a file. (Schema + worker + client + UI — its own batch.)
+- [x] **C — D1 cloud snapshots** (v54, Cat 97): `backups` + `backup_chunks` tables; a full export gzipped + DEK-encrypted + chunked into D1. Automatic monthly snapshot on a clean boot, manual "📸 Snapshot now", newest 12 kept, restore/delete from Settings. `_applyRestore` extracted so file and snapshot restores share one path. **Backup safety-net track COMPLETE.**
 
 ### UX Review & Default Tab Fix (2026-07-04)
 - [x] UX/investor workflow review — comprehensive audit of user and investor workflows, scored 7.5/10 UX, 8.5/10 investor workflow, 9.5/10 feature completeness

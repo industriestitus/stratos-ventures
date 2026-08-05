@@ -102,8 +102,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 94 | Backup Batch E1a — offline-readable HTML archive export + QA completeness fixes | `4cc0615` | 2026-07-24 | 2 | 0 |
 | 95 | Backup Batch E1b — full-dump XLSX + unencrypted-export warning; QA found 4 more ungated sensitive exports | `7557158` | 2026-07-24 | 4 | 0 |
 | 96 | Backup Batch E2 — opt-in historical data in the encrypted backup + chart-PNG export gate; QA found a false success signal, a silent no-op tick and a render-blocking restore step | `5f3ab13` | 2026-08-05 | 8 | 0 |
+| 97 | Backup Batch C — D1 cloud snapshots; QA found a CRITICAL function-name collision with the portfolio `deleteSnapshot` + 5 more | `d38500a` | 2026-08-05 | 6 | 0 |
 
-**Total: 513 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch.)
+**Total: 519 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch.)
 
 ---
 
@@ -1886,8 +1887,43 @@ sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe e
 
 ---
 
+## Category 97 — Backup Batch C: D1 Cloud Snapshots (2026-08-05)
+
+**Feature (backup safety-net Batch C — the last item in the plan).** sw.js **v54**. In-app rollback without a file.
+
+- **Schema:** new `backups` (header: `created_at, label, kind, app_version, size_bytes, chunk_count, summary`) + `backup_chunks` (`backup_id` FK ON DELETE CASCADE, `seq`, `data`, UNIQUE(backup_id,seq)). Both are deliberately ABSENT from the worker's `USER_DATA_CLEAR_TABLES` and hold no FK to `companies`, so neither the C3b purge nor `/api/migrate`'s clear can destroy the snapshots you might need to roll back to — verified in QA.
+- **Payload:** `_gatherAllData()` → JSON → **gzip** (`CompressionStream`, `raw` fallback for Safari <16.4) → **AES-GCM with the account DEK** → base64, tagged `snap:v1:<codec>:<iv>:<ct>`, split into 500 000-char chunks (D1 caps a row at 2MB, the worker a body at 5MB; an export with note images is several MB). The DEK — not a passphrase — because an automatic monthly snapshot has to run silently. `_dek==null` (locked / no envelope) → the feature is simply unavailable; there is no path to a plaintext dump.
+- **Lifecycle:** header row first, then chunk POSTs; a failed chunk deletes the header again (no restorable-looking 0-chunk snapshot). One automatic snapshot per calendar month on a clean D1 boot (server list is the authority, localStorage only short-circuits), manual "📸 Snapshot now", retention = newest 12, restore + delete from Settings → Data Management.
+- **No custom worker route** — the generic CRUD covers create/list/delete with 2 `TABLES` entries.
+- **`_applyRestore` refactor:** the "apply a decrypted backup object" body was lifted verbatim out of `doRestore` so the file restore and the snapshot restore run ONE path (version checks → typed RESTORE confirm → pre-restore safety FILE backup → wipe → re-apply → C3b clear-and-restore → rollback on failure). QA diffed the 107 moved lines and confirmed the extraction is faithful (only the intended `confirm.restoreSource` line added).
+- **Integrity:** the payload is a SINGLE AES-GCM ciphertext, so any missing/reordered/truncated chunk fails the tag check inside `_snapUnpack` — before `_applyRestore` is reached and before anything is mutated. Plus an explicit `chunk_count` and contiguous-`seq` check.
+
+**QA (agent, adversarial) — the refactor, snapshot integrity, prune safety, privacy and i18n came back CLEAN and verified. 6 fixes folded in:**
+
+| # | Sev | Issue | Fix |
+|---|-----|-------|-----|
+| 97.1 | **CRITICAL** | **Function-name collision.** `deleteSnapshot(id)` already existed for PORTFOLIO snapshots (`portfolio_snapshots`). Both are top-level declarations in the same script, so the later one won — clicking Delete on a cloud snapshot would have run `API.del('portfolio_snapshots/<id>')` and permanently deleted a portfolio history row with the same id (both tables start at id 1). The confirm copy was near-identical, so there was no visual tell; the cloud row stayed listed. Portfolio snapshots feed the value-over-time chart and TWR → silent, permanent data loss. | whole cloud API renamed (`deleteCloudSnapshot` / `createCloudSnapshot` / `restoreFromCloudSnapshot` / `renderCloudSnapshots` / `cloudSnapshotNow` / `_listCloudSnapshots` / `_pruneCloudSnapshots`) + a full duplicate-declaration scan of the file |
+| 97.2 | HIGH | Auto-snapshot fired after a PARTIAL D1 boot: a per-company `/full` failure leaves stub `tStocks` entries, so the month's automatic snapshot would capture hollow data, set the month marker (suppressing the real one) and evict a good snapshot on prune — while the picker summary still showed the right company count | `_d1LoadHadErrors` + `_d1LoadClean` gate the boot hook; skipped loads log a warning |
+| 97.3 | MEDIUM | A snapshot payload carries no `historicalCache`, yet restoring one runs the C3b purge which cascades `api_cache` away → every cached chart/insider/dividend series silently lost | `restoreFromCloudSnapshot` captures the CURRENT historical cache (pre-purge) and hands it to `_applyRestore`, which re-upserts it through the existing path |
+| 97.4 | LOW | `restoreFromCloudSnapshot` didn't catch `_applyRestore` rejections (the file path does) → an unhandled rejection from an onclick, no toast | same try/catch → `toast.restoreError` |
+| 97.5 | LOW | The chunk-count guard failed OPEN when the header row wasn't found | `if(!hdr)throw` — fail closed |
+| 97.6 | NIT | Manual "Snapshot now" silently no-opped while the auto snapshot was running; `created_at` (SQLite UTC) rendered raw, so a 00:30 CEST snapshot showed as the previous day | busy toast (auto stays silent) + `_snapWhen()` local-time render |
+
+**Accepted / documented:** two tabs booting at the same second can each create the monthly auto snapshot (harmless duplicate, pruned eventually); `created_at`/`kind`/`app_version`/`size_bytes`/`chunk_count` stay plaintext metadata (a rough dataset-size signal, negligible next to the row counts the single-tenant DB already exposes).
+
+**Lesson (CODING-LESSONS):** in a 17k-line single-file app, grep every new top-level function name against the file BEFORE writing it — a duplicate `function` declaration is silently legal, the later one wins, and here it would have pointed a Delete button at a different table.
+
+---
+
 ## Deployment Notes
 
+- **`d38500a` (Batch C — cloud snapshots) deploy order is MANDATORY** — create the two tables in live D1 BEFORE `wrangler deploy`, otherwise the new `TABLES` entries reference missing tables and every snapshot call 500s. Both are NEW tables — nothing is altered, dropped or backfilled, so this is non-destructive to existing data:
+  ```bash
+  cd web/cloudflare-worker
+  npx wrangler d1 execute stratos-ventures-db --remote --command "CREATE TABLE backups (id INTEGER PRIMARY KEY, created_at TEXT NOT NULL DEFAULT (datetime('now')), label TEXT, kind TEXT NOT NULL DEFAULT 'manual', app_version TEXT, size_bytes INTEGER NOT NULL DEFAULT 0, chunk_count INTEGER NOT NULL DEFAULT 0, summary TEXT); CREATE INDEX idx_backups_created ON backups(created_at DESC); CREATE TABLE backup_chunks (id INTEGER PRIMARY KEY, backup_id INTEGER NOT NULL REFERENCES backups(id) ON DELETE CASCADE, seq INTEGER NOT NULL, data TEXT NOT NULL, UNIQUE(backup_id, seq)); CREATE INDEX idx_backup_chunks_backup ON backup_chunks(backup_id, seq);"
+  npx wrangler deploy
+  ```
+  Until both steps are done the feature degrades quietly: the Settings list shows "Could not load the snapshots", a manual snapshot toasts an error and the automatic one fails silently. No other feature is affected.
 - **`d176a0a` (C3) deploy order is MANDATORY — worker FIRST, then frontend push.** The 403 gate on `/api/migrate` must be live before (or together with) the client push: until the worker is deployed, a stale cached pre-encryption client could still call the un-gated `/migrate` and clear+re-import plaintext. No schema change. Then: **backup live D1** (`cd web/cloudflare-worker && npx wrangler d1 export stratos-ventures-db --remote --output=../../backup-pre-c3.sql`), reload to v38, and run Settings → Master Password → Data Encryption → Scan → Encrypt on ONE device with others closed.
 - **Worker must be redeployed** after commits `9a06c86` (Yahoo proxy auth), `bde6c93` (rate limiting + atomic DELETE), `2dfccef` (chart crumb auth), `bbc5856` (cross-device login: /sync/meta, /sync/restore-backup, enc_version guard), `f42dfb4` (5MB body size limit), `36cf706` (natural-key upsert conflict targets), `cc3c9a2` (natural-key DELETE route + `NATURAL_DELETE` allowlist + GET cap 100000), `aaff465` (S2a-2: companies attr columns + single-PUT upsert — **run the D1 `ALTER` first**, see below), and any future Worker changes:
   ```bash

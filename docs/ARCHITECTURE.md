@@ -647,6 +647,14 @@ Plaintext payload = `_gatherAllData()`: `{version, format:'backup', exportedAt, 
 
 - **`historicalCache` (optional, Batch E2)** — present only when the user ticks "Include historical data". Shape: `{TICKER: {historical_charts|insider_transactions|dividend_history: {data, fetched_at}}}`. This is the only part of the backup sourced from `api_cache` rather than from user data, and it is keyed by **ticker** because D1 company ids are re-minted on restore. `stock_data` is deliberately excluded — those market metrics already ride on `trackerStocks` and are re-inserted by `_rehydrateStockCache`. On restore, `_restoreHistoricalCache` upserts them back into `api_cache` (fail-closed on `data_source`, guarded by `_d1CompanyMap[cid]===ticker`) and stamps them fresh, so the app is fully readable offline even while the source APIs are broken.
 
+#### Cloud snapshots (Batch C)
+An in-app rollback that needs no file. `_gatherAllData()` → JSON → gzip (`CompressionStream`; `raw` fallback) → AES-GCM with the **account DEK** → base64, tagged `snap:v1:<codec>:<b64 iv>:<b64 ct>` and split across `backup_chunks` at 500 000 chars (D1 caps a row at 2MB, the worker a request body at 5MB; an export with note images is several MB). The header row (`backups`) carries `created_at, label, kind, app_version, size_bytes, chunk_count, summary`, with `label`/`summary` DEK-encrypted like every other sensitive TEXT column so the picker can list snapshots without downloading payloads.
+
+- **Key choice:** the DEK, not a passphrase — the automatic monthly snapshot must run silently. A locked account (`_dek==null`) disables the feature entirely rather than writing plaintext. The FILE backup keeps its standalone passphrase and stays the artifact that survives losing the account; the snapshot is the convenient rollback that lives in the same D1 as the data. Both, not either.
+- **Integrity:** the whole payload is ONE ciphertext, so a missing/reordered/truncated chunk fails the AES-GCM tag check during unpack — before any mutation. `chunk_count` and a contiguous `seq` run are checked first.
+- **Data safety:** `backups`/`backup_chunks` are absent from the worker's `USER_DATA_CLEAR_TABLES` and hold no FK to `companies`, so neither the C3b purge nor `/api/migrate`'s clear can destroy them — a failed restore can be retried from another snapshot.
+- **Restore** goes through the same `_applyRestore()` as a file restore (see §6.3), and captures the current historical `api_cache` beforehand because the C3b purge cascades it away.
+
 ---
 
 ## 7. Security

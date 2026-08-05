@@ -507,6 +507,12 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 **Rule:** A success counter must increment at the point where the write reaches the store that the READ path uses, per mode — not at the first plausible write. And "zero results" from an operation the user explicitly asked for is a WARNING, never a silent success: if the user ticked a box and nothing came of it, say so. Green toasts that overstate what happened are worse than errors — they stop the user from taking the recovery action they still could.
 
+### 11. Grep Every New Top-Level Function Name Before You Write It (Cat 97)
+
+**Pattern:** A new cloud-snapshot module added `deleteSnapshot(id)` to a 17k-line single-file app that already had a `deleteSnapshot(id)` for PORTFOLIO snapshots. Two `function` declarations with the same name in one script are silently legal — the later one wins — so the new Delete button called `API.del('portfolio_snapshots/<id>')`. Both tables start at id 1, both confirm dialogs read "Delete snapshot", and the cloud row stayed in the list afterwards, so the only symptom was a portfolio history point quietly disappearing from the value chart and TWR.
+
+**Rule:** In a single-file app there is no module scope to protect you. Before adding any top-level function, `grep -c "function <name>("` the whole file — and when the new feature shares a noun with an existing one ("snapshot", "backup", "export"), namespace the entire new API (`createCloudSnapshot`, `deleteCloudSnapshot`, …) rather than the one name that happens to collide today. Run a duplicate-declaration scan over all new names as a batch, not one at a time.
+
 ---
 
 ## Summary
@@ -519,9 +525,9 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | API & Caching | 5 | 31+ (Categories 5, 6, 21, 80) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |
-| AI Behavioral | 9 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting) |
+| AI Behavioral | 10 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 513+ bugs fixed, 38 lessons, 7 domains.
+**Total:** 519+ bugs fixed, 39 lessons, 7 domains.
 
 ## Related Documents
 

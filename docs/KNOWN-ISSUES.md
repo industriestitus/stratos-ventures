@@ -153,6 +153,14 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Risk:** a very large `historical_charts` set could exceed the Worker's response budget → 500 → the whole gather throws.
 - **Mitigation in place:** best-effort — the backup is still written, without historical, and the user is warned. Add `offset` pagination if it ever trips.
 
+### P.23 — Two Tabs Can Create Duplicate Monthly Snapshots (ACCEPTED, Batch C / Cat 97)
+- **Where:** `_maybeAutoSnapshot` has no cross-tab lock — two tabs booting in the same second both see "no snapshot this month" before either has written one.
+- **Effect:** one harmless duplicate row; retention prunes it eventually. Not worth a lock (a BroadcastChannel/localStorage mutex for a once-a-month background write).
+
+### P.24 — Snapshot Metadata Is Plaintext (ACCEPTED, Batch C)
+- **Where:** `backups.created_at / kind / app_version / size_bytes / chunk_count`. Only `label` and `summary` are DEK-encrypted.
+- **Effect:** `size_bytes` is a rough dataset-size signal. Negligible next to what the single-tenant DB already exposes (per-table row counts), and the columns are needed unencrypted for listing, sorting and the integrity check.
+
 ### P.22 — The Plaintext Backup Has No Historical Option (BY DESIGN, Batch E2)
 - **Where:** `downloadBackupPlaintext` uses `_gatherAllData()` directly; only `downloadBackup` (encrypted) offers the checkbox.
 - **Decision:** the encrypted download is the default and the intended complete-snapshot path; the plaintext export exists as an escape hatch, not as the archival format.
