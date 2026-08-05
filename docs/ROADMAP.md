@@ -286,6 +286,18 @@ Status: COMPLETE (2026-06-27)
 - [x] XLSX Export — SheetJS lazy-loaded, 5-sheet workbook (2026-07-02): Positions (with market value, P&L, P&L%), Transactions, Notes, Reviews, Framework. Auto-sized columns, async with error handling.
 - [x] Portfolio Summary PDF — jsPDF portfolio overview report (2026-07-02): Stratos branding, Portfolio Overview (value/cost/P&L/TWR/XIRR), Broker Accounts, Positions table (sorted by value), Allocation by Asset Type, Recent Transactions (last 20), Dividend Income breakdown with per-ticker stats.
 
+### Process & Docs Hygiene (2026-08-05, Cat 100)
+Four-agent process audit — is the handoff process defined, does the docs policy actually hold?
+- [x] **Handoff process defined** (CLAUDE.md § Session Status & Handoff) — one `memory/STATUS.md`, rewritten in place, five required sections. It had never been written down anywhere; each handoff reinvented its own format.
+- [x] **Unwritten-but-followed rules recorded** (CLAUDE.md § Shipping a Batch, § Git) — conventional prefixes, the `(vNN)` suffix, `APP_VERSION`+`sw.js` lockstep, schema→worker→frontend deploy order. Dropped "branch per major feature" (0 of 239 commits ever used it).
+- [x] **`docs/check.sh`** — 10 mechanical checks so the hand-maintained facts stop drifting. Fails closed.
+- [x] **DEPLOYMENT.md P0** — it prescribed the retired `X-Sync-Key` auth header, listed removed routes, and omitted the mandatory deploy ordering. Rewritten against the Worker source.
+- [ ] **CLAUDE.md counters** — 8 stale numbers (ADRs, tables, fixes, categories, lessons, line count, cache name, dev port). `check.sh` reports each.
+- [ ] **BUG-HISTORY integrity** — 4 categories with no summary row (12/13/34/61), 11 with no body section, 3 duplicate numbers, Fixed column off by 13 from the stated total.
+- [ ] **Orphaned `.txt` dumps** — ~16 open items live only in six one-off audit files in `docs/`, incl. "there is not a single automated test". Migrate to ROADMAP, then delete the dumps.
+- [ ] **Stale git worktree** at `.claude/worktrees/sleepy-jennings-5aafbd` (v37) shadows the real tree in searches.
+- [ ] **Memory consolidation** — 57 files / 13 KB index loaded every session; ~28 duplicate what the repo already records.
+
 ### External API Maintenance
 - [x] **FMP `/stable` migration** (2026-08-05, v55, Cat 98) — FMP retired the v3 path style and gated `limit>5` behind a paid plan, silently breaking 5 features (company financials, portfolio value/TWR history, SPY benchmark, dividend history, earnings calendar). Endpoints probed live against the account's own key, then migrated: `historical-price-eod/light`, `dividends`, `earnings-calendar`, `quote?symbol=`, statements capped at 5 years. Shape adapters accept both the new flat array and the legacy `{historical:[…]}` wrapper so pre-migration `api_cache` rows still parse. No worker change needed.
 

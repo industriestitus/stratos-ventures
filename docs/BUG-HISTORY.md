@@ -105,8 +105,15 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 97 | Backup Batch C — D1 cloud snapshots; QA found a CRITICAL function-name collision with the portfolio `deleteSnapshot` + 5 more | `d38500a` | 2026-08-05 | 6 | 0 |
 | 98 | FMP `/stable` migration — 5 broken endpoints restored (financials, portfolio history, benchmark, dividends, earnings); QA found a HIGH 24h cache-poisoning path + 7 more | `5a30b3e` | 2026-08-05 | 8 | 0 |
 | 99 | FMP live-browser verification — `earnings-calendar` ignores `symbol` and returned ANOTHER company's earnings (HTTP 200, wrong data) | `14bd3b6` | 2026-08-05 | 1 | 0 |
+| 100 | Process audit — handoff process defined, unwritten shipping rules recorded, `docs/check.sh` added; DEPLOYMENT.md P0 (retired `X-Sync-Key` auth, removed routes, missing deploy ordering); QA caught 4 new false statements + a `pipefail` bug that made the checker lie | `96cd04f` | 2026-08-05 | 8 | 0 |
 
-**Total: 528 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch; Cat 98 = 8 adversarial-QA fixes folded into the FMP /stable migration; Cat 99 = 1 wrong-data endpoint caught only by live-browser verification.)
+**Total: 536 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations.
+
+> ⚠️ **This total does not reconcile with the table above and is known-wrong.** Summing the Fixed
+> column (including the two `X` rows and the `5+3 QA`-style cells) gives **523**, a gap of 13.
+> Four categories (12, 13, 34, 61) have no row at all, and 24/33/34 appear twice in the body.
+> Reconciling this is its own batch; `docs/check.sh` fails on it until then, deliberately.
+ (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch; Cat 98 = 8 adversarial-QA fixes folded into the FMP /stable migration; Cat 99 = 1 wrong-data endpoint caught only by live-browser verification.)
 
 ---
 
@@ -1970,6 +1977,40 @@ Confirmed still working on this plan (so deliberately untouched): `profile`, `fi
 - Confirmed working end-to-end on the live account: `historical-price-eod/light` (1253 rows), the same with `from`/`to` (11 rows for a 2-week window), `dividends` (92 rows), and the `limit` clamp (asked for 10 → returned 5 years, HTTP 200).
 
 **Lesson (CODING-LESSONS #13):** an external-API migration is not verified until it has run against the live API. A 200 with the right *shape* can still be the wrong *data*.
+
+---
+
+## Category 100 — Process Audit: Undefined Handoff, Drifted Docs, a Wrong Deploy Guide (2026-08-05)
+
+**Found by a four-agent process audit** (docs freshness · docs usefulness · memory/handoff · process compliance), run against the written rules rather than the code. No app code changed; nothing deployed.
+
+**What the audit established, with evidence:**
+
+- **The handoff process was never defined.** `grep -i handoff` → zero hits in CLAUDE.md and all 13 `feedback_*` memories. The two existing handoffs shared no section heading, and supersession depended on a later session manually demoting the earlier file. `docs/CODING-LESSONS.md:488` already records a handoff as the *source* of a wrong instruction.
+- **Rules that are followed but written nowhere:** conventional commit prefixes, the `(vNN)` subject suffix, the `APP_VERSION` + `sw.js CACHE_NAME` lockstep, and the schema-before-worker-before-frontend deploy order. A fresh session could not know any of them.
+- **A dead rule:** "branch per major feature" — 0 of 239 commits ever followed it, `git log --merges` is empty. Removed rather than left as decoration.
+- **Every hand-maintained counter had drifted**, while the one rule with a visible feedback loop (APP_VERSION in the sidebar) held for 28/28 deploys. That asymmetry is the root cause and the reason for `docs/check.sh`.
+- **~16 open items were orphaned** in six one-off `.txt` dumps in `docs/`, including "there is not a single automated test". Tracked nowhere else since a single manual migration on 2026-07-04.
+
+**100.1 — `DEPLOYMENT.md` prescribed a retired auth header (P0).** §10 said *"All endpoints except `/health` require `X-Sync-Key`"* — fifteen lines after the same file marked that credential RETIRED (B3c). Reality is `X-Auth-Token` (`index.js:93`). Anyone following the guide would have built a client that 401s.
+
+**100.2 — Endpoint table listed removed routes and omitted the live ones.** `/sync/load` and `/sync/save` were retired in B3c; `/auth/*`, `/proxy/fmp`, `/proxy/finnhub`, `/api/purge`, `/sync/meta`, the natural-key DELETE and the generic `/api/<table>` CRUD surface were all missing.
+
+**100.3 — The mandatory deploy ordering was absent from the deploy guide.** BUG-HISTORY states it four times ("DDL BEFORE `wrangler deploy`", "worker FIRST, then frontend push"); DEPLOYMENT.md's pre-deploy checklist had only "D1 schema compatible". A push auto-deploys the frontend within a minute, so the omission is data-shaped, not cosmetic.
+
+**100.4 — `/api/migrate` documented without its 403 gate.** Since C3 it 403s on an encrypted account (`index.js:1128-1129`); the encrypted path is `/api/purge`. Also corrected the "wipes all D1 tables" claim: it clears the 9 `USER_DATA_CLEAR_TABLES` plus `app_settings` except `schema_version` — `checklist_templates`, `backups` and `backup_chunks` survive by design.
+
+**100.5 — Stale facts corrected:** 22 → 24 D1 tables, `stratos-v5` → `stratos-v56`, dev port 8765 → 8767, KV described as "legacy sync" → auth config + device tokens + `user_meta` + brute-force counters, `FMP_KEY`/`FINNHUB_KEY` marked required-now rather than required-eventually, the B3c sync-key retirement marked DONE instead of reading as pending.
+
+**100.6 — QA on this batch caught 4 NEW false statements I had just written:** `/auth/salt` documented as POST (it is GET, `index.js:284`); "all of `/auth/*` is unauthenticated" (only `salt`/`login`/`recover` are — `change`/`devices`/`revoke`/`dek` all call `authenticate()`); "migrate wipes all tables"; and the `/sync/load|save` removal attributed to B3b-2 instead of B3c. All four fixed before commit.
+
+**100.7 — `docs/check.sh` added** — 10 mechanical checks (version lockstep, CLAUDE.md counters vs measured reality, BUG-HISTORY table/body integrity and Fixed-column sum, CODING-LESSONS sync, the docs pass and `docs:`-commit purity, stray dumps, stray worktrees, secrets in tree **and in history**, STATUS.md shape). It fails closed: an unmatched pattern is a FAIL, because a claim that can no longer be located is indistinguishable from a wrong one.
+
+**100.8 — A `pipefail` defect in check.sh made it lie.** `producer | grep -q` SIGPIPEs the producer once grep exits at the first match, so the pipeline status is 141 and the match branch never runs. The secrets check reported "no key in git history" for a key that is demonstrably in three commits. Fixed by dropping `pipefail`; every check treats empty output as FAIL, so the failure mode stays closed. → CODING-LESSONS #14.
+
+**Still open after this batch** (deliberately, as the next batches): CLAUDE.md's 8 stale counters, the BUG-HISTORY table/body divergence below, the six orphaned `.txt` dumps, the stale worktree, and the memory consolidation. `docs/check.sh` reports each one, so none of them can be forgotten again.
+
+**⚠️ Peter's action, not a deploy:** the live FMP API key is present in this public repo's git history (`23f9c31`, `f2d6e5b`; `cfc0da6` removed it from the tree but not from history). **Rotate it at FMP, then `wrangler secret put FMP_KEY`.** `docs/check.sh` fails until the key in `.claude/settings.local.json` no longer appears in `git log --all -S`.
 
 ---
 

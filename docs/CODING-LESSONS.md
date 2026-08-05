@@ -529,6 +529,14 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 ---
 
+### 14. A Checker That Fails Open Is Worse Than No Checker — and `pipefail` + `grep -q` Makes One (Cat 100)
+
+**Pattern:** `docs/check.sh` was written with `set -uo pipefail`. Its secrets check ran `git log --all -S"$KEY" | grep -q .` and reported **"no key in git history"** for a key that is provably in three commits. Cause: `grep -q` exits at the first match, which SIGPIPEs `git`, so the pipeline's status is 141 — non-zero — and under `pipefail` the "found it" branch never runs. A separate defect in the same script searched the whole file instead of the summary table, which masked a missing category row behind an unrelated table; and a helper turned an unmatched regex into a non-fatal warning, so rewording a heading would have silently deleted a check while the script still exited 0.
+
+**Rule:** Verification code needs stricter review than the code it verifies, because a false green stops anyone from looking again. Two habits: (1) **fail closed** — an unmatched pattern, an unparsable cell or an empty capture is a FAIL, never a pass, since "I could not find the claim" is indistinguishable from "the claim is wrong"; (2) **test a checker against a known-bad input** and confirm it actually goes red. Avoid `producer | grep -q` under `pipefail` entirely — capture the output first, then test it.
+
+---
+
 ## Summary
 
 | Domain | Lessons | Bugs Found |
@@ -538,10 +546,10 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Data Safety | 8 | 34+ (Categories 15, 72, 82, 86) |
 | API & Caching | 7 | 40+ (Categories 5, 6, 21, 80, 98, 99) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
-| Process | 4 | 15+ (Categories 19-23) |
+| Process | 5 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 10 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 528+ bugs fixed, 41 lessons, 7 domains.
+**Total:** 536+ bugs fixed, 42 lessons, 7 domains.
 
 ## Related Documents
 
