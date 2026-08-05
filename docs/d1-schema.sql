@@ -427,3 +427,38 @@ CREATE TABLE api_cache (
     fetched_at   TEXT NOT NULL DEFAULT (datetime('now')),
     UNIQUE(company_id, data_source)
 );
+
+-- ============================================================
+-- 18. CLOUD SNAPSHOTS (Backup safety-net Batch C)
+-- ============================================================
+-- In-app rollback without a file: a full export, gzipped + AES-GCM encrypted with the
+-- account DEK, stored as base64 split across `backup_chunks` (D1 caps a row at 2MB and
+-- the worker caps a request body at 5MB, so a snapshot with note images must be chunked).
+-- `label` and `summary` are DEK-encrypted like every other sensitive TEXT column, so the
+-- picker can list snapshots without pulling the chunks.
+-- NOTE (data safety): these tables are deliberately NOT in the worker's
+-- USER_DATA_CLEAR_TABLES and hold no FK to companies — a C3b clear-and-restore purge must
+-- never destroy the snapshots you might need to roll back to.
+
+CREATE TABLE backups (
+    id          INTEGER PRIMARY KEY,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    label       TEXT,                                -- encrypted (enc:v1:…)
+    kind        TEXT NOT NULL DEFAULT 'manual',      -- 'manual' | 'auto'
+    app_version TEXT,
+    size_bytes  INTEGER NOT NULL DEFAULT 0,
+    chunk_count INTEGER NOT NULL DEFAULT 0,
+    summary     TEXT                                 -- encrypted JSON {companies,positions,tx,notes,reviews,exportedAt,hist}
+);
+
+CREATE INDEX idx_backups_created ON backups(created_at DESC);
+
+CREATE TABLE backup_chunks (
+    id        INTEGER PRIMARY KEY,
+    backup_id INTEGER NOT NULL REFERENCES backups(id) ON DELETE CASCADE,
+    seq       INTEGER NOT NULL,
+    data      TEXT NOT NULL,
+    UNIQUE(backup_id, seq)
+);
+
+CREATE INDEX idx_backup_chunks_backup ON backup_chunks(backup_id, seq);

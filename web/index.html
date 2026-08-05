@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v53';
+var APP_VERSION='v54';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1146,7 +1146,7 @@ var I18N={en:{
 'settings.install':'Install Stratos Ventures','settings.installHint':'Add to home screen for offline access and a native app experience','settings.apiKeysNote':'FMP and Finnhub API keys are stored securely on the Worker (server-side) — never in the browser or source code. Your device signs in with your master-password token.','settings.yahooWorker':'Yahoo Worker URL','settings.fmpKey':'FMP API Key','settings.finnhubKey':'Finnhub API Key','settings.keyServerSide':'🔒 Stored securely on the Worker','settings.syncKey':'Sync Key','settings.cloudSync':'Cloud Sync','settings.tokenAuthNote':'🔒 Authenticated by your master password',
 'mp.title':'Master Password','mp.setupHint':'Set one master password to sign in on any device — no sync key needed. Minimum 10 characters (letters and numbers are enough).','mp.status.checkFailed':'Could not reach the server to check status — try again','mp.choose':'Choose a master password','mp.confirm':'Confirm master password','mp.setup':'Set Master Password','mp.change':'Change Master Password','mp.current':'Current master password','mp.new':'New master password','mp.tooShort':'Password must be at least {n} characters','mp.allSame':'Password cannot be a single repeated character','mp.mismatch':'Passwords do not match','mp.setupOk':'Master password set. You can now sign in with it on any device.','mp.changeOk':'Master password changed.','mp.status.set':'✓ Master password is set up','mp.status.notSet':'Not set up yet','mp.status.notReady':'Set your Sync Key first (needed once to set up the master password)','mp.devices':'Signed-in Devices','mp.devicesHint':'Each device that signs in with the master password appears here. Revoke any you no longer use.','mp.thisDevice':'(this device)','mp.revoke':'Revoke','mp.revoked':'Device revoked','mp.noDevices':'No devices signed in yet','mp.needSetup':'Set up a master password first','mp.wrongCurrent':'Current password incorrect','mp.enterCurrent':'Enter your current master password','mp.loginPrompt':'Enter your master password to sign in','mp.signIn':'Sign In','mp.signingIn':'Signing in…','mp.loginFailed':'Sign-in failed','mp.sessionExpired':'Your session expired — please sign in again','mp.enc.title':'Data Encryption','mp.enc.checking':'Checking…','mp.enc.active':'✓ End-to-end encryption is active on this device','mp.enc.needLogin':'Encryption is set up — sign in again on this device to activate it','mp.enc.notSet':'Not set up yet — finish below to protect your data','mp.enc.setupHint':'Enter your master password to generate your data key and one-time recovery key.','mp.enc.enable':'Enable Encryption','mp.enc.nudge':'Finish encryption setup in Settings → Master Password to protect your data.','mp.enc.needKey':'Enter your master password to unlock your encrypted data on this device.','mp.enc.rkTitle':'Save your recovery key','mp.enc.rkBody':'This is the only way to recover your data if you forget your master password. Store it somewhere safe — it is shown only once.','mp.rec.forgot':'Forgot password? Use recovery key','mp.rec.title':'Enter your recovery key and a new master password','mp.rec.keyPlaceholder':'Recovery key (xxxx-xxxx-…)','mp.rec.newPassword':'New master password','mp.rec.reset':'Reset Password','mp.rec.resetting':'Resetting…','mp.rec.back':'Back to sign in','mp.rec.enterKey':'Enter your recovery key','mp.rec.invalidKey':'Invalid recovery key','mp.rec.noEnvelope':'No recovery key is set up for this account','mp.rec.done':'Password reset — signed in with your new password.','mp.rec.resetSignIn':'Password reset — sign in with your new password.','mp.rec.failed':'Reset failed','mp.mig.title':'Encrypt Existing Cloud Data','mp.mig.hint':'Data saved before encryption was enabled may still be stored unencrypted in the cloud. Scan is read-only; Encrypt rewrites those rows in place.','mp.mig.scan':'Scan Cloud Data','mp.mig.scanning':'Scanning cloud data…','mp.mig.clean':'✓ All cloud data is encrypted — nothing to migrate','mp.mig.found':'{fields} unencrypted fields in {rows} rows • {dups} duplicate note rows to clean up','mp.mig.run':'Encrypt Existing Data','mp.mig.running':'Encrypting: {table}…','mp.mig.confirmTitle':'Encrypt existing cloud data?','mp.mig.confirmMsg':'Back up your database first — this rewrites cloud rows in place. Close the app on other devices and don\'t edit data while it runs. Orphaned duplicate note rows will also be removed.','mp.mig.confirmOk':'Encrypt Now','mp.mig.done':'✓ Done — {fields} fields in {rows} rows encrypted, {dups} duplicate rows removed','mp.mig.partial':'{fields} fields / {dups} duplicate rows still remain — run Scan again or check the console','mp.mig.failed':'Migration failed — rows are rewritten in place so existing data is safe; run Scan again','mp.mig.busy':'A cloud save is in progress — wait a few seconds and try again','mp.mig.needD1':'Cloud database (D1) mode is required','settings.syncNow':'Sync Now','settings.encNotEnabled':'Encryption is not enabled. Your cloud data is stored in plaintext.','settings.enableEnc':'Enable Encryption','settings.encEnabled':'Encryption is enabled. Cloud data is encrypted with AES-256-GCM.','settings.currentPassword':'Current Password','settings.newPassword':'New Password','settings.changePassword':'Change Password','settings.baseCurrency':'Base Currency','settings.exchangeRates':'Exchange Rates','settings.notFetched':'Not fetched','settings.refreshRates':'Refresh Rates','settings.d1':'Cloud Database (D1)','settings.d1Hint':'Migrate your data from browser storage to Cloudflare D1 for cross-device access.','settings.migrateD1':'Migrate to Cloud Database','settings.d1Connected':'Connected to D1 — all data is stored in your Cloudflare D1 database.','settings.backupHint':'Backup downloads an encrypted snapshot (you set a passphrase). Restore REPLACES all data. A plaintext backup is available but unencrypted — handle with care.','settings.downloadBackup':'🔒 Download Backup','settings.restoreBackup':'⚠ Restore from Backup','settings.importHint':'Import MERGES data without replacing. Export saves individual data types.','settings.importJSON':'Import JSON','settings.exportCSV':'Export CSV','settings.exportXLSX':'Export XLSX','settings.exportMarkdown':'Export Markdown','settings.exportPortfolioPDF':'Portfolio PDF','settings.darkMode':'Dark Mode','settings.lightMode':'Light Mode','settings.autoMode':'Auto',
 'modal.exportData':'Export Data','modal.importData':'Import Data','modal.pasteJSON':'Paste JSON data here...','modal.loadFile':'Load File','modal.downloadJSON':'Download JSON','modal.removeCompany':'Remove Company','modal.archive':'Archive — keep all data','modal.deletePermanently':'Delete permanently',
-'toast.imported':'{count} data section(s) imported','toast.backupDownloaded':'Backup downloaded','toast.encBackupDownloaded':'Encrypted backup downloaded','settings.downloadBackupPlain':'🔓 Plaintext backup','backup.encPromptTitle':'Encrypt backup','backup.encPromptMsg':'Choose a passphrase to encrypt this backup (at least 10 characters). You will need this exact passphrase to restore it — store it safely. A lost passphrase means the backup cannot be recovered.','backup.passPlaceholder':'Backup passphrase','backup.passConfirmPlaceholder':'Confirm passphrase','backup.encrypt':'Encrypt & Download','backup.decPromptTitle':'Restore encrypted backup','backup.decPromptMsg':'Enter the passphrase for this backup to decrypt and restore it.','backup.decrypt':'Decrypt & Restore','backup.wrongPass':'Wrong passphrase or corrupt file — could not decrypt. Your data is untouched.','backup.plainWarnTitle':'Unencrypted backup','backup.plainWarnMsg':'This file will contain ALL your data in cleartext — theses, notes, positions, amounts. Anyone who gets the file can read it. Only use this if you understand the risk.','backup.plainWarnOk':'Download unencrypted','backup.preRestoreTitle':'Safety backup before restore','backup.preRestoreMsg':'Choose a passphrase to encrypt a safety backup of your CURRENT data before it is replaced. Cancel to skip.','backup.preRestoreSaved':'Safety backup of your current data downloaded — keep it until the restore looks right.','backup.preRestoreSavedReuse':'Safety backup of your current data downloaded — encrypted with the passphrase you just entered. Keep it until the restore looks right.','settings.verifyBackup':'Verify backup','backup.verifyPassMsg':'Enter the passphrase to check this backup — it will NOT be restored.','backup.verify':'Verify','backup.verifyResultTitle':'Backup contents','backup.verifyEncOk':'Encrypted backup — decrypts correctly.','backup.lastBackupNever':'No backup yet — download one to be safe.','backup.lastBackupToday':'Last backup: today.','backup.lastBackupDay':'Last backup: 1 day ago.','backup.lastBackupDays':'Last backup: {days} days ago.','backup.lastBackupStaleNudge':'Consider downloading a fresh one.','settings.exportArchive':'📄 Archive (HTML)','toast.archiveExported':'Archive downloaded (HTML) — opens in any browser','toast.archiveFailed':'Archive export failed: {err}','export.warnTitle':'Unencrypted export','export.warnMsg':'This file will contain your data in cleartext — theses, notes, positions, amounts. Anyone who gets the file can read it. Continue?','export.warnOk':'Export','backup.includeHistorical':'Include historical data','backup.includeHistoricalHint':'Historical charts, insider transactions and dividend history. Makes the backup a complete offline snapshot that works even when the APIs are down — but the file gets considerably larger.','toast.gatheringHistorical':'Collecting historical data…','toast.historicalGatherFailed':'Could not read the historical data — the backup was created without it.','toast.historicalNothingCached':'No cached historical data found — the backup was created without it. Open a few company profiles (or sign in again) and retry.','toast.encBackupDownloadedHist':'Encrypted backup downloaded — including historical data for {n} companies','toast.historicalRestored':'Historical data restored ({n} records)','toast.historicalRestoreFailed':'Historical data could NOT be restored — open the companies once to refetch it from the APIs.','toast.backupBusy':'A backup is already being created — please wait.','toast.backupTooBigToRestore':'Careful: this backup is {mb} MB, above the 50 MB restore limit. Download one without historical data as well.','export.warnMsgChart':'This image may contain personal financial data (allocation, net worth, amounts). Anyone who gets the file can see it. Continue?','confirm.backupHistNote':'Includes historical data for {n} companies.','confirm.backupRestoreSummary':'This backup contains: {companies} companies, {positions} positions, {tx} transactions, {notes} notes, {reviews} reviews — dated {dated}.','toast.staleRestoreRefresh':'Restored backup is {days} days old — refreshing market data from the APIs…','toast.backupFailed':'Backup failed: {err}','toast.invalidJSON':'Invalid JSON data.','toast.noImportable':'No importable data found in file.','toast.newerVersion':'This backup was created by a newer app version (v{v}). Please update the app first.','toast.invalidBackup':'Invalid backup file — no version field','toast.restoredLocal':'Restored locally but D1 sync failed','sync.finishingRestore':'Finishing restore…','toast.c3bRecovered':'Restore finished on reconnect — your data is synced.','toast.c3bRecoverFailed':'Re-sync is still incomplete — your data is safe locally and will retry on the next reload.','toast.backupRestored':'Backup restored successfully!','toast.restoreFailed':'Restore failed — original data preserved: {err}','toast.restoreError':'Restore failed: {err}','toast.cannotReadFile':'Could not read file','toast.newerData':'Your data was saved by a newer app version. Please update to avoid issues.','toast.noTicker':'No ticker specified','toast.companyNotFound':'Company not found: {ticker}','toast.pageNotFound':'Page not found: #{hash}','toast.storageSaveError':'Storage full — could not save {type}','toast.saved':'Saved','toast.yearExists':'Year {yr} already exists',
+'toast.imported':'{count} data section(s) imported','toast.backupDownloaded':'Backup downloaded','toast.encBackupDownloaded':'Encrypted backup downloaded','settings.downloadBackupPlain':'🔓 Plaintext backup','backup.encPromptTitle':'Encrypt backup','backup.encPromptMsg':'Choose a passphrase to encrypt this backup (at least 10 characters). You will need this exact passphrase to restore it — store it safely. A lost passphrase means the backup cannot be recovered.','backup.passPlaceholder':'Backup passphrase','backup.passConfirmPlaceholder':'Confirm passphrase','backup.encrypt':'Encrypt & Download','backup.decPromptTitle':'Restore encrypted backup','backup.decPromptMsg':'Enter the passphrase for this backup to decrypt and restore it.','backup.decrypt':'Decrypt & Restore','backup.wrongPass':'Wrong passphrase or corrupt file — could not decrypt. Your data is untouched.','backup.plainWarnTitle':'Unencrypted backup','backup.plainWarnMsg':'This file will contain ALL your data in cleartext — theses, notes, positions, amounts. Anyone who gets the file can read it. Only use this if you understand the risk.','backup.plainWarnOk':'Download unencrypted','backup.preRestoreTitle':'Safety backup before restore','backup.preRestoreMsg':'Choose a passphrase to encrypt a safety backup of your CURRENT data before it is replaced. Cancel to skip.','backup.preRestoreSaved':'Safety backup of your current data downloaded — keep it until the restore looks right.','backup.preRestoreSavedReuse':'Safety backup of your current data downloaded — encrypted with the passphrase you just entered. Keep it until the restore looks right.','settings.verifyBackup':'Verify backup','backup.verifyPassMsg':'Enter the passphrase to check this backup — it will NOT be restored.','backup.verify':'Verify','backup.verifyResultTitle':'Backup contents','backup.verifyEncOk':'Encrypted backup — decrypts correctly.','backup.lastBackupNever':'No backup yet — download one to be safe.','backup.lastBackupToday':'Last backup: today.','backup.lastBackupDay':'Last backup: 1 day ago.','backup.lastBackupDays':'Last backup: {days} days ago.','backup.lastBackupStaleNudge':'Consider downloading a fresh one.','settings.exportArchive':'📄 Archive (HTML)','toast.archiveExported':'Archive downloaded (HTML) — opens in any browser','toast.archiveFailed':'Archive export failed: {err}','export.warnTitle':'Unencrypted export','export.warnMsg':'This file will contain your data in cleartext — theses, notes, positions, amounts. Anyone who gets the file can read it. Continue?','export.warnOk':'Export','backup.includeHistorical':'Include historical data','backup.includeHistoricalHint':'Historical charts, insider transactions and dividend history. Makes the backup a complete offline snapshot that works even when the APIs are down — but the file gets considerably larger.','toast.gatheringHistorical':'Collecting historical data…','toast.historicalGatherFailed':'Could not read the historical data — the backup was created without it.','toast.historicalNothingCached':'No cached historical data found — the backup was created without it. Open a few company profiles (or sign in again) and retry.','toast.encBackupDownloadedHist':'Encrypted backup downloaded — including historical data for {n} companies','toast.historicalRestored':'Historical data restored ({n} records)','toast.historicalRestoreFailed':'Historical data could NOT be restored — open the companies once to refetch it from the APIs.','toast.backupBusy':'A backup is already being created — please wait.','toast.backupTooBigToRestore':'Careful: this backup is {mb} MB, above the 50 MB restore limit. Download one without historical data as well.','export.warnMsgChart':'This image may contain personal financial data (allocation, net worth, amounts). Anyone who gets the file can see it. Continue?','settings.snapshots':'Cloud snapshots','settings.cloudSnapshotNow':'📸 Snapshot now','settings.snapHint':'An encrypted copy of all your data, stored in your own cloud database — one click to roll back, no file needed. One is taken automatically at the start of each month; the last 12 are kept. This does NOT replace the downloaded backup: a snapshot lives in the same database as your data.','settings.snapEmpty':'No snapshots yet.','settings.snapNotReady':'Snapshots need cloud sync and an unlocked account.','settings.snapListFailed':'Could not load the snapshots.','settings.snapAuto':'Automatic','settings.snapManual':'Manual','settings.snapRestore':'⚠ Restore','settings.snapMeta':'{companies} companies · {positions} positions · {notes} notes','settings.snapAutoLabel':'Automatic monthly snapshot {month}','toast.snapCreated':'Snapshot created ({size}) — restorable from Settings','toast.snapFailed':'Snapshot failed: {err}','toast.snapNotReady':'A snapshot needs cloud sync and an unlocked account (master password).','toast.snapDeleted':'Snapshot deleted','toast.snapDeleteFailed':'Could not delete the snapshot: {err}','toast.snapLoading':'Loading snapshot…','toast.snapReadFailed':'Could not read the snapshot: {err}. Nothing was changed.','confirm.snapDeleteTitle':'Delete snapshot','confirm.snapDeleteMsg':'This snapshot will be permanently deleted. Your current data is not affected.','confirm.restoreSource':'Source: snapshot from {src}.','confirm.backupHistNote':'Includes historical data for {n} companies.','confirm.backupRestoreSummary':'This backup contains: {companies} companies, {positions} positions, {tx} transactions, {notes} notes, {reviews} reviews — dated {dated}.','toast.staleRestoreRefresh':'Restored backup is {days} days old — refreshing market data from the APIs…','toast.backupFailed':'Backup failed: {err}','toast.invalidJSON':'Invalid JSON data.','toast.noImportable':'No importable data found in file.','toast.newerVersion':'This backup was created by a newer app version (v{v}). Please update the app first.','toast.invalidBackup':'Invalid backup file — no version field','toast.restoredLocal':'Restored locally but D1 sync failed','sync.finishingRestore':'Finishing restore…','toast.c3bRecovered':'Restore finished on reconnect — your data is synced.','toast.c3bRecoverFailed':'Re-sync is still incomplete — your data is safe locally and will retry on the next reload.','toast.backupRestored':'Backup restored successfully!','toast.restoreFailed':'Restore failed — original data preserved: {err}','toast.restoreError':'Restore failed: {err}','toast.cannotReadFile':'Could not read file','toast.newerData':'Your data was saved by a newer app version. Please update to avoid issues.','toast.noTicker':'No ticker specified','toast.companyNotFound':'Company not found: {ticker}','toast.pageNotFound':'Page not found: #{hash}','toast.storageSaveError':'Storage full — could not save {type}','toast.saved':'Saved','toast.yearExists':'Year {yr} already exists',
 'toast.dateReq':'Date is required','toast.contentReq':'Content is required','toast.excerptReq':'Excerpt or comment is required','toast.tickerReq':'Ticker / identifier is required','toast.tickerIsStock':'"{ticker}" is already a tracked stock — use a distinct identifier for this cash/real-estate/bond position (e.g. append -BOND).','toast.tickerIsNonStock':'"{ticker}" is already used by a cash/real-estate/bond position — use a distinct ticker for this stock.','toast.accountReq':'Select a valid account','toast.priceReq':'Enter purchase price or current value','toast.cashAmountReq':'Enter a cash amount','toast.sharesReq':'Enter a valid number of shares/units','toast.avgCostReq':'Enter a valid average cost','toast.sharesOrAvg':'Enter shares or average cost','toast.dateReqTx':'Date is required','toast.dateFutureTx':'Date cannot be in the future','toast.tickerReqTx':'Ticker is required','toast.accountReqTx':'Select an account','toast.amountReqTx':'Enter a valid total amount','toast.sharesReqTx':'Enter a valid number of shares',
 'comp.returnDriversHint':'Fill in the return drivers above, or set them in Checklist → Buy/Sell Decision.','comp.sizingHint':'Set Expected CAGR in the checklist (Buy/Sell Decision) to see position sizing.','comp.convictionHint':'No conviction data yet. Set conviction level in the Psychology checklist or Quarterly Follow-up.','comp.neverReviewed':'Never reviewed','comp.reviewAgo':'Review: {d}d ago',
 'comp.noRevenueData':'No revenue data — load company data first.','comp.probWarning':'Probabilities sum to {pct}% — should be 100%','comp.noValSnapshots':'No snapshots yet. Click "Save Snapshot" to record current valuations.','comp.openCalculator':'Open Full Calculator (DCF tables, charts, sensitivity)','comp.saveSnapshot':'Save Snapshot',
@@ -1217,7 +1217,7 @@ var I18N={en:{
 'settings.install':'Stratos Ventures telepítése','settings.installHint':'Telepítsd az asztalra offline hozzáféréshez és natív alkalmazás élményhez','settings.apiKeysNote':'Az FMP és Finnhub API kulcsok biztonságosan a Workeren (szerver-oldalon) vannak tárolva — soha nem a böngészőben vagy a forráskódban. Az eszközöd a mesterjelszó-tokennel jelentkezik be.','settings.yahooWorker':'Yahoo Worker URL','settings.fmpKey':'FMP API kulcs','settings.finnhubKey':'Finnhub API kulcs','settings.keyServerSide':'🔒 Biztonságosan a Workeren tárolva','settings.syncKey':'Szinkronizálási kulcs','settings.cloudSync':'Felhő szinkronizáció','settings.tokenAuthNote':'🔒 A mesterjelszavaddal hitelesítve',
 'mp.title':'Mesterjelszó','mp.setupHint':'Állíts be egy mesterjelszót, amivel bármely eszközön beléphetsz — sync key nélkül. Minimum 10 karakter (a betű és szám elég).','mp.status.checkFailed':'Nem sikerült elérni a szervert az állapot ellenőrzéséhez — próbáld újra','mp.choose':'Válassz mesterjelszót','mp.confirm':'Mesterjelszó megerősítése','mp.setup':'Mesterjelszó beállítása','mp.change':'Mesterjelszó megváltoztatása','mp.current':'Jelenlegi mesterjelszó','mp.new':'Új mesterjelszó','mp.tooShort':'A jelszó legalább {n} karakter legyen','mp.allSame':'A jelszó nem állhat egyetlen ismételt karakterből','mp.mismatch':'A jelszavak nem egyeznek','mp.setupOk':'Mesterjelszó beállítva. Mostantól bármely eszközön beléphetsz vele.','mp.changeOk':'Mesterjelszó megváltoztatva.','mp.status.set':'✓ A mesterjelszó be van állítva','mp.status.notSet':'Még nincs beállítva','mp.status.notReady':'Előbb állítsd be a Sync Key-t (egyszer szükséges a mesterjelszó beállításához)','mp.devices':'Bejelentkezett eszközök','mp.devicesHint':'Minden eszköz, amely a mesterjelszóval belép, itt megjelenik. Vond vissza, amit már nem használsz.','mp.thisDevice':'(ez az eszköz)','mp.revoke':'Visszavonás','mp.revoked':'Eszköz visszavonva','mp.noDevices':'Még nincs bejelentkezett eszköz','mp.needSetup':'Előbb állíts be mesterjelszót','mp.wrongCurrent':'A jelenlegi jelszó helytelen','mp.enterCurrent':'Add meg a jelenlegi mesterjelszavad','mp.loginPrompt':'Add meg a mesterjelszavad a belépéshez','mp.signIn':'Belépés','mp.signingIn':'Belépés…','mp.loginFailed':'A belépés sikertelen','mp.sessionExpired':'A munkameneted lejárt — lépj be újra','mp.enc.title':'Adattitkosítás','mp.enc.checking':'Ellenőrzés…','mp.enc.active':'✓ A végpontok közötti titkosítás aktív ezen az eszközön','mp.enc.needLogin':'A titkosítás be van állítva — lépj be újra ezen az eszközön az aktiváláshoz','mp.enc.notSet':'Még nincs beállítva — fejezd be lent az adataid védelméhez','mp.enc.setupHint':'Add meg a mesterjelszavad az adatkulcs és az egyszer megjelenő helyreállítási kulcs létrehozásához.','mp.enc.enable':'Titkosítás engedélyezése','mp.enc.nudge':'Fejezd be a titkosítás beállítását: Beállítások → Mesterjelszó, az adataid védelméhez.','mp.enc.needKey':'Add meg a mesterjelszavad a titkosított adataid feloldásához ezen az eszközön.','mp.enc.rkTitle':'Mentsd el a helyreállítási kulcsod','mp.enc.rkBody':'Ez az egyetlen mód az adataid helyreállítására, ha elfelejted a mesterjelszavad. Tárold biztonságos helyen — csak egyszer jelenik meg.','mp.rec.forgot':'Elfelejtetted a jelszót? Használd a helyreállítási kulcsot','mp.rec.title':'Add meg a helyreállítási kulcsod és egy új mesterjelszót','mp.rec.keyPlaceholder':'Helyreállítási kulcs (xxxx-xxxx-…)','mp.rec.newPassword':'Új mesterjelszó','mp.rec.reset':'Jelszó visszaállítása','mp.rec.resetting':'Visszaállítás…','mp.rec.back':'Vissza a belépéshez','mp.rec.enterKey':'Add meg a helyreállítási kulcsod','mp.rec.invalidKey':'Érvénytelen helyreállítási kulcs','mp.rec.noEnvelope':'Ehhez a fiókhoz nincs helyreállítási kulcs beállítva','mp.rec.done':'Jelszó visszaállítva — beléptél az új jelszavaddal.','mp.rec.resetSignIn':'Jelszó visszaállítva — lépj be az új jelszavaddal.','mp.rec.failed':'A visszaállítás sikertelen','mp.mig.title':'Meglévő felhőadatok titkosítása','mp.mig.hint':'A titkosítás bekapcsolása előtt mentett adatok még titkosítatlanul lehetnek a felhőben. A keresés csak olvas; a titkosítás helyben írja át az érintett sorokat.','mp.mig.scan':'Felhőadatok átvizsgálása','mp.mig.scanning':'Felhőadatok vizsgálata…','mp.mig.clean':'✓ Minden felhőadat titkosítva — nincs teendő','mp.mig.found':'{fields} titkosítatlan mező {rows} sorban • {dups} duplikált jegyzetsor törölhető','mp.mig.run':'Meglévő adatok titkosítása','mp.mig.running':'Titkosítás: {table}…','mp.mig.confirmTitle':'Titkosítod a meglévő felhőadatokat?','mp.mig.confirmMsg':'Előbb készíts adatbázis-backupot — a művelet helyben írja át a felhő sorait. Zárd be az appot a többi eszközön, és futás közben ne szerkessz adatot. Az árva duplikált jegyzetsorok is törlődnek.','mp.mig.confirmOk':'Titkosítás most','mp.mig.done':'✓ Kész — {fields} mező {rows} sorban titkosítva, {dups} duplikált sor törölve','mp.mig.partial':'{fields} mező / {dups} duplikált sor még hátravan — futtasd újra a keresést, vagy nézd meg a konzolt','mp.mig.failed':'A migráció megszakadt — a sorok helyben íródnak át, a meglévő adat biztonságban van; futtasd újra a keresést','mp.mig.busy':'Felhőmentés van folyamatban — várj pár másodpercet, és próbáld újra','mp.mig.needD1':'Felhő adatbázis (D1) mód szükséges','settings.syncNow':'Szinkronizálás','settings.encNotEnabled':'Titkosítás nincs engedélyezve. A felhő adataid titkosítatlanul vannak tárolva.','settings.enableEnc':'Titkosítás engedélyezése','settings.encEnabled':'Titkosítás engedélyezve. A felhő adatok AES-256-GCM titkosítással vannak védve.','settings.currentPassword':'Jelenlegi jelszó','settings.newPassword':'Új jelszó','settings.changePassword':'Jelszó megváltoztatása','settings.baseCurrency':'Alap pénznem','settings.exchangeRates':'Árfolyamok','settings.notFetched':'Nem lekérve','settings.refreshRates':'Árfolyamok frissítése','settings.d1':'Felhő adatbázis (D1)','settings.d1Hint':'Migráld az adataidat a böngésző tárhelyéről Cloudflare D1-be az eszközök közötti hozzáféréshez.','settings.migrateD1':'Migráció felhő adatbázisba','settings.d1Connected':'Csatlakozva a D1-hez — minden adat a Cloudflare D1 adatbázisban van.','settings.backupHint':'A Backup titkosított pillanatfelvételt tölt le (te adsz meg jelszót). A visszaállítás FELÜLÍRJA az összes adatot. A plaintext backup elérhető, de titkosítatlan — óvatosan.','settings.downloadBackup':'🔒 Backup letöltése','settings.restoreBackup':'⚠ Visszaállítás backupból','settings.importHint':'Importálás ÖSSZEFŰZI az adatokat felülírás nélkül. Exportálás egyes adattípusokat ment.','settings.importJSON':'JSON importálás','settings.exportCSV':'CSV exportálás','settings.exportXLSX':'XLSX exportálás','settings.exportMarkdown':'Markdown exportálás','settings.exportPortfolioPDF':'Portfólió PDF','settings.darkMode':'Sötét mód','settings.lightMode':'Világos mód','settings.autoMode':'Automatikus',
 'modal.exportData':'Adatok exportálása','modal.importData':'Adatok importálása','modal.pasteJSON':'Illeszd be a JSON adatokat ide...','modal.loadFile':'Fájl betöltése','modal.downloadJSON':'JSON letöltése','modal.removeCompany':'Cég eltávolítása','modal.archive':'Archiválás — adatok megőrzése','modal.deletePermanently':'Végleges törlés',
-'toast.imported':'{count} adatszekció importálva','toast.backupDownloaded':'Backup letöltve','toast.encBackupDownloaded':'Titkosított backup letöltve','settings.downloadBackupPlain':'🔓 Plaintext backup','backup.encPromptTitle':'Backup titkosítása','backup.encPromptMsg':'Adj meg egy jelszót a backup titkosításához (legalább 10 karakter). Pontosan ezzel a jelszóval tudod majd visszaállítani — tárold biztonságos helyen. Elveszett jelszó = a backup nem állítható vissza.','backup.passPlaceholder':'Backup jelszó','backup.passConfirmPlaceholder':'Jelszó megerősítése','backup.encrypt':'Titkosítás és letöltés','backup.decPromptTitle':'Titkosított backup visszaállítása','backup.decPromptMsg':'Add meg a backup jelszavát a visszafejtéshez és visszaállításhoz.','backup.decrypt':'Visszafejtés és visszaállítás','backup.wrongPass':'Hibás jelszó vagy sérült fájl — nem sikerült visszafejteni. Az adataid érintetlenek.','backup.plainWarnTitle':'Titkosítatlan backup','backup.plainWarnMsg':'Ez a fájl MINDEN adatodat titkosítatlanul tartalmazza — tézisek, jegyzetek, pozíciók, összegek. Bárki elolvashatja, aki hozzáfér a fájlhoz. Csak akkor használd, ha tisztában vagy a kockázattal.','backup.plainWarnOk':'Letöltés titkosítatlanul','backup.preRestoreTitle':'Biztonsági backup a visszaállítás előtt','backup.preRestoreMsg':'Adj meg egy jelszót a JELENLEGI adataid biztonsági backupjához, mielőtt felülíródnak. Mégsem = kihagyás.','backup.preRestoreSaved':'A jelenlegi adataid biztonsági backupja letöltve — tartsd meg, amíg a visszaállítás rendben nincs.','backup.preRestoreSavedReuse':'A jelenlegi adataid biztonsági backupja letöltve — ugyanazzal a jelszóval titkosítva, amit az imént beírtál. Tartsd meg, amíg a visszaállítás rendben nincs.','settings.verifyBackup':'Backup ellenőrzése','backup.verifyPassMsg':'Add meg a jelszót a backup ellenőrzéséhez — NEM áll vissza semmi.','backup.verify':'Ellenőrzés','backup.verifyResultTitle':'Backup tartalma','backup.verifyEncOk':'Titkosított backup — sikeresen visszafejthető.','backup.lastBackupNever':'Még nincs backup — tölts le egyet a biztonság kedvéért.','backup.lastBackupToday':'Utolsó backup: ma.','backup.lastBackupDay':'Utolsó backup: 1 napja.','backup.lastBackupDays':'Utolsó backup: {days} napja.','backup.lastBackupStaleNudge':'Érdemes frisset letölteni.','settings.exportArchive':'📄 Archívum (HTML)','toast.archiveExported':'Archívum letöltve (HTML) — bármelyik böngészőben megnyitható','toast.archiveFailed':'Archívum export sikertelen: {err}','export.warnTitle':'Titkosítatlan export','export.warnMsg':'Ez a fájl titkosítatlanul tartalmazza az adataidat — tézisek, jegyzetek, pozíciók, összegek. Bárki elolvashatja, aki hozzáfér a fájlhoz. Folytatod?','export.warnOk':'Exportálás','backup.includeHistorical':'Historikus adatok is','backup.includeHistoricalHint':'Historikus grafikonok, bennfentes tranzakciók és osztalék-előzmények. Ezzel a backup teljes offline pillanatkép lesz, ami akkor is működik, ha az API-k nem elérhetők — cserébe a fájl jóval nagyobb.','toast.gatheringHistorical':'Historikus adatok összegyűjtése…','toast.historicalGatherFailed':'A historikus adatokat nem sikerült beolvasni — a backup nélkülük készült el.','toast.historicalNothingCached':'Nem található cache-elt historikus adat — a backup nélkülük készült el. Nyiss meg pár cégprofilt (vagy jelentkezz be újra), és próbáld újra.','toast.encBackupDownloadedHist':'Titkosított backup letöltve — {n} cég historikus adataival','toast.historicalRestored':'Historikus adatok visszaállítva ({n} rekord)','toast.historicalRestoreFailed':'A historikus adatokat NEM sikerült visszaállítani — nyisd meg egyszer a cégeket, hogy újratöltődjenek az API-król.','toast.backupBusy':'Már készül egy backup — várj egy kicsit.','toast.backupTooBigToRestore':'Figyelem: ez a backup {mb} MB, ami túllépi az 50 MB-os visszaállítási limitet. Tölts le egyet historikus adatok nélkül is.','export.warnMsgChart':'Ez a kép személyes pénzügyi adatokat tartalmazhat (allokáció, nettó vagyon, összegek). Bárki láthatja, aki hozzáfér a fájlhoz. Folytatod?','confirm.backupHistNote':'Tartalmazza {n} cég historikus adatait.','confirm.backupRestoreSummary':'A backup tartalma: {companies} cég, {positions} pozíció, {tx} tranzakció, {notes} jegyzet, {reviews} review — dátum: {dated}.','toast.staleRestoreRefresh':'A visszaállított backup {days} napos — piaci adatok frissítése az API-król…','toast.backupFailed':'Backup sikertelen: {err}','toast.invalidJSON':'Érvénytelen JSON adat.','toast.noImportable':'Nem található importálható adat a fájlban.','toast.newerVersion':'Ezt a backupot újabb alkalmazás verzió készítette (v{v}). Kérlek frissítsd az appot.','toast.invalidBackup':'Érvénytelen backup fájl — nincs verzió mező','toast.restoredLocal':'Helyben visszaállítva, de D1 szinkronizálás sikertelen','sync.finishingRestore':'Visszaállítás befejezése…','toast.c3bRecovered':'A visszaállítás befejeződött újracsatlakozáskor — az adataid szinkronizálva.','toast.c3bRecoverFailed':'Az újraszinkronizálás még hiányos — az adataid helyben biztonságban vannak, és a következő betöltéskor újrapróbálja.','toast.backupRestored':'Backup sikeresen visszaállítva!','toast.restoreFailed':'Visszaállítás sikertelen — eredeti adatok megőrizve: {err}','toast.restoreError':'Visszaállítás sikertelen: {err}','toast.cannotReadFile':'Fájl olvasása sikertelen','toast.newerData':'Az adataidat újabb alkalmazás verzió mentette. Frissíts a problémák elkerülése érdekében.','toast.noTicker':'Nincs megadva ticker','toast.companyNotFound':'Cég nem található: {ticker}','toast.pageNotFound':'Oldal nem található: #{hash}','toast.storageSaveError':'Tárhely megtelt — nem sikerült menteni: {type}','toast.saved':'Mentve','toast.yearExists':'{yr} év már létezik',
+'toast.imported':'{count} adatszekció importálva','toast.backupDownloaded':'Backup letöltve','toast.encBackupDownloaded':'Titkosított backup letöltve','settings.downloadBackupPlain':'🔓 Plaintext backup','backup.encPromptTitle':'Backup titkosítása','backup.encPromptMsg':'Adj meg egy jelszót a backup titkosításához (legalább 10 karakter). Pontosan ezzel a jelszóval tudod majd visszaállítani — tárold biztonságos helyen. Elveszett jelszó = a backup nem állítható vissza.','backup.passPlaceholder':'Backup jelszó','backup.passConfirmPlaceholder':'Jelszó megerősítése','backup.encrypt':'Titkosítás és letöltés','backup.decPromptTitle':'Titkosított backup visszaállítása','backup.decPromptMsg':'Add meg a backup jelszavát a visszafejtéshez és visszaállításhoz.','backup.decrypt':'Visszafejtés és visszaállítás','backup.wrongPass':'Hibás jelszó vagy sérült fájl — nem sikerült visszafejteni. Az adataid érintetlenek.','backup.plainWarnTitle':'Titkosítatlan backup','backup.plainWarnMsg':'Ez a fájl MINDEN adatodat titkosítatlanul tartalmazza — tézisek, jegyzetek, pozíciók, összegek. Bárki elolvashatja, aki hozzáfér a fájlhoz. Csak akkor használd, ha tisztában vagy a kockázattal.','backup.plainWarnOk':'Letöltés titkosítatlanul','backup.preRestoreTitle':'Biztonsági backup a visszaállítás előtt','backup.preRestoreMsg':'Adj meg egy jelszót a JELENLEGI adataid biztonsági backupjához, mielőtt felülíródnak. Mégsem = kihagyás.','backup.preRestoreSaved':'A jelenlegi adataid biztonsági backupja letöltve — tartsd meg, amíg a visszaállítás rendben nincs.','backup.preRestoreSavedReuse':'A jelenlegi adataid biztonsági backupja letöltve — ugyanazzal a jelszóval titkosítva, amit az imént beírtál. Tartsd meg, amíg a visszaállítás rendben nincs.','settings.verifyBackup':'Backup ellenőrzése','backup.verifyPassMsg':'Add meg a jelszót a backup ellenőrzéséhez — NEM áll vissza semmi.','backup.verify':'Ellenőrzés','backup.verifyResultTitle':'Backup tartalma','backup.verifyEncOk':'Titkosított backup — sikeresen visszafejthető.','backup.lastBackupNever':'Még nincs backup — tölts le egyet a biztonság kedvéért.','backup.lastBackupToday':'Utolsó backup: ma.','backup.lastBackupDay':'Utolsó backup: 1 napja.','backup.lastBackupDays':'Utolsó backup: {days} napja.','backup.lastBackupStaleNudge':'Érdemes frisset letölteni.','settings.exportArchive':'📄 Archívum (HTML)','toast.archiveExported':'Archívum letöltve (HTML) — bármelyik böngészőben megnyitható','toast.archiveFailed':'Archívum export sikertelen: {err}','export.warnTitle':'Titkosítatlan export','export.warnMsg':'Ez a fájl titkosítatlanul tartalmazza az adataidat — tézisek, jegyzetek, pozíciók, összegek. Bárki elolvashatja, aki hozzáfér a fájlhoz. Folytatod?','export.warnOk':'Exportálás','backup.includeHistorical':'Historikus adatok is','backup.includeHistoricalHint':'Historikus grafikonok, bennfentes tranzakciók és osztalék-előzmények. Ezzel a backup teljes offline pillanatkép lesz, ami akkor is működik, ha az API-k nem elérhetők — cserébe a fájl jóval nagyobb.','toast.gatheringHistorical':'Historikus adatok összegyűjtése…','toast.historicalGatherFailed':'A historikus adatokat nem sikerült beolvasni — a backup nélkülük készült el.','toast.historicalNothingCached':'Nem található cache-elt historikus adat — a backup nélkülük készült el. Nyiss meg pár cégprofilt (vagy jelentkezz be újra), és próbáld újra.','toast.encBackupDownloadedHist':'Titkosított backup letöltve — {n} cég historikus adataival','toast.historicalRestored':'Historikus adatok visszaállítva ({n} rekord)','toast.historicalRestoreFailed':'A historikus adatokat NEM sikerült visszaállítani — nyisd meg egyszer a cégeket, hogy újratöltődjenek az API-król.','toast.backupBusy':'Már készül egy backup — várj egy kicsit.','toast.backupTooBigToRestore':'Figyelem: ez a backup {mb} MB, ami túllépi az 50 MB-os visszaállítási limitet. Tölts le egyet historikus adatok nélkül is.','export.warnMsgChart':'Ez a kép személyes pénzügyi adatokat tartalmazhat (allokáció, nettó vagyon, összegek). Bárki láthatja, aki hozzáfér a fájlhoz. Folytatod?','settings.snapshots':'Felhő snapshotok','settings.cloudSnapshotNow':'📸 Snapshot most','settings.snapHint':'Az összes adatod titkosított másolata a saját felhő-adatbázisodban — egy kattintás a visszaállítás, fájl nélkül. Minden hónap elején automatikusan készül egy; az utolsó 12 marad meg. Ez NEM helyettesíti a letöltött backupot: a snapshot ugyanabban az adatbázisban van, mint az adataid.','settings.snapEmpty':'Még nincs snapshot.','settings.snapNotReady':'A snapshothoz felhő-szinkron és feloldott fiók kell.','settings.snapListFailed':'A snapshotokat nem sikerült betölteni.','settings.snapAuto':'Automatikus','settings.snapManual':'Kézi','settings.snapRestore':'⚠ Visszaállítás','settings.snapMeta':'{companies} cég · {positions} pozíció · {notes} jegyzet','settings.snapAutoLabel':'Automatikus havi snapshot {month}','toast.snapCreated':'Snapshot elkészült ({size}) — a Beállításokból visszaállítható','toast.snapFailed':'A snapshot nem sikerült: {err}','toast.snapNotReady':'A snapshothoz felhő-szinkron és feloldott fiók kell (mesterjelszó).','toast.snapDeleted':'Snapshot törölve','toast.snapDeleteFailed':'A snapshotot nem sikerült törölni: {err}','toast.snapLoading':'Snapshot betöltése…','toast.snapReadFailed':'A snapshotot nem sikerült beolvasni: {err}. Semmi nem változott.','confirm.snapDeleteTitle':'Snapshot törlése','confirm.snapDeleteMsg':'Ez a snapshot véglegesen törlődik. A jelenlegi adataidat ez nem érinti.','confirm.restoreSource':'Forrás: snapshot innen: {src}.','confirm.backupHistNote':'Tartalmazza {n} cég historikus adatait.','confirm.backupRestoreSummary':'A backup tartalma: {companies} cég, {positions} pozíció, {tx} tranzakció, {notes} jegyzet, {reviews} review — dátum: {dated}.','toast.staleRestoreRefresh':'A visszaállított backup {days} napos — piaci adatok frissítése az API-król…','toast.backupFailed':'Backup sikertelen: {err}','toast.invalidJSON':'Érvénytelen JSON adat.','toast.noImportable':'Nem található importálható adat a fájlban.','toast.newerVersion':'Ezt a backupot újabb alkalmazás verzió készítette (v{v}). Kérlek frissítsd az appot.','toast.invalidBackup':'Érvénytelen backup fájl — nincs verzió mező','toast.restoredLocal':'Helyben visszaállítva, de D1 szinkronizálás sikertelen','sync.finishingRestore':'Visszaállítás befejezése…','toast.c3bRecovered':'A visszaállítás befejeződött újracsatlakozáskor — az adataid szinkronizálva.','toast.c3bRecoverFailed':'Az újraszinkronizálás még hiányos — az adataid helyben biztonságban vannak, és a következő betöltéskor újrapróbálja.','toast.backupRestored':'Backup sikeresen visszaállítva!','toast.restoreFailed':'Visszaállítás sikertelen — eredeti adatok megőrizve: {err}','toast.restoreError':'Visszaállítás sikertelen: {err}','toast.cannotReadFile':'Fájl olvasása sikertelen','toast.newerData':'Az adataidat újabb alkalmazás verzió mentette. Frissíts a problémák elkerülése érdekében.','toast.noTicker':'Nincs megadva ticker','toast.companyNotFound':'Cég nem található: {ticker}','toast.pageNotFound':'Oldal nem található: #{hash}','toast.storageSaveError':'Tárhely megtelt — nem sikerült menteni: {type}','toast.saved':'Mentve','toast.yearExists':'{yr} év már létezik',
 'toast.dateReq':'Dátum kötelező','toast.contentReq':'Tartalom kötelező','toast.excerptReq':'Kivonat vagy megjegyzés kötelező','toast.tickerReq':'Ticker / azonosító kötelező','toast.tickerIsStock':'"{ticker}" már egy követett részvény — használj külön azonosítót ehhez a készpénz/ingatlan/kötvény pozícióhoz (pl. told meg -BOND-dal).','toast.tickerIsNonStock':'"{ticker}" már egy készpénz/ingatlan/kötvény pozícióhoz használt — használj külön tickert ehhez a részvényhez.','toast.accountReq':'Válassz érvényes számlát','toast.priceReq':'Vételár vagy jelenlegi érték kötelező','toast.cashAmountReq':'Add meg a készpénz összeget','toast.sharesReq':'Érvényes darabszám szükséges','toast.avgCostReq':'Érvényes átlagár szükséges','toast.sharesOrAvg':'Adj meg darabszámot vagy átlagárat','toast.dateReqTx':'Dátum kötelező','toast.dateFutureTx':'A dátum nem lehet jövőbeli','toast.tickerReqTx':'Ticker kötelező','toast.accountReqTx':'Válassz egy számlát','toast.amountReqTx':'Érvényes összeg szükséges','toast.sharesReqTx':'Érvényes darabszám szükséges',
 'comp.returnDriversHint':'Töltsd ki a hozam driver-eket fent, vagy állítsd be a Checklist → Vételi/Eladási döntésnél.','comp.sizingHint':'Állítsd be az elvárt CAGR-t a checklistben (Vételi/Eladási döntés) a pozícióméretezés megtekintéséhez.','comp.convictionHint':'Még nincs meggyőződés adat. Állítsd be a meggyőződés szintjét a Pszichológia checklistben vagy a Negyedéves követésnél.','comp.neverReviewed':'Soha nem értékelt','comp.reviewAgo':'Értékelés: {d} napja',
 'comp.noRevenueData':'Nincs bevételi adat — töltsd be először a cég adatait.','comp.probWarning':'Valószínűségek összege {pct}% — 100% kellene','comp.noValSnapshots':'Még nincs pillanatfelvétel. Kattints a "Pillanatfelvétel mentése" gombra az aktuális értékelések rögzítéséhez.','comp.openCalculator':'Teljes kalkulátor megnyitása (DCF táblák, grafikonok, érzékenység)','comp.saveSnapshot':'Pillanatfelvétel mentése',
@@ -2278,6 +2278,14 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     <button class="btn btn-secondary" onclick="downloadBackupPlaintext()" data-i18n="settings.downloadBackupPlain" style="opacity:.75">🔓 Plaintext backup</button>
   </div>
   <div id="last-backup-indicator" style="font-size:11px;color:var(--text2);margin-bottom:16px"></div>
+  <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px">
+      <strong style="font-size:13px;color:var(--text)" data-i18n="settings.snapshots">Cloud snapshots</strong>
+      <button id="snap-now-btn" class="btn btn-secondary" style="padding:4px 12px;font-size:12px" onclick="cloudSnapshotNow()" data-i18n="settings.cloudSnapshotNow">📸 Snapshot now</button>
+    </div>
+    <p style="color:var(--text2);font-size:12px;margin-bottom:8px" data-i18n="settings.snapHint">An encrypted copy of all your data, stored in your own cloud database — one click to roll back, no file needed. One is taken automatically at the start of each month; the last 12 are kept. This does NOT replace the downloaded backup: a snapshot lives in the same database as your data.</p>
+    <div id="snapshot-list" style="padding-bottom:4px"></div>
+  </div>
   <div style="border-top:1px solid var(--border);padding-top:14px">
     <p style="color:var(--text2);font-size:12px;margin-bottom:10px" data-i18n="settings.importHint">Import MERGES data without replacing. Export saves individual data types.</p>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
@@ -4989,6 +4997,123 @@ async function _c3bClearAndRestore(){
   try{localStorage.removeItem('c3b_incomplete')}catch(e){}
 }
 
+// Apply an ALREADY-DECRYPTED backup object. Extracted from doRestore (Batch C) so the file
+// restore and the cloud-snapshot restore run the exact same, single, well-tested path — the
+// version checks, the typed confirm, the pre-restore safety backup, the localStorage+memory
+// rollback on failure and the C3b encrypted clear-and-restore all live here.
+// `restorePass` is reused for the pre-restore safety backup when the caller already has one
+// (encrypted FILE restore); pass null and the user is prompted once, skippably.
+// `srcLabel` names the source in the confirm dialog ("file" vs the snapshot's date).
+async function _applyRestore(d,restorePass,srcLabel){
+  if(!d.version){showToast(t('toast.invalidBackup'),'error');return}
+  if(d.version>SCHEMA_VERSION){showToast(t('toast.newerVersion',{v:d.version}),'error');return}
+  // Richer confirm: show what the file contains so a valid-but-WRONG backup is caught here.
+  if(!await showConfirm(t('confirm.backupRestore'),t('confirm.backupRestoreMsg')+' '+_backupSummary(d)+(srcLabel?' '+t('confirm.restoreSource',{src:srcLabel}):''),{okLabel:t('confirm.backupRestoreOk'),typeToConfirm:'RESTORE'}))return;
+  // Auto safety backup of the CURRENT data before anything is wiped (encrypted; reuses the
+  // restore passphrase when we have one, else prompts skippably). Best-effort — never aborts.
+  await _preRestoreSafetyBackup(restorePass);
+  // Session/auth/mode keys MUST survive a data restore — they are identity, not
+  // data. Wiping auth_token logs the device out mid-restore → every D1 save (incl.
+  // the C3b purge) throws "API not configured" and the cloud restore silently fails.
+  // dek_cache/enc_active keep the silent token boot + encryption working; d1_migrated
+  // keeps D1 mode; meta_version feeds /sync/meta. (Pre-existing bug since master-
+  // password auth landed — the keepKeys list predated it.)
+  const keepKeys=['auth_token','dek_cache','enc_active','d1_migrated','meta_version','enc_salt','enc_verify','enc_recovery','enc_skipped','schema_version','tracker_settings'];
+  const snapshot={};
+  Object.keys(localStorage).forEach(k=>{snapshot[k]=localStorage.getItem(k)});
+  const memSnapshot={tStocks:tStocks,researchNotes,pfAccounts,pfPositions,pfTransactions,pfSnapshots,pfExchangeRates,dbTodos,dbFiSettings,dbBenchmark,db52wHighs,divHistory,divSettings,fwData,rvData};
+  try{
+  const allKeys=Object.keys(localStorage);
+  allKeys.forEach(k=>{if(!keepKeys.includes(k))localStorage.removeItem(k)});
+  tStocks={};researchNotes={journal:[],news:[],market:[],_nextId:1};
+  pfAccounts=[];pfPositions=[];pfTransactions=[];pfSnapshots=[];
+  pfExchangeRates={baseCurrency:'HUF',rates:{},lastFetched:null};
+  dbTodos=[];dbFiSettings={targetAmount:500000,monthlyExpenses:2000,monthlySavings:1000};
+  dbBenchmark={ticker:'SPY',prices:[],fetchedAt:null};db52wHighs={};
+  divHistory={};divSettings={taxRate:15,forecastMonths:12,customTaxRates:{}};
+  fwData={principles:[],portfolioRules:[],idealTraits:[],avoidList:[],_nextId:1};
+  rvData={entries:[],_nextId:1};
+  if(d.current)loadData(d.current);
+  if(d.savedStocks)_putSavedStocks(d.savedStocks);
+  if(d.trackerStocks){tStocks=d.trackerStocks;saveTrackerStocks()}
+  if(d.researchNotes){researchNotes=d.researchNotes;saveResearchNotes()}
+  if(d.portfolioAccounts&&Array.isArray(d.portfolioAccounts)){pfAccounts=d.portfolioAccounts;savePortfolioAccounts()}
+  if(d.portfolioPositions&&Array.isArray(d.portfolioPositions)){pfPositions=d.portfolioPositions;savePortfolioPositions()}
+  if(d.portfolioTransactions&&Array.isArray(d.portfolioTransactions)){pfTransactions=d.portfolioTransactions;savePortfolioTransactions()}
+  if(d.portfolioSnapshots&&Array.isArray(d.portfolioSnapshots)){pfSnapshots=d.portfolioSnapshots;savePortfolioSnapshots()}
+  if(d.portfolioExchangeRates){pfExchangeRates=d.portfolioExchangeRates;saveExchangeRates()}
+  if(d.dashboardTodos&&Array.isArray(d.dashboardTodos)){dbTodos=d.dashboardTodos;saveDashTodos()}
+  if(d.dashboardFiSettings&&typeof d.dashboardFiSettings==='object'){dbFiSettings=d.dashboardFiSettings;saveDashFiSettings()}
+  if(d.dashboardBenchmark&&typeof d.dashboardBenchmark==='object'){dbBenchmark=d.dashboardBenchmark;saveDashBenchmark()}
+  if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs()}
+  if(d.dividendHistory&&typeof d.dividendHistory==='object'){divHistory=d.dividendHistory;saveDividendHistory()}
+  if(d.dividendSettings&&typeof d.dividendSettings==='object'){divSettings=d.dividendSettings;saveDivSettings()}
+  if(d.frameworkData&&typeof d.frameworkData==='object'){fwData=d.frameworkData;fwData._nextId=Math.max(fwData._nextId||0,...(fwData.principles||[]).map(x=>x.id||0),...(fwData.portfolioRules||[]).map(x=>x.id||0),...(fwData.idealTraits||[]).map(x=>x.id||0),...(fwData.avoidList||[]).map(x=>x.id||0),0)+1;saveFramework()}
+  if(d.reviewsData&&typeof d.reviewsData==='object'){rvData=d.reviewsData;rvData._nextId=Math.max(rvData._nextId||0,...(rvData.entries||[]).map(x=>x.id||0),0)+1;saveReviews()}
+  localStorage.setItem('schema_version',String(SCHEMA_VERSION));
+  if(d1Mode&&API.ready()){
+    // C3: /migrate writes raw plaintext into D1 (the worker has no DEK and blocks it
+    // server-side once the envelope exists). C3b: with encryption active, do an
+    // encrypted CLEAR-and-restore instead — purge the cloud, then re-encrypt+re-insert
+    // the restored local data via the savers (a true replace, no SV.8 resurrection).
+    // On failure the local data is intact (never overwritten from D1) → keep the backup.
+    if(_encRequired){
+      try{await _c3bClearAndRestore()}
+      catch(e){console.error('C3b clear-and-restore:',e);showToast(t('toast.restoredLocal'),'warning',12000)}
+    }
+    else try{await API.post('migrate',{trackerStocks:d.trackerStocks||tStocks,researchNotes:d.researchNotes||researchNotes,
+      portfolioAccounts:d.portfolioAccounts||pfAccounts,portfolioPositions:d.portfolioPositions||pfPositions,
+      portfolioTransactions:d.portfolioTransactions||pfTransactions,portfolioSnapshots:d.portfolioSnapshots||pfSnapshots,
+      portfolioExchangeRates:d.portfolioExchangeRates||pfExchangeRates,dashboardTodos:d.dashboardTodos||dbTodos,
+      dashboardFiSettings:d.dashboardFiSettings||dbFiSettings,dashboardBenchmark:d.dashboardBenchmark||dbBenchmark,
+      dashboard52wHighs:d.dashboard52wHighs||db52wHighs,dividendHistory:d.dividendHistory||divHistory,
+      dividendSettings:d.dividendSettings||divSettings,frameworkData:d.frameworkData||fwData,
+      reviewsData:d.reviewsData||rvData,savedStocks:d.savedStocks||_getSavedStocks()});
+      // Rebuild company ID map
+      const cr=await API.get('companies?limit=100000');
+      _d1CompanyMap={};
+      (cr.data||[]).forEach(c=>{_d1CompanyMap[c.id]=c.symbol;const st=tStocks[c.symbol];if(st)st._d1Id=c.id});
+    }catch(e){console.error('D1 restore migrate:',e);showToast(t('toast.restoredLocal'),'warning')}
+    // Complete restore: re-populate api_cache market metrics from the restored data so a
+    // reload keeps them even if the live APIs are down. Best-effort; awaited so cache is warm.
+    try{await _rehydrateStockCache()}catch(e){console.warn('rehydrate stock cache:',e)}
+  }
+  showToast(t('toast.backupRestored'),'success');
+  recalcAll();renderSavedStocks();renderTracker();renderResearch();
+  handleRoute();
+  // E2: opt-in historical block (charts/insider/dividends). NOT awaited and deliberately AFTER
+  // the render — it can be hundreds of throttled upserts (minutes), and unlike the stock-metric
+  // rehydrate nothing on screen needs it until a company profile is opened. Outside the d1Mode
+  // branch on purpose so offline mode gets it into _memCache too. Never fails the restore.
+  if(_histCacheCount(d.historicalCache)){
+    _restoreHistoricalCache(d.historicalCache)
+      .then(hn=>{if(hn)showToast(t('toast.historicalRestored',{n:hn}),'success',6000);
+        else showToast(t('toast.historicalRestoreFailed'),'warning',9000)})
+      .catch(e=>console.warn('rehydrate historical cache:',e));
+  }
+  // Auto-refresh if the restored backup is stale (>7 days) and the APIs are reachable — pulls
+  // fresh marks over the rehydrated cache. Fire-and-forget; degrades quietly if APIs are down.
+  try{
+    const ageDays=d.exportedAt?Math.floor((Date.now()-new Date(d.exportedAt).getTime())/86400000):0;
+    if(ageDays>7&&d1Mode&&typeof hasDataAuth==='function'&&hasDataAuth()&&typeof refreshAllStocks==='function'){
+      showToast(t('toast.staleRestoreRefresh',{days:ageDays}),'info',5000);
+      refreshAllStocks();
+    }
+  }catch(e){console.warn('stale-restore refresh:',e)}
+  }catch(restoreErr){
+    Object.keys(localStorage).forEach(k=>localStorage.removeItem(k));
+    Object.entries(snapshot).forEach(([k,v])=>localStorage.setItem(k,v));
+    tStocks=memSnapshot.tStocks;researchNotes=memSnapshot.researchNotes;
+    pfAccounts=memSnapshot.pfAccounts;pfPositions=memSnapshot.pfPositions;
+    pfTransactions=memSnapshot.pfTransactions;pfSnapshots=memSnapshot.pfSnapshots;
+    pfExchangeRates=memSnapshot.pfExchangeRates;dbTodos=memSnapshot.dbTodos;
+    dbFiSettings=memSnapshot.dbFiSettings;dbBenchmark=memSnapshot.dbBenchmark;
+    db52wHighs=memSnapshot.db52wHighs;divHistory=memSnapshot.divHistory;
+    divSettings=memSnapshot.divSettings;fwData=memSnapshot.fwData;rvData=memSnapshot.rvData;
+    showToast(t('toast.restoreFailed',{err:restoreErr.message}),'error');
+  }
+}
+
 function doRestore(){
   const input=document.createElement('input');
   input.type='file';input.accept='.json';
@@ -5010,119 +5135,224 @@ function doRestore(){
           catch(err){showToast(t('backup.wrongPass'),'error',7000);return}
           restorePass=pass; // reuse for the pre-restore safety backup (no second prompt)
         }
-        if(!d.version){showToast(t('toast.invalidBackup'),'error');return}
-        if(d.version>SCHEMA_VERSION){showToast(t('toast.newerVersion',{v:d.version}),'error');return}
-        // Richer confirm: show what the file contains so a valid-but-WRONG backup is caught here.
-        if(!await showConfirm(t('confirm.backupRestore'),t('confirm.backupRestoreMsg')+' '+_backupSummary(d),{okLabel:t('confirm.backupRestoreOk'),typeToConfirm:'RESTORE'}))return;
-        // Auto safety backup of the CURRENT data before anything is wiped (encrypted; reuses the
-        // restore passphrase when we have one, else prompts skippably). Best-effort — never aborts.
-        await _preRestoreSafetyBackup(restorePass);
-        // Session/auth/mode keys MUST survive a data restore — they are identity, not
-        // data. Wiping auth_token logs the device out mid-restore → every D1 save (incl.
-        // the C3b purge) throws "API not configured" and the cloud restore silently fails.
-        // dek_cache/enc_active keep the silent token boot + encryption working; d1_migrated
-        // keeps D1 mode; meta_version feeds /sync/meta. (Pre-existing bug since master-
-        // password auth landed — the keepKeys list predated it.)
-        const keepKeys=['auth_token','dek_cache','enc_active','d1_migrated','meta_version','enc_salt','enc_verify','enc_recovery','enc_skipped','schema_version','tracker_settings'];
-        const snapshot={};
-        Object.keys(localStorage).forEach(k=>{snapshot[k]=localStorage.getItem(k)});
-        const memSnapshot={tStocks:tStocks,researchNotes,pfAccounts,pfPositions,pfTransactions,pfSnapshots,pfExchangeRates,dbTodos,dbFiSettings,dbBenchmark,db52wHighs,divHistory,divSettings,fwData,rvData};
-        try{
-        const allKeys=Object.keys(localStorage);
-        allKeys.forEach(k=>{if(!keepKeys.includes(k))localStorage.removeItem(k)});
-        tStocks={};researchNotes={journal:[],news:[],market:[],_nextId:1};
-        pfAccounts=[];pfPositions=[];pfTransactions=[];pfSnapshots=[];
-        pfExchangeRates={baseCurrency:'HUF',rates:{},lastFetched:null};
-        dbTodos=[];dbFiSettings={targetAmount:500000,monthlyExpenses:2000,monthlySavings:1000};
-        dbBenchmark={ticker:'SPY',prices:[],fetchedAt:null};db52wHighs={};
-        divHistory={};divSettings={taxRate:15,forecastMonths:12,customTaxRates:{}};
-        fwData={principles:[],portfolioRules:[],idealTraits:[],avoidList:[],_nextId:1};
-        rvData={entries:[],_nextId:1};
-        if(d.current)loadData(d.current);
-        if(d.savedStocks)_putSavedStocks(d.savedStocks);
-        if(d.trackerStocks){tStocks=d.trackerStocks;saveTrackerStocks()}
-        if(d.researchNotes){researchNotes=d.researchNotes;saveResearchNotes()}
-        if(d.portfolioAccounts&&Array.isArray(d.portfolioAccounts)){pfAccounts=d.portfolioAccounts;savePortfolioAccounts()}
-        if(d.portfolioPositions&&Array.isArray(d.portfolioPositions)){pfPositions=d.portfolioPositions;savePortfolioPositions()}
-        if(d.portfolioTransactions&&Array.isArray(d.portfolioTransactions)){pfTransactions=d.portfolioTransactions;savePortfolioTransactions()}
-        if(d.portfolioSnapshots&&Array.isArray(d.portfolioSnapshots)){pfSnapshots=d.portfolioSnapshots;savePortfolioSnapshots()}
-        if(d.portfolioExchangeRates){pfExchangeRates=d.portfolioExchangeRates;saveExchangeRates()}
-        if(d.dashboardTodos&&Array.isArray(d.dashboardTodos)){dbTodos=d.dashboardTodos;saveDashTodos()}
-        if(d.dashboardFiSettings&&typeof d.dashboardFiSettings==='object'){dbFiSettings=d.dashboardFiSettings;saveDashFiSettings()}
-        if(d.dashboardBenchmark&&typeof d.dashboardBenchmark==='object'){dbBenchmark=d.dashboardBenchmark;saveDashBenchmark()}
-        if(d.dashboard52wHighs&&typeof d.dashboard52wHighs==='object'){db52wHighs=d.dashboard52wHighs;saveDash52wHighs()}
-        if(d.dividendHistory&&typeof d.dividendHistory==='object'){divHistory=d.dividendHistory;saveDividendHistory()}
-        if(d.dividendSettings&&typeof d.dividendSettings==='object'){divSettings=d.dividendSettings;saveDivSettings()}
-        if(d.frameworkData&&typeof d.frameworkData==='object'){fwData=d.frameworkData;fwData._nextId=Math.max(fwData._nextId||0,...(fwData.principles||[]).map(x=>x.id||0),...(fwData.portfolioRules||[]).map(x=>x.id||0),...(fwData.idealTraits||[]).map(x=>x.id||0),...(fwData.avoidList||[]).map(x=>x.id||0),0)+1;saveFramework()}
-        if(d.reviewsData&&typeof d.reviewsData==='object'){rvData=d.reviewsData;rvData._nextId=Math.max(rvData._nextId||0,...(rvData.entries||[]).map(x=>x.id||0),0)+1;saveReviews()}
-        localStorage.setItem('schema_version',String(SCHEMA_VERSION));
-        if(d1Mode&&API.ready()){
-          // C3: /migrate writes raw plaintext into D1 (the worker has no DEK and blocks it
-          // server-side once the envelope exists). C3b: with encryption active, do an
-          // encrypted CLEAR-and-restore instead — purge the cloud, then re-encrypt+re-insert
-          // the restored local data via the savers (a true replace, no SV.8 resurrection).
-          // On failure the local data is intact (never overwritten from D1) → keep the backup.
-          if(_encRequired){
-            try{await _c3bClearAndRestore()}
-            catch(e){console.error('C3b clear-and-restore:',e);showToast(t('toast.restoredLocal'),'warning',12000)}
-          }
-          else try{await API.post('migrate',{trackerStocks:d.trackerStocks||tStocks,researchNotes:d.researchNotes||researchNotes,
-            portfolioAccounts:d.portfolioAccounts||pfAccounts,portfolioPositions:d.portfolioPositions||pfPositions,
-            portfolioTransactions:d.portfolioTransactions||pfTransactions,portfolioSnapshots:d.portfolioSnapshots||pfSnapshots,
-            portfolioExchangeRates:d.portfolioExchangeRates||pfExchangeRates,dashboardTodos:d.dashboardTodos||dbTodos,
-            dashboardFiSettings:d.dashboardFiSettings||dbFiSettings,dashboardBenchmark:d.dashboardBenchmark||dbBenchmark,
-            dashboard52wHighs:d.dashboard52wHighs||db52wHighs,dividendHistory:d.dividendHistory||divHistory,
-            dividendSettings:d.dividendSettings||divSettings,frameworkData:d.frameworkData||fwData,
-            reviewsData:d.reviewsData||rvData,savedStocks:d.savedStocks||_getSavedStocks()});
-            // Rebuild company ID map
-            const cr=await API.get('companies?limit=100000');
-            _d1CompanyMap={};
-            (cr.data||[]).forEach(c=>{_d1CompanyMap[c.id]=c.symbol;const st=tStocks[c.symbol];if(st)st._d1Id=c.id});
-          }catch(e){console.error('D1 restore migrate:',e);showToast(t('toast.restoredLocal'),'warning')}
-          // Complete restore: re-populate api_cache market metrics from the restored data so a
-          // reload keeps them even if the live APIs are down. Best-effort; awaited so cache is warm.
-          try{await _rehydrateStockCache()}catch(e){console.warn('rehydrate stock cache:',e)}
-        }
-        showToast(t('toast.backupRestored'),'success');
-        recalcAll();renderSavedStocks();renderTracker();renderResearch();
-        handleRoute();
-        // E2: opt-in historical block (charts/insider/dividends). NOT awaited and deliberately AFTER
-        // the render — it can be hundreds of throttled upserts (minutes), and unlike the stock-metric
-        // rehydrate nothing on screen needs it until a company profile is opened. Outside the d1Mode
-        // branch on purpose so offline mode gets it into _memCache too. Never fails the restore.
-        if(_histCacheCount(d.historicalCache)){
-          _restoreHistoricalCache(d.historicalCache)
-            .then(hn=>{if(hn)showToast(t('toast.historicalRestored',{n:hn}),'success',6000);
-              else showToast(t('toast.historicalRestoreFailed'),'warning',9000)})
-            .catch(e=>console.warn('rehydrate historical cache:',e));
-        }
-        // Auto-refresh if the restored backup is stale (>7 days) and the APIs are reachable — pulls
-        // fresh marks over the rehydrated cache. Fire-and-forget; degrades quietly if APIs are down.
-        try{
-          const ageDays=d.exportedAt?Math.floor((Date.now()-new Date(d.exportedAt).getTime())/86400000):0;
-          if(ageDays>7&&d1Mode&&typeof hasDataAuth==='function'&&hasDataAuth()&&typeof refreshAllStocks==='function'){
-            showToast(t('toast.staleRestoreRefresh',{days:ageDays}),'info',5000);
-            refreshAllStocks();
-          }
-        }catch(e){console.warn('stale-restore refresh:',e)}
-        }catch(restoreErr){
-          Object.keys(localStorage).forEach(k=>localStorage.removeItem(k));
-          Object.entries(snapshot).forEach(([k,v])=>localStorage.setItem(k,v));
-          tStocks=memSnapshot.tStocks;researchNotes=memSnapshot.researchNotes;
-          pfAccounts=memSnapshot.pfAccounts;pfPositions=memSnapshot.pfPositions;
-          pfTransactions=memSnapshot.pfTransactions;pfSnapshots=memSnapshot.pfSnapshots;
-          pfExchangeRates=memSnapshot.pfExchangeRates;dbTodos=memSnapshot.dbTodos;
-          dbFiSettings=memSnapshot.dbFiSettings;dbBenchmark=memSnapshot.dbBenchmark;
-          db52wHighs=memSnapshot.db52wHighs;divHistory=memSnapshot.divHistory;
-          divSettings=memSnapshot.divSettings;fwData=memSnapshot.fwData;rvData=memSnapshot.rvData;
-          showToast(t('toast.restoreFailed',{err:restoreErr.message}),'error');
-        }
+        await _applyRestore(d,restorePass,null);
       }catch(e){showToast(t('toast.restoreError',{err:e.message}),'error')}
     };
     r.onerror=()=>showToast(t('toast.cannotReadFile'),'error');
     r.readAsText(f);
   };
   input.click();
+}
+
+// ====== Cloud snapshots (Batch C) ======
+// In-app rollback without a file. A full `_gatherAllData()` export is gzipped, encrypted with
+// the account DEK (NOT a passphrase — an auto-monthly snapshot must run silently) and stored in
+// D1 as base64 split across `backup_chunks`, because D1 caps a row at 2MB and the worker caps a
+// request body at 5MB while an export with note images can be several MB.
+// The FILE backup stays the artifact that survives everything (standalone passphrase, off-site);
+// a snapshot is the convenient rollback — it lives in the same D1 the app writes to, and it is
+// readable only while you can unlock the account. Both, not either.
+const SNAP_PREFIX='snap:v1:';
+const SNAP_CHUNK=500000;   // base64 chars per row — an order of magnitude under D1's 2MB row cap
+const SNAP_KEEP=12;        // retention: a year of monthly snapshots
+let _snapBusy=false;
+
+async function _gzip(bytes){
+  if(typeof CompressionStream==='undefined')return null; // Safari <16.4 → store uncompressed
+  const cs=new CompressionStream('gzip');
+  const stream=new Blob([bytes]).stream().pipeThrough(cs);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function _gunzip(bytes){
+  const ds=new DecompressionStream('gzip');
+  const stream=new Blob([bytes]).stream().pipeThrough(ds);
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+// → 'snap:v1:gz:<b64 iv>:<b64 ct>' (or ':raw:' when the browser has no CompressionStream).
+// The codec tag is IN the payload so an old snapshot stays readable after the codec changes.
+async function _snapPack(obj){
+  if(_dek==null)throw new Error('locked');
+  const raw=new TextEncoder().encode(JSON.stringify(obj));
+  const gz=await _gzip(raw);
+  const codec=gz?'gz':'raw';
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},_dek,gz||raw);
+  return SNAP_PREFIX+codec+':'+b64(iv)+':'+b64(ct);
+}
+async function _snapUnpack(s){
+  if(typeof s!=='string'||!s.startsWith(SNAP_PREFIX))throw new Error('Not a snapshot payload');
+  if(_dek==null)throw new Error('locked');
+  const rest=s.slice(SNAP_PREFIX.length);
+  const p=rest.split(':');                       // codec : iv : ct  (base64 never contains ':')
+  if(p.length!==3)throw new Error('Malformed snapshot payload');
+  const [codec,ivB,ctB]=p;
+  if(codec!=='gz'&&codec!=='raw')throw new Error('Unsupported snapshot codec '+codec);
+  const pt=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(unb64(ivB))},_dek,new Uint8Array(unb64(ctB))));
+  const bytes=codec==='gz'?await _gunzip(pt):pt;
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+function _snapSummary(d){
+  return{companies:Object.keys(d.trackerStocks||{}).length,positions:(d.portfolioPositions||[]).length,
+    tx:(d.portfolioTransactions||[]).length,
+    notes:['journal','news','market'].reduce((n,k)=>n+(((d.researchNotes||{})[k])||[]).length,0),
+    reviews:((d.reviewsData||{}).entries||[]).length,exportedAt:d.exportedAt||null,
+    hist:_histCacheCount(d.historicalCache)};
+}
+function _snapReady(){return d1Mode&&API.ready()&&_dek!=null}
+// KB under a megabyte — "0.0 MB" reads like an empty snapshot.
+function _snapWhen(ts){
+  if(!ts)return '';
+  const d=new Date(/[Z+]|[+-]\d\d:?\d\d$/.test(ts)?ts:String(ts).replace(' ','T')+'Z');
+  if(isNaN(d.getTime()))return String(ts).replace('T',' ').slice(0,16);
+  const p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function _snapSize(n){n=Number(n)||0;return n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB'}
+
+// Create a snapshot. kind='auto' runs silently (no toasts on the happy path) from the boot hook.
+async function createCloudSnapshot(label,kind){
+  if(_snapBusy){if(kind!=='auto')showToast(t('toast.backupBusy'),'info');return null}
+  const silent=kind==='auto';
+  if(!_snapReady()){if(!silent)showToast(t('toast.snapNotReady'),'warning',8000);return null}
+  _snapBusy=true;
+  const btn=document.getElementById('snap-now-btn');
+  if(btn)setBtnLoading(btn,true,t('settings.cloudSnapshotNow'));
+  try{
+    const data=_gatherAllData();
+    const payload=await _snapPack(data);
+    const chunks=[];
+    for(let i=0;i<payload.length;i+=SNAP_CHUNK)chunks.push(payload.slice(i,i+SNAP_CHUNK));
+    // Header row first so the chunks have a parent to hang off; if a chunk PUT then fails we
+    // delete the header again rather than leave a 0-chunk snapshot that looks restorable.
+    const row=await API.post('backups',{label:await encStr(label||''),kind:kind||'manual',
+      app_version:APP_VERSION,size_bytes:payload.length,chunk_count:chunks.length,
+      summary:await encStr(JSON.stringify(_snapSummary(data)))});
+    if(!row||!row.id)throw new Error('No snapshot id returned');
+    try{
+      for(let i=0;i<chunks.length;i++)await API.post('backup_chunks',{backup_id:row.id,seq:i,data:chunks[i]});
+    }catch(e){
+      try{await API.del('backups/'+row.id)}catch(e2){} // cascade drops any chunks already written
+      throw e;
+    }
+    try{localStorage.setItem('last_auto_snapshot',new Date().toISOString().slice(0,7))}catch(e){}
+    await _pruneCloudSnapshots();
+    if(!silent)showToast(t('toast.snapCreated',{size:_snapSize(payload.length)}),'success',6000);
+    renderCloudSnapshots();
+    return row.id;
+  }catch(e){
+    console.error('createCloudSnapshot:',e);
+    if(!silent)showToast(t('toast.snapFailed',{err:e.message}),'error',9000);
+    return null;
+  }finally{
+    _snapBusy=false;
+    if(btn)setBtnLoading(btn,false,t('settings.cloudSnapshotNow'));
+  }
+}
+
+// Newest-first list of header rows (no chunks — the picker never downloads payloads).
+async function _listCloudSnapshots(){
+  const r=await API.get('backups?limit=1000');
+  const rows=(r&&r.data)||[];
+  rows.sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||''))||b.id-a.id);
+  return rows;
+}
+// Retention: keep the newest SNAP_KEEP, drop the rest (chunks go with them via FK cascade).
+async function _pruneCloudSnapshots(){
+  try{
+    const rows=await _listCloudSnapshots();
+    for(const r of rows.slice(SNAP_KEEP)){try{await API.del('backups/'+r.id)}catch(e){console.warn('prune snapshot',r.id,e)}}
+  }catch(e){console.warn('_pruneCloudSnapshots:',e)}
+}
+
+async function deleteCloudSnapshot(id){
+  if(!await showConfirm(t('confirm.snapDeleteTitle'),t('confirm.snapDeleteMsg'),{okLabel:t('common.delete'),danger:true}))return;
+  try{await API.del('backups/'+id);showToast(t('toast.snapDeleted'),'success');renderCloudSnapshots()}
+  catch(e){showToast(t('toast.snapDeleteFailed',{err:e.message}),'error')}
+}
+
+// Restore from a snapshot → the SAME _applyRestore path as a file restore (typed confirm,
+// pre-restore safety FILE backup, rollback on failure, C3b clear-and-restore).
+async function restoreFromCloudSnapshot(id,when){
+  if(!_snapReady()){showToast(t('toast.snapNotReady'),'warning',8000);return}
+  let d;
+  try{
+    showToast(t('toast.snapLoading'),'info',8000);
+    const r=await API.get('backup_chunks?filter=backup_id&filter_value='+encodeURIComponent(id)+'&limit=100000');
+    const rows=((r&&r.data)||[]).slice().sort((a,b)=>a.seq-b.seq);
+    if(!rows.length)throw new Error('Snapshot has no data');
+    // Guard against a partially-written snapshot: the header records how many chunks there
+    // should be, and seq must be a complete 0..n-1 run — restoring a hole would corrupt.
+    const hdr=(await _listCloudSnapshots()).find(x=>x.id===id);
+    if(!hdr)throw new Error('Snapshot header missing');
+    if(hdr.chunk_count&&rows.length!==hdr.chunk_count)throw new Error('Snapshot incomplete ('+rows.length+'/'+hdr.chunk_count+' chunks)');
+    rows.forEach((row,i)=>{if(row.seq!==i)throw new Error('Snapshot chunk sequence broken at '+i)});
+    d=await _snapUnpack(rows.map(x=>x.data).join(''));
+    // A snapshot payload is `_gatherAllData()`, which never carries the historical cache — but
+    // the restore's C3b purge drops api_cache with the companies cascade. Capture the CURRENT
+    // historical cache now (still intact, pre-purge) and hand it to the restore so the same
+    // re-upsert path that serves a file backup puts it back. Without this a snapshot restore
+    // silently wipes every cached chart/insider/dividend series. Best-effort.
+    if(!_histCacheCount(d.historicalCache)){
+      try{const h=await _gatherHistoricalCache();if(_histCacheCount(h))d.historicalCache=h}
+      catch(e){console.warn('pre-snapshot-restore historical gather:',e)}
+    }
+  }catch(e){
+    console.error('restoreFromCloudSnapshot:',e);
+    showToast(t('toast.snapReadFailed',{err:e.message}),'error',10000);
+    return; // nothing mutated — _applyRestore was never reached
+  }
+  try{await _applyRestore(d,null,when||String(id))}
+  catch(e){console.error('_applyRestore (snapshot):',e);showToast(t('toast.restoreError',{err:e.message}),'error')}
+}
+
+async function renderCloudSnapshots(){
+  const el=document.getElementById('snapshot-list');
+  if(!el)return;
+  if(!_snapReady()){el.innerHTML='<div style="color:var(--text2);font-size:11px">'+escH(t('settings.snapNotReady'))+'</div>';return}
+  let rows;
+  try{rows=await _listCloudSnapshots()}
+  catch(e){el.innerHTML='<div style="color:var(--text2);font-size:11px">'+escH(t('settings.snapListFailed'))+'</div>';return}
+  if(!rows.length){el.innerHTML='<div style="color:var(--text2);font-size:11px">'+escH(t('settings.snapEmpty'))+'</div>';return}
+  const parts=[];
+  for(const r of rows){
+    let sum=null;
+    try{sum=JSON.parse(await decStrSafe(r.summary)||'null')}catch(e){}
+    let label='';
+    try{label=await decStrSafe(r.label)||''}catch(e){}
+    // created_at is SQLite datetime('now') = UTC with no zone marker; append Z so it renders in
+    // local time (a 00:30 CEST snapshot otherwise reads as the previous day).
+    const when=_snapWhen(r.created_at);
+    const meta=sum?t('settings.snapMeta',{companies:sum.companies,positions:sum.positions,notes:sum.notes}):'';
+    const size=r.size_bytes?_snapSize(r.size_bytes):'';
+    parts.push('<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">'
+      +'<span style="font-size:12px;color:var(--text);min-width:112px">'+escH(when)+'</span>'
+      +'<span style="font-size:11px;color:var(--text2);flex:1;min-width:150px">'+escH((r.kind==='auto'?t('settings.snapAuto'):t('settings.snapManual'))+(label?' · '+label:'')+(meta?' · '+meta:'')+(size?' · '+size:''))+'</span>'
+      +'<button class="btn btn-secondary" style="padding:3px 10px;font-size:11px;border-color:rgba(226,75,74,.45);color:var(--red)" onclick="restoreFromCloudSnapshot('+r.id+','+JSON.stringify(when).replace(/"/g,'&quot;')+')">'+escH(t('settings.snapRestore'))+'</button>'
+      +'<button class="btn btn-secondary" style="padding:3px 10px;font-size:11px" onclick="deleteCloudSnapshot('+r.id+')">'+escH(t('common.delete'))+'</button>'
+      +'</div>');
+  }
+  el.innerHTML=parts.join('');
+}
+
+// Manual snapshot. No label prompt — the row already shows date + kind + contents summary,
+// which is what you actually pick by; `label` stays in the schema for the auto-monthly tag.
+function cloudSnapshotNow(){return createCloudSnapshot('','manual')}
+
+// Auto-monthly: on the first successful D1 boot of a new month, take one silently. The
+// authority is the SERVER list (a fresh device has no localStorage marker but must not create
+// a duplicate); the localStorage marker only short-circuits the extra request.
+async function _maybeAutoSnapshot(){
+  try{
+    if(!_snapReady())return;
+    const month=new Date().toISOString().slice(0,7);
+    if(localStorage.getItem('last_auto_snapshot')===month)return;
+    const rows=await _listCloudSnapshots();
+    if(rows.some(r=>String(r.created_at||'').slice(0,7)===month)){
+      try{localStorage.setItem('last_auto_snapshot',month)}catch(e){}
+      return;
+    }
+    await createCloudSnapshot(t('settings.snapAutoLabel',{month}),'auto');
+  }catch(e){console.warn('_maybeAutoSnapshot:',e)}
 }
 
 // CSV helpers
@@ -5625,7 +5855,7 @@ function showSection(name){
   if(name==='dashboard')renderDashboard();
   if(name==='framework')renderFramework();
   if(name==='reviews')renderReviews();
-  if(name==='settings'){renderTrash();renderApiUsage();renderMasterPassword();updateLastBackupIndicator()}
+  if(name==='settings'){renderTrash();renderApiUsage();renderMasterPassword();updateLastBackupIndicator();renderCloudSnapshots()}
   void document.body.offsetHeight;
   window.scrollTo(0,_scrollPositions[name]||0);
 }
@@ -6868,7 +7098,7 @@ function renderPortfolioOverview(){
   renderSummaryCards();
   renderValueChart();
   switchAllocChart('ticker');
-  renderSnapshotsList();
+  renderCloudSnapshotsList();
   checkSnapshotReminder();
   renderReturnsGrid();
 }
@@ -7218,7 +7448,7 @@ function switchAllocChart(groupBy){
   });
 }
 
-function renderSnapshotsList(){
+function renderCloudSnapshotsList(){
   const c=document.getElementById('pf-snapshots-list');
   if(!pfSnapshots.length){c.innerHTML='<p style="color:var(--text2);font-size:12px">No snapshots yet.</p>';return}
   const sorted=[...pfSnapshots].sort((a,b)=>b.date.localeCompare(a.date));
@@ -11702,6 +11932,9 @@ async function _d1CompanyToTStock(c){
   return s;
 }
 
+// Batch C: a per-company /full failure leaves a STUB tStock (ticker+name only). The auto
+// snapshot must not capture that, so record it and let the boot gate check it.
+let _d1LoadHadErrors=false;
 async function loadTrackerStocks(){
   if(d1Mode){try{
     const r=await API.get('companies?limit=100000');
@@ -11716,7 +11949,7 @@ async function loadTrackerStocks(){
       if(c.holder_type){_holderCompanies[c.symbol]={ticker:c.symbol,name:c.name||c.symbol,currency:c.currency||'USD',holderType:c.holder_type,_d1Id:c.id};_d1CompanyMap[c.id]=c.symbol;return false}
       return true;
     });
-    const fullLoads=companies.map(c=>API.get('companies/'+c.symbol+'/full').then(async full=>{tStocks[c.symbol]=await _d1CompanyToTStock(full)}).catch(e=>{tStocks[c.symbol]={ticker:c.symbol,name:c.name||c.symbol};console.error('D1 load company '+c.symbol+':',e)}));
+    const fullLoads=companies.map(c=>API.get('companies/'+c.symbol+'/full').then(async full=>{tStocks[c.symbol]=await _d1CompanyToTStock(full)}).catch(e=>{tStocks[c.symbol]={ticker:c.symbol,name:c.name||c.symbol};_d1LoadHadErrors=true;console.error('D1 load company '+c.symbol+':',e)}));
     await Promise.all(fullLoads);
     // Merge client-only fields from localStorage (not in D1 schema). These are never written
     // to D1, so without this they'd be permanently WIPED when we overwrite localStorage below
@@ -15821,6 +16054,7 @@ async function autoLoad(){
     rov.remove();
     }else{
     // Show loading overlay
+    let _d1LoadClean=true; // Batch C: gates the auto snapshot — never snapshot a partial load
     const overlay=document.createElement('div');
     overlay.id='d1-loading-overlay';
     overlay.style.cssText='position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
@@ -15829,6 +16063,7 @@ async function autoLoad(){
     try{
       // Phase 1: load companies first (needed for ticker lookups)
       await loadTrackerStocks();
+      _d1LoadClean=!_d1LoadHadErrors;
       // Build company_id→ticker map for dependent loads
       _d1CompanyMap={};
       Object.values(tStocks).forEach(s=>{if(s._d1Id)_d1CompanyMap[s._d1Id]=s.ticker});
@@ -15854,9 +16089,16 @@ async function autoLoad(){
         for(const v of (vr.data||[])){if(v.deleted_at)continue;const label=v.label||'';if(!label)continue;try{const inputs=JSON.parse((await decStr(v.inputs_json))||'{}');inputs.savedAt=v.updated_at||v.created_at;inputs._d1ValId=v.id;sv[label]=inputs}catch(e){}}
         if(Object.keys(sv).length)_savedStocksCache=sv;
       }catch(e){console.error('D1 load valuations:',e)}
-    }catch(e){console.error('D1 load error:',e);showToast(t('sync.partialLoadFailed'),'warning')}
+    }catch(e){console.error('D1 load error:',e);showToast(t('sync.partialLoadFailed'),'warning');_d1LoadClean=false}
     API.reconcileDirtyKeys();
     overlay.remove();
+    // Batch C: first CLEAN D1 boot of a new month → take an automatic snapshot. Deferred and
+    // fire-and-forget so it never competes with the boot render; silent on success and failure
+    // (a missed month is a missed convenience, not a data problem). Gated on a clean load: a
+    // partial one leaves stub companies in memory, and snapshotting THAT would burn the month
+    // AND evict a good snapshot on prune, while the picker summary still shows the right counts.
+    if(_d1LoadClean)setTimeout(()=>{_maybeAutoSnapshot()},8000);
+    else console.warn('Auto-snapshot skipped — D1 load was not clean');
     }
   }else{
     // localStorage mode

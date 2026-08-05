@@ -488,6 +488,12 @@ const TABLES = {
   general_todos:         { cols: ['title','due_date','is_done','sort_order'], hasUpdatedAt: true },
   app_settings:          { cols: ['key','value'], hasUpdatedAt: false, pk: 'key' },
   api_cache:             { cols: ['company_id','data_source','data_json','fetched_at'], hasUpdatedAt: false, conflictTarget: 'company_id, data_source' },
+  // Cloud snapshots (Batch C). The generic CRUD is enough: POST creates, GET lists, DELETE
+  // cascades the chunks. The payload is already gzipped + DEK-encrypted client-side, so the
+  // worker only ever sees ciphertext. Deliberately ABSENT from USER_DATA_CLEAR_TABLES — a C3b
+  // purge must not destroy the snapshots the user may need to roll back to.
+  backups:               { cols: ['created_at','label','kind','app_version','size_bytes','chunk_count','summary'], hasUpdatedAt: false },
+  backup_chunks:         { cols: ['backup_id','seq','data'], hasUpdatedAt: false, conflictTarget: 'backup_id, seq' },
 };
 
 // Whitelist for natural-key DELETE (DELETE /api/{table}?col=val...). Only these tables allow it, and
