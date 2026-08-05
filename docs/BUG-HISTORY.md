@@ -103,8 +103,9 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 95 | Backup Batch E1b — full-dump XLSX + unencrypted-export warning; QA found 4 more ungated sensitive exports | `7557158` | 2026-07-24 | 4 | 0 |
 | 96 | Backup Batch E2 — opt-in historical data in the encrypted backup + chart-PNG export gate; QA found a false success signal, a silent no-op tick and a render-blocking restore step | `5f3ab13` | 2026-08-05 | 8 | 0 |
 | 97 | Backup Batch C — D1 cloud snapshots; QA found a CRITICAL function-name collision with the portfolio `deleteSnapshot` + 5 more | `d38500a` | 2026-08-05 | 6 | 0 |
+| 98 | FMP `/stable` migration — 5 broken endpoints restored (financials, portfolio history, benchmark, dividends, earnings); QA found a HIGH 24h cache-poisoning path + 7 more | `5a30b3e` | 2026-08-05 | 8 | 0 |
 
-**Total: 519 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch.)
+**Total: 527 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations. (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch; Cat 98 = 8 adversarial-QA fixes folded into the FMP /stable migration.)
 
 ---
 
@@ -1912,6 +1913,44 @@ sw.js **v45**, frontend-only. **Lesson (CODING-LESSONS Data-Safety):** a "wipe e
 **Accepted / documented:** two tabs booting at the same second can each create the monthly auto snapshot (harmless duplicate, pruned eventually); `created_at`/`kind`/`app_version`/`size_bytes`/`chunk_count` stay plaintext metadata (a rough dataset-size signal, negligible next to the row counts the single-tenant DB already exposes).
 
 **Lesson (CODING-LESSONS):** in a 17k-line single-file app, grep every new top-level function name against the file BEFORE writing it — a duplicate `function` declaration is silently legal, the later one wins, and here it would have pointed a Delete button at a different table.
+
+---
+
+## Category 98 — FMP `/stable` API Migration (2026-08-05)
+
+**External API drift, fixed on our side.** sw.js **v55**. FMP retired the legacy v3 path style and moved `limit` above 5 behind a paid plan. Five features were silently broken (display-only — no data was ever at risk).
+
+**Method: measured, not guessed.** The docs alone couldn't say whether the 402 came from the endpoint, the `limit` parameter or its value, so a 17-endpoint probe was run through the app's own authenticated proxy with the account's real key (no key handling anywhere). Results:
+
+| Call | Before | After |
+|---|---|---|
+| `historical-price-full/{sym}` | **404** | `historical-price-eod/light?symbol=` → 200, `[{symbol,date,price,volume}]`, ~1250 rows (5y) |
+| `historical-price-full/stock_dividend/{sym}` | **404** | `dividends?symbol=` → 200, `[{date,recordDate,paymentDate,declarationDate,adjDividend,…}]` |
+| `earning-calendar?symbol=` | **404** (not previously known) | `earnings-calendar?symbol=` → 200; fields renamed `eps`→`epsActual`, `revenue`→`revenueActual` |
+| `quote/{A,B,C}` (v3 path batch) | path form dead | `quote?symbol=` (single per docs; comma list probed once at runtime, per-symbol fallback) |
+| `income-statement` / `cash-flow-statement` `?limit=10` | **402 "Premium Query Parameter: 'limit'"** | `limit=5` → 200 (`limit<=5` is the free-plan ceiling) |
+
+Confirmed still working on this plan (so deliberately untouched): `profile`, `financial-growth`, `key-metrics-ttm`, `balance-sheet-statement`, `quote?symbol=` (single), and `from`/`to` on the EOD endpoints.
+
+**Implementation notes:**
+- `/stable` returns a **FLAT array** where v3 wrapped rows in `{symbol, historical:[…]}`. `_fmpRows()` accepts BOTH, so an `api_cache` row written before the migration still parses instead of silently reading as empty. `_fmpClose()` bridges `price` (light) vs `close` (full/v3).
+- `FMP_MAX_LIMIT=5` is clamped **inside `fmpFetch`** (copying the params object, never mutating the caller's) so no call site can reintroduce the 402 — fix the system, not the symptom.
+- `fmpHistoricalPrices()` asks with `from`/`to`, and on a successful-but-empty response retries unranged and windows the rows client-side, so the feature survives if that parameter is ever gated.
+- `balance-sheet-statement` went 3 → 5 years: same call cost, two more years of history.
+- **No worker change or redeploy** — the proxy already points at `/stable` and its path sanitiser already accepts the new endpoint names.
+
+**QA (agent, adversarial) — data-correctness/ordering, legacy cache shapes, the clamp's effect on derived metrics and hoisting all came back CLEAN and verified. 8 fixes folded in:**
+
+| # | Sev | Issue | Fix |
+|---|-----|-------|-----|
+| 98.1 | **HIGH** | `fetchHistoricalCharts` returns a wrapper object even when all three calls failed; `cachedFetch` only refuses `null`/`rateLimited`, so `{incData:null,cfData:null,bsData:null}` was cached for the full **24h TTL** — the migration would look broken for a day per company, and every pre-fix page-open refreshed the poison window | return `null` (or the sentinel) when nothing came back, so a failure is never cached |
+| 98.2 | MEDIUM | Dip finder could go from 2 calls to **32 per click** (per-symbol fallback for every ticker), and symbols this plan can't quote (EVO.ST, MC.PA…) burned a wasted call on **every** refresh forever | probe the comma batch ONCE per run, skip the fallback entirely when it works, negative-cache unquotable symbols (`high52:null`) and skip anything already probed today |
+| 98.3 | MEDIUM | HTTP **429** returned `null`, not the `rateLimited` sentinel, so the new guards didn't catch it — a rate limit mid-run fired up to 30 more doomed calls, 30 toasts and 30 budget ticks | `fmpFetch` returns the sentinel for 429 too (verified safe: every caller reads `x?.[0]` or `Array.isArray`) |
+| 98.4 | MEDIUM | The unranged retry also fired when the request FAILED (null), doubling cost and turning a 31s timeout into 63s | retry only on a parsed-but-empty response (`d!=null`) |
+| 98.5 | MEDIUM | `fetchSpyForChart` never cached a negative result, and it runs on every period switch / asset-filter click → repeated re-fetches | cache the empty result too; a cache hit returns the same `null` the miss path does |
+| 98.6 | MEDIUM | The card promised "Historical Trends (10 Year)" while the plan now caps at 5 — a half-window trend presented as the full one (and a hardcoded English string) | `comp.historicalTrendsN` i18n key, filled from the actual row count after the fetch |
+| 98.7 | LOW | Upcoming earnings stored `undefined` (dropped by `JSON.stringify`) instead of `null` | `?? null` |
+| 98.8 | NIT | Inner `break` on the sentinel leaked one extra call+toast per group; the fallback loop had no throttle while every sibling loop paces itself | `stop` flag + 300ms pacing |
 
 ---
 

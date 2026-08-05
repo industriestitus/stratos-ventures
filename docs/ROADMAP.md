@@ -286,6 +286,9 @@ Status: COMPLETE (2026-06-27)
 - [x] XLSX Export — SheetJS lazy-loaded, 5-sheet workbook (2026-07-02): Positions (with market value, P&L, P&L%), Transactions, Notes, Reviews, Framework. Auto-sized columns, async with error handling.
 - [x] Portfolio Summary PDF — jsPDF portfolio overview report (2026-07-02): Stratos branding, Portfolio Overview (value/cost/P&L/TWR/XIRR), Broker Accounts, Positions table (sorted by value), Allocation by Asset Type, Recent Transactions (last 20), Dividend Income breakdown with per-ticker stats.
 
+### External API Maintenance
+- [x] **FMP `/stable` migration** (2026-08-05, v55, Cat 98) — FMP retired the v3 path style and gated `limit>5` behind a paid plan, silently breaking 5 features (company financials, portfolio value/TWR history, SPY benchmark, dividend history, earnings calendar). Endpoints probed live against the account's own key, then migrated: `historical-price-eod/light`, `dividends`, `earnings-calendar`, `quote?symbol=`, statements capped at 5 years. Shape adapters accept both the new flat array and the legacy `{historical:[…]}` wrapper so pre-migration `api_cache` rows still parse. No worker change needed.
+
 ### Backup Safety-Net (2026-07-24 → 2026-08-05)
 Making the backup a complete, offline-interpretable snapshot of the whole app. One shippable batch at a time, each with an adversarial QA pass + docs.
 - [x] **A — Encrypted backup** (v47, Cat 91, ADR-042): passphrase prompt → PBKDF2-600k + AES-256-GCM → `.enc.json`. Default action; plaintext kept behind its own warning. Standalone passphrase (survives a master-password change).

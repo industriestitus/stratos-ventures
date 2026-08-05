@@ -513,6 +513,14 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 **Rule:** In a single-file app there is no module scope to protect you. Before adding any top-level function, `grep -c "function <name>("` the whole file — and when the new feature shares a noun with an existing one ("snapshot", "backup", "export"), namespace the entire new API (`createCloudSnapshot`, `deleteCloudSnapshot`, …) rather than the one name that happens to collide today. Run a duplicate-declaration scan over all new names as a batch, not one at a time.
 
+### 12. Probe a Drifted External API Before Migrating It — Docs Won't Tell You Which Half Broke (Cat 98)
+
+**Pattern:** FMP's API drifted and five features broke with a mix of 404s and 402s. The vendor docs could not distinguish the causes: they showed the new endpoint names, but marked `limit` merely as "Limited Access", which could have meant the parameter, its value, or the endpoint needed a paid plan. Guessing would have produced a plausible migration that still 402'd. A 17-endpoint probe run through the app's own authenticated proxy (so no API key had to be handled anywhere) answered it in one round trip: `limit<=5` → 200, `limit=10` → 402, i.e. the VALUE was the gate. The same probe also surfaced a **sixth** broken endpoint nobody had noticed (`earning-calendar` → `earnings-calendar`) and confirmed which endpoints were still fine, so they could be left alone.
+
+**Rule:** When an external API drifts, measure before you migrate — a short probe script through the app's existing authenticated path costs one round trip and converts every assumption into a fact, including the ones you didn't think to question. And when migrating a response format, make the parser accept BOTH shapes (`_fmpRows` takes the new flat array and the legacy `{historical:[…]}` wrapper): cached payloads written by the old code outlive the deploy.
+
+**Corollary — never cache a failure.** A fetch wrapper that returns `{a:null,b:null,c:null}` when all its calls failed looks like a valid payload to a TTL cache, so the outage gets frozen in for the full TTL and the fix appears not to work. Distinguish `null` (the request failed → don't cache, don't retry) from `[]` (it succeeded with nothing → cacheable) at every layer.
+
 ---
 
 ## Summary
@@ -522,12 +530,12 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
 | JavaScript | 11 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
 | Data Safety | 8 | 34+ (Categories 15, 72, 82, 86) |
-| API & Caching | 5 | 31+ (Categories 5, 6, 21, 80) |
+| API & Caching | 6 | 39+ (Categories 5, 6, 21, 80, 98) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
 | Process | 4 | 15+ (Categories 19-23) |
 | AI Behavioral | 10 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 519+ bugs fixed, 39 lessons, 7 domains.
+**Total:** 527+ bugs fixed, 40 lessons, 7 domains.
 
 ## Related Documents
 

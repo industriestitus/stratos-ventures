@@ -250,9 +250,12 @@ The legacy KV blob path (`/sync/load`, `/sync/save`, `/sync/restore-backup`) was
 ## FMP API
 
 **Base URL:** `https://financialmodelingprep.com/stable`
-**Auth:** Query parameter `apikey` (URL-encoded)
-**Key Storage:** `stSettings().apiKey` from localStorage (`st-apikey` input)
+**Auth:** `apikey` query parameter, injected by the Worker proxy — the key is a Worker secret (`FMP_KEY`) and never reaches the browser (Security v2 Phase A).
 **Timeout:** 15 seconds default
+
+> **Free-plan ceiling (measured 2026-08-05, Cat 98):** `limit` above **5** returns **402 "Premium Query Parameter"** — the whole request fails, it does not degrade. `fmpFetch` clamps `params.limit` to `FMP_MAX_LIMIT=5` centrally so no call site can reintroduce the 402.
+>
+> **Response shape:** `/stable` returns a **FLAT array**; the retired v3 endpoints wrapped rows in `{symbol, historical:[…]}`. Client helper `_fmpRows()` accepts both (old `api_cache` rows still parse); `_fmpClose()` bridges `price` (light) vs `close` (full/v3).
 
 ### Profile
 - **Endpoint:** `GET /profile?symbol={TICKER}&apikey={KEY}`
@@ -263,22 +266,19 @@ The legacy KV blob path (`/sync/load`, `/sync/save`, `/sync/restore-backup`) was
 ### Income Statement
 - **Endpoint:** `GET /income-statement?symbol={TICKER}&limit={N}&apikey={KEY}`
 - **Response:** Array of annual statements (newest first): `[{revenue, netIncome, operatingIncome, grossProfit, epsDiluted, ...}]`
-- **Typical Limit:** 1-10
-- **Line:** web/index.html:8436, 8448
+- **Typical Limit:** 1 or `FMP_MAX_LIMIT` (5). **10 → 402.**
 - **Usage:** Extract revenue, profit, EBIT, EPS, margins; historical data for charts
 
 ### Cash Flow Statement
 - **Endpoint:** `GET /cash-flow-statement?symbol={TICKER}&limit={N}&apikey={KEY}`
 - **Response:** Array of annual statements: `[{operatingCashFlow, freeCashFlow, capitalExpenditure, stockBasedCompensation, commonStockRepurchased, depreciationAndAmortization, ...}]`
-- **Typical Limit:** 1-10
-- **Line:** web/index.html:8437, 8457
+- **Typical Limit:** 1 or `FMP_MAX_LIMIT` (5). **10 → 402.**
 - **Usage:** OCF, FCF, SBC, buyback, D&A; used for valuation models
 
 ### Balance Sheet Statement
 - **Endpoint:** `GET /balance-sheet-statement?symbol={TICKER}&limit={N}&apikey={KEY}`
 - **Response:** Array of statements: `[{totalCurrentAssets, totalCurrentLiabilities, totalDebt, totalStockholdersEquity, cashAndCashEquivalents, ...}]`
-- **Typical Limit:** 1-3
-- **Line:** web/index.html:6850
+- **Typical Limit:** 1 or `FMP_MAX_LIMIT` (5)
 - **Usage:** Working capital delta, goodwill/intangibles; historical charts
 
 ### Financial Growth
@@ -296,34 +296,32 @@ The legacy KV blob path (`/sync/load`, `/sync/save`, `/sync/restore-backup`) was
 - **Usage:** ROIC, ROE, debt ratios, current ratio, gross margin (if Yahoo missing)
 
 ### Historical Dividends
-- **Endpoint:** `GET /historical-price-full/stock_dividend/{TICKER}?apikey={KEY}`
-- **Response:** `{historical: [{date, paymentDate, adjDividend, dividend, ...}]}`
-- **Line:** web/index.html:7914
+- **Endpoint:** `GET /dividends?symbol={TICKER}` *(was `historical-price-full/stock_dividend/{TICKER}` → now 404)*
+- **Response:** Flat array `[{symbol, date, recordDate, paymentDate, declarationDate, adjDividend, dividend, yield, frequency}]`, newest first
 - **Usage:** Dividend history; calculates yield, growth rates, payout ratio
 
 ### Earnings Calendar
-- **Endpoint:** `GET /earning-calendar?symbol={TICKER}&apikey={KEY}`
-- **Response:** Array of earnings dates: `[{date, symbol, quarter, ...}]`
-- **Line:** web/index.html:5282
+- **Endpoint:** `GET /earnings-calendar?symbol={TICKER}` *(was `earning-calendar` → now 404)*
+- **Response:** `[{symbol, date, epsActual, epsEstimated, revenueActual, revenueEstimated}]` — v3 called these `eps`/`revenue`; the client reads both
 - **Usage:** Earnings dates for company tracking
 
-### Historical Prices (for benchmark data)
-- **Endpoint:** `GET /historical-price-full/SPY?from={YYYY-MM-DD}&to={YYYY-MM-DD}&apikey={KEY}`
-- **Response:** `{historical: [{date, close, ...}]}`
-- **Line:** web/index.html:5017
-- **Usage:** S&P 500 benchmark performance for dashboard comparisons
+### Historical Prices (portfolio history + SPY benchmark)
+- **Endpoint:** `GET /historical-price-eod/light?symbol={TICKER}&from={YYYY-MM-DD}&to={YYYY-MM-DD}` *(was `historical-price-full/{TICKER}` → now 404)*
+- **Response:** Flat array `[{symbol, date, price, volume}]`, newest first, ~5 years unranged. `historical-price-eod/full` is the same with `open/high/low/close`.
+- **Client:** `fmpHistoricalPrices(symbol, from, to)` — asks with the range, retries unranged on a successful-but-empty response and windows client-side, so the feature survives if `from`/`to` are ever gated. Consumers build date-keyed maps, so the newest-first order doesn't matter; `dbBenchmark.prices` is sorted ascending explicitly.
+- **Usage:** Position price history, portfolio value chart, S&P 500 benchmark
 
-### Batch Quote
-- **Endpoint:** `GET /quote/{TICKER1},{TICKER2},{TICKER3}?apikey={KEY}`
-- **Response:** Array: `[{symbol, price, change, ...}]`
-- **Line:** web/index.html:5101
-- **Usage:** Quick price updates for multiple tickers
+### Quote
+- **Endpoint:** `GET /quote?symbol={TICKER}` *(the v3 path batch `quote/{A},{B},{C}` is dead)*
+- **Response:** Array `[{symbol, name, price, change, changePercentage, volume, dayLow, dayHigh, yearHigh, yearLow, marketCap, ...}]`
+- **Client:** the 52-week-high dip finder probes a comma-separated `symbol` list ONCE per run and falls back to per-symbol calls only if the list isn't honoured; symbols this plan can't quote are negative-cached for the day so they aren't re-requested on every refresh.
+- **Usage:** 52-week highs for the dip finder
 
 ### Error Handling
-- **429 Rate Limit:** Shown as toast "FMP rate limit — wait a moment"
-- **401/403 Invalid Key:** Shown as toast "FMP API key invalid"
-- **No Error Message:** Returns `null` and logs warning
-- **Line:** web/index.html:8265-8284
+- **429 Rate Limit:** toast "FMP rate limit — wait a moment" and returns the `{rateLimited:true}` sentinel (same as local budget exhaustion) so batch loops STOP instead of firing more doomed calls
+- **402 Premium Query Parameter:** only reachable via `limit>5`; prevented by the `FMP_MAX_LIMIT` clamp
+- **401/403 Invalid Key:** toast "FMP API key invalid"
+- **Anything else:** returns `null` and logs a warning. `null` means *the request failed*; `[]` means *it succeeded with no rows* — callers must not conflate them (a failed request is never retried or cached)
 
 ---
 

@@ -153,6 +153,15 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Risk:** a very large `historical_charts` set could exceed the Worker's response budget → 500 → the whole gather throws.
 - **Mitigation in place:** best-effort — the backup is still written, without historical, and the user is warned. Add `offset` pagination if it ever trips.
 
+### P.25 — FMP Free Plan Caps Statements at 5 Years (EXTERNAL, Cat 98)
+- **Where:** `fmpFetch` clamps `limit` to `FMP_MAX_LIMIT=5`; above that FMP returns 402 "Premium Query Parameter" and the whole request fails.
+- **Effect:** the company Financials charts show 5 years instead of 10. The card title now reports the real span (`comp.historicalTrendsN`) rather than promising 10.
+- **Options if 10 years is ever needed:** a paid FMP tier, or sourcing statements from Yahoo `quoteSummary` (which also typically returns ~4–5 years).
+
+### P.26 — Some Tickers Are Unquotable on the FMP US Free Plan (EXTERNAL, Cat 98)
+- **Where:** the 52-week-high dip finder. Non-US symbols (`EVO.ST`, `MC.PA`, `KSPI`, …) may return no `quote` row.
+- **Mitigation in place:** those symbols are negative-cached (`high52:null`) for the day, so they don't burn one wasted API call on every refresh. The dip finder simply omits them.
+
 ### P.23 — Two Tabs Can Create Duplicate Monthly Snapshots (ACCEPTED, Batch C / Cat 97)
 - **Where:** `_maybeAutoSnapshot` has no cross-tab lock — two tabs booting in the same second both see "no snapshot this month" before either has written one.
 - **Effect:** one harmless duplicate row; retention prunes it eventually. Not worth a lock (a BroadcastChannel/localStorage mutex for a once-a-month background write).
