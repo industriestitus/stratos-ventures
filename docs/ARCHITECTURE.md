@@ -732,17 +732,14 @@ stratos-ventures/
 │   ├── manifest.json                  — PWA manifest
 │   ├── icon-192.png, icon-512.png     — App icons
 │   └── cloudflare-worker/
-│       ├── src/index.js               — Worker code (843 lines)
+│       ├── src/index.js               — Worker code
 │       ├── wrangler.toml              — Cloudflare config (D1 binding, KV)
 │       └── package.json
-└── docs/
-    ├── ARCHITECTURE.md                — This document
-    ├── API-REFERENCE.md               — Complete API endpoint reference
-    ├── ROADMAP.md                     — Phase tracker (0-18, all complete)
-    ├── EXPANSION-PLAN.md              — Phase 11-18 detailed specs
-    ├── BUG-HISTORY.md                 — QA audit (168 fixes, 21 categories)
-    ├── DEVELOPMENT-WORKFLOW.md        — Session workflow guide
-    ├── INVESTMENT-CHECKLIST.md        — Investment philosophy reference
-    ├── d1-schema.sql                  — D1 database schema (22 tables)
-    └── reference-desktop-schema.sql   — Legacy desktop schema (archive)
+└── docs/                             — see CLAUDE.md § Architecture for the file list
 ```
+
+> **The `docs/` listing lives in CLAUDE.md, not here.** This file used to keep a second copy, and it
+> drifted exactly as you would expect: "168 fixes, 21 categories" against a real 629/112, "22 tables"
+> against 24, and it described `ROADMAP.md` as the phase tracker after the completed phases had moved
+> to `ROADMAP-ARCHIVE.md`. `check.sh` check 11 verifies CLAUDE.md's tree against the directory;
+> nothing was watching this one, which is the whole argument for having one owner (Cat 101, Cat 109).

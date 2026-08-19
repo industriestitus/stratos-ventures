@@ -28,12 +28,15 @@ docs/
   GLOSSARY.md         — Financial formulas, metrics, scoring thresholds
   CODING-LESSONS.md   — Validated coding pitfalls distilled from the bug log
   KNOWN-ISSUES.md     — Unfixed issues, tech debt, dev gotchas
-  DECISIONS.md        — 43 Architecture Decision Records (ADRs)
+  DECISIONS.md        — 45 Architecture Decision Records (ADRs)
   DEPLOYMENT.md       — Deploy guide (GitHub Pages, Worker, D1, secrets)
-  ROADMAP.md          — Project phases, progress, and the technical-debt backlog
+  ROADMAP.md          — The LIVE backlog: in-flight process track, technical debt, Maybe Later
+  ROADMAP-ARCHIVE.md  — Completed phases 0-18 and finished tracks. No open checkbox, ever
   TEST-PLAN.md        — Manual test checklist (there are no automated tests)
   d1-schema.sql       — D1 database schema (24 tables)
-  BUG-HISTORY.md      — QA audit log, by category and commit
+  BUG-HISTORY.md      — QA audit log. Summary table = the index for BOTH log files; bodies
+                        from 2026-07-24 (Cat 84) on. Deployment Notes live here
+  BUG-HISTORY-ARCHIVE.md — QA bodies older than that cut-off. Archived by DATE, not number
   EXPANSION-PLAN.md   — Phase 11-18 detailed specs (all complete)
   DEVELOPMENT-WORKFLOW.md   — How the collaboration works, written for Peter (Hungarian).
                               This file owns the process RULES; that one describes the experience

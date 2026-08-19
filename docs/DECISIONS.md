@@ -1293,6 +1293,71 @@ A restore re-inserts the authoritative `companies` rows but the tracker's market
 
 ---
 
+## ADR-044: D1 Cloud Snapshots — Chunked, DEK-Encrypted, Written Through the Generic CRUD (Batch C)
+
+**Status:** Accepted (2026-08-05) — Batch C (`d38500a`+`878d594`, v54, Cat 97). Written retroactively 2026-08-19 (Cat 109): the batch shipped without an ADR, which is why this one exists.
+
+**Context:**  
+The file backup (ADR-042) survives losing the account, but it is a manual act — it only protects you if you remembered to run it. What was missing was an *unattended* rollback point living in the same D1 as the data. D1 caps a row at ~2 MB and a full export is larger than that, so a snapshot cannot be one row. The automatic case must also run without a passphrase prompt, which rules out the file backup's standalone-passphrase model.
+
+**Decision:**  
+- **Two tables, header + chunks.** `backups` holds the metadata (`created_at, label, kind, app_version, size_bytes, chunk_count, summary`); `backup_chunks` holds base64 slices keyed `UNIQUE(backup_id, seq)` with `ON DELETE CASCADE`. Deleting a header cannot orphan chunks.
+- **Encrypt with the account DEK, not a passphrase.** The monthly snapshot must run silently. An account without a usable DEK **disables the feature entirely** rather than writing plaintext — `_snapReady()` requires D1 mode, a provisioned envelope and an unlocked `_dek`, so it is broader than "locked". The file backup keeps its standalone passphrase and remains the artifact that survives losing the account; the snapshot is the convenient rollback that lives beside the data. Both, not either.
+- **Compress before encrypting.** `_gatherAllData()` → JSON → gzip (`CompressionStream`, with a `raw` codec fallback for Safari < 16.4) → AES-GCM → base64, tagged `snap:v1:<codec>:<iv>:<ct>`, then split.
+- **One ciphertext, split after encryption — not one ciphertext per chunk.** This is what makes integrity free. Order of operations, stated precisely because the obvious reading is wrong: the explicit `chunk_count` and contiguous-`seq` checks run **first** and are the primary catch, and out-of-order rows are *corrected* by a `sort` rather than detected; the AES-GCM tag is the backstop that catches a truncated or corrupted payload. What matters is that all of it happens **before `_applyRestore` is reached and before anything is mutated**. Per-chunk encryption would give none of it: every chunk would verify alone and a dropped one would decrypt cleanly into silently truncated JSON.
+- **No custom Worker route.** Two `TABLES` entries give create/list/delete through the generic CRUD. The server-side work is therefore the DDL **plus a `wrangler deploy`** for those two entries — not the DDL alone.
+- **Write the header first, and delete it if a chunk POST is rejected** — so a failed upload does not leave a restorable-looking 0-chunk row. Note the limit: this is a compensating delete, not a transaction, so a tab closed mid-upload still leaves an orphan header and `_listCloudSnapshots` does not filter for it. Bounded by the 12-snapshot prune; not currently guarded.
+- **`_applyRestore` extracted verbatim from `doRestore`** so the file restore and the snapshot restore run one path: version checks → typed RESTORE confirm → pre-restore safety backup → C3b clear-and-restore → cache rehydrate.
+- **Keep the newest 12; one automatic snapshot per calendar month on a clean D1 boot.**
+- **`backups`/`backup_chunks` are deliberately absent from the Worker's `USER_DATA_CLEAR_TABLES` and hold no FK to `companies`** — so a purge (ADR-041) can never destroy the snapshots you would roll back to.
+
+**Alternatives Rejected:**  
+- **One row per snapshot:** exceeds D1's ~2 MB row cap on a real dataset.
+- **Encrypt each chunk separately:** every chunk verifies on its own, so a dropped or reordered chunk still decrypts cleanly and yields silently truncated JSON. Integrity would then need a separate manifest and hash — more moving parts for a weaker guarantee.
+- **Passphrase-encrypted snapshots:** cannot run unattended, which removes the entire point.
+- **Plaintext snapshots when the account is locked:** would put at-rest plaintext back into D1 and undo Phase C.
+- **A dedicated Worker route:** no behaviour the generic CRUD did not already provide.
+- **R2 or an external blob store:** a second service, second set of credentials and second failure mode, for data that already lives in D1.
+
+**Consequences:**  
+- Rollback without a file, and without the user having remembered anything.
+- A locked account silently has no snapshot capability — acceptable, and preferable to the alternative.
+- Two tables the purge path must keep excluding; this is load-bearing and stated in ARCHITECTURE § 6.3.
+- Snapshot metadata (`created_at, kind, app_version, size_bytes, chunk_count`) is plaintext by necessity — needed for listing, sorting and the integrity check. `size_bytes` is a rough dataset-size signal, negligible next to what a single-tenant DB already exposes. Accepted as KNOWN-ISSUES **P.24**.
+- Two tabs can each create the month's snapshot (KNOWN-ISSUES **P.23**, accepted — the prune keeps it bounded).
+- **The DDL must run on live D1 BEFORE `wrangler deploy`.** Until both are done the feature degrades quietly. Commands in BUG-HISTORY → Deployment Notes.
+- QA caught a **CRITICAL** here that review alone would have missed: `deleteSnapshot(id)` already existed for *portfolio* snapshots, and two top-level declarations in one script mean the later one silently wins. → CODING-LESSONS #11, "grep every new top-level function name before you write it".
+
+---
+
+## ADR-045: Migrating FMP to `/stable` — Probe the API, Don't Trust the Docs
+
+**Status:** Accepted (2026-08-05) — Cat 98 (`5a30b3e`+`75f02be`, v55). Written retroactively 2026-08-19 (Cat 109).
+
+**Context:**  
+FMP retired the legacy v3 path style and moved `limit` above 5 behind a paid plan. Five known features broke **silently and simultaneously**: company financials, portfolio value/TWR history, the SPY benchmark line, dividend history and the earnings calendar. The probe then turned up a **sixth** nobody had reported — `earning-calendar?symbol=` was already 404 — which is the argument for probing rather than fixing the reported list. Display-only — no stored data was affected — but the failure was invisible because the app degraded to empty charts rather than errors. The published docs could not say whether a given 402 came from the endpoint, the `limit` parameter, or its value.
+
+**Decision:**  
+- **Measure before migrating.** A 17-endpoint probe was run through the app's own authenticated proxy, against the real account and plan, and the migration was written from the results rather than from the documentation. Findings: v3 path-style endpoints 404; `limit > 5` returns 402 `"Premium Query Parameter: 'limit'"`; the batch `quote/{A,B,C}` path form is dead.
+- **Clamp the plan ceiling centrally.** One `FMP_MAX_LIMIT = 5`, applied inside `fmpFetch`, rather than the **nine** call sites that pass a `limit` each remembering. Caveat worth stating: one call bypasses `fmpFetch` entirely (`proxyFetch('fmp','profile',…)` in the Settings connection test), so it also bypasses the clamp, the budget counter and the 401/429 sentinel. It passes no `limit` today, so there is no live 402 — but "no call site can reintroduce it" would be false.
+- **Accept both response shapes in one adapter.** `_fmpRows` takes the new flat array *and* the legacy `{historical:[…]}` wrapper, so pre-migration `api_cache` rows still parse and the migration needs no cache flush.
+- **Leave working endpoints alone.** `profile`, `financial-growth`, `key-metrics-ttm` and the `from`/`to` range params were confirmed working and left as they were. Two entries commonly listed here do **not** belong: `balance-sheet-statement` kept its path but had `limit:3` replaced by the central clamp (a user-visible change — 3 → 5 years of history), and single `quote?symbol=` is not an untouched call site but a **new** one that replaced the dead `quote/{A,B,C}` path batch.
+- **No Worker change.** The proxy passes paths through; this was entirely client-side.
+- **Verify migrations live in a browser, not by reading the response contract.** Added after this batch shipped: see Consequences.
+
+**Alternatives Rejected:**  
+- **Migrate from the documentation:** the docs do not distinguish plan-gated parameters from removed endpoints, which is the exact distinction needed.
+- **Pay for a higher FMP tier:** the project is deliberately free-tier; five years of statements is sufficient for the analysis the app performs.
+- **Fall back to Yahoo for the broken endpoints:** a second data model and a second failure mode for data FMP still serves once the path is right.
+- **Flush `api_cache` on migration:** discards up to 24h of usable data to avoid writing one shape adapter.
+
+**Consequences:**  
+- Statements are capped at 5 years on this plan (KNOWN-ISSUES **P.25**) and some non-US symbols are unquotable (**P.26**). Both external, both handled in code.
+- The shape adapter is permanent complexity, and worth it — it made the migration a pure client change with no cache invalidation.
+- **The migration's own endpoint choice was wrong, and only the browser said so.** The probe accepted `earnings-calendar?symbol=` because it answers HTTP 200 with a well-formed array carrying exactly the expected fields — **and another company's rows** (the live check came back with PLTR data for an AAPL query). It is the market-wide calendar; `symbol` is silently ignored. The code now calls **`earnings?symbol=`**, the per-company endpoint — so `earnings-calendar` names the *bug*, and `earnings` is what ships. No contract check catches that; only opening the app did (Cat 99). → CODING-LESSONS #13, and the reason CLAUDE.md § Shipping a Batch now requires live browser verification for anything on a data path.
+
+---
+
 ## Summary Table
 
 | ADR | Decision | Status | Date |
@@ -1340,6 +1405,8 @@ A restore re-inserts the authoritative `companies` rows but the tracker's market
 | 041 | Encrypted clear-and-restore via client-driven purge (C3b) | Accepted | 2026-07-24 |
 | 042 | Encrypted backup with a standalone passphrase (Batch A) | Accepted | 2026-07-24 |
 | 043 | Restore completeness — rehydrate derived caches + pre-restore safety backup (Batch B) | Accepted | 2026-07-24 |
+| 044 | D1 cloud snapshots — chunked, DEK-encrypted, generic CRUD (Batch C) | Accepted | 2026-08-05 |
+| 045 | FMP `/stable` migration — probe the API, don't trust the docs | Accepted | 2026-08-05 |
 
 ---
 
@@ -1354,4 +1421,4 @@ A restore re-inserts the authoritative `companies` rows but the tracker's market
 ---
 
 **End of Document**  
-Last updated: 2026-07-24
+Last updated: 2026-08-19
