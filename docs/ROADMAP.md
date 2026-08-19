@@ -485,8 +485,11 @@ cheaper after it.
   cloning in `renderPositions`/`renderChecklist`. *(optimization #6)*
 - [ ] **Virtual scrolling** for 100+ tracked companies or 500+ transactions. Fine at today's scale;
   a scalability ceiling, not a current bug. *(IMPROVEMENT-IDEAS #15, optimization #3)*
-- [ ] **Chart.js ships whole** (~200 KB gzip) but only line/bar/pie/doughnut are used — a custom
-  build or uPlot (~35 KB) would cut ~80%. *(optimization #4)*
+- [ ] **Chart.js ships whole** — `chart.js@4.4.7/dist/chart.umd.min.js` plus
+  `chartjs-adapter-date-fns@3.0.0`, both from jsDelivr, while only line/bar/pie/doughnut are used.
+  A custom build or uPlot would cut most of it. *(optimization #4 — its "~200 KB gzip" is
+  **unverified**; that looks like the minified, not the gzipped, figure. Measure both bundles over
+  the wire before deciding this is worth a batch.)*
 - [ ] **Staging/dev D1** — every schema change today runs against the live database. Deferred in the
   dump on the grounds that schema changes are rare and always a manual `wrangler d1 execute`, with
   CLAUDE.md's warn-first rule as the mitigation. `wrangler d1 create stratos-ventures-dev` + an
@@ -496,12 +499,17 @@ cheaper after it.
 Rated high in the audit:
 - [ ] **No breadcrumb or back navigation** — opening a profile and jumping to the calculator loses
   all context of where you came from. *(UX-UI #1, UX-IMPROVEMENTS #4)*
-- [ ] **Profile Overview has no visual hierarchy** — 30+ metrics on identically sized cards, so
-  nothing reads as important. Proposed: a small "headline metrics" block (P/E, revenue growth, FCF
-  yield, ROIC) plus a collapsible detail block, with the Terry Smith and ARIA scores lifted to the
-  top. *(UX-UI #3)*
-- [ ] **Tracker column picker** — 12-15 columns force horizontal scrolling on a mid-size screen.
-  User-chosen columns with saved configurations ("valuation view", "growth view"). *(UX-UI #4)*
+- [ ] **Profile Overview has no visual hierarchy** — metrics sit on identically sized cards in two
+  `cp-metrics-grid` blocks (`index.html:9580`, `:9600`), so nothing reads as important. Proposed: a
+  small "headline metrics" block (P/E, revenue growth, FCF yield, ROIC) plus a collapsible detail
+  block, with the Terry Smith and ARIA scores lifted to the top. *(UX-UI #3 — the audit's "30+
+  metrics" is **unverified**: the grids are built from several helpers and a static count was not
+  cheap to establish. Count it in the browser before sizing this work.)*
+- [ ] **Tracker column picker** — **39 columns** are defined (`stCols`, `index.html:13209-13249`)
+  with no visibility control of any kind: no `colPicker`/`toggleCol`/per-column hide exists. The
+  audit said "12-15", so this is materially worse than it was reported, not better. User-chosen
+  columns with saved configurations ("valuation view", "growth view"). *(UX-UI #4 — count measured
+  2026-08-19, not carried over)*
 
 Rated medium/low:
 - [ ] **Dashboard as hub** — widget headline numbers should be clickable and lead to the detail
