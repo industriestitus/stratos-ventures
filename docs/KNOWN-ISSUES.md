@@ -68,7 +68,7 @@ These were surfaced during the Security v2 (Phase A+B) audit and consciously def
 
 ## Sync Audit — Deferred to S2 Cross-Device Completeness (flagged 2026-07-22)
 
-The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat source (see `docs/BUG-HISTORY.md` Category 71). What remains is **cross-device completeness only** — data that is correct on the device that wrote it but doesn't propagate to a second device. None causes data loss on the originating device. Tracked as the **S2** batch in ROADMAP.md.
+The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat source (see `docs/BUG-HISTORY.md` Category 72). What remains is **cross-device completeness only** — data that is correct on the device that wrote it but doesn't propagate to a second device. None causes data loss on the originating device. Tracked as the **S2** batch in ROADMAP.md.
 
 ### SA.1 — localStorage-only fields never reach D1 (MEDIUM, mostly resolved)
 - ✅ **S2a-1** (`e8aacb0`): dashboard widget config + screener presets → `app_settings`.

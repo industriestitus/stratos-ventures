@@ -21,6 +21,8 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 9 | Post-completion QA | `93a0420` | 2026-06-27 | 10 | 0 |
 | 10 | Mobile Responsive Overflow | `b21f930` | 2026-06-27 | 6 | 1 |
 | 11 | Dashboard Widget Overflow | `b5fdc36` | 2026-06-27 | 3 | 0 |
+| 12 | Chart Container Mobile Overflow | `39fbfca` | 2026-06-28 | 1 | 0 |
+| 13 | TODO Widget Vertical Clipping | `c3b355f` | 2026-06-28 | 1 | 0 |
 | 14 | Dashboard Grid Bottom Clipping | `e74446c` | 2026-06-28 | 1 | 0 |
 | 15 | D1 Data Persistence | `f053cb7`+`cf9c284` | 2026-06-30 | 2 | 0 |
 | 16 | Phase 15 Feature QA | `bc15b16`+`872b96b` | 2026-06-30 | 4 | 0 |
@@ -41,6 +43,7 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 31 | Skeleton/Animation QA | `c7412e9` | 2026-07-02 | 3 QA | 0 |
 | 32 | Confirmation Dialogs | `a0362db` | 2026-07-02 | 3 QA | 0 |
 | 33 | CSV/Scroll/Lazy QA | `10edf61` | 2026-07-02 | 2 QA | 0 |
+| 34 | i18n Localization QA — 3 CRITICAL `t()` shadowing crashes | `e338abf` | 2026-07-02 | 3 | 0 |
 | 35 | i18n Deep Pass | `c49f3ac` | 2026-07-02 | 5 | 0 |
 | 36 | Soft-Delete + Trash | `fe3b0c8` | 2026-07-02 | 5 | 0 |
 | 37 | UX Polish (padding/focus/collapsible) | `3d75f00` | 2026-07-02 | 1 QA | 0 |
@@ -62,21 +65,22 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 53 | UX Review — Default Tab Fix | e45cba3 | 2026-07-04 | 1 | 0 |
 | 54 | UX — Back Navigation | d3260d0 | 2026-07-04 | 1 | 0 |
 | 55 | UX — Dashboard Hub Links | 3ec4467 | 2026-07-04 | 1 | 0 |
-| 56 | UX — Transaction Ticker Link | fe3cbd6 | 2026-07-04 | 1 | 0 |
-| 57 | UX — Accessibility Overlay Fix | f17d2c7 | 2026-07-04 | 1 | 0 |
-| 58 | UX — TEST-PLAN.md + Data Structures | 68604b1 | 2026-07-04 | 0 | 0 |
-| 59 | UX — Screener Filter Presets | 3f81b2d | 2026-07-04 | 4 | 0 |
-| 60 | Keyboard Shortcut + TEST-PLAN Accuracy | c4427e0 | 2026-07-04 | 1 | 0 |
+| 56 | UX — Ticker Autocomplete | `1fea9e8` | 2026-07-04 | 2 | 0 |
+| 57 | UX — Transaction Price Auto-fill | `6edec93` | 2026-07-04 | 3 | 0 |
+| 58 | UX — Partial Add Toast | `14e92e5` | 2026-07-04 | 1 | 0 |
+| 59 | UX — Transaction Ticker Cross-link | `f616215` | 2026-07-04 | 1 | 0 |
+| 60 | UX — Screener Filter Presets | `3f81b2d` | 2026-07-04 | 4 | 0 |
+| 61 | Keyboard Shortcut + TEST-PLAN Accuracy | `c4427e0` | 2026-07-04 | 1 | 0 |
 | 62 | Tooltip Expansion QA | `9a875f9` | 2026-07-08 | 4 | 0 |
 | 63 | Portfolio History Chart QA | `a7d64b9` | 2026-07-09 | 5 | 0 |
 | 64 | QA Sweep — CRITICAL+HIGH fixes | `e75f044` | 2026-07-09 | 16 | 0 |
 | 65 | QA Sweep — MEDIUM fixes | `60d3c5e` | 2026-07-09 | 14 | 0 |
-| 66 | QA Verification — extra parseInt radix | pending | 2026-07-09 | 2 | 0 |
+| 66 | QA Verification — extra parseInt radix | `935ad58` | 2026-07-09 | 2 | 0 |
 | 67 | QA Sweep — LOW fixes | `e682b59` | 2026-07-09 | 8 | 0 |
 | 68 | Cross-Device Login QA | `bbc5856` | 2026-07-09 | 1 | 0 |
 | 69 | Pre-Production Security Audit | `f42dfb4` | 2026-07-10 | 17 | 0 |
 | 70 | Pre-Production Full QA (A+B+C) | `61488a7` | 2026-07-10 | 7 | 0 |
-| 71 | Privacy Mode QA | `` | 2026-07-10 | 5 | 0 |
+| 71 | Privacy Mode QA | `abe37a1` | 2026-07-10 | 5 | 0 |
 | 72 | Field-by-Field Sync Audit & Hardening | `36cf706`…`1d31799` | 2026-07-22 | 21 | 0 |
 | 73 | S2a Cross-Device Sync + SW Auto-Reload | `e8aacb0`+`8803d3c` | 2026-07-23 | 4 | 0 |
 | 74 | S2a-2 Per-Company Attr Sync + Single-PUT Upsert | `aaff465` | 2026-07-23 | 2 | 0 |
@@ -107,14 +111,13 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 99 | FMP live-browser verification — `earnings-calendar` ignores `symbol` and returned ANOTHER company's earnings (HTTP 200, wrong data) | `14bd3b6` | 2026-08-05 | 1 | 0 |
 | 100 | Process audit — handoff process defined, unwritten shipping rules recorded, `docs/check.sh` added; DEPLOYMENT.md P0 (retired `X-Sync-Key` auth, removed routes, missing deploy ordering); QA caught 4 new false statements + a `pipefail` bug that made the checker lie; FMP key exposure closed by rotation | `96cd04f` | 2026-08-19 | 9 | 0 |
 | 101 | Stale counters removed rather than repaired — CLAUDE.md's 8 wrong numbers fixed or deleted by volatility, `check.sh` guards re-introduction, check 9 rebuilt to scan new commits, CODING-LESSONS header synced | `74fe4eb` | 2026-08-19 | 5 | 0 |
+| 102 | PDF Export QA (renumbered from a duplicate 24) | `eb93370` | 2026-07-01 | 5 | 0 |
+| 103 | Scroll Preservation + Lazy-Load Charts (renumbered from a duplicate 33) | `36c8750` | 2026-07-02 | 5 | 0 |
+| 104 | CSV Import Locale Detection (renumbered from a duplicate 34) | `3412aac` | 2026-07-02 | 4 | 0 |
+| 105 | Summary table reconciled with the body — 4 unindexed categories, 3 renumbered duplicates, 2 placeholder hashes, rows 56-61 rebuilt from the body, total re-derived | `cd919d5` | 2026-08-19 | 11 | 0 |
 
-**Total: 542 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations.
+**Total: 564 fixed, 25 potential (unfixed)** — derived from the Fixed column above, not maintained by hand; `docs/check.sh` fails if the two ever disagree. — P.3/P.15/P.16 accepted as external limitations.
 
-> ⚠️ **This total does not reconcile with the table above and is known-wrong.** Summing the Fixed
-> column (including the two `X` rows and the `5+3 QA`-style cells) gives **529**, a gap of 13.
-> Four categories (12, 13, 34, 61) have no row at all; eleven (1–4, 17, 66–71) have no `## Category N`
-> body section; and 24/33/34 appear twice in the body. Two rows carry a placeholder commit hash.
-> Reconciling this is its own batch; `docs/check.sh` fails on it until then, deliberately.
  (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch; Cat 98 = 8 adversarial-QA fixes folded into the FMP /stable migration; Cat 99 = 1 wrong-data endpoint caught only by live-browser verification.)
 
 ---
@@ -655,17 +658,19 @@ Both used `rgba(253,203,110,.2)` with `var(--orange)` — indistinguishable in t
 
 ---
 
-## Category 24 — PDF Export (QA 2026-07-01)
+## Category 102 — PDF Export QA (2026-07-01) — `eb93370`
+
+*Renumbered 2026-08-19: this was written as "Category 24" and a later batch reused that number, leaving this section invisible in the summary table. Content unchanged; the date column preserves the chronology.*
 
 ### Fixed (5)
 
 | # | Bug | Fix | File:Line |
 |---|-----|-----|-----------|
-| 24.1 | XSS risk: inline onclick with ticker interpolation in PDF dialog | Replaced with data-attribute + addEventListener | index.html:11637 |
-| 24.2 | Null ref: window.jspdf undefined if CDN blocked | Added validation check before destructuring | index.html:11659 |
-| 24.3 | Memory: jsPDF doc object never cleaned up | Moved closePdfDialog() to finally block (doc goes out of scope) | index.html:12236 |
-| 24.4 | Dialog stays open on PDF generation error | Moved closePdfDialog() to finally block (always runs) | index.html:12233 |
-| 24.5 | PDF dialog not responsive on mobile <480px | Added media query for max-width and scrollable section list | index.html:912 |
+| 102.1 | XSS risk: inline onclick with ticker interpolation in PDF dialog | Replaced with data-attribute + addEventListener | index.html:11637 |
+| 102.2 | Null ref: window.jspdf undefined if CDN blocked | Added validation check before destructuring | index.html:11659 |
+| 102.3 | Memory: jsPDF doc object never cleaned up | Moved closePdfDialog() to finally block (doc goes out of scope) | index.html:12236 |
+| 102.4 | Dialog stays open on PDF generation error | Moved closePdfDialog() to finally block (always runs) | index.html:12233 |
+| 102.5 | PDF dialog not responsive on mobile <480px | Added media query for max-width and scrollable section list | index.html:912 |
 
 ### Unfixed (0)
 
@@ -872,7 +877,9 @@ Extended bulk operations to research notes, reviews, and tracked stocks. Select 
 
 ---
 
-## Category 33 — Scroll Position Preservation & Lazy-Load Charts (UX audit)
+## Category 103 — Scroll Position Preservation & Lazy-Load Charts (UX audit, 2026-07-02)
+
+*Renumbered 2026-08-19 — originally written as "Category 33", a number a later QA batch reused.*
 
 | # | Severity | Bug | Fix |
 |---|----------|-----|-----|
@@ -884,7 +891,9 @@ Extended bulk operations to research notes, reviews, and tracked stocks. Select 
 
 ---
 
-## Category 34 — CSV Import Locale Detection (UX audit)
+## Category 104 — CSV Import Locale Detection (UX audit, 2026-07-02)
+
+*Renumbered 2026-08-19 — originally written as "Category 34", a number the i18n QA batch reused.*
 
 | # | Severity | Bug | Fix |
 |---|----------|-----|-----|
@@ -2037,6 +2046,30 @@ The design test was built into this very batch: adding Category 101 changes the 
 The summary table was also wrong in its own right and had been for months: it claimed **42** lessons where the file contains **54**, and 5 of its 7 per-domain rows were stale (JavaScript 11→12, Data Safety 8→11, API & Caching 7→5, Process 5→4, AI Behavioral 10→14). Recounted from the headings.
 
 **Result:** `check.sh` went from 15 failures to 5. Four of the five are the BUG-HISTORY table/body divergence that batch 2c will resolve; the fifth is a different defect — two summary rows (Cat 66, 71) carry a placeholder instead of a real commit hash.
+
+---
+
+## Category 105 — Summary Table Reconciled With the Body (2026-08-19)
+
+The QA log's index and its contents had drifted apart in three directions at once. None of it was visible until `docs/check.sh` (Cat 100) started comparing them.
+
+**105.1 — Four categories were documented but invisible in the index.** Cat **12** (chart-container mobile overflow, `39fbfca`), **13** (TODO widget vertical clipping, `c3b355f`), **34** (i18n QA — the three CRITICAL `t()`-shadowing crashes, `e338abf`) and **61** (keyboard shortcut + TEST-PLAN accuracy, `c4427e0`) had full body sections and no summary row. Cat 34's absence is the notable one: `CODING-LESSONS.md:150` cites "Category 34: 34.1-34.3 — all CRITICAL" as the source of the `t()`-shadowing rule, so the index was silently missing the entry behind one of the project's most-cited lessons.
+
+**105.2 — Three sections had their numbers taken by later batches.** The 2026-07-01/02 UX-audit work was written as Categories 24, 33 and 34; later QA batches reused all three numbers. For 24 and 33 the summary table resolved the number to the *later* section; for 34 there was no row at all (105.1), and `CODING-LESSONS.md:150` is what pins 34 to the later, i18n section. The earlier ones became unreachable — present in the file, absent from the index, impossible to cite without ambiguity. They were renumbered **102** (PDF Export QA, `eb93370`), **103** (scroll preservation + lazy-load charts, `36c8750`) and **104** (CSV import locale detection, `3412aac`), each carrying a note about its original number. Content unchanged; the Date column preserves the chronology that the numbering no longer carries.
+
+**105.3 — Two rows carried a placeholder instead of a commit hash**, against the docs rule that requires a real hash in the index. Cat 66 said `pending`; Cat 71 was an empty pair of backticks. Recovered from git: `935ad58` ("Fix 2 remaining parseInt missing radix found during QA verification") and `abe37a1` ("Add Privacy Mode"). Both had been unresolved for over a month.
+
+**105.4 — The running total was a hand-maintained number that matched nothing.** It claimed 542 while the Fixed column summed to 529. Be precise about the direction, because the obvious story is wrong: recovering the 20 genuinely-missing fixes (6 in the four unindexed categories, 14 in the three renumbered ones) puts the true pre-batch count at **549**, so the stated 542 was **7 too low** — not 13 too high. The −13 was measured against a table that was itself incomplete. The residual 7 is unexplained drift from re-typing a total across dozens of batches, and there is no way to attribute it now. The total is now **derived from the table** and `check.sh` fails if the two disagree. It is not a coincidence that the one number nobody could verify is the one that was wrong.
+
+**105.5 — `check.sh` check 4 asked a one-directional question in both directions.** It required every number to have *both* a summary row and a `## Category N` body section, so it reported 11 "missing" bodies (Cat 1-4, 17, 66-71). Those are not defects: the table is the index of record, and a category summarised in a single row is a complete entry. A body section with no row is the real defect — work that has vanished from the index. The check now enforces that direction only, and reports table-only categories as information.
+
+**105.6 — Rows 56-61 indexed the wrong work entirely (found by QA on this batch).** The first attempt at this category added a row for Cat 61 and declared the region fixed. QA noticed the new row was byte-identical to row 60 — which exposed a table that had been offset against the body since 2026-07-04. Rows 56-60 carried shifted titles and, in three cases, the hash of the *docs* commit rather than the fix commit (`fe3cbd6`, `f17d2c7`, `68604b1` are all "Update docs: BUG-HISTORY cat N…"). The body sections were correct all along, each holding its own feature commit. The rows were rebuilt from the body: 56 Ticker Autocomplete `1fea9e8` (2), 57 Transaction Price Auto-fill `6edec93` (3), 58 Partial Add Toast `14e92e5` (1), 59 Transaction Ticker Cross-link `f616215` (1), 60 Screener Filter Presets `3f81b2d` (4), 61 Keyboard Shortcut + TEST-PLAN `c4427e0` (1) — 12 fixes where the table had claimed 7. Git shows the origin: commit `1228090`, "Update BUG-HISTORY: add cat 60-61, **fix summary table** for July 4 sessions", is what introduced the offset while trying to correct it.
+
+**105.7 — A blank line was silently splitting the summary table.** In GFM a blank line ends a table, so the rows after it rendered as literal `| 102 | … |` text. `check.sh` never saw it because its parser reads line-by-line and ignores blanks. A machine check and a human reader were looking at two different documents.
+
+**105.8 — Known limits of this check, stated rather than implied.** `check.sh` compares category *numbers*, not content: a row numbered N satisfies it whatever it says, which is precisely why the 56-61 misalignment survived. It is also blind to the one `## Session 25` heading (24 documented fixes, no row) that predates the `## Category N` convention. Both are now reported by the script rather than left to be rediscovered.
+
+**Lesson:** an index and its contents drift apart silently, because nothing reads both at once. Every defect here was months old, and none had ever been caught by a human reading the file.
 
 ---
 
