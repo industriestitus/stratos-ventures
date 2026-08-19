@@ -739,7 +739,7 @@ stratos-ventures/
 ```
 
 > **The `docs/` listing lives in CLAUDE.md, not here.** This file used to keep a second copy, and it
-> drifted exactly as you would expect: "168 fixes, 21 categories" against a real 629/112, "22 tables"
+> drifted exactly as you would expect: "168 fixes, 21 categories" against a real 632/112, "22 tables"
 > against 24, and it described `ROADMAP.md` as the phase tracker after the completed phases had moved
 > to `ROADMAP-ARCHIVE.md`. `check.sh` check 11 verifies CLAUDE.md's tree against the directory;
 > nothing was watching this one, which is the whole argument for having one owner (Cat 101, Cat 109).
