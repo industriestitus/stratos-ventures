@@ -33,6 +33,11 @@ warn() { printf '  \033[33mwarn\033[0m  %s\n' "$1"; WARN=$((WARN+1)); }
 head_() { printf '\n\033[1m%s\033[0m\n' "$1"; }
 
 BH=docs/BUG-HISTORY.md
+BHA=docs/BUG-HISTORY-ARCHIVE.md
+# The log is split by date (Cat 84 / 2026-07-24). $BH holds the summary table — the index for
+# BOTH files — so every check that asks "is this category indexed?" must read the bodies from both,
+# or archiving a category would silently make it invisible to the very check meant to catch that.
+BH_ALL="$BH $BHA"
 
 # ---------------------------------------------------------------- 1. versions
 head_ "1. Version bump (APP_VERSION must equal sw.js CACHE_NAME)"
@@ -52,7 +57,7 @@ LINES=$(wc -l < web/index.html | tr -d ' ')
 ADRS=$(grep -c '^## ADR-' docs/DECISIONS.md)
 TABLES=$(grep -c '^CREATE TABLE' docs/d1-schema.sql)
 TOTAL=$(grep -oE 'Total: *[0-9]+ fixed' "$BH" | grep -oE '[0-9]+' | head -1)
-MAXCAT=$(grep -oE '^## Category [0-9]+' "$BH" | grep -oE '[0-9]+' | sort -n | tail -1)
+MAXCAT=$(grep -hoE '^## Category [0-9]+' $BH_ALL 2>/dev/null | grep -oE '[0-9]+' | sort -n | tail -1)
 LESSONS=$(grep -c '^### ' docs/CODING-LESSONS.md)
 if [ -z "$TOTAL" ] || [ -z "$MAXCAT" ]; then
   bad "could not parse BUG-HISTORY: Total='${TOTAL:-?}' MaxCategory='${MAXCAT:-?}' — heading/phrasing changed?"
@@ -119,7 +124,9 @@ else
   # IS a defect: a body section with no row is work that has vanished from the index,
   # which is exactly how four categories (12/13/34/61) went missing for months.
   for i in $(seq 1 "$MAXCAT"); do
-    grep -qE "^## Category $i([^0-9]|\$)" "$BH" || { tableonly=$((tableonly+1)); continue; }
+    # Both files: a body moved to the archive must still be held to having a row, or
+    # archiving would silently exempt a category from the one check that indexes it.
+    grep -qhE "^## Category $i([^0-9]|\$)" $BH_ALL 2>/dev/null || { tableonly=$((tableonly+1)); continue; }
     printf '%s\n' "$TBL" | grep -qE "^\| *$i *\|" || missing_row="$missing_row $i"
   done
   [ -z "$missing_row" ] \
@@ -128,11 +135,12 @@ else
 fi
 # Headings that predate the `## Category N` convention are invisible to every check
 # above — flag them rather than let them be rediscovered.
-LEGACY=$(grep -cE '^## Session [0-9]+' "$BH")
+LEGACY=$(grep -hcE '^## Session [0-9]+' $BH_ALL 2>/dev/null | awk '{s+=$1} END{print s+0}')
 [ "$LEGACY" = "0" ] \
+  && ok "no headings outside the '## Category N' convention" \
   || warn "$LEGACY '## Session N' section(s) sit outside the category numbering and are indexed by nothing"
 
-DUPES=$(grep -oE '^## Category [0-9]+' "$BH" | grep -oE '[0-9]+$' | sort -n | uniq -d | tr '\n' ' ')
+DUPES=$(grep -hoE '^## Category [0-9]+' $BH_ALL 2>/dev/null | grep -oE '[0-9]+$' | sort -n | uniq -d | tr '\n' ' ')
 [ -z "$DUPES" ] && ok "no duplicate category numbers in the body" \
                 || bad "duplicate '## Category N' numbers: $DUPES"
 
@@ -328,6 +336,25 @@ else
     && ok "every file CLAUDE.md's tree names actually exists" \
     || bad "named in CLAUDE.md's tree but not on disk:$GHOST"
 fi
+
+# ------------------------------------------------ 12. archives hold no live work
+head_ "12. Archives contain only finished work"
+# An archive is a promise that nothing in it is still open. If live work gets swept in
+# during a split it stops appearing in the backlog and is not "archived" but lost —
+# the same failure as Cat 106's .txt dumps, arrived at from the opposite direction.
+if [ ! -f docs/ROADMAP-ARCHIVE.md ]; then
+  bad "docs/ROADMAP-ARCHIVE.md is missing — the ROADMAP split is half-applied"
+else
+  OPENBOX=$(grep -cE '^- \[ \]' docs/ROADMAP-ARCHIVE.md)
+  [ "$OPENBOX" = "0" ] \
+    && ok "ROADMAP-ARCHIVE.md has no open checkbox" \
+    || bad "$OPENBOX open checkbox(es) in ROADMAP-ARCHIVE.md — live work was archived, move it back to ROADMAP.md"
+fi
+# The live ROADMAP must still be the place with open work, or the split went the wrong way.
+LIVEBOX=$(grep -cE '^ *- \[ \]' docs/ROADMAP.md)
+[ "$LIVEBOX" -gt 0 ] \
+  && ok "ROADMAP.md still carries the open backlog ($LIVEBOX items)" \
+  || bad "ROADMAP.md has no open checkbox left — the backlog was archived wholesale"
 
 # ------------------------------------------------------------------ summary
 printf '\n'
