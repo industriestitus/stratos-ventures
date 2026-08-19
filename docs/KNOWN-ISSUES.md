@@ -1,6 +1,6 @@
 # Stratos Ventures — Known Issues & Tech Debt
 
-**Last Updated:** 2026-08-05
+**Last Updated:** 2026-08-19
 
 Consolidated from `docs/BUG-HISTORY.md` audit findings, feedback memory, and code review.
 
@@ -94,7 +94,10 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 
 ## Medium Priority
 
-### P.17 — Notes full-text search runs over encrypted content (functional, from Phase-D sweep 2026-07-24)
+### P.27 — Notes full-text search runs over encrypted content (functional, from Phase-D sweep 2026-07-24)
+> Renumbered from P.17 on 2026-08-19 (Cat 106): that ID was already taken by the fixed
+> `renderPositions` NaN issue below, and BUG-HISTORY records it under the old meaning. Two live
+> entries sharing one ID is the same defect Cat 105 removed from BUG-HISTORY.
 - **Status:** Open, accepted trade-off of E2EE. Since Phase C encrypted `notes.title`/`content`, the worker's FTS/LIKE search (`handleNotesSearch`) now matches **ciphertext**, so content search returns nothing useful for encrypted notes. Not a leak (the sweep confirmed no plaintext exposure) — a functionality cost of at-rest encryption. **Fix direction (future):** client-side search (decrypt in memory + filter) since the app already loads all notes, OR a client-maintained encrypted search index. Tracked with [[fmp-api-migration]]/[[backup-safety-net]] as non-security follow-ups.
 
 ### P.3 — FMP `/profile` Missing Debt/Cash Data (ACCEPTED)
@@ -174,6 +177,11 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Where:** `downloadBackupPlaintext` uses `_gatherAllData()` directly; only `downloadBackup` (encrypted) offers the checkbox.
 - **Decision:** the encrypted download is the default and the intended complete-snapshot path; the plaintext export exists as an escape hatch, not as the archival format.
 
+### P.28 — The Global `t()` Is Shadowed at ~91 Sites (MAINTENANCE RISK, migrated 2026-08-19)
+- **Where:** **110 sites, measured 2026-08-19** — 15 `const t = …` declarations, 91 `t =>` callback parameters (`forEach`/`map`/`filter`/`reduce`), and 4 `(t, …)` parameter lists, all shadowing the global i18n `t()`. Most common: `const t=document.createElement('div')` in `showToast`, `.forEach(t=>…)` over transaction arrays, `const t=escH(ticker)` in checklist rendering. The July 2026 sweep counted ~91; the count grows with the file, so re-measure rather than quoting this number later.
+- **Effect:** nothing today — none of those scopes calls `t()`. The risk is latent: any future line added *inside* one of them that calls `t()` throws `TypeError: t is not a function`. This has already happened twice: Cat 34 (three CRITICAL crashes) and the tooltips batch, where QA caught a `t`→`tip` shadow before it shipped.
+- **Status:** the unfixed remainder of the 2026-07-09 QA sweep, whose other findings were resolved across Cat 64/65/67 or judged not real bugs. Recorded here because it is a real trap with no current symptom, so it will never surface on its own. **Fix direction:** rename to descriptive locals (`el`, `tx`, `todo`, `tip`) — mechanical, but 110 sites means its own batch, ideally alongside the module split. See `memory/feedback_t-function-shadowing.md` and CODING-LESSONS.
+
 ---
 
 ## ~~Deep Audit Findings~~ (ALL FIXED 2026-07-01)
@@ -229,5 +237,11 @@ Bundling too many tasks per session (e.g., 9 tasks, ~200 fields) compounds bugs 
 | ~~LOW~~ | ~~3/5~~ | ~~P.12/P.17/P.18 FIXED, P.15/P.16 accepted~~ |
 | ~~Deep Audit~~ | ~~5~~ | ~~ALL FIXED 2026-07-01~~ |
 | Dev Gotchas | 6 | Process discipline, not code fixes |
+
+The rows above are a 2026-07-01 snapshot, kept for the record. **Currently open** (nothing critical):
+`SV.1`, `SV.4`, `SV.5`, `SV.7` (deferred security hardening) · `SA.1`, `SA.4`, `SA.5` (sync audit
+remnants) · `P.3`, `P.15`, `P.16`, `P.19`, `P.20`–`P.26` (accepted or external) · `P.27` (notes
+search over ciphertext) · `P.28` (`t()` shadowing, latent). Feature-shaped work lives in
+ROADMAP § Technical Debt & Deferred Audit Findings, not here.
 
 No active `TODO`, `FIXME`, or `HACK` comments found in the codebase — inline technical debt markers are clean.

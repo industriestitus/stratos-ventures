@@ -150,10 +150,12 @@ SUMV=${SUM%%|*}; NONNUM=${SUM##*|}
   || bad "Fixed column sums to $SUMV but the header claims ${TOTAL:-?}"
 
 # Commit hashes: required in the table row. Assert that the cell CONTAINS an identifier
-# rather than blacklisting placeholder words — the blacklist was case-sensitive, so a row
+# rather than blacklisting placeholder words. The old blacklist was fail-open twice over: it
+# was case-sensitive (missing `PENDING`) AND it required a bare cell, so even a lowercase
+# `pending` in backticks passed — and backticks are the format every real row uses. A row
 # reading `PENDING` sailed straight through the check whose whole job was to catch it. Same
-# fail-open class as the pipefail bug: a rule that only recognises the wordings someone
-# thought of is not a rule. Deliberately shape-tolerant, because the legitimate cells are
+# fail-open class as the pipefail bug: a rule that has to guess both the wording and the
+# punctuation someone will use is not a rule. Deliberately shape-tolerant, because the cells are
 # not uniform: backticked and bare hashes, `a`+`b` pairs, an `a`…`b` range, and the pre-Cat-24
 # session references (`S1-S7`). Demanding one canonical form here would have flagged 10 valid
 # rows and buried the one real defect — a check nobody trusts gets bypassed.

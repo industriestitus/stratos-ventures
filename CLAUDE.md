@@ -30,13 +30,22 @@ docs/
   KNOWN-ISSUES.md     — Unfixed issues, tech debt, dev gotchas
   DECISIONS.md        — 43 Architecture Decision Records (ADRs)
   DEPLOYMENT.md       — Deploy guide (GitHub Pages, Worker, D1, secrets)
-  ROADMAP.md          — Project phases and progress
+  ROADMAP.md          — Project phases, progress, and the technical-debt backlog
   TEST-PLAN.md        — Manual test checklist (there are no automated tests)
   d1-schema.sql       — D1 database schema (24 tables)
   BUG-HISTORY.md      — QA audit log, by category and commit
   EXPANSION-PLAN.md   — Phase 11-18 detailed specs (all complete)
+  DEVELOPMENT-WORKFLOW.md   — How the collaboration works, written for Peter (Hungarian).
+                              This file owns the process RULES; that one describes the experience
+  INVESTMENT-CHECKLIST.md   — The investment framework the in-app checklist implements
+  reference-desktop-schema.sql — SQLite schema of the deleted Electron app; kept as D1 design input
   check.sh            — Docs & process consistency gate
 ```
+This tree must list every document in `docs/`, and every name here must exist — `check.sh` check 11
+fails on either. (`.txt`/`.pdf` are exempt: those are one-off dumps, and check 7 warns about them
+instead, because the fix is deleting them, not listing them.) Three real documents were missing from
+this tree for six weeks, and the unlisted one drifted the furthest — it still prescribed a branching
+model deleted long before. Nobody maintains what nothing points at.
 
 **Only slow-moving counters live here** — the ADR count and the table count, which change on
 architecture or schema batches, and `docs/check.sh` fails when either drifts. Anything that moves

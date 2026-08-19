@@ -295,8 +295,8 @@ Four-agent process audit — is the handoff process defined, does the docs polic
 - [x] **CLAUDE.md counters** (2026-08-19, Cat 101) — all 8 were wrong (ADRs, tables, fixes, categories, lessons, line count, cache name, dev port). The two slow-moving ones were corrected; the five that change every batch or commit were **removed** rather than repaired, because a claim that goes stale every batch turns the gate permanently red and trains people to bypass it. `check.sh` guards re-introduction, and check 5 now verifies CODING-LESSONS against itself instead of forcing it to restate BUG-HISTORY's numbers.
 - [x] **`check.sh` check 9 rebuilt** (2026-08-19, Cat 101) — the "is the local key in git history" test lost its input when the key was deleted and degraded to a silent "skipped". Replaced by a scan of recent commits across all branches for key-shaped literals, sharing one pattern with the working-tree scan.
 - [x] **BUG-HISTORY integrity** (2026-08-19, Cat 105) — 4 categories were documented but absent from the index (12/13/34/61, incl. the one CODING-LESSONS cites for the `t()`-shadowing rule); 3 sections had their numbers reused by later batches and were renumbered 102-104; 2 rows carried a placeholder instead of a commit hash, both recovered from git. The running total is now derived from the table rather than typed by hand. The 11 "missing body sections" turned out not to be a defect — the check was asking a one-directional question in both directions, and was corrected.
-- [ ] **Orphaned `.txt` dumps** — ~16 open items live only in six one-off audit files in `docs/`, incl. "there is not a single automated test". Migrate to ROADMAP, then delete the dumps.
-- [ ] **Stale git worktree** at `.claude/worktrees/sleepy-jennings-5aafbd` (v37) shadows the real tree in searches.
+- [x] **Orphaned `.txt` dumps** (2026-08-19, Cat 106) — six one-off audit files plus `DOCUMENTATION-PLAN.pdf` held **32 items tracked nowhere else**, twice the ~16 estimated. Migrated to § Technical Debt & Deferred Audit Findings below, then all seven files deleted. The PDF turned out to be a fully executed plan (every document it proposed exists) and carried no open items — but it named three real docs missing from CLAUDE.md's file tree, so `check.sh` gained check 11 to keep that tree honest.
+- [x] **Stale git worktree** (2026-08-19, Cat 106) — `.claude/worktrees/sleepy-jennings-5aafbd` removed. Its one unmerged commit `61cfc5e` (D1 checklist sync) was checked before deleting: all three of its fixes were independently re-made on `main` by `815857d` (flat-vs-`.answers` shape, via the `_sectionAnswers` helper that handles both) and `4b7db52` (seeding missing `checklist_templates`, via batch upsert + re-fetch). Nothing was lost.
 - [ ] **Memory consolidation** — 57 files / 13 KB index loaded every session; ~28 duplicate what the repo already records.
 - [ ] **Archiving + missing ADRs** — split BUG-HISTORY (keep summary table + last ~15 categories + Deployment Notes hot) and ROADMAP (completed phases → archive); write the 2 ADRs that were skipped: D1 cloud snapshots and the FMP `/stable` migration.
 - [ ] **Final: end-to-end process review + presentation** — once the cleanup batches are done, re-run the audit from scratch against the new end state, verify every rule now holds, and present it to Peter: what the process looks like now, what it costs per session, where it still leaks, plus concrete optimisation and improvement options (automation depth, what to measure, what to drop). Deliverable is a presentation for Peter, not another doc dump.
@@ -440,6 +440,118 @@ Making the backup a complete, offline-interpretable snapshot of the whole app. O
 - [x] Portfolio history chart — Calculated daily portfolio value from transactions + FMP historical prices. Period selector (1M/3M/6M/1Y/YTD/ALL), asset type filter chips (i18n), S&P 500 benchmark overlay (dashed orange, scaled). Handles: stocks/ETF/crypto (API), real_estate (manual), cash/savings (=1), bonds (face value fallback). Race condition guard, in-memory price cache. QA: 5 fixes (race condition, savings=1, bond fallback, i18n chips, error status cleanup).
 - [x] Accessibility (ARIA + Backdrop) — role="dialog" aria-modal on all 13 overlays, backdrop click-to-close on 11 modals, aria-label on 7 icon-only buttons. Remaining: aria-live on toast container, aria-expanded on collapsible toggles.
 - [ ] Mobile gestures — Pull-to-refresh on company profile and dashboard (vertical swipe down, no browser conflict). Long-press on table rows for context menu (edit/delete/archive, replaces tiny icon buttons). Swipe-to-dismiss on toasts (horizontal, no browser back/forward conflict). Note: horizontal swipe navigation deliberately excluded — conflicts with browser back/forward gesture and bottom nav already handles section switching.
+
+---
+
+## Technical Debt & Deferred Audit Findings
+
+Migrated 2026-08-19 (Cat 106) out of six one-off `.txt` dumps in `docs/` that were then deleted —
+`IMPROVEMENT-IDEAS`, `optimization-suggestions`, `UX-IMPROVEMENTS`, `UX-REVIEW-2026-07-03`,
+`UX-UI-AUDIT-2026-07-03`, `QA-SWEEP-2026-07-03`. Only items **tracked nowhere else** are listed:
+each was checked against this file and KNOWN-ISSUES first, and about 70% of the dumps' ~107 findings
+were dropped because they were already done, already tracked, or already fixed. A handful that the
+dumps themselves marked "MAYBE LATER" were kept rather than dropped — each says so, with the reason,
+because a deferral with a stated rationale is worth more than a deleted line. Provenance is kept per
+item so the deletion lost nothing. None of this is blocking; it is the honest backlog.
+
+### Architecture & code quality
+The first item is the parent — most of the rest are only worth doing as part of it, or become much
+cheaper after it.
+- [ ] **Split the monolithic `index.html`** — 17 253 lines in one file, the single largest piece of
+  technical debt. ES modules (`portfolio.js`, `dashboard.js`, `company.js`, `utils.js`, …). Makes
+  debugging tractable, lets the browser cache per-module, and unlocks the four items below.
+  ~4-5 sessions. *(IMPROVEMENT-IDEAS #1, optimization #1)*
+  - [ ] **Code splitting / lazy-load** rarely used modules (screener, framework, valuation history)
+    so first paint doesn't pay for all 18 phases. *(IMPROVEMENT-IDEAS #14)*
+  - [ ] **Reduce the global surface** (`tStocks`, `pfPositions`, …) — explicit import/export instead
+    of globals; removes name-collision and leak risk. *(optimization #5)*
+  - [ ] **Build tooling** (Vite/esbuild) for bundling, minification and cache-busting — deferred in
+    the dump itself, and only meaningful once the file is split. *(IMPROVEMENT-IDEAS #3)*
+- [ ] **No automated tests at all** — `docs/TEST-PLAN.md` is 371 checkboxes and 100% manual; every
+  fix in BUG-HISTORY came from manual QA. At minimum, unit tests over the pure calculation logic (DCF,
+  TWR, XIRR, scoring, thresholds, yellow flags) so a refactor can't silently break the numbers.
+  This is the item that sat untracked for six weeks. ~2-4 sessions.
+  *(IMPROVEMENT-IDEAS #2, optimization #7)*
+- [ ] **Extract the inline CSS** — a **1 058-line** `<style>` block (`index.html:36-1093`). A
+  separate `.css` file is cached independently and downloaded in parallel. ~1 session.
+  *(optimization #2 — which claimed "~3000+ sor"; measured, it was ~1 049 even when that was
+  written. Re-measured rather than copied forward, since propagating unverified numbers is the
+  habit this whole track exists to break.)*
+- [ ] **JSDoc types for the core data structures** — `tStocks`, `pfPositions`, `pfAccounts` are
+  documented in prose (ARCHITECTURE § 5.1) but nothing checks them. JSDoc gives IDE completion and
+  catches shape errors without adopting TypeScript. ~1 session. *(optimization #8)*
+- [ ] **`innerHTML` in the large renderers** — `escH()` already covers XSS (the 2026-07-09 sweep
+  audited all 162 sites clean), so this is about speed and fragility: `DocumentFragment` or template
+  cloning in `renderPositions`/`renderChecklist`. *(optimization #6)*
+- [ ] **Virtual scrolling** for 100+ tracked companies or 500+ transactions. Fine at today's scale;
+  a scalability ceiling, not a current bug. *(IMPROVEMENT-IDEAS #15, optimization #3)*
+- [ ] **Chart.js ships whole** (~200 KB gzip) but only line/bar/pie/doughnut are used — a custom
+  build or uPlot (~35 KB) would cut ~80%. *(optimization #4)*
+- [ ] **Staging/dev D1** — every schema change today runs against the live database. Deferred in the
+  dump on the grounds that schema changes are rare and always a manual `wrangler d1 execute`, with
+  CLAUDE.md's warn-first rule as the mitigation. `wrangler d1 create stratos-ventures-dev` + an
+  env-based binding if it is ever wanted. *(IMPROVEMENT-IDEAS #10)*
+
+### UX findings (2026-07-03 UI/UX audit)
+Rated high in the audit:
+- [ ] **No breadcrumb or back navigation** — opening a profile and jumping to the calculator loses
+  all context of where you came from. *(UX-UI #1, UX-IMPROVEMENTS #4)*
+- [ ] **Profile Overview has no visual hierarchy** — 30+ metrics on identically sized cards, so
+  nothing reads as important. Proposed: a small "headline metrics" block (P/E, revenue growth, FCF
+  yield, ROIC) plus a collapsible detail block, with the Terry Smith and ARIA scores lifted to the
+  top. *(UX-UI #3)*
+- [ ] **Tracker column picker** — 12-15 columns force horizontal scrolling on a mid-size screen.
+  User-chosen columns with saved configurations ("valuation view", "growth view"). *(UX-UI #4)*
+
+Rated medium/low:
+- [ ] **Dashboard as hub** — widget headline numbers should be clickable and lead to the detail
+  view, so most things are one click from the dashboard. Related: the default widget set is large
+  enough to overwhelm on first run, even though hide/show and reordering already exist.
+  *(UX-UI #2 + #5, UX-REVIEW #6)*
+- [ ] **Ticker input autocomplete is inconsistent** — the transaction and research modals have a
+  datalist, the tracker's "Add Stock" input does not. *(UX-UI #9)*
+- [ ] **"Add broker first" is a dead end** — the error says what is wrong but doesn't open the
+  account modal. *(UX-UI #10)*
+- [ ] **Transaction price isn't pre-filled** from the last known price for an already-tracked
+  ticker. *(UX-UI #11)*
+- [ ] **Delete confirmation works three different ways** — confirm modal for positions, type-to-
+  confirm for stocks, undo toast for notes. Proposed rule: soft delete + undo everywhere,
+  confirm dialog for permanent actions, type-to-confirm only for genuinely destructive ones.
+  *(UX-UI #13)*
+- [ ] **No rule for modal vs inline data entry** — positions and transactions use modals, price
+  alerts and sell triggers are inline. Proposed: 3+ fields → modal, 1-2 fields → inline.
+  *(UX-UI #14)*
+- [ ] **Missing cross-links** — earnings calendar, research notes and dashboard alerts show tickers
+  as plain text. Every ticker occurrence should open that company's profile. *(UX-UI #15)*
+- [ ] **Checklist has no progress indicator** — 12 sections and 100+ questions with no per-company
+  "65% analysed" signal, in the tracker or at the top of the checklist. *(UX-REVIEW #7 + II.3)*
+- [ ] **Quick add position** — adding a position is account → position → transaction with no wizard.
+  One modal (ticker, broker, shares, price, date) that creates the account if needed.
+  *(UX-REVIEW #3 + II.5)*
+- [ ] **Pipeline is text-only** — Watchlist → Under review → Buy target → Owned would read far
+  faster as a kanban or funnel view. *(UX-REVIEW #8)*
+- [ ] **Empty states are weak in several places** — screener "no match" doesn't offer to clear
+  filters, compare mode disables its button without saying why, the conviction and expected-return
+  charts render an empty canvas. Each needs explanation + a CTA + a suggested first step. Related:
+  the three empty dashboard cards on first run all say the same thing differently, and the empty
+  pages would carry better with an illustration.
+  *(UX-UI #18, UX-REVIEW #5, UX-IMPROVEMENTS #2 + #3)*
+- [ ] **Partial add is silent about what's missing** — a "partial add" toast appears but doesn't say
+  which data failed or how to fill it in by hand. *(UX-UI #12)*
+- [ ] **Shortcut cheat-sheet** — `?` opens the guide in Settings; a floating overlay palette would
+  surface it where it is needed. *(UX-UI #8)*
+- [ ] **Recently viewed** — pin-to-top exists, but there is no most-recent list for the 5-6
+  companies actually being worked on. *(UX-UI #16)*
+- [ ] **Settings test buttons mix green and red styling** — colour should signal the result, not the
+  button. *(UX-IMPROVEMENTS #5)*
+- [ ] **Dashboard drag-and-drop** — hide/show and arrow reordering are done; freeform layout and
+  widget sizing are not. *(IMPROVEMENT-IDEAS #13)*
+- [ ] **Watchlist price tracking** — no sparkline or price history for watched companies, so you
+  can't see whether something got cheaper since you started following it.
+  *(IMPROVEMENT-IDEAS #12)*
+- [ ] **Deep analysis is spread across modules** — fully analysing one company means Companies →
+  checklist → Research → Portfolio → Reviews. The summary tab helps for reading; editing still
+  bounces between sections. *(UX-REVIEW #4)*
 
 ---
 

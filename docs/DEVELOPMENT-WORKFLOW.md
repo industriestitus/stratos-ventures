@@ -1,5 +1,12 @@
 # Fejlesztési Workflow — Hogyan dolgozunk együtt
 
+> **Ez a dokumentum neked szól, Peter — nem Claude-nak.** Azt írja le, hogyan néz ki az
+> együttműködés a te oldaladról. A *kötelező* folyamatszabályokat (commit-prefixek, verzió-bump,
+> deploy-sorrend, QA, docs pass, handoff) a **`CLAUDE.md` birtokolja, és az az irányadó** —
+> ha a kettő valaha ellentmond egymásnak, a CLAUDE.md nyer. Ez a fájl 2026-08-19-ig karbantartás
+> nélkül állt, és három hamis állítást hordozott (branching modell, `desktop/` mappa,
+> commit-gyakorlat); azóta a `docs/check.sh` 11. pontja figyeli, hogy legalább látható maradjon.
+
 ## Session Workflow (minden session elején és végén)
 
 ### Session kezdete
@@ -66,17 +73,21 @@
 
 ## Git Workflow
 
-### Branching
-```
-main                    — stabil, működő kód
-feature/phase-0-security — Phase 0 munkája
-feature/phase-1-shell    — Phase 1 munkája
-...
-```
+**A részletes és irányadó szabályok: `CLAUDE.md` § Git és § Shipping a Batch.** Röviden:
+
+### Branching — nincs
+Minden commit egyenesen a `main`-re megy (trunk-based). Nincsenek feature branchek: egy fejlesztő,
+nincs CI-kapu, nincs reviewer — a biztonsági háló helyette a verzió-bump és a `docs/check.sh`.
+
+> Ez a szakasz korábban egy `feature/phase-N-*` modellt írt le. Az soha nem volt igaz: 239 commitból
+> **nulla** használta, ezért a Cat 100 kivette a CLAUDE.md-ből is.
 
 ### Commit gyakorlat
-- Minden session végén commit
-- Egy feature = egy commit (vagy logikus darabokra bontva)
+- **Egy batch = egy commit** — egy szállítható változás, soha nem vegyes zsák
+- **Mindig conventional prefix:** `feat:` `fix:` `refactor:` `chore:` `perf:` `revert:` `docs:`
+- **Deploy-commit a végén hordozza a verziót:** `fix: … (vNN)`, és ilyenkor az `APP_VERSION`
+  (`web/index.html`) és a `CACHE_NAME` (`web/sw.js`) **ugyanabban a commitban** mozdul együtt
+- **A kódcommit után külön `docs:` commit** jön, ami *csak* dokumentumot érint
 - Angol commit message, tömör
 
 ---
@@ -110,16 +121,20 @@ feature/phase-1-shell    — Phase 1 munkája
 
 ```
 /Claude/Finance/
-├── CLAUDE.md                    ← Claude beolvassa session elején
-├── docs/
+├── CLAUDE.md                    ← Claude beolvassa session elején; a folyamatszabályok gazdája
+├── docs/                        ← Teljes lista: CLAUDE.md § Architecture
 │   ├── ROADMAP.md               ← Feladatlista, progress tracking
-│   └── DEVELOPMENT-WORKFLOW.md  ← Ez a dokumentum
+│   ├── DEVELOPMENT-WORKFLOW.md  ← Ez a dokumentum
+│   └── check.sh                 ← Konzisztencia-kapu; minden docs commit előtt fut
 ├── web/                         ← IDE — minden fejlesztés
-├── desktop/                     ← Referencia, nem fejlesztünk bele
 └── .claude/
     └── projects/*/memory/       ← Claude memóriája (auto)
+        ├── STATUS.md            ← Hol tart a projekt MOST — az egyetlen státuszfájl
         ├── MEMORY.md            ← Memória index
         ├── user_*.md            ← Rólad (preferenciák)
         ├── project_*.md         ← Projekt döntések, tervek
         └── feedback_*.md        ← Feedback amit adtál
 ```
+
+> A `desktop/` mappa korábban itt szerepelt „referencia" címkével — az Electron app azóta törölve
+> lett, csak a sémája maradt meg `docs/reference-desktop-schema.sql`-ben.
