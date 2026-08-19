@@ -76,23 +76,31 @@ claim() { # claim <label> <regex whose LAST number is the claim> <expected>
     bad "$label — CLAUDE.md says $got, reality is $want"
   else ok "$label = $want"; fi
 }
-claim "ADR count"          '[0-9]+ Architecture Decision Records'  "$ADRS"
-claim "D1 table count"     'schema \([0-9]+ tables\)'              "$TABLES"
-claim "BUG-HISTORY fixes"  'QA audit log \([0-9]+'                 "${TOTAL:-0}"
-claim "BUG-HISTORY cats"   'fixes, [0-9]+ categories'              "$MAXCAT"
-claim "CODING-LESSONS"     '— [0-9]+ validated coding pitfalls'    "$LESSONS"
+# CLAUDE.md carries ONLY slow-moving counters — ones that change on an architecture
+# or schema batch, i.e. exactly when someone is already editing docs deeply.
+claim "ADR count"        '[0-9]+ Architecture Decision Records'  "$ADRS"
+claim "D1 table count"   'schema \([0-9]+ tables\)'              "$TABLES"
 
-# index.html line count, claimed as "11.6K lines" — compare to the nearest 0.1K.
-KL=$(awk -v n="$LINES" 'BEGIN{printf "%.1f", n/1000}')
-KCLAIM=$(grep -oE 'Main app \([0-9.]+K lines' CLAUDE.md | grep -oE '[0-9.]+' | head -1)
-if [ -z "$KCLAIM" ]; then bad "index.html line count — no claim matched in CLAUDE.md"
-elif [ "$KCLAIM" != "$KL" ]; then bad "index.html line count — CLAUDE.md says ${KCLAIM}K, reality is ${KL}K ($LINES)"
-else ok "index.html line count = ${KL}K"; fi
-
-SWCLAIM=$(grep -oE 'stratos-v[0-9.]+' CLAUDE.md | head -1)
-[ "$SWCLAIM" = "stratos-$SWV" ] \
-  && ok "sw.js cache name = stratos-$SWV" \
-  || bad "sw.js cache name — CLAUDE.md says ${SWCLAIM:-none}, reality is stratos-$SWV"
+# Per-batch and per-commit counters (bug totals, category count, lesson count, line
+# counts, cache version) must NOT be duplicated here: a claim that goes stale every
+# batch fails this gate every batch, which trains people to ignore it. They belong in
+# the document that owns them. This guard catches re-introduction.
+#
+# Scoped to the docs-tree code block only. Applied to the whole file it false-positives
+# on ordinary prose — "3 categories of failure", or documenting the cache-name format
+# by example — and a guard that fires on legitimate writing gets disabled.
+# It pins phrasings, so a determined rewording slips past; it is a reminder at the point
+# of temptation, not a proof. The real defence is that these numbers have no reason to
+# be here at all.
+TREE=$(awk '/^## Architecture/{on=1} on; on&&/^```$/&&seen++{exit}' CLAUDE.md)
+VOLATILE=$(printf '%s\n' "$TREE" | grep -cE '[0-9.]+K lines|stratos-v[0-9]|[0-9]+ (fixes|categories|bug fixes|validated coding pitfalls|lessons)')
+if [ -z "$TREE" ]; then
+  bad "could not locate the docs tree in CLAUDE.md — the volatile-counter guard is blind"
+elif [ "$VOLATILE" = "0" ]; then
+  ok "CLAUDE.md's docs tree carries no per-batch-volatile counters"
+else
+  bad "CLAUDE.md's docs tree re-introduced $VOLATILE volatile counter(s) (line count / cache version / bug totals / category or lesson count) — keep them in their owning doc"
+fi
 
 PORTC=$(grep -oE 'http.server [0-9]+' CLAUDE.md | grep -oE '[0-9]+' | head -1)
 PORTL=$(grep -oE '"port": *[0-9]+' .claude/launch.json | grep -oE '[0-9]+' | head -1)
@@ -139,16 +147,21 @@ NOHASH=$(printf '%s\n' "$TBL" | grep -cE "\| *(—|-|\`\`|pending|TBD) *\|")
   && ok "no placeholder commit hashes in the table" \
   || bad "$NOHASH table row(s) carry a placeholder commit hash instead of a real one"
 
-# ----------------------------------------------------- 5. CODING-LESSONS sync
-head_ "5. CODING-LESSONS header sync"
-CLCAT=$(grep -oE 'Categories 1-[0-9]+' docs/CODING-LESSONS.md | grep -oE '[0-9]+$' | head -1)
-[ -n "$CLCAT" ] && [ "$CLCAT" = "$MAXCAT" ] \
-  && ok "CODING-LESSONS covers categories 1-$MAXCAT" \
-  || bad "CODING-LESSONS header says 'Categories 1-${CLCAT:-?}', BUG-HISTORY is at $MAXCAT"
-CLFIX=$(grep -oE 'Source:\**[^0-9]*[0-9]+\+? bug fixes' docs/CODING-LESSONS.md | grep -oE '[0-9]+' | tail -1)
-[ -n "$CLFIX" ] && [ "$CLFIX" = "${TOTAL:-}" ] \
-  && ok "CODING-LESSONS fix count = $TOTAL" \
-  || bad "CODING-LESSONS says '${CLFIX:-?} bug fixes', BUG-HISTORY total is ${TOTAL:-?}"
+# ------------------------------------------------ 5. CODING-LESSONS self-consistency
+head_ "5. CODING-LESSONS self-consistency"
+# Deliberately NOT compared against BUG-HISTORY's total or category range any more.
+# Making this file restate another file's per-batch numbers just relocates the
+# maintenance burden the batch above set out to remove — it forced an edit here every
+# single batch. What IS worth checking is that the file agrees with itself: its summary
+# must match the lessons it actually contains.
+CLSUM=$(grep -oE '[0-9]+ lessons' docs/CODING-LESSONS.md | grep -oE '[0-9]+' | head -1)
+if [ -z "$CLSUM" ]; then
+  bad "CODING-LESSONS states no lesson count in its summary — the check is blind"
+elif [ "$CLSUM" != "$LESSONS" ]; then
+  bad "CODING-LESSONS summary says $CLSUM lessons, the file contains $LESSONS"
+else
+  ok "CODING-LESSONS summary matches its $LESSONS lessons"
+fi
 
 # ---------------------------------------------------------- 6. docs-pass pair
 head_ "6. Docs pass"
@@ -204,22 +217,32 @@ fi
 
 # Whole tree, tracked AND untracked, no path filter — the historical leak was at
 # the repo root, and an untracked pre-commit file is exactly when you want a hit.
-HITS=$(grep -rInE "(api[_-]?key|apikey|FMP|FINNHUB)[^\"']{0,24}['\"][A-Za-z0-9]{24,}['\"]|value=\"[A-Za-z0-9]{28,}\"" \
+KEYPAT="(api[_-]?key|apikey|FMP|FINNHUB|TOKEN|SECRET)[^\"']{0,24}['\"][A-Za-z0-9]{24,}['\"]|value=\"[A-Za-z0-9]{28,}\""
+HITS=$(grep -rInE "$KEYPAT" \
         --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=worktrees . 2>/dev/null | head -5)
 [ -z "$HITS" ] \
   && ok "no API-key-shaped literals in the working tree" \
   || bad "possible hardcoded key(s): $(printf '%s' "$HITS" | cut -c1-100 | tr '\n' ' ')"
 
-# The key in local settings must NOT be reachable in git history. This repo is
-# public: removing a secret in a later commit does not unpublish it — rotation does.
-LOCALKEY=$(grep -oE '[A-Za-z0-9]{28,40}' .claude/settings.local.json 2>/dev/null | head -1)
-if [ -z "$LOCALKEY" ]; then
-  warn "no local API key found to test against history (skipped)"
-elif git log --all --oneline -S"$LOCALKEY" 2>/dev/null | grep -q .; then
-  bad "the API key in settings.local.json IS PRESENT IN GIT HISTORY of this public repo — ROTATE it:
-          $(git log --all --oneline -S"$LOCALKEY" | tr '\n' ' ')"
+# The 2026-05-27 exposure (FMP key hardcoded from the initial commit through
+# cfc0da6) is CLOSED: the key was rotated and the old value now returns 401.
+# A public repo's history cannot be un-published, so there is nothing left to test
+# there — the earlier version of this check derived the key from
+# settings.local.json, which meant that deleting the key silently turned the check
+# into "skipped". A check that can lose its input degrades to silence, and silence
+# reads as success. What still needs guarding is NEW commits, so that is what we scan.
+# --all so a key committed on a side branch or in a worktree is not invisible; the same
+# KEYPAT as the tree scan so the two cannot drift apart; and an explicit failure guard,
+# because "git produced nothing" must not be indistinguishable from "nothing to find".
+RECENT_RAW=$(git log -p -30 --all --unified=0 2>/dev/null)
+if [ -z "$RECENT_RAW" ]; then
+  bad "could not read recent commits — the new-secret scan did not run (do not read this as a pass)"
 else
-  ok "the local API key does not appear anywhere in git history"
+  RECENT=$(printf '%s\n' "$RECENT_RAW" | grep '^+' | grep -inE "$KEYPAT" | head -3)
+  [ -z "$RECENT" ] \
+    && ok "no key-shaped literal added in the last 30 commits (all branches)" \
+    || bad "a key-shaped literal appears in a recent commit — if it is real, ROTATE it (deleting it later does NOT unpublish it):
+          $(printf '%s' "$RECENT" | cut -c1-100 | tr '\n' ' ')"
 fi
 
 # ---------------------------------------------------------------- 10. status
