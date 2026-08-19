@@ -105,13 +105,15 @@ Comprehensive log of all bugs found and fixed during QA audits. Organized by aud
 | 97 | Backup Batch C — D1 cloud snapshots; QA found a CRITICAL function-name collision with the portfolio `deleteSnapshot` + 5 more | `d38500a` | 2026-08-05 | 6 | 0 |
 | 98 | FMP `/stable` migration — 5 broken endpoints restored (financials, portfolio history, benchmark, dividends, earnings); QA found a HIGH 24h cache-poisoning path + 7 more | `5a30b3e` | 2026-08-05 | 8 | 0 |
 | 99 | FMP live-browser verification — `earnings-calendar` ignores `symbol` and returned ANOTHER company's earnings (HTTP 200, wrong data) | `14bd3b6` | 2026-08-05 | 1 | 0 |
-| 100 | Process audit — handoff process defined, unwritten shipping rules recorded, `docs/check.sh` added; DEPLOYMENT.md P0 (retired `X-Sync-Key` auth, removed routes, missing deploy ordering); QA caught 4 new false statements + a `pipefail` bug that made the checker lie | `96cd04f` | 2026-08-05 | 8 | 0 |
+| 100 | Process audit — handoff process defined, unwritten shipping rules recorded, `docs/check.sh` added; DEPLOYMENT.md P0 (retired `X-Sync-Key` auth, removed routes, missing deploy ordering); QA caught 4 new false statements + a `pipefail` bug that made the checker lie; FMP key exposure closed by rotation | `96cd04f` | 2026-08-19 | 9 | 0 |
+| 101 | Stale counters removed rather than repaired — CLAUDE.md's 8 wrong numbers fixed or deleted by volatility, `check.sh` guards re-introduction, check 9 rebuilt to scan new commits, CODING-LESSONS header synced | `74fe4eb` | 2026-08-19 | 5 | 0 |
 
-**Total: 536 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations.
+**Total: 542 fixed, 25 potential (unfixed)** — P.3/P.15/P.16 accepted as external limitations.
 
 > ⚠️ **This total does not reconcile with the table above and is known-wrong.** Summing the Fixed
-> column (including the two `X` rows and the `5+3 QA`-style cells) gives **523**, a gap of 13.
-> Four categories (12, 13, 34, 61) have no row at all, and 24/33/34 appear twice in the body.
+> column (including the two `X` rows and the `5+3 QA`-style cells) gives **529**, a gap of 13.
+> Four categories (12, 13, 34, 61) have no row at all; eleven (1–4, 17, 66–71) have no `## Category N`
+> body section; and 24/33/34 appear twice in the body. Two rows carry a placeholder commit hash.
 > Reconciling this is its own batch; `docs/check.sh` fails on it until then, deliberately.
  (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch; Cat 98 = 8 adversarial-QA fixes folded into the FMP /stable migration; Cat 99 = 1 wrong-data endpoint caught only by live-browser verification.)
 
@@ -1980,7 +1982,7 @@ Confirmed still working on this plan (so deliberately untouched): `profile`, `fi
 
 ---
 
-## Category 100 — Process Audit: Undefined Handoff, Drifted Docs, a Wrong Deploy Guide (2026-08-05)
+## Category 100 — Process Audit: Undefined Handoff, Drifted Docs, a Wrong Deploy Guide (2026-08-19)
 
 **Found by a four-agent process audit** (docs freshness · docs usefulness · memory/handoff · process compliance), run against the written rules rather than the code. No app code changed; nothing deployed.
 
@@ -2013,6 +2015,28 @@ Confirmed still working on this plan (so deliberately untouched): `profile`, `fi
 **100.9 — The live FMP API key was exposed in this public repo's git history — ROTATED, closed.** The key sat in `value="…"` attributes in `index.html`/`valuation.html` from `23f9c31`; `cfc0da6` deleted the lines but a public repo's history keeps serving them. The project's own security rule had been written *because* of this incident, yet the remediation had stopped at deleting the line — so the same key was still in production months later. Rotated at FMP + `wrangler secret put FMP_KEY`; **verified dead: the old key now returns HTTP 401 "Invalid API KEY"**. The 26 `settings.local.json` permission entries that embedded it were removed (355 → 329 allow rules); the app itself holds no client-side key (Settings shows "🔒 Stored securely on the Worker" since Phase A2), so nothing else needed changing.
 
 *Checker note:* `check.sh` check 9 tested the key found in `settings.local.json` against `git log --all -S`. With the key gone it now reports "skipped" — weaker, not stronger. Batch 2a replaces it with a closed-out record of this one-time exposure plus the tree scan that guards future commits. **Lesson: a check whose input can disappear degrades to silence, and silence reads as success.**
+
+---
+
+## Category 101 — Stale Counters Removed Rather Than Repaired (2026-08-19)
+
+**101.1 — All 8 counters in CLAUDE.md were wrong.** ADRs 29→43, D1 tables 22→24, fixes 171→536, categories 19→100, coding lessons 25→54, `index.html` 11.6K→17.3K lines, service-worker cache `stratos-v5`→`stratos-v56`, dev port 8765→8767, and the tech-stack line still called KV "legacy sync" when it holds the auth config, device tokens and sync meta. The docs tree also omitted TEST-PLAN.md and check.sh, and did not say EXPANSION-PLAN's phases are complete.
+
+**101.2 — The real fix was deciding which counters deserve to exist.** Two of them (`index.html` line count, `sw.js` cache name) change on *every* commit or deploy: keeping them would have made `check.sh` fail on every batch, and a gate that is always red trains people to bypass it. Three more (bug total, category count, lesson count) change on every *batch* — the same disease, slower. All five were removed from CLAUDE.md rather than corrected; they live in the document that owns them. Only the ADR count and the table count stayed, because they move on architecture or schema batches — exactly when someone is already deep in the docs.
+
+QA caught the batch getting this half-right: the first attempt asserted `check.sh` still verified all five "in their owning document", when in fact deleting the CLAUDE.md claims had removed the *only* lesson-count check in the repo, and the `index.html` line count ended up claimed by nobody and checked by nothing. Removing a duplicated claim also removes whatever verification hung off it — that has to be replaced deliberately, not assumed. `check.sh` check 5 now verifies CODING-LESSONS against **itself** (its summary vs the lessons it actually contains), which is a claim that file genuinely owns.
+
+The design test was built into this very batch: adding Category 101 changes the bug total and the category count, and it **required no CLAUDE.md edit**. Under the previous design it would have required two.
+
+**101.3 — `check.sh` guards against re-introduction.** A new check fails if CLAUDE.md ever regains a volatile counter, so the decision cannot quietly erode. The old "index.html line count" comparison was deleted along with the claim.
+
+**101.4 — `check.sh` check 9 rebuilt (see 100.9).** The "is the local key in git history?" test was replaced: the 2026-05-27 exposure is closed by rotation, and history cannot be un-published, so there was nothing left to test — but the check's *input* could vanish, turning it into a silent "skipped". It now scans the last 20 commits' diffs for key-shaped literals, which guards the thing that can still go wrong: a *new* key being committed.
+
+**101.5 — CODING-LESSONS stopped restating BUG-HISTORY's numbers.** The header had been five batches stale (Cat 96–100), while the file's own lessons #10–#14 cited categories the header claimed did not exist yet. The first attempt simply updated the numbers — but that reproduced the very disease this category is about, since check 5 then forced an edit here on *every* batch. The fix count and category range were removed instead, replaced by a pointer to the document that owns them.
+
+The summary table was also wrong in its own right and had been for months: it claimed **42** lessons where the file contains **54**, and 5 of its 7 per-domain rows were stale (JavaScript 11→12, Data Safety 8→11, API & Caching 7→5, Process 5→4, AI Behavioral 10→14). Recounted from the headings.
+
+**Result:** `check.sh` went from 15 failures to 5. Four of the five are the BUG-HISTORY table/body divergence that batch 2c will resolve; the fifth is a different defect — two summary rows (Cat 66, 71) carry a placeholder instead of a real commit hash.
 
 ---
 

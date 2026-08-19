@@ -1,7 +1,9 @@
 # Coding Lessons — Stratos Ventures Finance App
 
-**Last Updated:** 2026-07-24
-**Source:** 505+ bug fixes across 25+ QA sessions (Categories 1-95)
+**Last Updated:** 2026-08-19
+**Source:** distilled from the QA audit log — see `docs/BUG-HISTORY.md` for the categories, counts
+and commits. Those numbers are deliberately not restated here: a figure copied out of another
+document is a figure that goes stale in one of them.
 
 Reference for AI assistants and developers. All lessons are validated patterns from actual bugs found and fixed.
 
@@ -542,14 +544,14 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Domain | Lessons | Bugs Found |
 |--------|---------|-----------|
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
-| JavaScript | 11 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
-| Data Safety | 8 | 34+ (Categories 15, 72, 82, 86) |
-| API & Caching | 7 | 40+ (Categories 5, 6, 21, 80, 98, 99) |
+| JavaScript | 12 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
+| Data Safety | 11 | 34+ (Categories 15, 72, 82, 86) |
+| API & Caching | 5 | 40+ (Categories 5, 6, 21, 80, 98, 99) |
 | Testing & QA | 3 | 50+ (Categories 9-18) |
-| Process | 5 | 15+ (Categories 19-23, 100) |
-| AI Behavioral | 10 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
+| Process | 4 | 15+ (Categories 19-23, 100) |
+| AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 536+ bugs fixed, 42 lessons, 7 domains.
+**Total:** 54 lessons across 7 domains.
 
 ## Related Documents
 

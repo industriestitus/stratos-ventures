@@ -3,36 +3,46 @@
 ## Commands
 ```bash
 # Web app — serve locally
-cd web && python3 -m http.server 8765
-# Then open: http://localhost:8765/index.html
+cd web && python3 -m http.server 8767
+# Then open: http://localhost:8767/index.html
+# Consistency gate — run before every docs commit
+bash docs/check.sh
 ```
 
 ## Tech Stack
 - **Web app**: Vanilla HTML/JS/CSS, Chart.js, localStorage + D1 cloud sync
-- **Backend**: Cloudflare Workers + D1 (SQLite), KV (legacy sync)
+- **Backend**: Cloudflare Workers + D1 (SQLite), KV (auth config, device tokens, sync meta)
 - **Data APIs**: FMP (fundamentals), Finnhub (real-time/insider), Yahoo Finance (EU stocks, via CF Worker proxy)
 - **Hosting**: GitHub Pages (frontend), Cloudflare Workers (backend)
 
 ## Architecture
 ```
 web/
-  index.html          — Main app (11.6K lines, all-in-one SPA)
-  sw.js               — Service Worker (PWA caching, stratos-v5)
+  index.html          — Main app (all-in-one SPA)
+  sw.js               — Service Worker (PWA caching; cache name = APP_VERSION, see Shipping a Batch)
   manifest.json       — PWA manifest
-  cloudflare-worker/  — Yahoo Finance proxy + D1 CRUD + sync backend
+  cloudflare-worker/  — Yahoo/FMP/Finnhub proxy + D1 CRUD + auth backend
 docs/
   ARCHITECTURE.md     — System architecture, data flow, cache layers
   API-REFERENCE.md    — All API endpoints (Worker, FMP, Finnhub, Yahoo)
   GLOSSARY.md         — Financial formulas, metrics, scoring thresholds
-  CODING-LESSONS.md   — 25 validated coding pitfalls from 171+ bug fixes
+  CODING-LESSONS.md   — Validated coding pitfalls distilled from the bug log
   KNOWN-ISSUES.md     — Unfixed issues, tech debt, dev gotchas
-  DECISIONS.md        — 29 Architecture Decision Records (ADRs)
+  DECISIONS.md        — 43 Architecture Decision Records (ADRs)
   DEPLOYMENT.md       — Deploy guide (GitHub Pages, Worker, D1, secrets)
   ROADMAP.md          — Project phases and progress
-  d1-schema.sql       — D1 database schema (22 tables)
-  BUG-HISTORY.md      — QA audit log (171+ fixes, 19 categories)
-  EXPANSION-PLAN.md   — Phase 11-18 detailed specs
+  TEST-PLAN.md        — Manual test checklist (there are no automated tests)
+  d1-schema.sql       — D1 database schema (24 tables)
+  BUG-HISTORY.md      — QA audit log, by category and commit
+  EXPANSION-PLAN.md   — Phase 11-18 detailed specs (all complete)
+  check.sh            — Docs & process consistency gate
 ```
+
+**Only slow-moving counters live here** — the ADR count and the table count, which change on
+architecture or schema batches, and `docs/check.sh` fails when either drifts. Anything that moves
+every batch or every commit (bug totals, category count, line counts, cache version) is
+deliberately absent: it belongs in the document that owns it, and a counter nobody can keep true
+is worse than no counter. `check.sh` verifies those in place instead.
 
 ## Code Standards
 - Dark theme UI: bg #0f1117, surface #1a1d27, text #e4e7f1, accent #6c5ce7
@@ -58,7 +68,7 @@ docs/
 - **Conventional prefix, always:** `feat:` `fix:` `refactor:` `chore:` `perf:` `revert:` `docs:`.
   A `docs:` commit must contain *only* doc changes — the docs-pass audit relies on it,
   and `docs/check.sh` enforces both the prefix list and the purity
-- **Deploy commits end with the version:** `fix: … (v56)`. This is how a commit is traced
+- **Deploy commits end with the version:** `fix: … (vNN)`. This is how a commit is traced
   to a service-worker cache generation
 - End commit messages with `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`
 
