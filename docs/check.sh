@@ -110,19 +110,28 @@ PORTL=$(grep -oE '"port": *[0-9]+' .claude/launch.json | grep -oE '[0-9]+' | hea
 
 # --------------------------------------------- 4. BUG-HISTORY table integrity
 head_ "4. BUG-HISTORY table/body integrity"
-missing_row='' missing_body=''
+missing_row='' tableonly=0
 if [ "$MAXCAT" -lt 1 ] 2>/dev/null; then
   bad "no categories parsed — skipping the row/body cross-check"
 else
+  # One direction only. The table is the index of record: a category summarised in a
+  # single row, with no prose section, is a complete entry — not a defect. The reverse
+  # IS a defect: a body section with no row is work that has vanished from the index,
+  # which is exactly how four categories (12/13/34/61) went missing for months.
   for i in $(seq 1 "$MAXCAT"); do
-    printf '%s\n' "$TBL" | grep -qE "^\| *$i *\|"    || missing_row="$missing_row $i"
-    grep -qE "^## Category $i([^0-9]|$)" "$BH"       || missing_body="$missing_body $i"
+    grep -qE "^## Category $i([^0-9]|\$)" "$BH" || { tableonly=$((tableonly+1)); continue; }
+    printf '%s\n' "$TBL" | grep -qE "^\| *$i *\|" || missing_row="$missing_row $i"
   done
-  [ -z "$missing_row" ]  && ok "every category 1-$MAXCAT has a summary-table row" \
-                         || bad "no summary-table row for category:$missing_row"
-  [ -z "$missing_body" ] && ok "every category 1-$MAXCAT has a '## Category N' section" \
-                         || bad "no '## Category N' section for:$missing_body"
+  [ -z "$missing_row" ] \
+    && ok "every documented category has a summary-table row ($tableonly are table-only, which is fine; numbers only — content is not compared)" \
+    || bad "documented in the body but MISSING from the summary table — invisible in the index:$missing_row"
 fi
+# Headings that predate the `## Category N` convention are invisible to every check
+# above — flag them rather than let them be rediscovered.
+LEGACY=$(grep -cE '^## Session [0-9]+' "$BH")
+[ "$LEGACY" = "0" ] \
+  || warn "$LEGACY '## Session N' section(s) sit outside the category numbering and are indexed by nothing"
+
 DUPES=$(grep -oE '^## Category [0-9]+' "$BH" | grep -oE '[0-9]+$' | sort -n | uniq -d | tr '\n' ' ')
 [ -z "$DUPES" ] && ok "no duplicate category numbers in the body" \
                 || bad "duplicate '## Category N' numbers: $DUPES"
