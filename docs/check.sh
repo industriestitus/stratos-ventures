@@ -149,12 +149,21 @@ SUMV=${SUM%%|*}; NONNUM=${SUM##*|}
   && ok "Fixed column sums to the stated total ($TOTAL)" \
   || bad "Fixed column sums to $SUMV but the header claims ${TOTAL:-?}"
 
-# Commit hashes: required in BOTH the table row and the section header.
-PLACE=$(printf '%s\n' "$TBL" | grep -cE "\| *(—|-|\`\`|pending|TBD)? *\| *[0-9]{4}-" )
-NOHASH=$(printf '%s\n' "$TBL" | grep -cE "\| *(—|-|\`\`|pending|TBD) *\|")
+# Commit hashes: required in the table row. Assert that the cell CONTAINS an identifier
+# rather than blacklisting placeholder words — the blacklist was case-sensitive, so a row
+# reading `PENDING` sailed straight through the check whose whole job was to catch it. Same
+# fail-open class as the pipefail bug: a rule that only recognises the wordings someone
+# thought of is not a rule. Deliberately shape-tolerant, because the legitimate cells are
+# not uniform: backticked and bare hashes, `a`+`b` pairs, an `a`…`b` range, and the pre-Cat-24
+# session references (`S1-S7`). Demanding one canonical form here would have flagged 10 valid
+# rows and buried the one real defect — a check nobody trusts gets bypassed.
+NOHASH=$(printf '%s\n' "$TBL" | awk -F'|' '
+  { c=$4; gsub(/^[ \t]+|[ \t]+$/, "", c)
+    if (c !~ /[0-9a-f]{7,40}/ && c !~ /S[0-9]/) n++ }
+  END { print n+0 }')
 [ "$NOHASH" = "0" ] \
-  && ok "no placeholder commit hashes in the table" \
-  || bad "$NOHASH table row(s) carry a placeholder commit hash instead of a real one"
+  && ok "every summary-table row names a commit (or a pre-Cat-24 session)" \
+  || bad "$NOHASH table row(s) carry a placeholder instead of a commit hash"
 
 # ------------------------------------------------ 5. CODING-LESSONS self-consistency
 head_ "5. CODING-LESSONS self-consistency"
@@ -282,6 +291,35 @@ else
   [ -z "$STRAY" ] \
     && ok "no stale PENDING markers in other memories" \
     || warn "PENDING markers outside STATUS.md (they outlive the thing they warn about): $STRAY"
+fi
+
+# ------------------------------------------- 11. CLAUDE.md docs tree vs reality
+head_ "11. CLAUDE.md docs tree lists every file in docs/"
+# A document nothing points at is a document nobody maintains: DEVELOPMENT-WORKFLOW.md sat
+# outside this tree for six weeks and drifted the furthest of any doc in the repo — it still
+# prescribed a `feature/phase-N-*` branching model that Cat 100 had deleted as never-used.
+# Both directions matter: an unlisted file goes stale unnoticed, a listed-but-absent file
+# sends the reader somewhere that does not exist.
+# .txt/.pdf are check 7's business, not this one's — dumps get deleted, not listed.
+TREE=$(awk '/^docs\/$/{on=1;next} /^```/{if(on)exit} on' CLAUDE.md \
+       | grep -oE '^  [A-Za-z0-9._-]+' | tr -d ' ' | sort -u)
+if [ -z "$TREE" ]; then
+  bad "could not read the docs/ tree out of CLAUDE.md — the block moved or changed shape"
+else
+  UNLISTED=''
+  for f in $(ls docs/ 2>/dev/null | grep -vE '\.(txt|pdf)$'); do
+    printf '%s\n' "$TREE" | grep -qxF "$f" || UNLISTED="$UNLISTED $f"
+  done
+  GHOST=''
+  for n in $TREE; do
+    [ -e "docs/$n" ] || GHOST="$GHOST $n"
+  done
+  [ -z "$UNLISTED" ] \
+    && ok "every file in docs/ appears in CLAUDE.md's tree" \
+    || bad "in docs/ but missing from CLAUDE.md's tree (unlisted docs go stale):$UNLISTED"
+  [ -z "$GHOST" ] \
+    && ok "every file CLAUDE.md's tree names actually exists" \
+    || bad "named in CLAUDE.md's tree but not on disk:$GHOST"
 fi
 
 # ------------------------------------------------------------------ summary
