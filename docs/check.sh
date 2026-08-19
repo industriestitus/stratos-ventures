@@ -115,6 +115,12 @@ PORTL=$(grep -oE '"port": *[0-9]+' .claude/launch.json | grep -oE '[0-9]+' | hea
 
 # --------------------------------------------- 4. BUG-HISTORY table integrity
 head_ "4. BUG-HISTORY table/body integrity"
+# The archive holds most of the bodies. If it is emptied (not deleted — check 11 catches
+# deletion), every archived category silently becomes "table-only", which is a legitimate
+# state, so the gate stays green while 1400 lines of history are gone. Assert it has content.
+if [ ! -s "$BHA" ]; then
+  bad "$BHA is missing or empty — the archived bodies are gone and every archived category would read as legitimately table-only"
+fi
 missing_row='' tableonly=0
 if [ "$MAXCAT" -lt 1 ] 2>/dev/null; then
   bad "no categories parsed — skipping the row/body cross-check"
@@ -129,16 +135,26 @@ else
     grep -qhE "^## Category $i([^0-9]|\$)" $BH_ALL 2>/dev/null || { tableonly=$((tableonly+1)); continue; }
     printf '%s\n' "$TBL" | grep -qE "^\| *$i *\|" || missing_row="$missing_row $i"
   done
+  # Table-only is legitimate, but the COUNT only rises when a body disappears. Pin it:
+  # a rise is a body that vanished, which is exactly what an unasserted "ok" would hide.
+  TABLEONLY_EXPECTED=11
   [ -z "$missing_row" ] \
     && ok "every documented category has a summary-table row ($tableonly are table-only, which is fine; numbers only — content is not compared)" \
     || bad "documented in the body but MISSING from the summary table — invisible in the index:$missing_row"
+  [ "$tableonly" -le "$TABLEONLY_EXPECTED" ] \
+    && ok "table-only count $tableonly is at or below the pinned $TABLEONLY_EXPECTED" \
+    || bad "table-only count rose to $tableonly (pinned $TABLEONLY_EXPECTED) — a body section disappeared. If deliberate, raise TABLEONLY_EXPECTED in this script"
 fi
 # Headings that predate the `## Category N` convention are invisible to every check
 # above — flag them rather than let them be rediscovered.
-LEGACY=$(grep -hcE '^## Session [0-9]+' $BH_ALL 2>/dev/null | awk '{s+=$1} END{print s+0}')
-[ "$LEGACY" = "0" ] \
-  && ok "no headings outside the '## Category N' convention" \
-  || warn "$LEGACY '## Session N' section(s) sit outside the category numbering and are indexed by nothing"
+# Match ANY numbered heading that is not '## Category N'. The first version of this check
+# hardcoded '## Session N' and reported clean while three '## Audit N' sections — holding 10
+# fixes absent from the running total, under numbers already used by real categories — sat in
+# the file. A guard that enumerates the one bad spelling it has seen is not a guard.
+LEGACY_H=$(grep -hE '^## [A-Za-z]+ [0-9]+' $BH_ALL 2>/dev/null | grep -vE '^## Category [0-9]+' | sed 's/ *—.*//' | tr '\n' ' ')
+[ -z "$LEGACY_H" ] \
+  && ok "no numbered headings outside the '## Category N' convention" \
+  || bad "numbered heading(s) outside the category convention — indexed by nothing, and their fixes are absent from the total: $LEGACY_H"
 
 DUPES=$(grep -hoE '^## Category [0-9]+' $BH_ALL 2>/dev/null | grep -oE '[0-9]+$' | sort -n | uniq -d | tr '\n' ' ')
 [ -z "$DUPES" ] && ok "no duplicate category numbers in the body" \
@@ -345,7 +361,10 @@ head_ "12. Archives contain only finished work"
 if [ ! -f docs/ROADMAP-ARCHIVE.md ]; then
   bad "docs/ROADMAP-ARCHIVE.md is missing — the ROADMAP split is half-applied"
 else
-  OPENBOX=$(grep -cE '^- \[ \]' docs/ROADMAP-ARCHIVE.md)
+  # Same regex as the live half — nested items are indented, and the first version of this
+  # check allowed a leading space on one side only, so an indented live item swept into the
+  # archive was invisible to the check written to catch exactly that.
+  OPENBOX=$(grep -cE '^ *- \[ \]' docs/ROADMAP-ARCHIVE.md)
   [ "$OPENBOX" = "0" ] \
     && ok "ROADMAP-ARCHIVE.md has no open checkbox" \
     || bad "$OPENBOX open checkbox(es) in ROADMAP-ARCHIVE.md — live work was archived, move it back to ROADMAP.md"
