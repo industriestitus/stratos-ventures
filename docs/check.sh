@@ -289,7 +289,12 @@ else
     && ok "STATUS.md states the pending-deploy position explicitly" \
     || warn "STATUS.md § Current state should say 'Pending deploys: none' explicitly when there are none"
   # Status markers belong in STATUS.md only — everywhere else they go stale.
-  STRAY=$(grep -lE 'PENDING PETER|⚠️ PENDING' "$MEMDIR"/*.md 2>/dev/null | grep -v 'STATUS.md' | xargs -n1 basename 2>/dev/null | tr '\n' ' ')
+  # -i is not optional here. This check was written against 'PENDING PETER' and was blind to the
+  # five 'PENDING Peter' markers sitting in one file the whole time — the THIRD case-sensitivity
+  # fail-open in this script (see check 4's hash guard, and the pipefail bug in check 9). A guard
+  # that only recognises one capitalisation of the thing it forbids reports clean and is worse than
+  # nothing, because it certifies the file it never read.
+  STRAY=$(grep -liE 'pending peter|⚠️ *pending|pending: *peter' "$MEMDIR"/*.md 2>/dev/null | grep -v 'STATUS.md' | xargs -n1 basename 2>/dev/null | tr '\n' ' ')
   [ -z "$STRAY" ] \
     && ok "no stale PENDING markers in other memories" \
     || warn "PENDING markers outside STATUS.md (they outlive the thing they warn about): $STRAY"
