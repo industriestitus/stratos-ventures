@@ -2010,7 +2010,9 @@ Confirmed still working on this plan (so deliberately untouched): `profile`, `fi
 
 **Still open after this batch** (deliberately, as the next batches): CLAUDE.md's 8 stale counters, the BUG-HISTORY table/body divergence below, the six orphaned `.txt` dumps, the stale worktree, and the memory consolidation. `docs/check.sh` reports each one, so none of them can be forgotten again.
 
-**⚠️ Peter's action, not a deploy:** the live FMP API key is present in this public repo's git history (`23f9c31`, `f2d6e5b`; `cfc0da6` removed it from the tree but not from history). **Rotate it at FMP, then `wrangler secret put FMP_KEY`.** `docs/check.sh` fails until the key in `.claude/settings.local.json` no longer appears in `git log --all -S`.
+**100.9 — The live FMP API key was exposed in this public repo's git history — ROTATED, closed.** The key sat in `value="…"` attributes in `index.html`/`valuation.html` from `23f9c31`; `cfc0da6` deleted the lines but a public repo's history keeps serving them. The project's own security rule had been written *because* of this incident, yet the remediation had stopped at deleting the line — so the same key was still in production months later. Rotated at FMP + `wrangler secret put FMP_KEY`; **verified dead: the old key now returns HTTP 401 "Invalid API KEY"**. The 26 `settings.local.json` permission entries that embedded it were removed (355 → 329 allow rules); the app itself holds no client-side key (Settings shows "🔒 Stored securely on the Worker" since Phase A2), so nothing else needed changing.
+
+*Checker note:* `check.sh` check 9 tested the key found in `settings.local.json` against `git log --all -S`. With the key gone it now reports "skipped" — weaker, not stronger. Batch 2a replaces it with a closed-out record of this one-time exposure plus the tree scan that guards future commits. **Lesson: a check whose input can disappear degrades to silence, and silence reads as success.**
 
 ---
 
