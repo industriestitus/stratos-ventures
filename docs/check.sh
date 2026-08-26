@@ -9,9 +9,13 @@
 # bumps, doc counters, BUG-HISTORY table/body integrity, the docs pass itself,
 # secrets, and stray working copies.
 #
-# Rationale: every rule with a feedback loop in this project has held (APP_VERSION
-# is visible in the sidebar → 28/28 deploys correct); every rule without one has
-# drifted. This script is that loop for the rest.
+# Rationale: every rule with a feedback loop in this project has held — APP_VERSION is
+# visible in the sidebar, and every commit that has ever bumped it moved sw.js CACHE_NAME
+# in the same commit, without exception. Every rule without a feedback loop has drifted.
+# This script is that loop for the rest. (The ratio that used to be quoted here is not:
+# it was written once and never re-measured, which is the drift this script exists to
+# stop. `git log -S APP_VERSION` measures it on demand — do that instead of trusting a
+# number in a comment.)
 #
 # A check must never fail OPEN: if a pattern stops matching, that is a FAIL, not a
 # pass — an unmatched claim is indistinguishable from a wrong one.
@@ -294,8 +298,15 @@ head_ "10. Session status file"
 SLUG=$(pwd | tr '/' '-')
 MEMDIR="$HOME/.claude/projects/$SLUG/memory"
 STATUS="$MEMDIR/STATUS.md"
+# A missing memory dir used to `warn` and skip — the NINTH fail-open in this script, and the
+# worst-placed one: the whole of check 10 is the only mechanical guard on the handoff, and it
+# switched itself off exactly when it could not find what it guards. Verified by running the
+# script with a fake $HOME: every status assertion vanished and the gate still exited 0. A
+# missing STATUS.md and a missing directory to hold it are the same defect — the handoff does
+# not exist — so they get the same verdict. On a fresh clone this fails loudly and correctly:
+# that checkout genuinely has no handoff yet.
 if [ ! -d "$MEMDIR" ]; then
-  warn "no memory dir for this checkout ($MEMDIR) — status check skipped"
+  bad "no memory dir for this checkout ($MEMDIR) — STATUS.md cannot exist, so the handoff does not (CLAUDE.md § Session Status & Handoff). Create the dir and write STATUS.md; do not read this as 'skipped'"
 elif [ ! -f "$STATUS" ]; then
   bad "STATUS.md is missing — the handoff has nowhere to live (CLAUDE.md § Session Status & Handoff)"
 else
