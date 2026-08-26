@@ -217,24 +217,40 @@ DIRTY=$(git status --porcelain 2>/dev/null)
 # "Docs" means docs/ plus CLAUDE.md — the same definition the purity check uses.
 DIRTY_DOCS=$(printf '%s\n' "$DIRTY" | grep -cE '(^| |\?\?)(docs/|CLAUDE\.md)')
 LAST=$(git log -1 --pretty=%s)
-if [ -n "$DIRTY" ]; then
-  if [ "$DIRTY_DOCS" -gt 0 ]; then
-    ok "docs pass in progress — docs/ has uncommitted changes (commit them as \`docs: …\`)"
-  else
-    bad "uncommitted changes but nothing in docs/ — the batch's docs pass has not been done"
-  fi
-elif printf '%s' "$LAST" | grep -qE '^docs(\([^)]*\))?:'; then
+
+# 6a — HEAD's prefix and a docs: commit's purity are properties of the COMMIT, true whatever
+# the working tree looks like. Assert them unconditionally.
+#
+# They used to live in the `elif` arms below `if [ -n "$DIRTY" ]`, which meant they only ran on
+# a CLEAN tree — while this script's own header and CLAUDE.md step 7 both prescribe running it
+# with the docs edits still UNCOMMITTED. So in the one invocation that is actually mandated,
+# neither assertion ever executed: an unprefixed HEAD passed, and an impure docs: commit passed.
+# The TENTH fail-open, found by QA on the batch that closed the ninth, and the same shape as it —
+# a branch reporting ok for "I did not look". Demonstrated on a throwaway clone: HEAD amended to a
+# subject with no prefix went FAIL on a clean tree and ok on a dirty one.
+if printf '%s' "$LAST" | grep -qE '^docs(\([^)]*\))?:'; then
   # A docs: commit must contain ONLY doc changes — the whole audit trail relies on it.
   NONDOC=$(git show --name-only --pretty=format: HEAD | grep -v '^$' | grep -vE '^(docs/|CLAUDE\.md$|README)' | head -5)
   [ -z "$NONDOC" ] \
-    && ok "HEAD is a docs: commit and touches docs only — batch closed" \
+    && ok "HEAD is a docs: commit and touches docs only" \
     || bad "HEAD is a docs: commit but also changes non-doc files: $(printf '%s' "$NONDOC" | tr '\n' ' ')"
+elif printf '%s' "$LAST" | grep -qE '^(feat|fix|refactor|chore|perf|revert)(\([^)]*\))?:'; then
+  ok "HEAD carries a conventional prefix"
+else
+  bad "HEAD subject has no conventional prefix (feat/fix/refactor/chore/perf/revert/docs): $LAST"
+fi
+
+# 6b — and separately, the state of the docs pass itself.
+if [ -n "$DIRTY" ]; then
+  [ "$DIRTY_DOCS" -gt 0 ] \
+    && ok "docs pass in progress — docs/ has uncommitted changes (commit them as \`docs: …\`)" \
+    || bad "uncommitted changes but nothing in docs/ — the batch's docs pass has not been done"
+elif printf '%s' "$LAST" | grep -qE '^docs(\([^)]*\))?:'; then
+  ok "batch closed — HEAD is the docs: commit"
 elif printf '%s' "$LAST" | grep -qE '^(feat|fix|refactor|chore|perf|revert)(\([^)]*\))?:'; then
   git show --name-only --pretty=format: HEAD | grep -q '^docs/' \
     && warn "HEAD is a code commit that also touched docs/ — allowed, but the policy wants a separate docs: commit" \
     || bad "HEAD is a code commit with no docs/ changes and no docs: commit after it"
-else
-  bad "HEAD subject has no conventional prefix (feat/fix/refactor/chore/perf/revert/docs): $LAST"
 fi
 
 # --------------------------------------------------- 7. one-off audit dumps
@@ -246,7 +262,8 @@ DUMPS=$(ls docs/*.txt docs/*.pdf 2>/dev/null | tr '\n' ' ')
 
 # ------------------------------------------------------- 8. stray work copies
 head_ "8. Stray working copies"
-EXTRA=$(git worktree list | tail -n +2 | grep -v '/\.claude/worktrees/[a-z-]*[0-9a-f]\{6\} ')
+# One list, one verdict. There used to be a second, whitelisted list here that nothing ever
+# read — an abandoned guard, in the script whose subject is abandoned guards.
 STALE=$(git worktree list | tail -n +2)
 if [ -z "$STALE" ]; then
   ok "no extra git worktrees"
@@ -296,7 +313,11 @@ fi
 # ---------------------------------------------------------------- 10. status
 head_ "10. Session status file"
 SLUG=$(pwd | tr '/' '-')
-MEMDIR="$HOME/.claude/projects/$SLUG/memory"
+# ${HOME:-} rather than $HOME: under `set -u` an unset HOME aborted the whole script here, so
+# checks 11 and 12 never ran and no summary line printed. It exited 1, so it failed closed — but
+# "the run died silently two checks early" is not a verdict anyone can act on. An empty HOME now
+# yields a path that cannot exist, which the branch below reports properly.
+MEMDIR="${HOME:-}/.claude/projects/$SLUG/memory"
 STATUS="$MEMDIR/STATUS.md"
 # A missing memory dir used to `warn` and skip — the NINTH fail-open in this script, and the
 # worst-placed one: the whole of check 10 is the only mechanical guard on the handoff, and it
@@ -307,6 +328,8 @@ STATUS="$MEMDIR/STATUS.md"
 # that checkout genuinely has no handoff yet.
 if [ ! -d "$MEMDIR" ]; then
   bad "no memory dir for this checkout ($MEMDIR) — STATUS.md cannot exist, so the handoff does not (CLAUDE.md § Session Status & Handoff). Create the dir and write STATUS.md; do not read this as 'skipped'"
+elif [ ! -r "$MEMDIR" ]; then
+  bad "memory dir $MEMDIR is not readable — STATUS.md cannot be checked, which is not the same as it being fine"
 elif [ ! -f "$STATUS" ]; then
   bad "STATUS.md is missing — the handoff has nowhere to live (CLAUDE.md § Session Status & Handoff)"
 else
