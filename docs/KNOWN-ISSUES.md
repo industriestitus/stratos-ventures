@@ -182,6 +182,11 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Effect:** nothing today — none of those scopes calls `t()`. The risk is latent: any future line added *inside* one of them that calls `t()` throws `TypeError: t is not a function`. This has already happened twice: Cat 34 (three CRITICAL crashes) and the tooltips batch, where QA caught a `t`→`tip` shadow before it shipped.
 - **Status:** the unfixed remainder of the 2026-07-09 QA sweep, whose other findings were resolved across Cat 64/65/67 or judged not real bugs. Recorded here because it is a real trap with no current symptom, so it will never surface on its own. **Fix direction:** rename to descriptive locals (`el`, `tx`, `todo`, `tip`) — mechanical, but 110 sites means its own batch, ideally alongside the module split. See `memory/feedback_t-function-shadowing.md` and CODING-LESSONS.
 
+### P.29 — Missing Rates Produce a Plausible Wrong Total, Not a Dash (LOW, Cat 113)
+- **Where:** every foreign-currency total uses `convertCurrency(amt, cur, base) || amt` — `renderPortfolioOverview`, the dividend tallies, the snapshot and allocation paths (**16 sites**, measured 2026-08-26 with `grep -c 'convertCurrency(.*)||'`).
+- **Effect:** `convertCurrency()` returns `null` when the rates table is empty, so the fallback **adds the raw foreign amount to a base-currency sum**. $2 000 lands in a HUF total as 2 000 Ft rather than as `—`. It reads as a real number and is off by the exchange rate. The `0 Ft` that motivated Cat 113 was the benign end of this: with no price it summed to zero, which at least looked wrong.
+- **Status:** materially less likely since Cat 113 — rates now fetch on their own, and the positions summary still shows its "rates not loaded" banner when they are absent — but the fallback itself is unchanged, so an offline first boot with foreign holdings still mixes currencies silently. **Fix direction:** propagate `null` and render `—` for any total whose inputs could not all be converted, and say so in the tile rather than in a banner two panels away. Wants its own batch: the `||amt` pattern is load-bearing in a dozen places and changing it changes what the dashboard shows.
+
 ---
 
 ## ~~Deep Audit Findings~~ (ALL FIXED 2026-07-01)
@@ -241,7 +246,8 @@ Bundling too many tasks per session (e.g., 9 tasks, ~200 fields) compounds bugs 
 The rows above are a 2026-07-01 snapshot, kept for the record. **Currently open** (nothing critical):
 `SV.1`, `SV.4`, `SV.5`, `SV.7` (deferred security hardening) · `SA.1`, `SA.4`, `SA.5` (sync audit
 remnants) · `P.3`, `P.15`, `P.16`, `P.19`, `P.20`–`P.26` (accepted or external) · `P.27` (notes
-search over ciphertext) · `P.28` (`t()` shadowing, latent). Feature-shaped work lives in
+search over ciphertext) · `P.28` (`t()` shadowing, latent) · `P.29` (missing rates sum
+un-converted). Feature-shaped work lives in
 ROADMAP § Technical Debt & Deferred Audit Findings, not here.
 
 No active `TODO`, `FIXME`, or `HACK` comments found in the codebase — inline technical debt markers are clean.

@@ -379,6 +379,16 @@ Responsive fixes tested at 2-3 sizes missed overflow at boundary widths.
 
 ---
 
+### 4. A Condition That Can Never Be True Hides the Call It Guards
+
+**What went wrong (Cat 113):** `_reRenderCurrentSection()` refreshed the open portfolio sub-tab with `const at=document.querySelector('.pf-tab.active'); if(at)switchPfTab(...)`. The markup is `.pf-tabs .tab`, so the selector never matched — and `switchPfTab` is defined **nowhere in the file**. A `ReferenceError` was one truthy `at` away; instead the app ran for months with the Positions and Transactions panels quietly never refreshing. Someone later patched the dividends tab with a separate line directly below it: the symptom got a workaround, the cause was never read.
+
+**Why it survives review:** it looks like defensive code. `if(x)` around an optional element is idiomatic, so the eye skips it — and because the guard is always false there is no error, no log, and nothing to contradict it. Same shape as this project's fail-open checkers (§ AI Behavioral #14), one layer down: there a guard passed work it should have caught, here a guard suppressed work it was supposed to do.
+
+**Rule:** a call behind a guard is not verified until you have seen the guard be **true** at least once. Check that the selector matches something before trusting the branch, and confirm every function you call is actually defined — a name that appears exactly once in the file is either dead or a typo. When you catch yourself adding a special-case line beside an existing branch that "should" already cover it, read that branch instead of routing around it.
+
+---
+
 ## Process
 
 ### 1. Session Scope Discipline
@@ -547,11 +557,11 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | JavaScript | 12 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
 | Data Safety | 11 | 34+ (Categories 15, 72, 82, 86) |
 | API & Caching | 5 | 40+ (Categories 5, 6, 21, 80, 98, 99) |
-| Testing & QA | 3 | 50+ (Categories 9-18) |
+| Testing & QA | 4 | 50+ (Categories 9-18, 113) |
 | Process | 4 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 54 lessons across 7 domains.
+**Total:** 55 lessons across 7 domains.
 
 ## Related Documents
 

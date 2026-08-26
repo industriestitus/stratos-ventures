@@ -30,12 +30,12 @@ Stratos Ventures is a single-page investment management app with a **local-first
 │  ┌────┴──────┐   ┌─────┴──────┐   ┌──────────────────┐  │
 │  │ Yahoo     │   │ D1 CRUD    │   │ Auth + Meta      │  │
 │  │ Proxy     │   │ /api/*     │   │ /auth/* (token)  │  │
-│  │ /quote/*  │   │ 22 tables  │   │ /sync/meta       │  │
+│  │ /quote/*  │   │ 24 tables  │   │ /sync/meta       │  │
 │  │ /chart/*  │   └─────┬──────┘   └──────────────────┘  │
 │  │ /batch    │         │                                  │
 │  └────┬──────┘   ┌─────┴──────┐                          │
 │       │          │ D1 SQLite  │                           │
-│       │          │ (22 tables)│                           │
+│       │          │ (24 tables)│                           │
 │       │          └────────────┘                           │
 └───────┼──────────────────────────────────────────────────┘
         │
@@ -80,15 +80,18 @@ No build process, no frameworks, no npm — vanilla JS with CDN libraries.
 ### 1.2 Backend — Cloudflare Worker (~1340 lines)
 Serverless edge compute handling:
 - Yahoo Finance proxy (CORS workaround + crumb/cookie auth)
-- D1 database CRUD API (22 tables), token-authed
+- D1 database CRUD API (24 tables), token-authed
 - Master-password auth (`/auth/*`) + `/sync/meta` marker (legacy KV blob sync retired in B3c)
 - Data migration (localStorage → D1)
 
 ### 1.3 Database — Cloudflare D1 (SQLite)
-22 tables for all app data. See `docs/d1-schema.sql` for full schema.
+24 tables for all app data. See `docs/d1-schema.sql` for full schema.
 
 ### 1.4 PWA — sw.js + manifest.json
-Installable app with offline caching. Cache name: `stratos-v5`.
+Installable app with offline caching. Cache name: `stratos-v<APP_VERSION>` — it tracks the build and
+is bumped on every deploy in lockstep with `index.html`'s `APP_VERSION` (CLAUDE.md § Shipping a
+Batch; `check.sh` check 1 fails on a divergence). Not restated as a literal here: it moves every
+deploy, and `stratos-v5` sat in this file for fifty-odd of them.
 
 ---
 
@@ -171,7 +174,7 @@ User edits data (e.g., adds position)
 │ Versioned keys: *_v1 suffix                      │
 │ Schema version tracking (currently v7)           │
 ├──────────────────────────────────────────────────┤
-│ Layer 3: Service Worker Cache (stratos-v5)       │
+│ Layer 3: Service Worker Cache (stratos-vNN)      │
 │ Strategy: Cache-first for assets,                │
 │           Network-first for Worker calls,        │
 │           Network-only for external APIs         │
@@ -232,7 +235,7 @@ See `docs/API-REFERENCE.md` for complete endpoint documentation.
 
 ## 5. D1 Database Schema
 
-22 tables organized by domain:
+24 tables organized by domain:
 
 | Domain | Tables | Key Table |
 |--------|--------|-----------|
@@ -739,7 +742,10 @@ stratos-ventures/
 ```
 
 > **The `docs/` listing lives in CLAUDE.md, not here.** This file used to keep a second copy, and it
-> drifted exactly as you would expect: "168 fixes, 21 categories" against a real 632/112, "22 tables"
-> against 24, and it described `ROADMAP.md` as the phase tracker after the completed phases had moved
-> to `ROADMAP-ARCHIVE.md`. `check.sh` check 11 verifies CLAUDE.md's tree against the directory;
-> nothing was watching this one, which is the whole argument for having one owner (Cat 101, Cat 109).
+> drifted exactly as you would expect: a bug total and category count roughly a quarter of the real
+> figures, a table count two short, and `ROADMAP.md` described as the phase tracker after the
+> completed phases had moved to `ROADMAP-ARCHIVE.md`. `check.sh` check 11 verifies CLAUDE.md's tree
+> against the directory; nothing was watching this one, which is the whole argument for having one
+> owner (Cat 101, Cat 109). *The counters are described rather than restated on purpose — quoting
+> them here would recreate the same drift in the sentence that warns about it, which is precisely
+> what happened when Cat 113 corrected this file's own "22 tables".*
