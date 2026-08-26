@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v56';
+var APP_VERSION='v57';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -7512,12 +7512,21 @@ function renderReturnsGrid(){
 // ---- Exchange Rates & Currency ----
 let pfExchangeRates={baseCurrency:'HUF',rates:{},lastFetched:null};
 
+/* False whenever loadExchangeRates() fell through to its localStorage fallback. The auto-fetch is
+   gated on it: baseCurrency is a user setting that lives ONLY in the exchange_rates_config row,
+   and saveExchangeRates() writes it back unconditionally — so auto-saving after a failed load
+   would push the 'HUF' initialiser over the real value, unattended and with nothing on screen.
+   Same reasoning as the auto-snapshot's _d1LoadClean gate: never write back a partial load. */
+let _ratesLoadedFromD1=false;
+
 async function loadExchangeRates(){
+  _ratesLoadedFromD1=false;
   if(d1Mode){try{
     const cfg=await API.get('app_settings/exchange_rates_config');
     if(cfg){const v=JSON.parse(cfg.value||'{}');pfExchangeRates.baseCurrency=v.baseCurrency||'HUF';pfExchangeRates.lastFetched=v.lastFetched||null}
     const r=await API.get('exchange_rates?limit=100000');
     pfExchangeRates.rates={};(r.data||[]).forEach(er=>{const pair=er.from_currency+'/'+er.to_currency;pfExchangeRates.rates[pair]=er.rate});/* high limit so legacy dated cruft rows can't truncate the current 'latest' rows; rows arrive ORDER BY id ASC so the newest (highest id) per pair wins the map assignment */
+    _ratesLoadedFromD1=true;
     return;
   }catch(e){console.error('D1 load exchange rates, falling back to localStorage:',e)}}
   try{const d=JSON.parse(localStorage.getItem('portfolio_exchange_rates_v1'));if(d&&typeof d==='object'){pfExchangeRates=d;if(!pfExchangeRates.rates)pfExchangeRates.rates={};if(!pfExchangeRates.baseCurrency)pfExchangeRates.baseCurrency='HUF'}}catch(e){}
@@ -7531,12 +7540,16 @@ function saveExchangeRates(){
   try{localStorage.setItem('portfolio_exchange_rates_v1',JSON.stringify(pfExchangeRates))}catch(e){}
 }
 
-async function fetchExchangeRates(){
-  const rateBtn=document.getElementById('pf-rate-btn');
+/* opts.silent suppresses every toast and the button spinner: the auto-fetch below runs during
+   boot, where a success toast is noise and a failure toast is something the user cannot act on.
+   Returns true only when rates were actually stored, so the caller can decide to re-render. */
+async function fetchExchangeRates(opts){
+  const silent=!!(opts&&opts.silent);
+  const rateBtn=silent?null:document.getElementById('pf-rate-btn');
   if(rateBtn)setBtnLoading(rateBtn,true,'Refreshing...');
   try{
     const r=await fetchWithTimeout('https://api.exchangerate-api.com/v4/latest/USD');
-    if(r.status===429){showToast(t('db.ratesLimited'),'warning');return}
+    if(r.status===429){if(!silent)showToast(t('db.ratesLimited'),'warning');return false}
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
     if(d.rates){
@@ -7549,13 +7562,76 @@ async function fetchExchangeRates(){
       }
       pfExchangeRates.lastFetched=new Date().toISOString();
       saveExchangeRates();
-      showToast(t('db.ratesUpdated'),'success');
+      if(!silent)showToast(t('db.ratesUpdated'),'success');
       const statusEl=document.getElementById('pf-rate-status');
       if(statusEl)statusEl.textContent='Updated '+new Date().toLocaleTimeString();
+      return true;
     }
-  }catch(e){showToast(t('db.ratesFailed')+e.message,'error');console.warn('Exchange rate fetch failed',e)}
+    return false;
+  }catch(e){if(!silent)showToast(t('db.ratesFailed')+e.message,'error');console.warn('Exchange rate fetch failed',e);return false}
   finally{if(rateBtn)setBtnLoading(rateBtn,false,'Refresh Rates')}
 }
+
+/* The rates table was only ever filled by a button the user had to notice: a HUF base with a USD
+   position rendered "0 Ft" and "TWR -100%" until it was pressed, because convertCurrency() returns
+   null on an empty table. Fetch on boot instead — but only when the numbers actually depend on it
+   (a holding or transaction in a currency other than the base) and only when the table is empty or
+   a day stale. Never blocks boot, and raises no toast of its own: the existing "rates not loaded"
+   banner is the failure signal. NOTE it is not fully mute in d1Mode — the save it triggers goes
+   through API.scheduleSave, which surfaces its OWN retry/failure toasts (and a 401 there bounces
+   the user to the lock screen, as any save does). That is the existing save path, not this one. */
+const RATES_MAX_AGE_MS=24*60*60*1000;
+const RATES_RETRY_MS=60*60*1000;
+const RATES_ATTEMPT_KEY='stratos_rates_auto_attempt';
+let _ratesAutoFetched=false;
+
+function _ratesAreStale(){
+  if(!pfExchangeRates.rates||!Object.keys(pfExchangeRates.rates).length)return true;
+  const ts=Date.parse(pfExchangeRates.lastFetched||'');
+  return !isFinite(ts)||(Date.now()-ts)>RATES_MAX_AGE_MS;
+}
+
+/* Positions AND transactions: dividends are transactions, and a HUF-base portfolio can hold only
+   HUF positions while still receiving USD dividends — which the totals convert too. */
+function _portfolioNeedsRates(){
+  const base=getBaseCurrency();
+  return getActivePositions().some(p=>(p.currency||'USD')!==base)
+      || getActiveTransactions().some(tx=>(tx.currency||'USD')!==base);
+}
+
+async function _maybeAutoFetchRates(){
+  if(_ratesAutoFetched||!navigator.onLine)return false;
+  /* d1Mode: only ever write back a load that actually succeeded — see _ratesLoadedFromD1. */
+  if(d1Mode&&!_ratesLoadedFromD1)return false;
+  if(!_portfolioNeedsRates()||!_ratesAreStale())return false;
+  /* Back off across reloads too. Without this, a dead or rate-limited API would be re-hit on
+     every single refresh, because a failure leaves the table empty — i.e. still "stale". The
+     stamp is written BEFORE the request so a hang or a closed tab still counts as an attempt.
+     If localStorage is unavailable the backoff simply is not in force — say so out loud rather
+     than pretending the guard held; _ratesAutoFetched still bounds it to one try per page load. */
+  let lastAttempt=0;
+  try{lastAttempt=parseInt(localStorage.getItem(RATES_ATTEMPT_KEY)||'0',10)||0}catch(e){}
+  if(Date.now()-lastAttempt<RATES_RETRY_MS)return false;
+  _ratesAutoFetched=true;
+  try{localStorage.setItem(RATES_ATTEMPT_KEY,String(Date.now()))}catch(e){console.warn('Rate auto-fetch backoff not persisted:',e)}
+  const ok=await fetchExchangeRates({silent:true});
+  /* Clear the stamp on success: the fetch can succeed while the D1 write behind it fails, and
+     that combination must not leave the next boot backed off with an empty table. When it truly
+     succeeded end to end, lastFetched now holds the backoff for the full 24 h instead. */
+  if(ok){try{localStorage.removeItem(RATES_ATTEMPT_KEY)}catch(e){}}
+  /* Boot renders before this resolves, so the fresh rates only reach the screen on a re-render. */
+  if(ok)_reRenderCurrentSection();
+  return ok;
+}
+
+/* A boot behind a captive portal or a dropped uplink passes navigator.onLine and fails, and the
+   1 h backoff would then hold the "0 Ft" on screen long after the network came back. Coming
+   online is new information about the cause, so it clears both guards and retries once. */
+window.addEventListener('online',()=>{
+  _ratesAutoFetched=false;
+  try{localStorage.removeItem(RATES_ATTEMPT_KEY)}catch(e){}
+  _maybeAutoFetchRates().catch(e=>console.warn('Auto exchange-rate fetch (online):',e));
+});
 
 function convertCurrency(amount,from,to){
   if(amount===0||from===to)return amount;
@@ -7643,7 +7719,20 @@ function handlePrivacyClick(){
 function _reRenderCurrentSection(){
   const sec=SECTIONS?.find(s=>{const el=document.getElementById('section-'+s);return el&&el.style.display!=='none'});
   if(sec==='dashboard')renderDashboard();
-  else if(sec==='portfolio'){renderPortfolioOverview();const at=document.querySelector('.pf-tab.active');if(at)switchPfTab(at.dataset.tab||'overview')}
+  /* The open sub-tab has to be refreshed too — its panel renders independently of the overview.
+     This used to read `.pf-tab.active` and call switchPfTab(): neither exists (the markup is
+     `.pf-tabs .tab`, the function is switchPortfolioTab), so the selector never matched and the
+     dead call was never reached — silently, because `if(at)` swallowed it. Detect the open panel
+     the same way switchPortfolioTab() does and call its renderer directly; going through
+     switchPortfolioTab() would also clear the bulk selection and reset scroll, which a background
+     re-render must not do. Dividends is deliberately absent — the line below already covers it. */
+  else if(sec==='portfolio'){
+    renderPortfolioOverview();
+    const openTab=['accounts','positions','transactions'].find(n=>{const el=document.getElementById('pf-panel-'+n);return el&&el.style.display!=='none'});
+    if(openTab==='accounts')renderAccounts();
+    else if(openTab==='positions')renderPositions();
+    else if(openTab==='transactions')renderTransactions();
+  }
   else if(sec==='companies'&&profileTicker)renderProfile(profileTicker);
   if(typeof renderDividendsTab==='function'){const divPanel=document.getElementById('pf-panel-dividends');if(divPanel&&divPanel.style.display!=='none')renderDividendsTab()}
 }
@@ -16215,6 +16304,9 @@ async function autoLoad(){
   const rateStatus=document.getElementById('pf-rate-status');
   if(rateStatus&&pfExchangeRates.lastFetched)rateStatus.textContent='Last: '+new Date(pfExchangeRates.lastFetched).toLocaleDateString();
   document.querySelectorAll('input[type="number"]').forEach(el=>el.setAttribute('inputmode','decimal'));
+  /* Deferred and fire-and-forget: all four load branches converge here with the stored rates
+     already in memory, and this must never compete with the boot render. */
+  setTimeout(()=>{_maybeAutoFetchRates().catch(e=>console.warn('Auto exchange-rate fetch:',e))},1200);
   handleRoute();
   checkPriceAlerts();
   purgeExpiredTrash();
