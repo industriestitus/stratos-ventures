@@ -547,6 +547,14 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 **Rule:** Verification code needs stricter review than the code it verifies, because a false green stops anyone from looking again. Two habits: (1) **fail closed** — an unmatched pattern, an unparsable cell or an empty capture is a FAIL, never a pass, since "I could not find the claim" is indistinguishable from "the claim is wrong"; (2) **test a checker against a known-bad input** and confirm it actually goes red. Avoid `producer | grep -q` under `pipefail` entirely — capture the output first, then test it.
 
+**Instances nine and ten, both in one batch, and each teaches something the first eight did not (Cat 114).**
+
+*Ninth — a check whose input comes from outside the repo.* Check 10, the only mechanical guard on the handoff, began `if [ ! -d "$MEMDIR" ]; then warn "…status check skipped"`. `MEMDIR` is derived from `$HOME` plus the checkout path, so on any machine where that resolves differently, **every assertion about `STATUS.md` vanished and the gate still exited 0**. Reproduced with a fake `$HOME` before touching it. **A check whose input comes from outside the repo will one day not find that input, and "skipped" renders as green.** Decide the missing-input verdict in advance and make it the same verdict as the defect — a missing directory and a missing `STATUS.md` both mean "the handoff does not exist". Corollary for any CI plan: never let an environment-dependent check quietly no-op in the environment that lacks it; mark it not-applicable explicitly and name which run is authoritative.
+
+*Tenth — an assertion parked in a branch the prescribed invocation never takes.* Check 6's conventional-prefix and `docs:`-purity tests sat in `elif` arms beneath `if [ -n "$DIRTY" ]`, so they ran **only on a clean tree** — while this very script's header and CLAUDE.md § Shipping a Batch step 7 both mandate running it *with the docs edits still uncommitted*. In the one invocation the process actually prescribes, neither assertion had ever executed. It was not that the check was weak; it was not running. Demonstrated on a throwaway clone: HEAD amended to a subject with no prefix at all went FAIL on a clean tree and **ok** on a dirty one.
+
+**The rule the tenth adds: test a checker in the invocation your process prescribes, not in the one that is convenient to type.** A green run proves nothing about the branch it did not enter, and "I ran it and it passed" is the sentence that hides this class of bug. When a check mixes *properties of the commit* with *state of the working tree*, split them — the first are true regardless of the second, and burying them together is what let this survive ten batches. Related: § JavaScript 0b (a condition that can never be true hides the call inside it).
+
 ---
 
 ## Summary
