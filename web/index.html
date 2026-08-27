@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v57';
+var APP_VERSION='v58';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1131,7 +1131,8 @@ var I18N={en:{
 'pf.overview':'Overview','pf.accounts':'Accounts','pf.positionsTab':'Positions','pf.transactionsTab':'Transactions','pf.dividendsTab':'Dividends','pf.portfolioOverview':'Portfolio Overview','pf.portfolioValueTime':'Portfolio Value Over Time','pf.allocationTitle':'Allocation','pf.snapshots':'Snapshots','pf.takeSnapshot':'Take Snapshot','pf.returns':'Returns','pf.brokerAccounts':'Broker Accounts','pf.addAccount':'+ Add Account','pf.addPosition':'+ Add Position','pf.logTransaction':'+ Log Transaction','pf.importCSV':'Import CSV','pf.dividendIncome':'Dividend Income','pf.taxPct':'Tax %','pf.fetchData':'Fetch Data','pf.monthlyForecast':'Monthly Income Forecast','pf.paymentCalendar':'Payment Calendar','pf.incomeBreakdown':'Income Breakdown',
 'pf.allAccounts':'All Accounts','pf.allTypes':'All Types','pf.stocks':'Stocks','pf.etfs':'ETFs','pf.crypto':'Crypto','pf.bonds':'Bonds','pf.realEstate':'Real Estate','pf.savings':'Savings','pf.cash':'Cash','pf.other':'Other','pf.filterTicker':'Filter ticker...',
 'pf.noAccounts':'No broker accounts yet.\nAdd your first account to start tracking positions.','pf.position':'{count} position','pf.positions':'{count} positions','pf.inactive':'(inactive)','pf.editAccount':'Edit Account','pf.addAccountTitle':'Add Account','pf.accountRequired':'Account name is required','pf.accountExists':'Account name already exists','pf.accountUpdated':'Account updated','pf.accountAdded':'Account added','pf.accountDeleted':'Account deleted','pf.addBrokerFirst':'Add a broker account first',
-'pf.totalCost':'Total Cost','pf.marketValue':'Market Value','pf.pl':'P&L','pf.ratesNotLoaded':'Exchange rates not loaded — totals may mix currencies.','pf.fetchRates':'Fetch rates',
+'pf.totalCost':'Total Cost','pf.marketValue':'Market Value','pf.pl':'P&L','pf.ratesNotLoaded':'Exchange rates not loaded — affected totals are hidden instead of mixing currencies.','pf.fetchRates':'Fetch rates',
+'pf.rateMissingTotal':'Exchange rate missing — hidden rather than mixed','pf.rateMissingChart':'Exchange rates missing. Showing this would compare amounts in different currencies as if they were the same.','pf.rateMissingSnapshot':'Snapshot not taken: exchange rates are missing, so the stored total would mix currencies — and unlike a screen value, that one would outlive the missing rate.',
 'pf.ticker':'Ticker','pf.account':'Account','pf.type':'Type','pf.shares':'Shares','pf.avgCost':'Avg Cost','pf.priceCol':'Price','pf.value':'Value','pf.plCol':'P&L','pf.plPct':'P&L %',
 'pf.editPosition':'Edit Position','pf.addPositionTitle':'Add Position','pf.positionExists':'Position for {ticker} already exists in this account. Edit it instead.','pf.positionUpdated':'Position updated','pf.positionAdded':'Position added','pf.currentPriceAuto':'Current Price (leave empty for auto)','pf.currentPrice':'Current Price',
 'pf.showing':'Showing','pf.bought':'Bought','pf.sold':'Sold','pf.dividendsPf':'Dividends','pf.fees':'Fees','pf.date':'Date','pf.typeCol':'Type','pf.tickerCol':'Ticker','pf.accountCol':'Account','pf.sharesCol':'Shares','pf.priceColTx':'Price','pf.total':'Total','pf.feesCol':'Fees','pf.notesCol':'Notes',
@@ -1202,7 +1203,8 @@ var I18N={en:{
 'pf.overview':'Áttekintés','pf.accounts':'Számlák','pf.positionsTab':'Pozíciók','pf.transactionsTab':'Tranzakciók','pf.dividendsTab':'Osztalékok','pf.portfolioOverview':'Portfólió áttekintés','pf.portfolioValueTime':'Portfólió értéke az idő során','pf.allocationTitle':'Elosztás','pf.snapshots':'Pillanatfelvételek','pf.takeSnapshot':'Pillanatfelvétel','pf.returns':'Hozamok','pf.brokerAccounts':'Bróker számlák','pf.addAccount':'+ Számla hozzáadása','pf.addPosition':'+ Pozíció hozzáadása','pf.logTransaction':'+ Tranzakció rögzítése','pf.importCSV':'CSV importálás','pf.dividendIncome':'Osztalék bevétel','pf.taxPct':'Adó %','pf.fetchData':'Adatok lekérése','pf.monthlyForecast':'Havi bevétel előrejelzés','pf.paymentCalendar':'Kifizetési naptár','pf.incomeBreakdown':'Bevétel bontás',
 'pf.allAccounts':'Összes számla','pf.allTypes':'Összes típus','pf.stocks':'Részvények','pf.etfs':'ETF-ek','pf.crypto':'Kriptó','pf.bonds':'Kötvények','pf.realEstate':'Ingatlan','pf.savings':'Megtakarítás','pf.cash':'Készpénz','pf.other':'Egyéb','pf.filterTicker':'Ticker szűrés...',
 'pf.noAccounts':'Még nincs bróker számlád.\nAdd hozzá az első számládat a pozíciók követéséhez.','pf.position':'{count} pozíció','pf.positions':'{count} pozíció','pf.inactive':'(inaktív)','pf.editAccount':'Számla szerkesztése','pf.addAccountTitle':'Számla hozzáadása','pf.accountRequired':'A számlanév kötelező','pf.accountExists':'Ez a számlanév már létezik','pf.accountUpdated':'Számla frissítve','pf.accountAdded':'Számla hozzáadva','pf.accountDeleted':'Számla törölve','pf.addBrokerFirst':'Először adj hozzá egy bróker számlát',
-'pf.totalCost':'Összköltség','pf.marketValue':'Piaci érték','pf.pl':'P&L','pf.ratesNotLoaded':'Árfolyamok nincsenek betöltve — az összesítés kevert pénznemű lehet.','pf.fetchRates':'Árfolyamok lekérése',
+'pf.totalCost':'Összköltség','pf.marketValue':'Piaci érték','pf.pl':'P&L','pf.ratesNotLoaded':'Árfolyamok nincsenek betöltve — az érintett összesítések rejtve maradnak a kevert érték helyett.','pf.fetchRates':'Árfolyamok lekérése',
+'pf.rateMissingTotal':'Hiányzó árfolyam — elrejtve a kevert érték helyett','pf.rateMissingChart':'Hiányoznak az árfolyamok. Ez a diagram különböző pénznemű összegeket hasonlítana össze, mintha azonosak lennének.','pf.rateMissingSnapshot':'Nem készült pillanatfelvétel: hiányoznak az árfolyamok, így a mentett összeg kevert pénznemű lenne — és egy képernyőn látott számmal ellentétben ez túlélné a hiányzó árfolyamot.',
 'pf.ticker':'Ticker','pf.account':'Számla','pf.type':'Típus','pf.shares':'Darab','pf.avgCost':'Átlagár','pf.priceCol':'Ár','pf.value':'Érték','pf.plCol':'P&L','pf.plPct':'P&L %',
 'pf.editPosition':'Pozíció szerkesztése','pf.addPositionTitle':'Pozíció hozzáadása','pf.positionExists':'{ticker} pozíció már létezik ebben a számlában. Szerkeszd helyette.','pf.positionUpdated':'Pozíció frissítve','pf.positionAdded':'Pozíció hozzáadva','pf.currentPriceAuto':'Jelenlegi ár (hagyd üresen az automatikushoz)','pf.currentPrice':'Jelenlegi ár',
 'pf.showing':'Megjelenítés','pf.bought':'Vétel','pf.sold':'Eladás','pf.dividendsPf':'Osztalékok','pf.fees':'Jutalékok','pf.date':'Dátum','pf.typeCol':'Típus','pf.tickerCol':'Ticker','pf.accountCol':'Számla','pf.sharesCol':'Darab','pf.priceColTx':'Ár','pf.total':'Összesen','pf.feesCol':'Jutalék','pf.notesCol':'Megjegyzések',
@@ -1353,7 +1355,8 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
     <!-- Allocation Charts -->
     <div class="db-widget" id="db-alloc-widget" data-wtip="allocation">
       <div class="db-widget-title"><span class="db-widget-link" onclick="showSection('portfolio')" data-i18n="db.allocation">Allocation</span></div>
-      <div class="db-alloc-grid">
+      <div id="db-alloc-ratewarn" class="db-empty" style="display:none"></div>
+      <div class="db-alloc-grid" id="db-alloc-grid">
         <div class="db-alloc-item"><div class="db-alloc-label" data-i18n="db.byTicker">By Ticker</div><canvas id="db-alloc-ticker"></canvas></div>
         <div class="db-alloc-item"><div class="db-alloc-label" data-i18n="db.byAccount">By Account</div><canvas id="db-alloc-account"></canvas></div>
         <div class="db-alloc-item"><div class="db-alloc-label" data-i18n="db.byType">By Type</div><canvas id="db-alloc-type"></canvas></div>
@@ -1938,7 +1941,8 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
             <button class="tab" onclick="switchAllocChart('type')">Type</button>
             <button class="tab" onclick="switchAllocChart('currency')">Currency</button>
           </div>
-          <div class="chart-container" style="position:relative;height:190px"><canvas id="pf-chart-alloc"></canvas></div>
+          <div class="chart-container" id="pf-alloc-chart-wrap" style="position:relative;height:190px"><canvas id="pf-chart-alloc"></canvas></div>
+          <div id="pf-alloc-ratewarn" style="display:none;color:var(--text2);font-size:12px;padding:16px 8px;text-align:center"></div>
         </div>
       </div>
       <div class="card" style="margin-bottom:16px">
@@ -2244,7 +2248,7 @@ function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(e
         <label data-i18n="settings.exchangeRates">Exchange Rates</label>
         <div style="display:flex;gap:8px;align-items:center">
           <span id="pf-rate-status" style="font-size:11px;color:var(--text2)" data-i18n="settings.notFetched">Not fetched</span>
-          <button class="btn btn-secondary" onclick="fetchExchangeRates()" style="padding:4px 12px;font-size:11px" data-i18n="settings.refreshRates" id="pf-rate-btn">Refresh Rates</button>
+          <button class="btn btn-secondary" onclick="fetchRatesAndRefresh(this)" style="padding:4px 12px;font-size:11px" data-i18n="settings.refreshRates" id="pf-rate-btn">Refresh Rates</button>
         </div>
       </div>
     </div>
@@ -6407,10 +6411,8 @@ function renderPositions(){
     return;
   }
 
-  let totalCost=0,totalValue=0;
   const base=getBaseCurrency();
-  const hasRates=pfExchangeRates.rates&&Object.keys(pfExchangeRates.rates).length>0;
-  const hasMixedCurrency=list.some(p=>(p.currency||'USD')!==base);
+  const sumCost=baseSum(base),sumValue=baseSum(base);
   const enriched=list.map(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
@@ -6420,10 +6422,17 @@ function renderPositions(){
     const pnl=mktVal!=null?mktVal-cost:null;
     const pnlPct=cost>0&&pnl!=null?(pnl/cost*100):null;
     if(mktVal!=null&&!isNaN(mktVal)){
-      const cvMkt=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cvMkt))totalValue+=cvMkt;else if(isFinite(mktVal))totalValue+=mktVal;
-      if(!isNaN(cost)){const cvCost=convertCurrency(cost,pos.currency||'USD',base);if(isFinite(cvCost))totalCost+=cvCost;else if(isFinite(cost))totalCost+=cost}
+      sumValue.add(mktVal,pos.currency);
+      if(!isNaN(cost))sumCost.add(cost,pos.currency);
     }
-    return{pos,price,shares,avg,cost,mktVal,pnl,pnlPct};
+    /* P.29 (QA): the cells below print each position in its OWN currency and through fmtMoney(),
+       which emits no symbol — so the money columns are unitless, and sorting them with `va-vb`
+       ranked 500 000 Ft above $2 000. Sort keys are converted into the base currency; a position
+       whose rate is missing yields null and the comparator already sends nulls to the bottom,
+       which is the only honest place for a value that cannot be ranked. */
+    const key=v=>baseSum(base).add(v,pos.currency).total;
+    return{pos,price,shares,avg,cost,mktVal,pnl,pnlPct,
+      kAvg:key(avg),kPrice:price==null?null:key(price),kVal:mktVal==null?null:key(mktVal),kPnl:pnl==null?null:key(pnl)};
   });
   enriched.sort((a,b)=>{
     if(a.pos.pinned&&!b.pos.pinned)return -1;
@@ -6434,12 +6443,12 @@ function renderPositions(){
     else if(col==='account'){va=getAccountName(a.pos.accountId);vb=getAccountName(b.pos.accountId)}
     else if(col==='type'){va=a.pos.assetType||'other';vb=b.pos.assetType||'other'}
     else if(col==='shares'){va=a.shares;vb=b.shares}
-    else if(col==='avgCost'){va=a.avg;vb=b.avg}
-    else if(col==='price'){va=a.price;vb=b.price}
-    else if(col==='value'){va=a.mktVal;vb=b.mktVal}
-    else if(col==='pnl'){va=a.pnl;vb=b.pnl}
+    else if(col==='avgCost'){va=a.kAvg;vb=b.kAvg}
+    else if(col==='price'){va=a.kPrice;vb=b.kPrice}
+    else if(col==='value'){va=a.kVal;vb=b.kVal}
+    else if(col==='pnl'){va=a.kPnl;vb=b.kPnl}
     else if(col==='pnlPct'){va=a.pnlPct;vb=b.pnlPct}
-    else{va=a.mktVal;vb=b.mktVal}
+    else{va=a.kVal;vb=b.kVal}
     if(va==null&&vb==null)return 0;
     if(va==null)return 1;
     if(vb==null)return -1;
@@ -6478,15 +6487,20 @@ function renderPositions(){
     </tr>`;
   });
 
-  const totalPnl=totalValue-totalCost;
-  const totalPnlPct=totalCost>0?(totalPnl/totalCost*100):0;
-  const pClass=totalPnl>=0?'pf-positive':'pf-negative';
+  /* P.29: totals only when EVERY position behind them converted. The banner below used to fire on
+     "mixed currencies and an empty rates table", which is a guess at the cause; `!totalsOk` is the
+     effect itself, so it also catches a table that holds some pairs but not this portfolio's. */
+  const totalCost=sumCost.total,totalValue=sumValue.total;
+  const totalsOk=sumsOk(sumCost,sumValue);
+  const totalPnl=totalsOk?totalValue-totalCost:null;
+  const totalPnlPct=(totalsOk&&totalCost>0)?(totalPnl/totalCost*100):null;
+  const pClass=totalPnl==null?'':(totalPnl>=0?'pf-positive':'pf-negative');
   sumEl.innerHTML=`<div class="pf-summary-bar">
     <div class="pf-summary-item"><span class="pf-summary-label">${t('db.positions')}</span><span class="pf-summary-value">${list.length}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.totalCost')}</span><span class="pf-summary-value">${fmtMoney(totalCost,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.marketValue')}</span><span class="pf-summary-value">${fmtMoney(totalValue,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">P&L</span><span class="pf-summary-value ${pClass}">${_privacyMode?_privacyMask:(totalPnl>=0?'+':'')+fmt(totalPnl,2)+' ('+(isFinite(totalPnlPct)?(totalPnlPct>=0?'+':'')+totalPnlPct.toFixed(1)+'%':'—')+')'}</span></div>
-  </div>${hasMixedCurrency&&!hasRates?'<div style="color:var(--yellow);font-size:12px;padding:4px 8px">⚠ '+t('pf.ratesNotLoaded')+' <button onclick="fetchExchangeRates()" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline">'+t('pf.fetchRates')+'</button></div>':''}`;
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.totalCost')}</span><span class="pf-summary-value">${fmtMoneyOrDash(totalCost,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.marketValue')}</span><span class="pf-summary-value">${fmtMoneyOrDash(totalValue,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">P&L</span><span class="pf-summary-value ${pClass}">${_privacyMode?_privacyMask:(totalPnl==null?'—':(totalPnl>=0?'+':'')+fmt(totalPnl,2)+' ('+(totalPnlPct!=null&&isFinite(totalPnlPct)?(totalPnlPct>=0?'+':'')+totalPnlPct.toFixed(1)+'%':'—')+')')}</span></div>
+  </div>${totalsOk?'':'<div style="color:var(--yellow);font-size:12px;padding:4px 8px">⚠ '+t('pf.ratesNotLoaded')+' <button onclick="fetchRatesAndRefresh(this)" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline">'+t('pf.fetchRates')+'</button></div>'}`;
 
   function pfTh(col,label,cls){
     const sorted=pfSort.col===col?' sorted':'';
@@ -6740,23 +6754,30 @@ function renderTransactions(){
     return;
   }
 
-  let totalBuys=0,totalSells=0,totalDividends=0,totalFees=0;
-  list.forEach(t=>{
-    const amt=parseFloat(t.totalAmount)||0;
-    const fees=parseFloat(t.fees)||0;
-    totalFees+=fees;
-    if(t.type==='buy')totalBuys+=amt;
-    else if(t.type==='sell')totalSells+=amt;
-    else if(t.type==='dividend')totalDividends+=amt;
+  /* P.29, found while verifying Cat 116: this bar summed totalAmount and fees across every
+     currency in the filtered list with no conversion at all, and rendered the result through
+     fmtMoney(), which prints no currency symbol — so a $1 500 buy and a 2 500 000 Ft buy became
+     "2.5M" with nothing on screen to hint the two had been added together. An unlabelled
+     cross-currency sum is the worst version of this bug: there is not even a wrong unit to notice.
+     `tx`, not `t` — the old callback shadowed the i18n t() used in the bar below. */
+  const base=getBaseCurrency();
+  const sumBuys=baseSum(base),sumSells=baseSum(base),sumDivs=baseSum(base),sumFees=baseSum(base);
+  list.forEach(tx=>{
+    const amt=parseFloat(tx.totalAmount)||0;
+    sumFees.add(parseFloat(tx.fees)||0,tx.currency);
+    if(tx.type==='buy')sumBuys.add(amt,tx.currency);
+    else if(tx.type==='sell')sumSells.add(amt,tx.currency);
+    else if(tx.type==='dividend')sumDivs.add(amt,tx.currency);
   });
+  const txTotalsOk=sumsOk(sumBuys,sumSells,sumDivs,sumFees);
 
   sumEl.innerHTML=`<div class="pf-summary-bar">
     <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.showing')}</span><span class="pf-summary-value">${list.length}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.bought')}</span><span class="pf-summary-value">${fmtMoney(totalBuys,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.sold')}</span><span class="pf-summary-value">${fmtMoney(totalSells,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.dividendsPf')}</span><span class="pf-summary-value pf-positive">${fmtMoney(totalDividends,2)}</span></div>
-    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.fees')}</span><span class="pf-summary-value">${fmtMoney(totalFees,2)}</span></div>
-  </div>`;
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.bought')}</span><span class="pf-summary-value">${fmtMoneyOrDash(sumBuys.total,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.sold')}</span><span class="pf-summary-value">${fmtMoneyOrDash(sumSells.total,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.dividendsPf')}</span><span class="pf-summary-value pf-positive">${fmtMoneyOrDash(sumDivs.total,2)}</span></div>
+    <div class="pf-summary-item"><span class="pf-summary-label">${t('pf.fees')}</span><span class="pf-summary-value">${fmtMoneyOrDash(sumFees.total,2)}</span></div>
+  </div>${txTotalsOk?'':'<div style="color:var(--yellow);font-size:12px;padding:4px 8px">⚠ '+t('pf.ratesNotLoaded')+' <button onclick="fetchRatesAndRefresh(this)" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline">'+t('pf.fetchRates')+'</button></div>'}`;
 
   const rows=list.map(t=>{
     const shares=t.shares!=null?(_privacyMode?_privacyMask:fmt(parseFloat(t.shares),t.shares%1?4:0)):'—';
@@ -6931,7 +6952,7 @@ async function loadPortfolioSnapshots(){
 }
 function savePortfolioSnapshots(){
   if(d1Mode){API.scheduleSave('pfSnapshots',async()=>{
-    const items=await Promise.all(pfSnapshots.map(async s=>({snapshot_date:s.date,total_value:await encStr(s.totalValue),base_currency:s.baseCurrency||'USD',notes:await encStr(s.notes||'')})));
+    const items=await Promise.all(pfSnapshots.map(async s=>({snapshot_date:s.date,total_value:await encStr(s.totalValue),base_currency:s.baseCurrency||''/* NOT 'USD': see snapshotInBase() — laundering an unknown denomination into a real currency is how a 3.4M Ft snapshot became 1.19bn */,notes:await encStr(s.notes||'')})));
     await API.postBatch('portfolio_snapshots/batch',items); // chunked (worker caps a batch at 1000)
     // Re-fetch snapshot IDs then save positions
     const sr=await API.get('portfolio_snapshots?limit=100000');
@@ -6945,22 +6966,34 @@ function savePortfolioSnapshots(){
 
 async function takeSnapshot(){
   if(!getActivePositions().length){showToast(t('pf.noPositionsSnapshot'),'error');return}
+  const base=getBaseCurrency();
+  /* P.29 — computed and checked BEFORE the overwrite prompt below, for two separate reasons.
+     (1) Every other total in this file is wrong only until the next paint; this one is WRITTEN,
+     and from then on it feeds calcTWR() and the "since last snapshot" delta long after the rates
+     came back. It is the only place where a missing rate outlives itself.
+     (2) The confirm branch has already dropped today's existing snapshot from pfSnapshots by the
+     time we would otherwise notice — bailing there would delete a good snapshot and write nothing
+     in its place. */
+  /* One conversion per position, reused for the row and the total — QA flagged the first version
+     for converting each position twice to fill `valueInBase`. That field predates this batch and
+     stays (it is written into the localStorage snapshot shape), it is simply no longer paid for
+     twice. Nothing is mutated before the bail below: this is a pure map. */
+  let allConverted=true,runningTotal=0;
+  const positions=getActivePositions().map(pos=>{
+    const price=getPositionPrice(pos);
+    const shares=parseFloat(pos.shares)||0;
+    const mktVal=price!=null?shares*price:0;
+    const one=baseSum(base).add(mktVal,pos.currency);
+    if(one.ok)runningTotal+=one.value;else allConverted=false;
+    return{ticker:pos.ticker,accountId:pos.accountId,assetType:pos.assetType||'stock',shares,pricePerShare:price||0,marketValue:mktVal,currency:pos.currency||'USD',valueInBase:one.total};
+  });
+  if(!allConverted){showToast(t('pf.rateMissingSnapshot'),'error',7000);return}
+  const totalValue=runningTotal;
   const today=new Date().toISOString().split('T')[0];
   if(pfSnapshots.find(s=>s.date===today)){
     if(!await showConfirm(t('confirm.snapshotOverwrite'),t('confirm.snapshotOverwriteMsg'),{okLabel:t('confirm.overwrite'),danger:false}))return;
     pfSnapshots=pfSnapshots.filter(s=>s.date!==today);
   }
-  const base=getBaseCurrency();
-  let totalValue=0;
-  const positions=getActivePositions().map(pos=>{
-    const price=getPositionPrice(pos);
-    const shares=parseFloat(pos.shares)||0;
-    const mktVal=price!=null?shares*price:0;
-    const converted=convertCurrency(mktVal,pos.currency||'USD',base);
-    const valueInBase=converted!=null?converted:mktVal;
-    if(isFinite(valueInBase))totalValue+=valueInBase;
-    return{ticker:pos.ticker,accountId:pos.accountId,assetType:pos.assetType||'stock',shares,pricePerShare:price||0,marketValue:mktVal,currency:pos.currency||'USD',valueInBase};
-  });
   pfSnapshots.push({id:pfNextId(pfSnapshots),date:today,totalValue,baseCurrency:base,notes:'',positions,createdAt:new Date().toISOString()});
   pfSnapshots.sort((a,b)=>a.date.localeCompare(b.date));
   savePortfolioSnapshots();
@@ -6998,24 +7031,35 @@ function checkSnapshotReminder(){
 function calcTWR(){
   if(pfSnapshots.length<2)return null;
   const sorted=[...pfSnapshots].sort((a,b)=>a.date.localeCompare(b.date));
+  const base=getBaseCurrency();
   let twr=1;
   for(let i=1;i<sorted.length;i++){
-    const vEnd=sorted[i].totalValue;
-    const vStart=sorted[i-1].totalValue;
+    /* P.29: a snapshot stores its own baseCurrency, and these two were compared raw — so changing
+       the base setting silently subtracted forints from dollars. Convert both, refuse if either
+       will not go. */
+    const vEndSum=snapshotInBase(sorted[i],base);
+    const vStartSum=snapshotInBase(sorted[i-1],base);
+    if(!sumsOk(vEndSum,vStartSum))return null;
+    const vEnd=vEndSum.total;
+    const vStart=vStartSum.total;
     const startDate=new Date(sorted[i-1].date);
     const endDate=new Date(sorted[i].date);
-    const cashflows=getActiveTransactions().filter(t=>{
-      const td=new Date(t.date);
+    /* `tx`, not `t` — this filter and the loop below shadowed the i18n t(). */
+    const cashflows=getActiveTransactions().filter(tx=>{
+      const td=new Date(tx.date);
       return td>=startDate&&td<endDate;
     });
-    let cf=0;
-    cashflows.forEach(t=>{
-      const amt=parseFloat(t.totalAmount)||0;
-      const base=getBaseCurrency();
-      const converted=convertCurrency(amt,t.currency||'USD',base)||amt;
-      if(t.type==='buy')cf+=converted;
-      else if(t.type==='sell')cf-=converted;
+    /* A cashflow is subtracted from the period's gain, so one raw foreign amount does not nudge
+       the result — it corrupts every period after it too. Refuse the metric; the returns grid and
+       the summary cards already render a null TWR as '—'. */
+    const cfSum=baseSum(base);
+    cashflows.forEach(tx=>{
+      if(tx.type!=='buy'&&tx.type!=='sell')return;
+      const amt=parseFloat(tx.totalAmount)||0;
+      cfSum.add(tx.type==='buy'?amt:-amt,tx.currency);
     });
+    if(!cfSum.ok)return null;
+    const cf=cfSum.total;
     if(vStart+cf>0&&vEnd>=0){
       const r=(vEnd-(vStart+cf))/(vStart+cf);
       if(isFinite(r))twr*=(1+r);
@@ -7034,19 +7078,27 @@ function calcXIRR(){
   if(!activeTx.length&&!activePos.length)return null;
   const cfs=[];
   const base=getBaseCurrency();
-  activeTx.forEach(t=>{
-    const amt=parseFloat(t.totalAmount)||0;
-    const converted=convertCurrency(amt,t.currency||'USD',base)||amt;
-    if(t.type==='buy')cfs.push({date:new Date(t.date),amount:-converted});
-    else if(t.type==='sell'||t.type==='dividend')cfs.push({date:new Date(t.date),amount:converted});
+  /* P.29: XIRR solves for the rate that makes these cashflows net to zero, so a single raw foreign
+     amount among them does not shift the answer slightly — it changes which rate solves it. `tx`,
+     not `t`: the old parameter shadowed the i18n t(). */
+  let cfOk=true;
+  activeTx.forEach(tx=>{
+    if(tx.type!=='buy'&&tx.type!=='sell'&&tx.type!=='dividend')return;
+    const amt=parseFloat(tx.totalAmount)||0;
+    const one=baseSum(base).add(amt,tx.currency);
+    if(!one.ok){cfOk=false;return}
+    const converted=one.total;
+    if(tx.type==='buy')cfs.push({date:new Date(tx.date),amount:-converted});
+    else cfs.push({date:new Date(tx.date),amount:converted});
   });
-  let totalValue=0;
+  const sumValue=baseSum(base);
   activePos.forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
-    const mktVal=price!=null?shares*price:0;
-    const cv=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cv))totalValue+=cv;else if(isFinite(mktVal))totalValue+=mktVal;
+    sumValue.add(price!=null?shares*price:0,pos.currency);
   });
+  if(!cfOk||!sumValue.ok)return null;
+  const totalValue=sumValue.total;
   if(totalValue>0)cfs.push({date:new Date(),amount:totalValue});
   if(cfs.length<2)return null;
   cfs.sort((a,b)=>a.date-b.date);
@@ -7105,32 +7157,36 @@ function renderPortfolioOverview(){
 
 function renderSummaryCards(){
   const base=getBaseCurrency();
-  let totalCost=0,totalValue=0,totalDiv=0;
+  const sumCost=baseSum(base),sumValue=baseSum(base),sumDiv=baseSum(base);
   getActivePositions().forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
     const cost=shares*avg;
     if(price!=null){
-      const mktVal=shares*price;
-      const cvC=convertCurrency(cost,pos.currency||'USD',base);if(isFinite(cvC))totalCost+=cvC;else if(isFinite(cost))totalCost+=cost;
-      const cvM=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cvM))totalValue+=cvM;else if(isFinite(mktVal))totalValue+=mktVal;
+      sumCost.add(cost,pos.currency);
+      sumValue.add(shares*price,pos.currency);
     }
   });
-  getActiveTransactions().filter(t=>t.type==='dividend').forEach(t=>{
-    const amt=parseFloat(t.totalAmount)||0;
-    totalDiv+=convertCurrency(amt,t.currency||'USD',base)||amt;
+  /* `tx`, not `t` — this callback used to shadow the i18n t(), and the cards below now need it. */
+  getActiveTransactions().filter(tx=>tx.type==='dividend').forEach(tx=>{
+    sumDiv.add(parseFloat(tx.totalAmount)||0,tx.currency);
   });
-  const pnl=totalValue-totalCost;
-  const pnlPct=totalCost>0?(pnl/totalCost*100):0;
-  const pClass=pnl>=0?'pf-positive':'pf-negative';
+  const totalValue=sumValue.total,totalDiv=sumDiv.total;
+  const plOk=sumsOk(sumCost,sumValue);
+  const pnl=plOk?totalValue-sumCost.total:null;
+  const pnlPct=(plOk&&sumCost.total>0)?(pnl/sumCost.total*100):null;
+  const pClass=pnl==null?'':(pnl>=0?'pf-positive':'pf-negative');
   const twrData=calcTWR();
   const xirr=calcXIRR();
+  /* P.29: the tile itself says why it is blank — the "rates not loaded" banner lives two panels
+     away on another tab, so a dash here with no explanation reads as "you own nothing". */
+  const missSub=t('pf.rateMissingTotal');
 
   const cards=[
-    {label:'Total Value',value:formatMoney(totalValue,base),sub:base},
-    {label:'Total P&L',value:(pnl>=0?'+':'')+formatMoney(pnl,base),sub:(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%',cls:pClass},
-    {label:'Dividends',value:formatMoney(totalDiv,base),sub:'total received',cls:'pf-positive'},
+    {label:'Total Value',value:formatMoney(totalValue,base),sub:sumValue.ok?base:missSub},
+    {label:'Total P&L',value:pnl==null?'—':(pnl>=0?'+':'')+formatMoney(pnl,base),sub:pnlPct==null?missSub:(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%',cls:pClass},
+    {label:'Dividends',value:formatMoney(totalDiv,base),sub:sumDiv.ok?'total received':missSub,cls:'pf-positive'},
     {label:'Positions',value:pfPositions.length,sub:pfAccounts.length+' account'+(pfAccounts.length!==1?'s':'')},
   ];
   if(twrData)cards.push({label:'TWR',value:(twrData.annualized>=0?'+':'')+(twrData.annualized*100).toFixed(1)+'%',sub:'annualized',cls:twrData.annualized>=0?'pf-positive':'pf-negative'});
@@ -7249,12 +7305,16 @@ async function fetchSpyForChart(fromDate,toDate){
   return rows.length?prices:null;
 }
 
+/* Returns null — not a partial series — when any holding on any day could not be converted into
+   `base`. P.29: a line chart built from half-converted values is a SHAPE, and a wrong shape is read
+   faster and doubted less than a wrong number. The caller draws the reason on the canvas instead. */
 function calcHistoricalValues(timeline,prices,base){
   const values=[];
   let lastKnownPrices={};
+  let anyMissing=false;
   timeline.dates.forEach(date=>{
     const held=timeline.holdings[date];
-    let total=0;
+    const daySum=baseSum(base);
     Object.entries(held).forEach(([ticker,shares])=>{
       if(shares<=0)return;
       const assetType=timeline.assetTypes?timeline.assetTypes[ticker]:'stock';
@@ -7274,16 +7334,12 @@ function calcHistoricalValues(timeline,prices,base){
         if(tp&&tp[date]!=null){price=tp[date];lastKnownPrices[ticker]=price}
         else if(lastKnownPrices[ticker]!=null){price=lastKnownPrices[ticker]}
       }
-      if(price!=null){
-        const cur=timeline.currencies[ticker]||'USD';
-        const val=shares*price;
-        const converted=convertCurrency(val,cur,base);
-        total+=(converted!=null&&isFinite(converted))?converted:val;
-      }
+      if(price!=null)daySum.add(shares*price,timeline.currencies[ticker]||'USD');
     });
-    values.push(total);
+    if(!daySum.ok)anyMissing=true;
+    values.push(daySum.value);
   });
-  return values;
+  return anyMissing?null:values;
 }
 
 function getPeriodStartDate(period){
@@ -7360,6 +7416,17 @@ async function renderValueChart(){
     const prices=await fetchHistoricalPricesForChart(apiTickers);
     const base=getBaseCurrency();
     const values=calcHistoricalValues(timeline,prices,base);
+    /* P.29: same canvas-message path the "no transactions" case above uses — clear the chart and
+       say why, rather than plotting a curve whose shape came from unconverted currencies. */
+    if(values===null){
+      if(_pfValueChart){_pfValueChart.destroy();_pfValueChart=null}
+      const ctx2=canvas.getContext('2d');
+      ctx2.clearRect(0,0,canvas.width,canvas.height);
+      ctx2.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text2');
+      ctx2.font='13px system-ui';ctx2.textAlign='center';
+      ctx2.fillText(t('pf.rateMissingTotal'),canvas.width/2,canvas.height/2);
+      return;
+    }
     let startIdx=0;
     const periodStart=getPeriodStartDate(_pfChartPeriod);
     if(periodStart){
@@ -7419,19 +7486,38 @@ function switchAllocChart(groupBy){
   document.querySelectorAll('#pf-panel-overview .card .tabs .tab')[idx]?.classList.add('active');
 
   const base=getBaseCurrency();
-  const groups=Object.create(null);
+  const groupSums=Object.create(null);
+  const sumAll=baseSum(base);
   getActivePositions().forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
-    const valInBase=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
     let key;
     if(groupBy==='ticker')key=pos.ticker||'Unknown';
     else if(groupBy==='account')key=getAccountName(pos.accountId);
     else if(groupBy==='type'){const at=pos.assetType||'other';key=at==='real_estate'?'Real Estate':at.charAt(0).toUpperCase()+at.slice(1)}
     else key=pos.currency||'USD';
-    groups[key]=(groups[key]||0)+valInBase;
+    if(!groupSums[key])groupSums[key]=baseSum(base);
+    groupSums[key].add(mktVal,pos.currency);
+    sumAll.add(mktVal,pos.currency);
   });
+
+  /* P.29: a doughnut is nothing but ratios between the slices, so one unconvertible holding does
+     not shrink one slice — it re-scales every other one against it. With a HUF base and no rates a
+     $10 000 position renders as 0.3% of a 3M Ft portfolio instead of 19%. Say so, draw nothing.
+     Note this holds for the "by currency" grouping too: the slices are still base-currency sums. */
+  const wrap=document.getElementById('pf-alloc-chart-wrap');
+  const warn=document.getElementById('pf-alloc-ratewarn');
+  if(!sumAll.ok){
+    if(_pfAllocChart){_pfAllocChart.destroy();_pfAllocChart=null}
+    if(wrap)wrap.style.display='none';
+    if(warn){warn.style.display='';warn.innerHTML=escH(t('pf.rateMissingChart'))+' <button onclick="fetchRatesAndRefresh(this)" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:12px;text-decoration:underline">'+escH(t('pf.fetchRates'))+'</button>'}
+    return;
+  }
+  if(wrap)wrap.style.display='';
+  if(warn){warn.style.display='none';warn.innerHTML=''}
+  const groups=Object.create(null);
+  Object.keys(groupSums).forEach(k=>{groups[k]=groupSums[k].value});
 
   const sorted=Object.entries(groups).sort((a,b)=>b[1]-a[1]);
   const chartLabels=sorted.map(([k])=>k);
@@ -7457,16 +7543,29 @@ function renderCloudSnapshotsList(){
   c.innerHTML=sorted.map((s,i)=>{
     const prev=sorted[i+1];
     let delta='';
-    if(prev){
-      const diff=s.totalValue-prev.totalValue;
-      const pct=prev.totalValue>0?(diff/prev.totalValue*100):0;
-      const cls=diff>=0?'pf-positive':'pf-negative';
-      delta=`<span class="${cls}" style="font-size:12px">${diff>=0?'+':''}${formatMoney(diff,s.baseCurrency)} (${pct>=0?'+':''}${pct.toFixed(1)}%)</span>`;
+    /* P.29, found while verifying this batch: each row prints its own snapshot in its own stored
+       baseCurrency, but the delta subtracted the previous row's total RAW. A $10 000 snapshot
+       followed by a 3 400 000 Ft one rendered "+3 390 000 Ft (+33900.0%)". This site never called
+       convertCurrency() at all, which is exactly why grepping for it could not find it. */
+    /* A row whose snapshot recorded no baseCurrency has a total of unknown denomination: it gets
+       neither a delta nor a currency symbol, because both would be an invented claim. */
+    if(prev&&s.baseCurrency){
+      const rowCur=s.baseCurrency;
+      const prevSum=snapshotInBase(prev,rowCur);
+      const thisSum=baseSum(rowCur).add(s.totalValue,rowCur);
+      if(prevSum.ok&&thisSum.ok){
+        const diff=thisSum.total-prevSum.total;
+        const pct=prevSum.total>0?(diff/prevSum.total*100):null;
+        const cls=diff>=0?'pf-positive':'pf-negative';
+        delta=`<span class="${cls}" style="font-size:12px">${diff>=0?'+':''}${formatMoney(diff,rowCur)} (${pct==null?'—':(pct>=0?'+':'')+pct.toFixed(1)+'%'})</span>`;
+      }else{
+        delta=`<span style="font-size:12px;color:var(--text2)" title="${escH(t('pf.rateMissingTotal'))}">—</span>`;
+      }
     }
     return`<div class="pf-snapshot-row">
       <div><strong>${s.date}</strong> <span style="color:var(--text2);font-size:12px">${s.positions?.length||0} positions</span></div>
       <div style="display:flex;align-items:center;gap:12px">
-        <span style="font-weight:600">${formatMoney(s.totalValue,s.baseCurrency)}</span>
+        <span style="font-weight:600"${s.baseCurrency?'':' title="No base currency recorded for this snapshot — shown without a unit rather than labelled with today\'s"'}>${s.baseCurrency?formatMoney(s.totalValue,s.baseCurrency):fmtMoneyOrDash(s.totalValue,0)}</span>
         ${delta}
         <button onclick="deleteSnapshot(${s.id})" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:2px 4px" title="Delete">🗑️</button>
       </div>
@@ -7479,20 +7578,20 @@ function renderReturnsGrid(){
   const twrData=calcTWR();
   const xirr=calcXIRR();
   const base=getBaseCurrency();
-  let totalCost=0,totalValue=0;
+  const sumCost=baseSum(base),sumValue=baseSum(base);
   getActivePositions().forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
     if(price!=null){
-      const cA=shares*avg,cvA=convertCurrency(cA,pos.currency||'USD',base);if(isFinite(cvA))totalCost+=cvA;else if(isFinite(cA))totalCost+=cA;
-      const cP=shares*price,cvP=convertCurrency(cP,pos.currency||'USD',base);if(isFinite(cvP))totalValue+=cvP;else if(isFinite(cP))totalValue+=cP;
+      sumCost.add(shares*avg,pos.currency);
+      sumValue.add(shares*price,pos.currency);
     }
   });
-  const simpleReturn=totalCost>0?((totalValue-totalCost)/totalCost*100):0;
+  const simpleReturn=(sumsOk(sumCost,sumValue)&&sumCost.total>0)?((sumValue.total-sumCost.total)/sumCost.total*100):null;
 
   const items=[
-    {label:t('db.simpleReturn'),value:(simpleReturn>=0?'+':'')+simpleReturn.toFixed(1)+'%',cls:simpleReturn>=0?'pf-positive':'pf-negative'},
+    {label:t('db.simpleReturn'),value:simpleReturn==null?'—':(simpleReturn>=0?'+':'')+simpleReturn.toFixed(1)+'%',cls:simpleReturn==null?'':(simpleReturn>=0?'pf-positive':'pf-negative')},
   ];
   if(twrData){
     items.push({label:t('db.twrTotal'),value:(twrData.twr>=0?'+':'')+(twrData.twr*100).toFixed(1)+'%',cls:twrData.twr>=0?'pf-positive':'pf-negative'});
@@ -7644,6 +7743,90 @@ function convertCurrency(amount,from,to){
   const toUsd=to==='USD'?1:(rates['USD/'+to]||rates[to]||null);
   if(!fromUsd||!toUsd)return null;
   return amount*fromUsd*toUsd;
+}
+
+/* P.29 — an honest accumulator for base-currency totals.
+   Every total in this file used to read `total += convertCurrency(amt,cur,base) || amt`, which adds
+   the RAW FOREIGN amount whenever the rates table is empty: $2 000 lands in a HUF total as 2 000 Ft.
+   It never throws, never renders blank, and is wrong by the exchange rate — the worst shape a number
+   can take in a money app, because nothing about it looks wrong. Two further spellings did exactly
+   the same thing (`?? amt`, and `isFinite(cv)?…:else if(isFinite(raw))`), which is why the real count
+   was 34 sites and not the 16 a grep for `||` found.
+
+   This adds only what it could actually convert and COUNTS what it could not. `total` is null the
+   moment anything is missing — deliberately never a partial sum, because a partial base-currency
+   total is itself a plausible wrong number, which is the entire thing this exists to stop. */
+function baseSum(base){
+  return{
+    base:base||getBaseCurrency(),value:0,counted:0,missing:0,
+    add(amount,from){
+      const n=typeof amount==='number'?amount:parseFloat(amount);
+      /* A non-number is not a currency problem — a missing price, an empty field. The old code
+         skipped these and so do we: counting them as missing would hide totals that are fine. */
+      if(n==null||!isFinite(n))return this;
+      const cur=from||'USD';
+      if(n===0||cur===this.base){this.value+=n;this.counted++;return this}
+      const cv=convertCurrency(n,cur,this.base);
+      if(cv!=null&&isFinite(cv)){this.value+=cv;this.counted++}
+      else this.missing++;
+      return this;
+    },
+    /* Record an amount that cannot be placed in this currency AT ALL, because its own denomination
+       is unknown. Different cause from a missing rate, identical consequence: nothing may be summed
+       or compared, so it must not be guessed. */
+    miss(){this.missing++;return this},
+    get ok(){return this.missing===0},
+    get total(){return this.missing?null:this.value}
+  };
+}
+
+/* A snapshot stores the base currency it was taken in. When that field is ABSENT the stored total
+   is of unknown denomination and nothing may be inferred from it — least of all "it is already in
+   today's base", which is what every comparison against a snapshot used to assume.
+
+   Found by QA on this batch, and it is the batch's own defect shape turned inward: `base_currency`
+   carries `NOT NULL DEFAULT 'USD'` in D1 (d1-schema.sql), while `savePortfolioSnapshots()` wrote
+   `s.baseCurrency||'USD'` — so a snapshot that merely lacked the field (legacy localStorage rows,
+   or anything arriving through import/restore) came back from a round-trip as a confident `'USD'`.
+   A 3 400 000 Ft total then read as ≈1.19 BILLION Ft, a −99.7% period return compounding through
+   every later TWR period. The writer now preserves the unknown as `''` instead of laundering it
+   into a currency, and this refuses rather than guesses. */
+function snapshotInBase(snap,base){
+  const s=baseSum(base);
+  return(snap&&snap.baseCurrency)?s.add(snap.totalValue,snap.baseCurrency):s.miss();
+}
+
+/* A difference, ratio or weight built from base-currency sums means nothing unless EVERY sum behind
+   it is complete — P&L from a complete value and an incomplete cost is not a smaller error, it is a
+   different wrong number. formatMoney(null,…) already renders '—', so most callers just pass through. */
+function sumsOk(...sums){return sums.every(s=>s&&s.ok)}
+
+/* fmt() renders null as '-' and formatMoney() as '—'. A hidden total must not change shape
+   depending on which formatter the tile it landed in happens to use, so this is fmtMoney() with
+   the em dash. Privacy still wins over both — the mask says nothing about whether a rate existed. */
+function fmtMoneyOrDash(n,dec){return _privacyMode?_privacyMask:(n==null||!isFinite(n)?'—':fmt(n,dec||0))}
+
+/* Found by QA on this batch. Cat 116 put a "Fetch rates" button inside seven widgets it had just
+   emptied, which makes that button the ONLY way back — and `fetchExchangeRates()` merely stores
+   the rates. Its own docblock says so ("the caller can decide to re-render"); no caller ever did.
+   The result: click, one second of nothing, a green "Rates updated" toast, and a still-blank
+   widget. Before this batch those widgets showed a wrong-but-present number, so the omission had
+   never mattered; emptying them is what turned it into a dead end.
+   The button is re-read after the await because the re-render replaces the node it lives in. */
+async function fetchRatesAndRefresh(btn){
+  /* Settings' #pf-rate-btn already gets a spinner from fetchExchangeRates()'s own setBtnLoading —
+     only the inline buttons this batch added need the wrapper to show that anything is happening,
+     and driving the same node from both would leave whichever finally ran last in charge. */
+  const own=(btn&&btn.id!=='pf-rate-btn')?btn:null;
+  const label=own?own.textContent:null;
+  if(own){own.disabled=true;own.textContent='…'}
+  try{
+    const ok=await fetchExchangeRates();
+    if(ok)_reRenderCurrentSection();
+    return ok;
+  }finally{
+    if(own&&own.isConnected){own.disabled=false;own.textContent=label}
+  }
 }
 
 function getBaseCurrency(){return pfExchangeRates.baseCurrency||'HUF'}
@@ -8197,26 +8380,28 @@ function renderDashboard(){
 // ---- 5A: Portfolio Summary ----
 function renderDbPortfolioSummary(){
   const base=getBaseCurrency();
-  let totalCost=0,totalValue=0,totalDiv=0;
+  const sumCost=baseSum(base),sumValue=baseSum(base),sumDiv=baseSum(base);
   const activePos=getActivePositions();
   activePos.forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const avg=parseFloat(pos.avgCost)||0;
     if(price!=null){
-      const cst=shares*avg,cvCst=convertCurrency(cst,pos.currency||'USD',base);if(isFinite(cvCst))totalCost+=cvCst;else if(isFinite(cst))totalCost+=cst;
-      const mktVal=shares*price;
-      const cvMv=convertCurrency(mktVal,pos.currency||'USD',base);if(isFinite(cvMv))totalValue+=cvMv;else if(isFinite(mktVal))totalValue+=mktVal;
+      sumCost.add(shares*avg,pos.currency);
+      sumValue.add(shares*price,pos.currency);
     }
   });
-  getActiveTransactions().filter(t=>t.type==='dividend').forEach(t=>{
-    const amt=parseFloat(t.totalAmount)||0;
-    totalDiv+=convertCurrency(amt,t.currency||'USD',base)||amt;
+  /* `tx`, not `t` — this callback shadowed the i18n t(), which is called further down this function. */
+  getActiveTransactions().filter(tx=>tx.type==='dividend').forEach(tx=>{
+    sumDiv.add(parseFloat(tx.totalAmount)||0,tx.currency);
   });
-  const pnl=totalValue-totalCost;
-  const pnlPct=totalCost>0?(pnl/totalCost*100):0;
+  const totalValue=sumValue.total,totalDiv=sumDiv.total;
+  const plOk=sumsOk(sumCost,sumValue);
+  const pnl=plOk?totalValue-sumCost.total:null;
+  const pnlPct=(plOk&&sumCost.total>0)?(pnl/sumCost.total*100):null;
   const twrData=calcTWR();
   const xirr=calcXIRR();
+  const missSub=t('pf.rateMissingTotal');
 
   const valEl=document.getElementById('db-total-value');
   const subEl=document.getElementById('db-total-sub');
@@ -8231,18 +8416,24 @@ function renderDbPortfolioSummary(){
   valEl.textContent=formatMoney(totalValue,base);
 
   let deltaText='';
-  if(pfSnapshots.length){
+  /* P.29: a snapshot carries its OWN base currency, and this delta subtracted it from today's total
+     without converting — so it silently mixed currencies whenever the base setting had changed since
+     the snapshot was taken, rates or no rates. Convert it, and drop the delta when it will not go. */
+  if(pfSnapshots.length&&sumValue.ok){
     const sorted=[...pfSnapshots].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
     const lastSnap=sorted[0];
-    const delta=totalValue-lastSnap.totalValue;
-    deltaText=`${delta>=0?'+':''}${formatMoney(delta,base)} since ${lastSnap.date}`;
+    const snapSum=snapshotInBase(lastSnap,base);
+    if(snapSum.ok){
+      const delta=totalValue-snapSum.total;
+      deltaText=`${delta>=0?'+':''}${formatMoney(delta,base)} since ${lastSnap.date}`;
+    }
   }
-  subEl.textContent=deltaText;
+  subEl.textContent=deltaText||(sumValue.ok?'':missSub);
 
   const metrics=[];
-  metrics.push({label:'P&L',value:(pnl>=0?'+':'')+formatMoney(pnl,base),cls:pnl>=0?'positive':'negative'});
-  metrics.push({label:'P&L %',value:(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%',cls:pnlPct>=0?'positive':'negative'});
-  metrics.push({label:t('db.dividends'),value:formatMoney(totalDiv,base),cls:'positive'});
+  metrics.push({label:'P&L',value:pnl==null?'—':(pnl>=0?'+':'')+formatMoney(pnl,base),cls:pnl==null?'':(pnl>=0?'positive':'negative')});
+  metrics.push({label:'P&L %',value:pnlPct==null?'—':(pnlPct>=0?'+':'')+pnlPct.toFixed(1)+'%',cls:pnlPct==null?'':(pnlPct>=0?'positive':'negative')});
+  metrics.push({label:t('db.dividends'),value:formatMoney(totalDiv,base),cls:sumDiv.ok?'positive':''});
   metrics.push({label:t('db.positions'),value:activePos.length,cls:''});
   if(twrData)metrics.push({label:'TWR',value:(twrData.annualized>=0?'+':'')+(twrData.annualized*100).toFixed(1)+'%',cls:twrData.annualized>=0?'positive':'negative'});
   if(xirr!=null)metrics.push({label:'XIRR',value:(xirr>=0?'+':'')+(xirr*100).toFixed(1)+'%',cls:xirr>=0?'positive':'negative'});
@@ -8262,17 +8453,38 @@ function renderDbAllocCharts(){
   const text2=getComputedStyle(document.documentElement).getPropertyValue('--text2').trim();
   const baseColors=['#6c5ce7','#74b9ff','#00b894','#fdcb6e','#e17055','#a29bfe','#55efc4','#ffeaa7','#fab1a0','#81ecec','#dfe6e9','#636e72'];
 
+  /* P.29 — checked once for all four doughnuts, since they share the same holdings. A doughnut is
+     only the ratios between its slices, so one unconvertible position re-scales every other slice
+     rather than just its own. See switchAllocChart() for the worked numbers. */
+  const gridEl=document.getElementById('db-alloc-grid');
+  const warnEl=document.getElementById('db-alloc-ratewarn');
+  const sumAll=baseSum(base);
+  getActivePositions().forEach(pos=>{
+    const price=getPositionPrice(pos);
+    const shares=parseFloat(pos.shares)||0;
+    sumAll.add(price!=null?shares*price:0,pos.currency);
+  });
+  if(!sumAll.ok){
+    groupKeys.forEach(gk=>{const id='db-alloc-'+gk;if(_dbCharts[id]){_dbCharts[id].destroy();delete _dbCharts[id]}});
+    if(gridEl)gridEl.style.display='none';
+    if(warnEl){warnEl.style.display='';warnEl.innerHTML=escH(t('pf.rateMissingChart'))+' <button onclick="fetchRatesAndRefresh(this)" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:13px;text-decoration:underline">'+escH(t('pf.fetchRates'))+'</button>'}
+    return;
+  }
+  if(gridEl)gridEl.style.display='';
+  if(warnEl){warnEl.style.display='none';warnEl.innerHTML=''}
+
   groupKeys.forEach(groupBy=>{
     const groups=Object.create(null);
     getActivePositions().forEach(pos=>{
       const price=getPositionPrice(pos);
       const shares=parseFloat(pos.shares)||0;
       const mktVal=price!=null?shares*price:0;
-      const valInBase=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+      /* sumAll.ok above guarantees this converts. `at`, not `t` — the old local shadowed the i18n t(). */
+      const valInBase=baseSum(base).add(mktVal,pos.currency).value;
       let key;
       if(groupBy==='ticker')key=pos.ticker||'?';
       else if(groupBy==='account')key=getAccountName(pos.accountId);
-      else if(groupBy==='type'){const t=pos.assetType||'other';key=t==='real_estate'?'Real Estate':t.charAt(0).toUpperCase()+t.slice(1)}
+      else if(groupBy==='type'){const at=pos.assetType||'other';key=at==='real_estate'?'Real Estate':at.charAt(0).toUpperCase()+at.slice(1)}
       else key=pos.currency||'USD';
       groups[key]=(groups[key]||0)+valInBase;
     });
@@ -8304,19 +8516,37 @@ function renderDbNetWorth(){
   const base=getBaseCurrency();
   const baseColors=['#6c5ce7','#74b9ff','#00b894','#fdcb6e','#e17055','#a29bfe','#55efc4','#ffeaa7','#fab1a0','#81ecec','#dfe6e9','#636e72'];
 
-  const groups={};
-  let totalNW=0;
+  /* `at`, not `t` — the asset type shadowed the i18n t(), which this function calls below. */
+  const groupSums=Object.create(null);
+  const sumNW=baseSum(base);
   activePos.forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
-    const valInBase=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
-    const t=pos.assetType||'other';
-    groups[t]=(groups[t]||0)+valInBase;
-    totalNW+=valInBase;
+    const at=pos.assetType||'other';
+    if(!groupSums[at])groupSums[at]=baseSum(base);
+    groupSums[at].add(mktVal,pos.currency);
+    sumNW.add(mktVal,pos.currency);
   });
 
+  /* P.29: one unconvertible holding makes the total, every slice, every legend percentage and the
+     YoY delta wrong together — they are all shares of the same sum. So replace the whole widget
+     body rather than individual numbers: a legend of dashes beside a confident doughnut is worse
+     than saying plainly that this cannot be drawn yet. */
+  if(!sumNW.ok){
+    /* The canvas goes with the innerHTML; a live Chart.js instance would be left pointing at a
+       detached node and would survive into the next render. */
+    if(_dbCharts['db-networth-chart']){_dbCharts['db-networth-chart'].destroy();delete _dbCharts['db-networth-chart']}
+    el.innerHTML='<div class="db-empty">'+t('pf.rateMissingChart')+' <button onclick="fetchRatesAndRefresh(this)" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:13px;text-decoration:underline">'+t('pf.fetchRates')+'</button></div>';
+    return;
+  }
+  const groups={};
+  Object.keys(groupSums).forEach(k=>{groups[k]=groupSums[k].value});
+  const totalNW=sumNW.total;
+
   if(totalNW===0){
+    /* Same detached-canvas hazard as the branch above — this one predates the batch. */
+    if(_dbCharts['db-networth-chart']){_dbCharts['db-networth-chart'].destroy();delete _dbCharts['db-networth-chart']}
     el.innerHTML='<div class="db-empty">'+t('db.waitingPrice')+'</div>';
     return;
   }
@@ -8334,8 +8564,9 @@ function renderDbNetWorth(){
       const diff=Math.abs(new Date(s.date)-new Date(oneYearAgo));
       if(diff<closestDiff){closestDiff=diff;closest=s}
     });
-    if(closest&&closestDiff<180*86400000){
-      const snapVal=closest.baseCurrency&&closest.baseCurrency!==base?(convertCurrency(closest.totalValue,closest.baseCurrency,base)||closest.totalValue):closest.totalValue;
+    const snapSum=closest?snapshotInBase(closest,base):null;
+    if(closest&&closestDiff<180*86400000&&snapSum.ok){
+      const snapVal=snapSum.total;
       const delta=totalNW-snapVal;
       const pct=snapVal>0?(delta/snapVal*100):0;
       const cls=delta>=0?'positive':'negative';
@@ -8365,7 +8596,7 @@ function renderDbNetWorth(){
     <div style="max-width:220px;margin:0 auto 16px"><canvas id="db-networth-chart"></canvas></div>
     <div style="margin-top:8px">${legendRows}</div>`;
 
-  const labels=sorted.map(([t])=>typeLabels[t]||t.charAt(0).toUpperCase()+t.slice(1));
+  const labels=sorted.map(([k])=>typeLabels[k]||k.charAt(0).toUpperCase()+k.slice(1));/* `k`, not `t`: the i18n t() is live in this function */
   const data=sorted.map(([,v])=>v);
   if(_dbCharts['db-networth-chart'])_dbCharts['db-networth-chart'].destroy();
   _dbCharts['db-networth-chart']=new Chart(document.getElementById('db-networth-chart'),{
@@ -8382,20 +8613,29 @@ function renderDbSmithMetrics(){
   if(!activePos.length){el.innerHTML='<div class="db-empty">'+t('empty.portfolioMetrics')+' <a href="#" onclick="event.preventDefault();showSection(\'portfolio\')" style="color:var(--accent)">Portfolio →</a></div>';return}
 
   const base=getBaseCurrency();
-  let totalValue=0;
+  /* P.29: these are VALUE-WEIGHTED averages, so an unconvertible holding does not drop out — it
+     enters the weighting at its raw foreign size and quietly reweights every other holding.
+     Summing only the positions that actually carry stock data (rather than the whole portfolio,
+     as before) is both less strict and mathematically identical: the denominator cancels against
+     weightSum below, and a HUF property with no rate should not hide metrics for USD stocks whose
+     weights relative to each other are perfectly sound. */
+  const sumStocks=baseSum(base);
   const posData=[];
   activePos.forEach(pos=>{
+    const s=tStocks[pos.ticker];
+    if(!s)return;
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
     const mktVal=price!=null?shares*price:0;
-    const cvVal=convertCurrency(mktVal,pos.currency||'USD',base);const valInBase=isFinite(cvVal)?cvVal:(isFinite(mktVal)?mktVal:0);
-    if(isFinite(valInBase))totalValue+=valInBase;
-    const s=tStocks[pos.ticker];
-    if(s&&valInBase>0){
-      const r=calcStockRatios(s);
-      posData.push({valInBase,s,r});
-    }
+    const one=baseSum(base).add(mktVal,pos.currency);
+    sumStocks.add(mktVal,pos.currency);
+    if(one.ok&&one.value>0)posData.push({valInBase:one.value,s,r:calcStockRatios(s)});
   });
+  if(!sumStocks.ok){
+    el.innerHTML='<div class="db-empty">'+t('pf.rateMissingChart')+' <button onclick="fetchRatesAndRefresh(this)" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:13px;text-decoration:underline">'+t('pf.fetchRates')+'</button></div>';
+    return;
+  }
+  const totalValue=sumStocks.total;
   if(!posData.length||totalValue<=0){el.innerHTML='<div class="db-empty">'+t('db.noStockData')+'</div>';return}
 
   const metricDefs=[
@@ -8552,19 +8792,29 @@ function renderDbBenchmark(){
   const spyReturn=(spyLast-spyFirst)/spyFirst;
 
   const sorted=[...pfSnapshots].sort((a,b)=>a.date.localeCompare(b.date));
+  /* P.29: the chart below indexes every snapshot to the first one (=100), so snapshots stored under
+     different base currencies yield a series with no meaning — and a wrong INDEX is worse than a
+     wrong total, because it carries no unit on screen to give itself away. */
+  const benchBase=getBaseCurrency();
+  const snapVals=sorted.map(s=>snapshotInBase(s,benchBase).total);
+  const canChart=sorted.length>=3&&prices.length>=2&&snapVals.every(v=>v!=null);
   const days=(new Date(sorted[sorted.length-1].date)-new Date(sorted[0].date))/(86400000);
   const spyAnn=days>365?Math.pow(1+spyReturn,365/days)-1:spyReturn;
 
-  const pfReturn=twrData?twrData.annualized:0;
-  const alpha=pfReturn-spyAnn;
+  /* P.29: `twrData?…:0` turned a REFUSED metric into a claim of exactly 0.0%, and then subtracted
+     the S&P from it to publish an alpha. calcTWR() now returns null whenever a cashflow or a
+     snapshot could not be converted, so this had to stop treating null as zero — it is the one
+     shape of wrong number that looks deliberate. */
+  const pfReturn=twrData?twrData.annualized:null;
+  const alpha=pfReturn==null?null:pfReturn-spyAnn;
 
   let html='<div class="db-benchmark">';
-  html+=`<div class="db-bench-card"><div class="bc-label">Portfolio TWR</div><div class="bc-value ${pfReturn>=0?'positive':'negative'}">${(pfReturn*100).toFixed(1)}%</div></div>`;
+  html+=`<div class="db-bench-card"><div class="bc-label">Portfolio TWR</div><div class="bc-value ${pfReturn==null?'':(pfReturn>=0?'positive':'negative')}">${pfReturn==null?'—':(pfReturn*100).toFixed(1)+'%'}</div></div>`;
   html+=`<div class="db-bench-card"><div class="bc-label">S&P 500</div><div class="bc-value ${spyReturn>=0?'positive':'negative'}">${(spyAnn*100).toFixed(1)}%</div></div>`;
-  html+=`<div class="db-bench-card"><div class="bc-label">Alpha</div><div class="bc-value ${alpha>=0?'positive':'negative'}">${alpha>=0?'+':''}${(alpha*100).toFixed(1)}%</div></div>`;
+  html+=`<div class="db-bench-card"><div class="bc-label">Alpha</div><div class="bc-value ${alpha==null?'':(alpha>=0?'positive':'negative')}">${alpha==null?'—':(alpha>=0?'+':'')+(alpha*100).toFixed(1)+'%'}</div></div>`;
   html+='</div>';
 
-  if(sorted.length>=3&&prices.length>=2){
+  if(canChart){
     html+=`<div class="db-bench-chart"><canvas id="db-bench-canvas"></canvas></div>`;
   }
 
@@ -8572,11 +8822,15 @@ function renderDbBenchmark(){
     html+=`<div style="font-size:11px;color:var(--text2);margin-top:8px">${t('db.lastUpdated')}${new Date(dbBenchmark.fetchedAt).toLocaleDateString()}</div>`;
   }
   el.innerHTML=html;
+  /* The canvas is only in `html` when canChart, so on the other branch innerHTML has just removed
+     it — destroy the instance or it survives pointing at a detached node. QA caught this: the
+     hazard was handled correctly in renderDbNetWorth and then not applied to the path added here. */
+  if(!canChart&&_dbCharts['bench']){_dbCharts['bench'].destroy();delete _dbCharts['bench']}
 
-  if(sorted.length>=3&&prices.length>=2){
+  if(canChart){
     const pfLabels=sorted.map(s=>s.date);
-    const baseVal=sorted[0].totalValue||1;
-    const pfData=sorted.map(s=>s.totalValue/baseVal*100);
+    const baseVal=snapVals[0]||1;
+    const pfData=snapVals.map(v=>v/baseVal*100);
     const spyData=pfLabels.map(date=>{
       const p=[...prices].reverse().find(pr=>pr.date<=date);
       return p?(p.close/spyFirst*100):100;
@@ -8689,13 +8943,20 @@ function renderDbDipFinder(){
 function renderDbFiTracker(){
   const el=document.getElementById('db-fi-content');
   const base=getBaseCurrency();
-  let currentValue=0;
+  const sumValue=baseSum(base);
   getActivePositions().forEach(pos=>{
     const price=getPositionPrice(pos);
     const shares=parseFloat(pos.shares)||0;
-    const mktVal=price!=null?shares*price:0;
-    currentValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+    sumValue.add(price!=null?shares*price:0,pos.currency);
   });
+  /* P.29: everything below — the ring, the percentage, years-to-FI, coast-FI — is a function of
+     currentValue alone. A wrong current value does not make one number wrong, it makes the whole
+     widget a confident wrong answer to "when can I stop working". */
+  if(!sumValue.ok){
+    el.innerHTML='<div class="db-empty">'+t('pf.rateMissingChart')+' <button onclick="fetchRatesAndRefresh(this)" style="color:var(--accent);background:none;border:none;cursor:pointer;font-size:13px;text-decoration:underline">'+t('pf.fetchRates')+'</button></div>';
+    return;
+  }
+  const currentValue=sumValue.total;
 
   const fi=dbFiSettings;
   const target=fi.targetAmount||0;
@@ -10191,26 +10452,20 @@ function calcPositionSizing(ticker){
   const pos=getActivePositions().filter(p=>p.ticker===ticker);
   if(pos.length>0){
     const base=pfAccounts.length>0?(pfAccounts[0].currency||'USD'):'USD';
-    let totalVal=0;
-    getActivePositions().forEach(p=>{
+    const posValue=p=>{
       const at=p.assetType||'stock';
-      let mv=0;
-      if(at==='cash')mv=parseFloat(p.cashAmount)||0;
-      else if(at==='real_estate')mv=parseFloat(p.reCurrentValue)||0;
-      else mv=(p.shares||0)*(p.currentPrice||p.avgCost||0);
-      const cvMv2=convertCurrency(mv,p.currency||'USD',base);if(isFinite(cvMv2))totalVal+=cvMv2;else if(isFinite(mv))totalVal+=mv;
-    });
-    if(totalVal>0){
-      let tickerVal=0;
-      pos.forEach(p=>{
-        const at=p.assetType||'stock';
-        let mv=0;
-        if(at==='cash')mv=parseFloat(p.cashAmount)||0;
-        else if(at==='real_estate')mv=parseFloat(p.reCurrentValue)||0;
-        else mv=(p.shares||0)*(p.currentPrice||p.avgCost||0);
-        tickerVal+=convertCurrency(mv,p.currency||'USD',base)||mv;
-      });
-      currentPct=tickerVal/totalVal*100;
+      if(at==='cash')return parseFloat(p.cashAmount)||0;
+      if(at==='real_estate')return parseFloat(p.reCurrentValue)||0;
+      return(p.shares||0)*(p.currentPrice||p.avgCost||0);
+    };
+    const sumAll=baseSum(base),sumTicker=baseSum(base);
+    getActivePositions().forEach(p=>sumAll.add(posValue(p),p.currency));
+    pos.forEach(p=>sumTicker.add(posValue(p),p.currency));
+    /* P.29: this is a share of the portfolio, so both halves of the ratio must be in one currency.
+       renderPositionSizing already omits the "Current" marker on null — a missing share is far
+       better than telling Peter a position is 0.4% of his portfolio when it is 19%. */
+    if(sumsOk(sumAll,sumTicker)&&sumAll.total>0){
+      currentPct=sumTicker.total/sumAll.total*100;
     }
   }
   return{score,minPct,maxPct,sizeLabel,cagrMult,convMult,riskMult,cagr,conv,risk,kelly,currentPct};
@@ -12302,7 +12557,7 @@ async function fetchAllDividendData(){
 
 function calcPortfolioDividendIncome(){
   const base=getBaseCurrency();
-  let totalAnnualGross=0,totalAnnualNet=0,totalCost=0,totalValue=0;
+  const sumGross=baseSum(base),sumNet=baseSum(base),sumCost=baseSum(base),sumValue=baseSum(base);
   const breakdown=[];
   getActivePositions().forEach(pos=>{
     const dh=divHistory[pos.ticker];
@@ -12319,24 +12574,28 @@ function calcPortfolioDividendIncome(){
     const mktVal=shares*price;
     const currentYield=mktVal>0?(grossIncome/mktVal*100):0;
     const cur=pos.currency||'USD';
-    const grossConverted=convertCurrency(grossIncome,cur,base)??grossIncome;
-    const netConverted=convertCurrency(netIncome,cur,base)??netIncome;
-    const costConverted=convertCurrency(cost,cur,base)??cost;
-    const valConverted=convertCurrency(mktVal,cur,base)??mktVal;
-    if(isFinite(grossConverted))totalAnnualGross+=grossConverted;
-    if(isFinite(netConverted))totalAnnualNet+=netConverted;
-    if(isFinite(costConverted))totalCost+=costConverted;
-    if(isFinite(valConverted))totalValue+=valConverted;
+    /* P.29: `?? grossIncome` was the third spelling of the same fallback — a raw foreign amount
+       added to a base-currency sum. Per-row values go out as null so the table prints '—'; the
+       portfolio totals below go null the moment any single row could not be converted. */
+    const inBase=amt=>baseSum(base).add(amt,cur).total;
+    sumGross.add(grossIncome,cur);
+    sumNet.add(netIncome,cur);
+    sumCost.add(cost,cur);
+    sumValue.add(mktVal,cur);
     breakdown.push({
       ticker:pos.ticker,shares,annualDPS,frequency:dh?.frequency||'unknown',
-      grossIncome:grossConverted,netIncome:netConverted,yieldOnCost,currentYield,
+      grossIncome:inBase(grossIncome),netIncome:inBase(netIncome),yieldOnCost,currentYield,
       growth5y:dh?.growthRate5y,currency:cur
     });
   });
-  const portfolioYieldOnCost=totalCost>0?(totalAnnualGross/totalCost*100):0;
-  const portfolioCurrentYield=totalValue>0?(totalAnnualGross/totalValue*100):0;
-  const avgGrowth5y=breakdown.filter(b=>b.growth5y!=null);
-  const weightedGrowth=avgGrowth5y.length?avgGrowth5y.reduce((s,b)=>s+b.growth5y*b.grossIncome,0)/avgGrowth5y.reduce((s,b)=>s+b.grossIncome,0):null;
+  const totalAnnualGross=sumGross.total,totalAnnualNet=sumNet.total;
+  const portfolioYieldOnCost=(sumsOk(sumGross,sumCost)&&sumCost.total>0)?(totalAnnualGross/sumCost.total*100):null;
+  const portfolioCurrentYield=(sumsOk(sumGross,sumValue)&&sumValue.total>0)?(totalAnnualGross/sumValue.total*100):null;
+  /* Income-weighted, so a row whose income would not convert must not be weighted at its raw
+     foreign size — drop it from both halves of the ratio rather than from the numerator only. */
+  const growthRows=breakdown.filter(b=>b.growth5y!=null&&b.grossIncome!=null);
+  const growthWeight=growthRows.reduce((s,b)=>s+b.grossIncome,0);
+  const weightedGrowth=growthRows.length&&growthWeight>0?growthRows.reduce((s,b)=>s+b.growth5y*b.grossIncome,0)/growthWeight:null;
   return{totalAnnualGross,totalAnnualNet,portfolioYieldOnCost,portfolioCurrentYield,
     dividendPayers:breakdown.length,totalPositions:getActivePositions().length,
     avgGrowth5y:weightedGrowth,breakdown};
@@ -12345,6 +12604,7 @@ function calcPortfolioDividendIncome(){
 function calcDividendForecast(months){
   const base=getBaseCurrency();
   const result=[];
+  let anyMissing=false;
   const now=new Date();
   for(let i=0;i<months;i++){
     const m=new Date(now.getFullYear(),now.getMonth()+i,1);
@@ -12367,13 +12627,16 @@ function calcDividendForecast(months){
       if(uniqueMonths.includes(slotMonth)){
         const gross=shares*latestDPS;
         const net=gross*(1-taxRate/100);
-        const converted=convertCurrency(net,cur,base)||net;
-        slot.income+=converted;
-        slot.byTicker[pos.ticker]=(slot.byTicker[pos.ticker]||0)+converted;
+        const one=baseSum(base).add(net,cur);
+        if(!one.ok){anyMissing=true;return}
+        slot.income+=one.value;
+        slot.byTicker[pos.ticker]=(slot.byTicker[pos.ticker]||0)+one.value;
       }
     });
   });
-  return result;
+  /* P.29: null, not a shorter set of bars. This is a stacked chart, so an omitted ticker does not
+     read as "unknown" — it reads as "that holding pays nothing in June". */
+  return anyMissing?null:result;
 }
 
 function getPaymentsForMonth(year,month){
@@ -12388,7 +12651,10 @@ function getPaymentsForMonth(year,month){
         const day=parseInt(pDate.slice(8,10),10);
         if(!payments[day])payments[day]=[];
         const shares=parseFloat(pos.shares)||0;
-        payments[day].push({ticker:pos.ticker,amount:(d.adjDividend||d.dividend)*shares});
+        /* P.29: the amount is in the POSITION's currency. It used to travel to the calendar
+           tooltip bare and get printed with the base-currency code in front of it, so a $40
+           dividend read "HUF 40.00". Carry the currency with the number. */
+        payments[day].push({ticker:pos.ticker,amount:(d.adjDividend||d.dividend)*shares,currency:pos.currency||'USD'});
       }
     });
   });
@@ -12402,12 +12668,18 @@ function renderDividendsTab(){
   if(taxInput)taxInput.value=divSettings.taxRate;
   const income=calcPortfolioDividendIncome();
   const base=getBaseCurrency();
-  const dfmt2=v=>_privacyMode?_privacyMask:base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  /* P.29: null totals reach here whenever a holding's currency could not be converted, and every
+     one of these formatters used to be handed a raw number unconditionally — `.toFixed` on null
+     throws, so the guards are load-bearing, not cosmetic. */
+  const dfmt2=v=>_privacyMode?_privacyMask:(v==null||!isFinite(v)?'—':base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}));
+  const money2=v=>_privacyMode?_privacyMask:(v==null||!isFinite(v)?'—':base+' '+dfmt2(v));
+  const pct2=v=>v==null||!isFinite(v)?'—':v.toFixed(2)+'%';
+  const missSub=t('pf.rateMissingTotal');
   const cards=document.getElementById('div-summary-cards');
   if(cards)cards.innerHTML=[
-    {label:'Annual Income (Net)',value:_privacyMode?_privacyMask:base+' '+dfmt2(income.totalAnnualNet),sub:_privacyMode?_privacyMask:'Gross: '+base+' '+dfmt2(income.totalAnnualGross)},
-    {label:'Monthly (Avg)',value:_privacyMode?_privacyMask:base+' '+dfmt2(income.totalAnnualNet/12),sub:_privacyMode?_privacyMask:dfmt2(income.totalAnnualGross/12)+' gross'},
-    {label:'Yield on Cost',value:income.portfolioYieldOnCost.toFixed(2)+'%',sub:'Current: '+income.portfolioCurrentYield.toFixed(2)+'%'},
+    {label:'Annual Income (Net)',value:money2(income.totalAnnualNet),sub:income.totalAnnualGross==null?missSub:(_privacyMode?_privacyMask:'Gross: '+base+' '+dfmt2(income.totalAnnualGross))},
+    {label:'Monthly (Avg)',value:money2(income.totalAnnualNet==null?null:income.totalAnnualNet/12),sub:income.totalAnnualGross==null?missSub:(_privacyMode?_privacyMask:dfmt2(income.totalAnnualGross/12)+' gross')},
+    {label:'Yield on Cost',value:pct2(income.portfolioYieldOnCost),sub:income.portfolioCurrentYield==null?missSub:'Current: '+pct2(income.portfolioCurrentYield)},
     {label:'Dividend Payers',value:income.dividendPayers+' / '+income.totalPositions,sub:'positions pay dividends'},
     {label:'Avg Growth (5Y)',value:income.avgGrowth5y!=null?income.avgGrowth5y.toFixed(1)+'%':'N/A',sub:'weighted by income'}
   ].map(c=>`<div class="pf-summary-card"><div class="pf-summary-card-label">${c.label}</div><div class="pf-summary-card-value">${c.value}</div><div class="pf-summary-card-sub">${c.sub}</div></div>`).join('');
@@ -12423,6 +12695,16 @@ function renderDivForecastChart(){
   const canvas=document.getElementById('div-chart-forecast');
   if(!canvas)return;
   if(divForecastChart){divForecastChart.destroy();divForecastChart=null}
+  /* P.29: a stacked bar chart with a ticker silently missing does not read as "unknown", it reads
+     as "that holding pays nothing that month". Draw the reason on the canvas instead. */
+  if(forecast===null){
+    const fctx=canvas.getContext('2d');
+    fctx.clearRect(0,0,canvas.width,canvas.height);
+    fctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--text2');
+    fctx.font='13px system-ui';fctx.textAlign='center';
+    fctx.fillText(t('pf.rateMissingTotal'),canvas.width/2,canvas.height/2);
+    return;
+  }
   const allTickers=[...new Set(forecast.flatMap(f=>Object.keys(f.byTicker)))];
   const colors=[cv('--accent'),cv('--blue'),cv('--green'),cv('--orange'),'#e17055',cv('--accent2'),'#55efc4','#fab1a0','#81ecec','#ff7675'];
   const datasets=allTickers.map((ticker,i)=>({
@@ -12470,7 +12752,15 @@ function renderDivCalendar(year,month){
     if(isToday)cls.push('today');
     let tooltip='';
     if(pays){
-      const details=pays.map(p=>`${escH(p.ticker)}: ${_privacyMode?_privacyMask:base+' '+p.amount.toFixed(2)}`).join('<br>');
+      /* Converted into the base currency when the rate is there; otherwise shown in its OWN
+         currency rather than hidden — a single payment needs no cross-currency sum to be true,
+         so the honest move here is to label it correctly, not to withhold it. */
+      const details=pays.map(p=>{
+        const cur=p.currency||'USD';
+        const inBase=baseSum(base).add(p.amount,cur).total;/* not `cv` — that is the global CSS-variable helper, used elsewhere in this very region */
+        const shown=inBase!=null?base+' '+inBase.toFixed(2):cur+' '+p.amount.toFixed(2);
+        return `${escH(p.ticker)}: ${_privacyMode?_privacyMask:shown}`;
+      }).join('<br>');
       tooltip=`<div class="div-cal-tooltip">${details}</div>`;
     }
     html+=`<div class="${cls.join(' ')}">${d}${pays?'<div class="div-cal-dot"></div>':''}${tooltip}</div>`;
@@ -12490,7 +12780,9 @@ function renderDivBreakdownTable(breakdown){
   const body=document.getElementById('div-breakdown-body');
   if(!body)return;
   const base=getBaseCurrency();
-  const dfmt=v=>_privacyMode?_privacyMask:base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  /* P.29: a row's converted income is null when its currency has no rate — .toLocaleString() on
+     null throws, so this guard keeps the whole table rendering when one row cannot be shown. */
+  const dfmt=v=>_privacyMode?_privacyMask:(v==null||!isFinite(v)?'—':base==='HUF'?Math.round(v).toLocaleString():v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}));
   let sorted=[...breakdown];
   sorted.sort((a,b)=>{
     let va=a[divSortCol],vb=b[divSortCol];
@@ -16924,7 +17216,10 @@ async function generatePdf(ticker){
         positions.forEach((p,i)=>{
           const acct=pfAccounts.find(a=>a.id===p.accountId);
           const val=p.shares&&s.price?(p.shares*s.price).toFixed(0):'-';
-          tableRow([acct?.name||p.accountId,p.shares,p.avgCost?'$'+parseFloat(p.avgCost).toFixed(2):'-',p.currency||'-',val?'$'+fmt(parseFloat(val)):'-'],colW,i%2===0);
+          /* P.29 (QA): these printed '$' in front of un-converted amounts in a row that states the
+             real currency two cells away — `$3400.00 | HUF | $1.2M`. The Currency column is the
+             unit; the numbers stay bare rather than claiming a different one. */
+          tableRow([acct?.name||p.accountId,p.shares,p.avgCost?parseFloat(p.avgCost).toFixed(2):'-',p.currency||'-',val!=='-'?fmt(parseFloat(val)):'-'],colW,i%2===0);
         });
         y+=6;
       }
@@ -16936,9 +17231,11 @@ async function generatePdf(ticker){
         tableHeader(['Date','Type','Shares','Price','Total','Notes'],colW);
         txns.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach((t,i)=>{
           tableRow([
+            /* Same defect, and here there is no Currency column to carry the unit — so each amount
+               is prefixed with its OWN transaction currency instead of a hardcoded '$'. */
             t.date||'-',t.type||'-',t.shares||'-',
-            t.pricePerShare?'$'+parseFloat(t.pricePerShare).toFixed(2):'-',
-            t.totalAmount?'$'+fmt(parseFloat(t.totalAmount)):'-',
+            t.pricePerShare?(t.currency||'')+' '+parseFloat(t.pricePerShare).toFixed(2):'-',
+            t.totalAmount?(t.currency||'')+' '+fmt(parseFloat(t.totalAmount)):'-',
             (t.notes||'-').substring(0,25)
           ],colW,i%2===0);
         });
@@ -17111,30 +17408,33 @@ async function generatePortfolioPdf(btn){
 
     // Summary
     const base=getBaseCurrency();
-    let totalCost=0,totalValue=0,totalDiv=0;
+    const sumCost=baseSum(base),sumValue=baseSum(base),sumDiv=baseSum(base);
     const positions=getActivePositions();
     positions.forEach(pos=>{
       const price=getPositionPrice(pos);const shares=parseFloat(pos.shares)||0;const avg=parseFloat(pos.avgCost)||0;
-      const cost=shares*avg;
       if(price!=null){
-        const mktVal=shares*price;
-        totalCost+=convertCurrency(cost,pos.currency||'USD',base)||cost;
-        totalValue+=convertCurrency(mktVal,pos.currency||'USD',base)||mktVal;
+        sumCost.add(shares*avg,pos.currency);
+        sumValue.add(shares*price,pos.currency);
       }
     });
     getActiveTransactions().filter(tx=>tx.type==='dividend').forEach(tx=>{
-      const amt=parseFloat(tx.totalAmount)||0;
-      totalDiv+=convertCurrency(amt,tx.currency||'USD',base)||amt;
+      sumDiv.add(parseFloat(tx.totalAmount)||0,tx.currency);
     });
-    const pnl=totalValue-totalCost;
-    const pnlPct=totalCost>0?(pnl/totalCost*100):0;
-    const fmt=v=>{const a=Math.abs(v),s=v<0?'-':'';return a>=1e6?s+(a/1e6).toFixed(1)+'M':a>=1e3?s+(a/1e3).toFixed(1)+'K':v.toFixed(0)};
+    const totalCost=sumCost.total,totalValue=sumValue.total,totalDiv=sumDiv.total;
+    const plOk=sumsOk(sumCost,sumValue);
+    const pnl=plOk?totalValue-totalCost:null;
+    const pnlPct=(plOk&&totalCost>0)?(pnl/totalCost*100):null;
+    /* P.29: 'N/A', not the '—' used on screen — this document already says N/A for an unavailable
+       TWR, and staying inside the PDF's own convention avoids betting on how the em dash survives
+       the standard-font encoding. The guard itself is load-bearing: .toFixed() on null throws, and
+       this local fmt() shadows the global one, so it needs its own. */
+    const fmt=v=>{if(v==null||!isFinite(v))return'N/A';const a=Math.abs(v),s=v<0?'-':'';return a>=1e6?s+(a/1e6).toFixed(1)+'M':a>=1e3?s+(a/1e3).toFixed(1)+'K':v.toFixed(0)};
 
     sectionTitle('Portfolio Overview');
     metricRow([
       {label:'Total Value ('+base+')',value:fmt(totalValue)},
       {label:'Total Cost',value:fmt(totalCost)},
-      {label:'P&L',value:(pnl>=0?'+':'')+fmt(pnl)+' ('+pnlPct.toFixed(1)+'%)'},
+      {label:'P&L',value:pnl==null?'N/A':(pnl>=0?'+':'')+fmt(pnl)+' ('+(pnlPct!=null?pnlPct.toFixed(1):'N/A')+'%)'},
       {label:'Dividends Received',value:fmt(totalDiv)}
     ]);
 
@@ -17152,14 +17452,20 @@ async function generatePortfolioPdf(btn){
       const acW=[50,30,45,45];
       tableHeader(['Account','Currency','Value','P&L'],acW);
       pfAccounts.forEach((acc,i)=>{
-        let accVal=0,accCost=0;
+        /* P.29, also found while verifying: this summed every position in the account WITHOUT
+           converting and then printed the result under the account's own currency column — so an
+           account holding both USD and HUF positions published their raw sum as forints. Another
+           site that never called convertCurrency(), and so was never in the count. */
+        const accCur=acc.currency||'USD';
+        const accValSum=baseSum(accCur),accCostSum=baseSum(accCur);
         positions.filter(p=>p.accountId===acc.id).forEach(p=>{
           const price=getPositionPrice(p);const shares=parseFloat(p.shares)||0;const avg=parseFloat(p.avgCost)||0;
-          if(price!=null){accVal+=shares*price;accCost+=shares*avg}
+          if(price!=null){accValSum.add(shares*price,p.currency||accCur);accCostSum.add(shares*avg,p.currency||accCur)}
         });
-        const accPnl=accVal-accCost;
-        tableRow([acc.name||'Account '+(i+1),acc.currency||'USD',accVal.toFixed(0),
-          (accPnl>=0?'+':'')+accPnl.toFixed(0)],acW,i%2===1);
+        const accOk=sumsOk(accValSum,accCostSum);
+        const accPnl=accOk?accValSum.total-accCostSum.total:null;
+        tableRow([acc.name||'Account '+(i+1),accCur,accValSum.total==null?'N/A':accValSum.total.toFixed(0),
+          accPnl==null?'N/A':(accPnl>=0?'+':'')+accPnl.toFixed(0)],acW,i%2===1);
       });
     }
 
@@ -17187,17 +17493,26 @@ async function generatePortfolioPdf(btn){
     }
 
     // Allocation by type
-    const typeMap={};
+    /* P.29: every share here is measured against totalValue, so one unconvertible holding skews
+       the whole breakdown rather than its own line. sumValue.ok is exactly that condition. */
+    const typeSums=Object.create(null);
     positions.forEach(p=>{
       const tp=p.assetType||'stock';const price=getPositionPrice(p);const shares=parseFloat(p.shares)||0;
-      if(price!=null){const v=shares*price;typeMap[tp]=(typeMap[tp]||0)+(convertCurrency(v,p.currency||'USD',base)||v)}
+      if(price!=null){
+        if(!typeSums[tp])typeSums[tp]=baseSum(base);
+        typeSums[tp].add(shares*price,p.currency);
+      }
     });
-    if(Object.keys(typeMap).length>=1){
+    if(Object.keys(typeSums).length>=1){
       sectionTitle('Allocation by Asset Type');
-      Object.entries(typeMap).sort((a,b)=>b[1]-a[1]).forEach(([tp,val])=>{
-        const pct=totalValue>0?(val/totalValue*100):0;
-        textLine(tp.charAt(0).toUpperCase()+tp.slice(1),fmt(val)+' ('+pct.toFixed(1)+'%)');
-      });
+      if(!sumValue.ok){
+        textLine('Not available','exchange rates missing');
+      }else{
+        Object.entries(typeSums).sort((a,b)=>b[1].value-a[1].value).forEach(([tp,s])=>{
+          const pct=totalValue>0?(s.value/totalValue*100):0;
+          textLine(tp.charAt(0).toUpperCase()+tp.slice(1),fmt(s.value)+' ('+pct.toFixed(1)+'%)');
+        });
+      }
     }
 
     // Recent transactions
@@ -17218,20 +17533,24 @@ async function generatePortfolioPdf(btn){
     const divTx=getActiveTransactions().filter(tx=>tx.type==='dividend');
     if(divTx.length){
       sectionTitle('Dividend Income');
-      const divByTicker={};
+      /* P.29: per ticker, so a ticker whose currency has no rate prints N/A on its own row rather
+         than a dollar figure typeset under a "Total Received (HUF)" header. */
+      const divSums=Object.create(null);
       divTx.forEach(tx=>{
-        const amt=parseFloat(tx.totalAmount)||0;
-        const cv=convertCurrency(amt,tx.currency||'USD',base)||amt;
-        divByTicker[tx.ticker]=(divByTicker[tx.ticker]||0)+cv;
+        if(!divSums[tx.ticker])divSums[tx.ticker]=baseSum(base);
+        divSums[tx.ticker].add(parseFloat(tx.totalAmount)||0,tx.currency);
       });
       const divW=[40,40,40,50];
       tableHeader(['Ticker','Total Received ('+base+')','# Payments','Avg per Payment'],divW);
-      Object.entries(divByTicker).sort((a,b)=>b[1]-a[1]).forEach(([ticker,total],i)=>{
+      /* Sort on `.total`, not `.value` — `.value` is the partial sum, which is exactly the number
+         this batch exists to keep out of sight. Unconvertible tickers sort last and print N/A. */
+      Object.entries(divSums).sort((a,b)=>(b[1].total??-Infinity)-(a[1].total??-Infinity)).forEach(([ticker,s],i)=>{
         const cnt=divTx.filter(tx=>tx.ticker===ticker).length;
-        tableRow([ticker,total.toFixed(2),String(cnt),(total/cnt).toFixed(2)],divW,i%2===1);
+        const total=s.total;
+        tableRow([ticker,total==null?'N/A':total.toFixed(2),String(cnt),total==null||!cnt?'N/A':(total/cnt).toFixed(2)],divW,i%2===1);
       });
       y+=4;
-      textLine('Total Dividend Income',totalDiv.toFixed(2)+' '+base);
+      textLine('Total Dividend Income',totalDiv==null?'N/A':totalDiv.toFixed(2)+' '+base);
     }
 
     const fileName='Stratos-Portfolio-'+new Date().toISOString().slice(0,10)+'.pdf';
