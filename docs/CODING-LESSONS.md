@@ -203,6 +203,16 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 ---
 
+### 13. Widening a Return Type to `null` Turns Every `x ? x.y : 0` Caller Into a Liar (Cat 116)
+
+**What went wrong:** Cat 116 made `calcTWR()` return `null` whenever a cashflow or snapshot could not be converted into the base currency — refusing the metric instead of computing it from mixed currencies. `renderDbBenchmark()` read it as `const pfReturn = twrData ? twrData.annualized : 0`, so a **refused** metric became a claim of exactly **0.0%**, and the tile then subtracted the S&P return from that fabricated zero and published the difference as *Alpha*. The batch that existed to stop the app stating wrong numbers had, in one tile, created a new one.
+
+**Why it survives review:** the `? :` was correct when it was written — back then `null` only meant "fewer than two snapshots", where 0% is a defensible placeholder. Widening the return type gave the same `null` a second, incompatible meaning, and nothing at the call site changed or needed to. The defaults look defensive (`|| 0`, `?? 0`, `x ? x.y : 0`) and the result is a plausible number, so no test fails and no console warns.
+
+**Rule:** when you widen a function's return type to include `null`/`undefined`, **grep every caller and read each one** — the compiler cannot help in vanilla JS. Ask of each: does this site distinguish *"not applicable"* from *"could not be computed"*? If it collapses both into a number, it will publish that number as fact. Prefer letting `null` flow to the formatter (`formatMoney(null, cur)` already renders `—`) over defaulting it at the call site, and be suspicious of any `|| 0` or `?? 0` sitting on a value that represents a measurement rather than a count.
+
+---
+
 ## Data Safety
 
 ### 0. Before a Purge-and-Reinsert, Strip EVERY Cached FK Row-Id (C3b / Cat 86)
@@ -559,6 +569,10 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 **And then the fix repeated the defect.** The replacement asserted that the last app-code commit's diff *added lines mentioning* both markers — which a re-add of the identical value satisfies. QA reproduced it: reflow those two lines, ship a real app change, and the check reported `ok … moved both markers together` while nothing had moved. **A batch written to stop a check measuring position instead of motion shipped a check measuring position instead of motion.** The working version reads both parsed values on both sides of the commit, requires them to differ, and prints the transition (`v56 → v57`) so the claim is legible rather than merely asserted. *If you catch yourself writing "necessary but not sufficient" about someone else's check, read your replacement back with the same sentence.*
 
+**Twelfth — and the first outside a checker: the same defect in a SCOPE COUNT (Cat 116).** `KNOWN-ISSUES` P.29 stated the bug lived at **16 sites**, and showed its work: `grep -c 'convertCurrency(.*)||'`. The real figure was **34 across 17 functions** — `?? amt` and `isFinite(cv)?…:else if(isFinite(raw))` are the identical fallback in different syntax, and the grep asked *"how many places spell it with `||`"* when the question was *"how many places add an unconverted foreign amount to a base-currency sum"*. **A number with its method written beside it is more persuasive, not more true.** Worse, **4 further sites mixed currencies without ever calling `convertCurrency()`** — a snapshot-to-snapshot delta, an index-to-100 chart, an account rollup, a tooltip labelling a dollar amount with the base currency code — so no grep for that function could ever have reached them; they were found only by opening the app and reading a `+33900.0%` off the screen.
+
+**The rule this adds: a scope count is a claim, and it inherits the shape of the query that produced it.** Before trusting one, state the defect in prose, then ask whether the query you ran could miss an instance that matches the prose but not the syntax. And when the defect is "two things that should not be combined get combined", the authoritative search is over the *combining*, not over the helper that usually does it — the instances that skip the helper entirely are both the hardest to find and the most wrong.
+
 **The generalisation, and the reason this one is worth its own entry: all four leaks in that batch were the same defect wearing different clothes — a check that returns a verdict on a question adjacent to the rule rather than the rule itself.** Comparing two values that both stood still. Warning about a rule stated without exception, where the entire failure mode is that nobody notices — which is what a non-blocking warning guarantees. Asserting that a handoff has the right five headings and calling it verified, while its body described a tree two commits stale. And a gate that only ran when someone remembered to run it. Every one of them printed `ok`. **When you write a check, say out loud the sentence it licenses — "therefore the version was bumped", "therefore the handoff is current" — and then ask whether the code actually establishes that sentence or merely something near it.** A fail-open at least has the decency to be silent; this class speaks, and says the wrong thing confidently.
 
 ---
@@ -568,14 +582,14 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Domain | Lessons | Bugs Found |
 |--------|---------|-----------|
 | Layout & CSS | 5 | 40+ (Categories 10-14) |
-| JavaScript | 12 | 55+ (Categories 5, 8, 9, 22, 34, 73) |
+| JavaScript | 13 | 55+ (Categories 5, 8, 9, 22, 34, 73, 116) |
 | Data Safety | 11 | 34+ (Categories 15, 72, 82, 86) |
 | API & Caching | 5 | 40+ (Categories 5, 6, 21, 80, 98, 99) |
 | Testing & QA | 4 | 50+ (Categories 9-18, 113) |
 | Process | 4 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 55 lessons across 7 domains.
+**Total:** 56 lessons across 7 domains.
 
 ## Related Documents
 
