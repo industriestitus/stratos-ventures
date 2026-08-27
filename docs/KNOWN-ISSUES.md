@@ -187,6 +187,11 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Effect:** `convertCurrency()` returns `null` when the rates table is empty, so the fallback **adds the raw foreign amount to a base-currency sum**. $2 000 lands in a HUF total as 2 000 Ft rather than as `—`. It reads as a real number and is off by the exchange rate. The `0 Ft` that motivated Cat 113 was the benign end of this: with no price it summed to zero, which at least looked wrong.
 - **Status:** materially less likely since Cat 113 — rates now fetch on their own, and the positions summary still shows its "rates not loaded" banner when they are absent — but the fallback itself is unchanged, so an offline first boot with foreign holdings still mixes currencies silently. **Fix direction:** propagate `null` and render `—` for any total whose inputs could not all be converted, and say so in the tile rather than in a banner two panels away. Wants its own batch: the `||amt` pattern is load-bearing in a dozen places and changing it changes what the dashboard shows.
 
+### P.30 — Three Process Rules Have No Mechanical Evidence and Cannot Acquire Any (ACCEPTED, Cat 115)
+- **Where:** CLAUDE.md § Shipping a Batch steps 5 and 6 (the QA agent ran; the app was opened in a browser) and the schema → `wrangler deploy` → push deploy ordering. `docs/check.sh` states this limit in its own header.
+- **Effect:** a green gate certifies the repository, never the process around it. All three are pure self-report by the agent doing the work, so a batch can pass 13 checks while none of the three happened. Cat 115 closed the *adjacent* half — check 10 now verifies that `STATUS.md` is current, not merely correctly shaped — but currency is not truthfulness.
+- **Status:** **accepted as permanently unverifiable from inside a repo**, and deliberately written down rather than left as an implied gap: an unstated limit gets read as coverage. The one mitigation that exists is structural — `STATUS.md` § Verified live records only what was actually exercised, kept apart from what was merely reviewed, so an unverified batch has to say so in the handoff. *A rejected fix, recorded so it is not re-proposed: making the docs commit state a QA finding count and having `check.sh` require it. The number would be written by the same agent the check exists to hold to account — ritual, not evidence.*
+
 ---
 
 ## ~~Deep Audit Findings~~ (ALL FIXED 2026-07-01)
@@ -247,7 +252,8 @@ The rows above are a 2026-07-01 snapshot, kept for the record. **Currently open*
 `SV.1`, `SV.4`, `SV.5`, `SV.7` (deferred security hardening) · `SA.1`, `SA.4`, `SA.5` (sync audit
 remnants) · `P.3`, `P.15`, `P.16`, `P.19`, `P.20`–`P.26` (accepted or external) · `P.27` (notes
 search over ciphertext) · `P.28` (`t()` shadowing, latent) · `P.29` (missing rates sum
-un-converted). Feature-shaped work lives in
+un-converted) · `P.30` (QA pass / browser check / deploy ordering are unverifiable by any
+gate). Feature-shaped work lives in
 ROADMAP § Technical Debt & Deferred Audit Findings, not here.
 
 No active `TODO`, `FIXME`, or `HACK` comments found in the codebase — inline technical debt markers are clean.

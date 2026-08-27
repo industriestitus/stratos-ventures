@@ -90,6 +90,28 @@ nincs CI-kapu, nincs reviewer — a biztonsági háló helyette a verzió-bump �
 - **A kódcommit után külön `docs:` commit** jön, ami *csak* dokumentumot érint
 - Angol commit message, tömör
 
+### A kapu magától fut — `git push` előtt (2026-08-27 óta)
+A `docs/check.sh` korábban csak akkor futott le, ha valaki eszébe jutott lefuttatni. Most a
+`.githooks/pre-push` minden `git push` előtt elindítja, és **ha valami piros, a push nem megy el.**
+Ez az utolsó pillanat, amikor egy hiba még ingyen javítható: a `web/` mappába érkező push egy
+percen belül automatikusan élesedik a GitHub Pages-en.
+
+Klónonként egyszer kell bekapcsolni (a `core.hooksPath` lokális beállítás, nem utazik a repóval):
+
+```bash
+git config core.hooksPath .githooks
+```
+
+- **Kikapcsolás:** `git config --unset core.hooksPath`
+- **Egyszeri megkerülés** (pl. sürgős revert): `git push --no-verify`
+- **Figyelmeztetés (sárga) soha nem blokkol**, csak a FAIL (piros)
+
+Amit a kapu **nem** tud ellenőrizni, és nem is fog: hogy a QA-menet tényleg lefutott-e, hogy
+tényleg megnyitotta-e valaki az appot a böngészőben, és hogy egy Worker-batch valóban
+séma → deploy → push sorrendben ment-e ki. Ezek a `memory/STATUS.md` őszinteségén múlnak —
+ezért van külön szakasza annak, ami *élesben ellenőrizve* lett, szemben azzal, amit csak
+átolvastunk.
+
 ---
 
 ## Claude-specifikus tippek — Amire figyelni kell
@@ -126,6 +148,8 @@ nincs CI-kapu, nincs reviewer — a biztonsági háló helyette a verzió-bump �
 │   ├── ROADMAP.md               ← Feladatlista, progress tracking
 │   ├── DEVELOPMENT-WORKFLOW.md  ← Ez a dokumentum
 │   └── check.sh                 ← Konzisztencia-kapu; minden docs commit előtt fut
+├── .githooks/
+│   └── pre-push                 ← Lefuttatja a kaput minden push előtt (lásd fentebb)
 ├── web/                         ← IDE — minden fejlesztés
 └── .claude/
     └── projects/*/memory/       ← Claude memóriája (auto)

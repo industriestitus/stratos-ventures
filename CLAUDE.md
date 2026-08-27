@@ -22,6 +22,11 @@ web/
   sw.js               — Service Worker (PWA caching; cache name = APP_VERSION, see Shipping a Batch)
   manifest.json       — PWA manifest
   cloudflare-worker/  — Yahoo/FMP/Finnhub proxy + D1 CRUD + auth backend
+.githooks/
+  pre-push            — Runs docs/check.sh before every push, so the gate is not something
+                        anyone has to remember. Enable once per clone (core.hooksPath is
+                        local config and cannot be versioned):
+                        git config core.hooksPath .githooks
 docs/
   ARCHITECTURE.md     — System architecture, data flow, cache layers
   API-REFERENCE.md    — All API endpoints (Worker, FMP, Finnhub, Yahoo)
@@ -45,8 +50,10 @@ docs/
   check.sh            — Docs & process consistency gate
 ```
 This tree must list every document in `docs/`, and every name here must exist — `check.sh` check 11
-fails on either. (`.txt`/`.pdf` are exempt: those are one-off dumps, and check 7 warns about them
-instead, because the fix is deleting them, not listing them.) Three real documents were missing from
+fails on either. (`.txt`/`.pdf` are exempt: those are one-off dumps, and check 7 fails on them
+instead, because the fix is deleting them, not listing them.) The `.githooks/` block is deliberately
+placed *above* `docs/`: check 11 parses the tree from the `docs/` line down, so an indented entry
+below it would be read as a file that ought to exist in `docs/`. Three real documents were missing from
 this tree for six weeks, and the unlisted one drifted the furthest — it still prescribed a branching
 model deleted long before. Nobody maintains what nothing points at.
 
@@ -93,7 +100,12 @@ in this order or a stale client will hit a backend that does not yet match it:
 1. **Run the schema DDL on live D1 FIRST** (BUG-HISTORY → Deployment Notes has the exact
    commands; record the date it was actually run)
 2. **Then `cd web/cloudflare-worker && npx wrangler deploy`**
-3. **Only then commit and push the frontend**
+3. **Only then commit and push the frontend** — meaning steps 4-8 below, which end in a *single*
+   push. This is a constraint on *when* the frontend push happens relative to the Worker, not an
+   extra earlier push: **a batch pushes once, after the docs commit.** QA read this line as a
+   second, mid-batch push and was right that the wording allowed it — and `.githooks/pre-push`
+   correctly refuses that state, because it would leave `main` code-without-docs. If you ever do
+   need to push mid-batch, that is a deliberate exception: `git push --no-verify`
 
 **Then, for the batch itself:**
 4. **Code commit** — conventional prefix, `(vNN)` if it deploys. **Bump `APP_VERSION`
@@ -108,6 +120,13 @@ in this order or a stale client will hit a backend that does not yet match it:
 7. **`bash docs/check.sh`** — run it with the doc edits still uncommitted; must exit 0
 8. **Docs commit** (see below), then push
 
+**Steps 5 and 6 are the two the gate cannot see.** `check.sh` has no way to know whether the QA
+agent ran or whether anyone opened the app, and neither does the deploy-ordering rule above have
+any mechanical evidence behind it. Those three rest on the honesty of the handoff alone — which is
+why `memory/STATUS.md` § Verified live must record only what was actually exercised, kept apart
+from what was merely reviewed. **`git push` now runs the gate by itself** via `.githooks/pre-push`,
+so step 7 is enforced rather than remembered; steps 5 and 6 still are not, and cannot be.
+
 ## Documentation Maintenance
 Do a **docs pass at the end of every batch** (each shippable feature/fix, not just once per session) — a dedicated `docs:` commit right after the code commit, so the repo is never left in a code-without-docs state (see `memory/feedback_doc-maintenance.md` for full rules):
 - **Every batch:** ROADMAP.md checkboxes, BUG-HISTORY.md (new Category + top summary-table row + running total)
@@ -117,6 +136,9 @@ Do a **docs pass at the end of every batch** (each shippable feature/fix, not ju
 
 Run `bash docs/check.sh` before the docs commit — it verifies the hand-maintained facts that
 drift (version bumps, doc counters, BUG-HISTORY table/body integrity, secrets, stray worktrees).
+It also runs on `git push` via `.githooks/pre-push`, so a forgotten docs pass blocks the push
+rather than reaching `main`. Bypass deliberately with `git push --no-verify`; a **warning** never
+blocks, only a FAIL does.
 
 **No one-off audit dumps in `docs/`.** Audit and review output goes straight to its owner:
 open items → ROADMAP.md · fixed → BUG-HISTORY.md · accepted/deferred → KNOWN-ISSUES.md.
