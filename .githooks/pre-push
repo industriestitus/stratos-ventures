@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Stratos Ventures — run the docs & process gate before every push.
+#
+# Why pre-push and not pre-commit: a batch is only complete after its docs: commit, so a
+# per-commit gate would fail on every code commit by design and get bypassed within a day.
+# Push is the last moment a mistake is still free — and the moment right before GitHub
+# Actions auto-deploys web/ to Pages, which is the first moment it is not.
+#
+# Enable once per clone (core.hooksPath is local config and cannot be versioned):
+#     git config core.hooksPath .githooks
+# Disable again:
+#     git config --unset core.hooksPath
+# Bypass deliberately for one push (an emergency revert, say):
+#     git push --no-verify
+#
+# check.sh cd's to the repo root itself, so this works from any hook working directory.
+# Warnings exit 0 and do not block; only a FAIL stops the push.
+exec bash "$(dirname "$0")/../docs/check.sh"

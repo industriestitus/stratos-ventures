@@ -19,6 +19,18 @@
 #
 # A check must never fail OPEN: if a pattern stops matching, that is a FAIL, not a
 # pass — an unmatched claim is indistinguishable from a wrong one.
+#
+# WHAT THIS SCRIPT STILL CANNOT SEE, stated here so nobody mistakes a green run for a
+# complete one. Three rules in CLAUDE.md § Shipping a Batch have no mechanical evidence
+# behind them and cannot acquire any from inside a repo: that the QA agent actually ran
+# (step 5), that someone actually opened the app in a browser (step 6), and that a batch
+# touching the Worker really did schema → wrangler deploy → push in that order (the deploy
+# ordering rule). Nothing below tests any of the three; they rest on the honesty of the
+# handoff. Check 10 constrains only the SHAPE and the CURRENCY of that handoff — the five
+# headings are present, and it was rewritten after the last shipping commit. It cannot tell
+# whether "verified live" is true. That is why CLAUDE.md § Session Status & Handoff insists
+# the "Verified live" section is kept apart from what was merely reviewed: the separation is
+# the only evidence there is, and inventing it is the one failure this gate cannot catch.
 
 # NOTE: deliberately no `pipefail`. Every pipeline here is `producer | grep -q`,
 # and grep -q exits at the first match — which SIGPIPEs the producer and makes the
@@ -53,6 +65,34 @@ elif [ "$APPV" != "$SWV" ]; then
   bad "APP_VERSION=$APPV but sw.js CACHE_NAME=stratos-$SWV — the SW will serve stale code"
 else
   ok "both at $APPV"
+fi
+
+# Equality is necessary but not sufficient: two markers that never moved are equal too. The
+# failure the comparison above cannot see is the likelier one — app code ships with NO bump at
+# all, both markers stay agreed at the previous value, the service worker keeps serving the old
+# generation under the old cache name, and the fix "does not apply". So assert the invariant
+# that actually carries the weight: the most recent commit to touch app code under web/ moved
+# BOTH markers, in that same commit.
+#
+# Phrased over history, not over HEAD, deliberately. Written as "if HEAD touches web/, then …"
+# it would be vacuous at both moments this script is actually run — HEAD is the code commit only
+# for the few minutes before the docs: commit lands, and after that it touches no web file at
+# all. That is the same fail-open this script has now rediscovered eleven times: a branch that
+# reports ok for "I did not look". Over history it is never vacuous, and it stays green by
+# itself once a batch is done right.
+#
+# web/cloudflare-worker/ is excluded: the Worker deploys separately and has no cache name.
+WEBC=$(git log -1 --pretty=%h -- web/ ':(exclude)web/cloudflare-worker/' 2>/dev/null)
+if [ -z "$WEBC" ]; then
+  bad "could not find any commit touching web/ — the version-bump history check did not run (do not read this as a pass)"
+else
+  APPB=$(git show "$WEBC" -- web/index.html 2>/dev/null | grep -cE '^\+[^+].*APP_VERSION *=')
+  SWB=$(git show "$WEBC" -- web/sw.js 2>/dev/null | grep -cE '^\+[^+].*CACHE_NAME *=')
+  if [ "$APPB" -gt 0 ] && [ "$SWB" -gt 0 ]; then
+    ok "the last commit to change app code ($WEBC) moved both markers together"
+  else
+    bad "$WEBC changed app code under web/ but did not move APP_VERSION (+$APPB) and sw.js CACHE_NAME (+$SWB) in that commit — the service worker will keep serving the previous generation"
+  fi
 fi
 
 # ------------------------------------------------------- 2. measured reality
@@ -255,10 +295,15 @@ fi
 
 # --------------------------------------------------- 7. one-off audit dumps
 head_ "7. No one-off audit dumps in docs/"
+# FAIL, not warn. CLAUDE.md § Documentation Maintenance states this as a rule with no
+# exception ("No one-off audit dumps in docs/"), and the cost is on record: six stray dumps
+# once held ~16 open items that appeared in no backlog, one of them "there is not a single
+# automated test", untracked for a month. A warning is the wrong instrument for a rule whose
+# whole failure mode is that nobody notices — that is precisely what a non-blocking warning is.
 DUMPS=$(ls docs/*.txt docs/*.pdf 2>/dev/null | tr '\n' ' ')
 [ -z "$DUMPS" ] \
   && ok "no stray .txt/.pdf dumps in docs/" \
-  || warn "stray dump(s) in docs/ — migrate their open items to ROADMAP and delete: $DUMPS"
+  || bad "stray dump(s) in docs/ — migrate their open items to ROADMAP/KNOWN-ISSUES and delete the file: $DUMPS"
 
 # ------------------------------------------------------- 8. stray work copies
 head_ "8. Stray working copies"
@@ -343,19 +388,46 @@ else
   awk '/^## Current state/{on=1;next} /^## /{on=0} on' "$STATUS" | grep -q "$APPV" \
     && ok "STATUS.md § Current state names the live version ($APPV)" \
     || bad "STATUS.md § Current state does not mention $APPV — it is stale"
-  awk '/^## Current state/{on=1;next} /^## /{on=0} on' "$STATUS" | grep -qiE 'pending deploys?:? *(none|no )' \
-    && ok "STATUS.md states the pending-deploy position explicitly" \
-    || warn "STATUS.md § Current state should say 'Pending deploys: none' explicitly when there are none"
+  # Require the position to be STATED, not to say "none". The old form matched only
+  # 'none'/'no …', so it could not fire correctly on the case that actually matters — a batch
+  # WITH a pending deploy, whose § Current state legitimately says something else. It warned on
+  # the safe case and stayed silent on the dangerous one, then let both through either way.
+  # CLAUDE.md requires the position stated explicitly; that is the checkable half, so it FAILs.
+  awk '/^## Current state/{on=1;next} /^## /{on=0} on' "$STATUS" | grep -qiE 'pending deploys?' \
+    && ok "STATUS.md § Current state states the pending-deploy position" \
+    || bad "STATUS.md § Current state never mentions pending deploys — CLAUDE.md requires the position stated explicitly, including 'none' when there are none"
+
+  # Structure is not currency. All five headings can be present over a body that describes a
+  # state two commits old — which is exactly what this gate did on the batch before this one:
+  # it went green over a handoff written before the last two commits landed, and nothing said
+  # a word. STATUS.md is rewritten during the docs pass, i.e. after every code/chore commit of
+  # the batch and before the docs: commit that closes it, so its stamp must not predate the
+  # newest non-docs commit. Compared as UTC integers, so no locale or timezone can shift it.
+  LASTCODE=$(git log -40 --pretty='%H%x09%s' 2>/dev/null | awk -F'\t' '$2 !~ /^docs(\([^)]*\))?:/ {print $1; exit}')
+  CODEAT=$(TZ=UTC git log -1 --date=format-local:%Y-%m-%dT%H:%M:%S --pretty=%ad "$LASTCODE" 2>/dev/null | tr -dc 0-9)
+  STATAT=$(grep -m1 'modified:' "$STATUS" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}' | tr -dc 0-9)
+  if [ -z "$CODEAT" ] || [ -z "$STATAT" ]; then
+    bad "could not compare STATUS.md's 'modified:' stamp (${STATAT:-unreadable}) against the last non-docs commit (${CODEAT:-unreadable}) — the freshness check did not run, which is not the same as passing"
+  elif [ "$STATAT" -ge "$CODEAT" ]; then
+    ok "STATUS.md was rewritten at or after the last non-docs commit"
+  else
+    bad "STATUS.md's 'modified:' stamp predates $(git log -1 --pretty=%h "$LASTCODE") ($(git log -1 --pretty=%s "$LASTCODE" | cut -c1-40)…) — the handoff describes a state the repo has already shipped past"
+  fi
   # Status markers belong in STATUS.md only — everywhere else they go stale.
   # -i is not optional here. This check was written against 'PENDING PETER' and was blind to the
   # five 'PENDING Peter' markers sitting in one file the whole time — the THIRD case-sensitivity
   # fail-open in this script (see check 4's hash guard, and the pipefail bug in check 9). A guard
   # that only recognises one capitalisation of the thing it forbids reports clean and is worse than
   # nothing, because it certifies the file it never read.
+  # FAIL, not warn: CLAUDE.md § Session Status & Handoff allows these markers in exactly one
+  # file, and a marker that outlives the thing it warns about is worse than no marker — it
+  # sends a future session to re-do work that is already done, or to trust a deploy that
+  # already happened. There is no case where one of these belongs outside STATUS.md, so there
+  # is no case for letting it through with a shrug.
   STRAY=$(grep -liE 'pending peter|⚠️ *pending|pending: *peter' "$MEMDIR"/*.md 2>/dev/null | grep -v 'STATUS.md' | xargs -n1 basename 2>/dev/null | tr '\n' ' ')
   [ -z "$STRAY" ] \
     && ok "no stale PENDING markers in other memories" \
-    || warn "PENDING markers outside STATUS.md (they outlive the thing they warn about): $STRAY"
+    || bad "PENDING markers outside STATUS.md (they outlive the thing they warn about): $STRAY"
 fi
 
 # ------------------------------------------- 11. CLAUDE.md docs tree vs reality
@@ -409,13 +481,39 @@ LIVEBOX=$(grep -cE '^ *- \[ \]' docs/ROADMAP.md)
   && ok "ROADMAP.md still carries the open backlog ($LIVEBOX items)" \
   || bad "ROADMAP.md has no open checkbox left — the backlog was archived wholesale"
 
+# ------------------------------------------------- 13. the gate runs by itself
+head_ "13. This gate runs without being remembered"
+# The script's own opening rationale — rules with a feedback loop hold, rules without one
+# drift — applied to everything except the script itself, which ran only when a human or an
+# agent thought to run it. `.githooks/pre-push` makes `git push` the trigger: the last moment
+# at which a mistake is still free to fix, and the moment just before the frontend auto-deploys.
+#
+# Advisory rather than FAIL, and the distinction is real: core.hooksPath is per-clone local
+# config and cannot be versioned, so a fresh checkout is not defective, it is un-configured.
+# The hook FILE missing from the repo IS a defect — that is the part this batch is responsible
+# for, and the part a future session could delete without noticing.
+HP=$(git config core.hooksPath 2>/dev/null)
+if [ ! -x .githooks/pre-push ]; then
+  bad ".githooks/pre-push is missing or not executable — the automatic gate is not in the repo"
+elif [ "$HP" = ".githooks" ]; then
+  ok "pre-push hook is wired up (core.hooksPath=.githooks) — every push runs this gate"
+else
+  warn "pre-push hook is in the repo but not enabled in this clone — run: git config core.hooksPath .githooks"
+fi
+
 # ------------------------------------------------------------------ summary
 printf '\n'
 if [ "$FAIL" -gt 0 ]; then
   printf '\033[31m%s check(s) failed\033[0m, %s warning(s). Fix before the docs: commit.\n' "$FAIL" "$WARN"
   exit 1
 fi
-printf '\033[32mAll checks passed\033[0m'
-[ "$WARN" -gt 0 ] && printf ' (%s warning(s))' "$WARN"
-printf '.\n'
+# Warnings do not block, so the summary must not read like an all-clear. Green-on-"passed"
+# with the count in parentheses was doing exactly that: five non-blocking warnings could sit
+# under a green line that every reader takes as "nothing to see". Same colour as the warnings
+# themselves, and the count says out loud that they were not fixed.
+if [ "$WARN" -gt 0 ]; then
+  printf '\033[33mAll blocking checks passed — %s warning(s) above went unfixed.\033[0m They do not block; read them.\n' "$WARN"
+  exit 0
+fi
+printf '\033[32mAll checks passed\033[0m, no warnings.\n'
 exit 0
