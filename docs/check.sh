@@ -86,12 +86,22 @@ WEBC=$(git log -1 --pretty=%h -- web/ ':(exclude)web/cloudflare-worker/' 2>/dev/
 if [ -z "$WEBC" ]; then
   bad "could not find any commit touching web/ — the version-bump history check did not run (do not read this as a pass)"
 else
-  APPB=$(git show "$WEBC" -- web/index.html 2>/dev/null | grep -cE '^\+[^+].*APP_VERSION *=')
-  SWB=$(git show "$WEBC" -- web/sw.js 2>/dev/null | grep -cE '^\+[^+].*CACHE_NAME *=')
-  if [ "$APPB" -gt 0 ] && [ "$SWB" -gt 0 ]; then
-    ok "the last commit to change app code ($WEBC) moved both markers together"
+  # Compare the parsed VALUES across the commit. The first version of this counted `+` lines in the
+  # diff that mention the markers — which is the very "necessary but not sufficient" trap this check
+  # was written to close, reproduced one level up: a re-add of the identical value counts as a hit,
+  # so a lint pass that reflows those two lines, or any added line that merely names APP_VERSION,
+  # passed while nothing had been bumped. QA reproduced it on a throwaway clone. Count nothing; read
+  # both values on both sides and require them to differ.
+  CURAPP=$(git show "$WEBC:web/index.html" 2>/dev/null   | grep -oE "APP_VERSION *= *['\"]v[0-9.]+"        | grep -oE 'v[0-9.]+$' | head -1)
+  CURSW=$(git show "$WEBC:web/sw.js" 2>/dev/null         | grep -oE "CACHE_NAME *= *['\"]stratos-v[0-9.]+" | grep -oE 'v[0-9.]+$' | head -1)
+  PREAPP=$(git show "$WEBC^:web/index.html" 2>/dev/null  | grep -oE "APP_VERSION *= *['\"]v[0-9.]+"        | grep -oE 'v[0-9.]+$' | head -1)
+  PRESW=$(git show "$WEBC^:web/sw.js" 2>/dev/null        | grep -oE "CACHE_NAME *= *['\"]stratos-v[0-9.]+" | grep -oE 'v[0-9.]+$' | head -1)
+  if [ -z "$CURAPP" ] || [ -z "$CURSW" ] || [ -z "$PREAPP" ] || [ -z "$PRESW" ]; then
+    bad "could not read both version markers on both sides of $WEBC (at it: '${CURAPP:-?}'/'${CURSW:-?}', at its parent: '${PREAPP:-?}'/'${PRESW:-?}') — so whether it bumped them is unknown, which is not the same as it having done so"
+  elif [ "$PREAPP" != "$CURAPP" ] && [ "$PRESW" != "$CURSW" ]; then
+    ok "the last commit to change app code ($WEBC) moved both markers ($PREAPP → $CURAPP)"
   else
-    bad "$WEBC changed app code under web/ but did not move APP_VERSION (+$APPB) and sw.js CACHE_NAME (+$SWB) in that commit — the service worker will keep serving the previous generation"
+    bad "$WEBC changed app code under web/ but left APP_VERSION at $CURAPP (was $PREAPP) and/or CACHE_NAME at $CURSW (was $PRESW) — the service worker will keep serving the previous generation"
   fi
 fi
 
@@ -405,9 +415,15 @@ else
   # newest non-docs commit. Compared as UTC integers, so no locale or timezone can shift it.
   LASTCODE=$(git log -40 --pretty='%H%x09%s' 2>/dev/null | awk -F'\t' '$2 !~ /^docs(\([^)]*\))?:/ {print $1; exit}')
   CODEAT=$(TZ=UTC git log -1 --date=format-local:%Y-%m-%dT%H:%M:%S --pretty=%ad "$LASTCODE" 2>/dev/null | tr -dc 0-9)
-  STATAT=$(grep -m1 'modified:' "$STATUS" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}' | tr -dc 0-9)
+  # The trailing `Z` is REQUIRED, not decoration. The comparison strips punctuation and compares
+  # digits, so an offset-bearing stamp (`…T12:00:00+02:00`) would be read as if it were UTC and
+  # score two hours LATE — a fail-open in the lenient direction, i.e. a stale handoff passing.
+  # Unreachable while the memory system writes `Z`, which is exactly when a format assumption is
+  # worth asserting rather than relying on. Anything else is unreadable, and unreadable is a FAIL.
+  STATZ=$(grep -m1 'modified:' "$STATUS" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\.[0-9]+)?Z')
+  STATAT=$(printf '%s' "$STATZ" | grep -oE '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}' | tr -dc 0-9)
   if [ -z "$CODEAT" ] || [ -z "$STATAT" ]; then
-    bad "could not compare STATUS.md's 'modified:' stamp (${STATAT:-unreadable}) against the last non-docs commit (${CODEAT:-unreadable}) — the freshness check did not run, which is not the same as passing"
+    bad "could not compare STATUS.md's 'modified:' stamp (${STATZ:-unreadable — it must be UTC ending in Z, e.g. 2026-08-27T10:26:43.000Z}) against the last non-docs commit (${CODEAT:-unreadable}) — the freshness check did not run, which is not the same as passing"
   elif [ "$STATAT" -ge "$CODEAT" ]; then
     ok "STATUS.md was rewritten at or after the last non-docs commit"
   else
@@ -424,7 +440,14 @@ else
   # sends a future session to re-do work that is already done, or to trust a deploy that
   # already happened. There is no case where one of these belongs outside STATUS.md, so there
   # is no case for letting it through with a shrug.
-  STRAY=$(grep -liE 'pending peter|⚠️ *pending|pending: *peter' "$MEMDIR"/*.md 2>/dev/null | grep -v 'STATUS.md' | xargs -n1 basename 2>/dev/null | tr '\n' ' ')
+  # Anchored to the START of a line, after list/quote/emphasis decoration. As a `warn` the old
+  # substring match was harmless; as a FAIL it also fired on a memory that merely *documents the
+  # rule* — "never leave a `PENDING Peter` marker outside STATUS.md" tripped the guard against
+  # PENDING markers. QA reproduced it. A FAIL that fires on legitimate writing is how the whole
+  # gate gets bypassed, so the pattern now asserts the shape a real marker has (it leads its line)
+  # rather than the phrase it contains. Residual, stated rather than hidden: a live marker buried
+  # mid-sentence is no longer caught. Every real one this project has found led its line.
+  STRAY=$(grep -liE '^[[:space:]>*_-]*(\*\*)?(⚠️[[:space:]]*)?pending[[:space:]:]' "$MEMDIR"/*.md 2>/dev/null | grep -v 'STATUS.md' | xargs -n1 basename 2>/dev/null | tr '\n' ' ')
   [ -z "$STRAY" ] \
     && ok "no stale PENDING markers in other memories" \
     || bad "PENDING markers outside STATUS.md (they outlive the thing they warn about): $STRAY"
@@ -492,13 +515,24 @@ head_ "13. This gate runs without being remembered"
 # config and cannot be versioned, so a fresh checkout is not defective, it is un-configured.
 # The hook FILE missing from the repo IS a defect — that is the part this batch is responsible
 # for, and the part a future session could delete without noticing.
+# Both halves learned from QA on this batch. (1) The enabled-test compared `core.hooksPath` to the
+# literal string `.githooks`, so `./.githooks`, `.githooks/` and an absolute path all reported "not
+# enabled" — while the hook was demonstrably running and producing this very output. That is the
+# "enumerates the one spelling it has seen" antipattern this script condemns in check 4. Resolve
+# both sides to a real directory instead. (2) Existence and the exec bit say nothing about what the
+# file does: a hook gutted to `exit 0` kept this green, which defeats the point of guarding it at
+# all. Assert that it still invokes the gate.
 HP=$(git config core.hooksPath 2>/dev/null)
+HPR=''; [ -n "$HP" ] && HPR=$(cd "$HP" 2>/dev/null && pwd)
+WANT=$(cd .githooks 2>/dev/null && pwd)
 if [ ! -x .githooks/pre-push ]; then
   bad ".githooks/pre-push is missing or not executable — the automatic gate is not in the repo"
-elif [ "$HP" = ".githooks" ]; then
-  ok "pre-push hook is wired up (core.hooksPath=.githooks) — every push runs this gate"
+elif ! grep -q 'docs/check.sh' .githooks/pre-push; then
+  bad ".githooks/pre-push no longer invokes docs/check.sh — the hook is present but does nothing"
+elif [ -n "$HPR" ] && [ -n "$WANT" ] && [ "$HPR" = "$WANT" ]; then
+  ok "pre-push hook is wired up (core.hooksPath=$HP) — every push runs this gate"
 else
-  warn "pre-push hook is in the repo but not enabled in this clone — run: git config core.hooksPath .githooks"
+  warn "pre-push hook is in the repo but not enabled in this clone${HP:+ (core.hooksPath=$HP points elsewhere)} — run: git config core.hooksPath .githooks"
 fi
 
 # ------------------------------------------------------------------ summary

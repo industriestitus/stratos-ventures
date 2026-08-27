@@ -13,6 +13,9 @@
 # Bypass deliberately for one push (an emergency revert, say):
 #     git push --no-verify
 #
-# check.sh cd's to the repo root itself, so this works from any hook working directory.
+# Resolved from the repo root, not from `dirname "$0"`. Git also supports installing hooks by
+# copying or symlinking them into `.git/hooks/`, and by both of those routes `$0` is `.git/hooks`,
+# so a relative `../docs/check.sh` pointed at a path that does not exist. It failed CLOSED (127
+# blocks the push), but the gate never ran and the error named no cause. QA found it.
 # Warnings exit 0 and do not block; only a FAIL stops the push.
-exec bash "$(dirname "$0")/../docs/check.sh"
+exec bash "$(git rev-parse --show-toplevel)/docs/check.sh"
