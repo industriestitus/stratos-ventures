@@ -32,6 +32,13 @@
 # the "Verified live" section is kept apart from what was merely reviewed: the separation is
 # the only evidence there is, and inventing it is the one failure this gate cannot catch.
 
+# WHAT THIS SCRIPT NOW NEEDS THAT IT DID NOT BEFORE. Check 14 shells out to `node` and needs
+# `acorn`, which is declared in web/cloudflare-worker/package.json and installed into that
+# project's node_modules (gitignored). A fresh clone therefore FAILS check 14 until someone runs
+# `npm install` there. That is deliberate — the alternative is a check that quietly stands down
+# on an unprepared machine, which is fail-open number twelve — but it is a real prerequisite and
+# is stated here rather than discovered at a blocked push.
+
 # NOTE: deliberately no `pipefail`. Every pipeline here is `producer | grep -q`,
 # and grep -q exits at the first match — which SIGPIPEs the producer and makes the
 # pipeline status 141 under pipefail, so the match branch never runs. That bug made
@@ -533,6 +540,58 @@ elif [ -n "$HPR" ] && [ -n "$WANT" ] && [ "$HPR" = "$WANT" ]; then
   ok "pre-push hook is wired up (core.hooksPath=$HP) — every push runs this gate"
 else
   warn "pre-push hook is in the repo but not enabled in this clone${HP:+ (core.hooksPath=$HP points elsewhere)} — run: git config core.hooksPath .githooks"
+fi
+
+# ------------------------------------------------------- 14. i18n invariants
+head_ "14. i18n invariants (parsed, not grepped)"
+# The first gate check with an external dependency, so it needs saying plainly: node and acorn
+# missing is a FAILURE, never a skip. A checker that quietly stands down on an unprepared clone
+# is fail-open number twelve, and this script has had eleven.
+#
+# What the helper licenses, precisely: every key reachable by static analysis exists in the
+# fallback dictionary and the dictionaries agree; nothing resolves to a global `t` (Cat 117);
+# and applyI18n() still CONTAINS its two Cat 118 lines. That last one is textual — it proves
+# the line is present, not that the tooltips survive. Only a browser shows that, which is why
+# TEST-PLAN § Internationalisation carries the manual case.
+if ! command -v node >/dev/null 2>&1; then
+  bad "node is not on PATH — the i18n invariants could not be checked (this is a failure, not a skip)"
+elif [ ! -f docs/i18n-invariants.mjs ]; then
+  bad "docs/i18n-invariants.mjs is missing — check 14 cannot run"
+elif [ ! -d web/cloudflare-worker/node_modules/acorn ]; then
+  bad "acorn is missing — run 'npm install' in web/cloudflare-worker; a grep cannot answer what check 14 asks"
+else
+  # stderr goes to its OWN file, never into the parsed stream. Merging them turned a single
+  # benign Node warning ("(node:123) ExperimentalWarning: …", or anything in NODE_OPTIONS) into
+  # two "unrecognised output" FAILs on a clean tree — and a gate that red-lights correct work is
+  # the gate that gets --no-verify'd, which is a fail-open by another route.
+  I18N_ERR=$(mktemp 2>/dev/null || printf '/tmp/i18n-check.%s' "$$")
+  # Bounded, because this is the gate's first external process and it runs from pre-push, where
+  # a hang blocks the push with no diagnosis. `timeout` is not on a stock macOS, so it is used
+  # only when present rather than assumed.
+  if command -v timeout >/dev/null 2>&1; then
+    I18N_OUT=$(timeout 60 node docs/i18n-invariants.mjs 2>"$I18N_ERR"); I18N_RC=$?
+  else
+    I18N_OUT=$(node docs/i18n-invariants.mjs 2>"$I18N_ERR"); I18N_RC=$?
+  fi
+  if [ "$I18N_RC" -eq 124 ]; then
+    bad "docs/i18n-invariants.mjs timed out after 60s — treated as a failure, not as skipped"
+  elif [ "$I18N_RC" -ne 0 ] || [ -z "$I18N_OUT" ]; then
+    bad "docs/i18n-invariants.mjs did not complete (exit $I18N_RC) — treated as a failure, not as skipped"
+    [ -s "$I18N_ERR" ] && sed 's/^/          /' "$I18N_ERR"
+  else
+    while IFS="$(printf '\t')" read -r I18N_ST I18N_MSG; do
+      [ -z "$I18N_ST" ] && continue
+      case "$I18N_ST" in
+        OK)   ok   "$I18N_MSG" ;;
+        FAIL) bad  "$I18N_MSG" ;;
+        WARN) warn "$I18N_MSG" ;;
+        *)    bad  "unrecognised output from i18n-invariants.mjs: $I18N_ST $I18N_MSG" ;;
+      esac
+    done <<EOF_I18N
+$I18N_OUT
+EOF_I18N
+  fi
+  rm -f "$I18N_ERR"
 fi
 
 # ------------------------------------------------------------------ summary

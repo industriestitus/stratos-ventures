@@ -48,6 +48,9 @@ docs/
   INVESTMENT-CHECKLIST.md   — The investment framework the in-app checklist implements
   reference-desktop-schema.sql — SQLite schema of the deleted Electron app; kept as D1 design input
   check.sh            — Docs & process consistency gate
+  i18n-invariants.mjs — check.sh's i18n check: parses index.html with acorn and asserts the
+                        i18n contracts (keys exist in every dictionary, nothing resolves to
+                        a global `t`, applyI18n still carries its Cat 118 lines)
 ```
 This tree must list every document in `docs/`, and every name here must exist — `check.sh` check 11
 fails on either. (`.txt`/`.pdf` are exempt: those are one-off dumps, and check 7 fails on them
