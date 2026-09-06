@@ -592,3 +592,29 @@ sign-in gate is behind a master password, so every case below is **manual only**
       Dashboard, Portfolio and Settings, and confirm the tooltips are still there.
 - [ ] **Known limitation, not a bug:** a first-time user with no stored language gets an English gate
       and no control on it to change the language (P.33). Do not file this again.
+## Tracker CL% and the Broker Flow (added Cat 120, v61)
+
+Manual only — both need a signed-in session, which no agent has.
+
+- [ ] **CL% shows `—`, not a number, for a company nobody has opened.** Add a fresh ticker and look
+      at the `CL%` column. It must read `—`. A percentage there means the not-started test regressed
+      — and in the D1 path that is invisible to any static check, because every company arrives with
+      an empty `checklist` object (BUG-HISTORY 120.3).
+- [ ] **CL% agrees with the checklist page.** Open a company's checklist, note the header
+      percentage, go back to the tracker: the same number. Two different figures means the column
+      started computing instead of delegating.
+- [ ] **Sorting by CL% puts never-opened companies last**, in both directions.
+- [ ] **Viewing the tracker changes nothing.** Open Companies, then edit any inline cell (which
+      triggers a save). No checklist should have been altered by merely looking at the table
+      (BUG-HISTORY 120.4).
+- [ ] **The broker flow, create path.** With no broker accounts, click "+ Add Position". Expect a
+      dialog offering to add an account — not a toast and a dead stop. Accept, save the account, and
+      the position modal must open by itself.
+- [ ] **The broker flow, edit path.** With no accounts but at least one transaction, click the edit
+      pencil on that transaction. The dialog appears, but after saving the account the edit modal
+      must **not** reopen — and the transaction's broker must be unchanged (BUG-HISTORY 120.6).
+- [ ] **A cancelled flow leaves nothing armed.** Decline the dialog, then open Accounts and add one
+      by hand. No modal should appear on its own afterwards.
+- [ ] **Transaction price pre-fill** (verifying an item ticked as already-built): open Log
+      Transaction, type a tracked ticker — the price fills and a "current price" hint appears. Type
+      a price first, then the ticker: your price must survive.

@@ -210,6 +210,12 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Status: ACCEPTED, not deferred.** Peter decided on 2026-09-06 that the sign-in screen does not get a language toggle. The gate is four labels and a button; the cost of a control there is permanent visual clutter on the app's front door, against a one-time inconvenience for a first-time Hungarian user who reaches Settings within a minute of signing in anyway. **Do not re-propose it** — a fix was designed (reuse `setLang(_lang==='en'?'hu':'en')` inside `#lock-screen`, which sits outside the `app-locked` subtree, no CSS change needed) and declined on product grounds, not on cost.
 
 
+
+### P.34 — `CL%` Moves Without Anyone Filling Anything In (2026-09-06, found in Cat 120)
+- **Where:** `calcClProgress()`. The `financials` section (`fields:'auto_thresholds'`) counts a threshold as complete when `t.auto(s)` can derive it from live FMP metrics rather than from an answer the user gave, and the `change_log` section is hardwired to 100%. So the figure includes credit nobody earned.
+- **Effect:** the number rises after a data refresh and falls when a fetch fails — QA measured **14% → 9% on one company with no user action in between**, purely by clearing `_isData`/`_cfData`. It has always behaved this way on the checklist page; Cat 120 put it in the tracker, on the screen Peter looks at most, which is what makes it worth writing down. The cell tooltip was reworded in Cat 120 so it no longer claims the figure is what the user "filled in".
+- **Status:** open, and deliberately not "fixed" in the batch that surfaced it. Excluding auto-derived credit would move **every** historical percentage at once — including the ones the checklist page has been showing for months — so it is a definition change, not a bug fix, and it should be a decision rather than a side effect. **Fix direction, if taken:** either count auto-derived thresholds separately (`"38% answered, 62% auto"`), or drop them from the completion figure and let the thresholds table speak for itself.
+
 ---
 
 ## ~~Deep Audit Findings~~ (ALL FIXED 2026-07-01)
@@ -269,7 +275,8 @@ Bundling too many tasks per session (e.g., 9 tasks, ~200 fields) compounds bugs 
 The rows above are a 2026-07-01 snapshot, kept for the record. **Currently open** (nothing critical):
 `SV.1`, `SV.4`, `SV.5`, `SV.7` (deferred security hardening) · `SA.1`, `SA.4`, `SA.5` (sync audit
 remnants) · `P.3`, `P.15`, `P.16`, `P.19`, `P.20`–`P.26` (accepted or external) · `P.27` (notes
-search over ciphertext) · `P.32` (a destroyed highlight) · `P.33` (no language control before
+search over ciphertext) · `P.32` (a destroyed highlight) · `P.34` (CL% counts auto-derived
+checks) · `P.33` (no language control before
 sign-in) · `P.30` (QA pass / browser check /
 deploy ordering are unverifiable by any gate). **`P.29` closed 2026-08-27 (Cat 116, v58)** — no
 open item can now show a wrong number in a portfolio total. Feature-shaped work lives in

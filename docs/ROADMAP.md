@@ -180,7 +180,7 @@ Rated high in the audit:
   block, with the Terry Smith and ARIA scores lifted to the top. *(UX-UI #3 — the audit's "30+
   metrics" is **unverified**: the grids are built from several helpers and a static count was not
   cheap to establish. Count it in the browser before sizing this work.)*
-- [ ] **Tracker column picker** — **39 columns** are defined (`stCols`, `index.html:13209-13249`)
+- [ ] **Tracker column picker** — **40 columns** are defined (`stCols`, `index.html:13646-13687`)
   with no visibility control of any kind: no `colPicker`/`toggleCol`/per-column hide exists. The
   audit said "12-15", so this is materially worse than it was reported, not better. User-chosen
   columns with saved configurations ("valuation view", "growth view"). *(UX-UI #4 — count measured
@@ -193,10 +193,14 @@ Rated medium/low:
   *(UX-UI #2 + #5, UX-REVIEW #6)*
 - [ ] **Ticker input autocomplete is inconsistent** — the transaction and research modals have a
   datalist, the tracker's "Add Stock" input does not. *(UX-UI #9)*
-- [ ] **"Add broker first" is a dead end** — the error says what is wrong but doesn't open the
-  account modal. *(UX-UI #10)*
-- [ ] **Transaction price isn't pre-filled** from the last known price for an already-tracked
-  ticker. *(UX-UI #11)*
+- [x] **"Add broker first" is a dead end** (2026-09-06, Cat 120, v61) — all three entry points
+  now offer to create the account and resume the original action. An EDIT is deliberately not
+  resumed: `pfAccounts` is also empty when its D1 load merely failed, and coming back into an edit
+  would silently reassign that record's broker. *(UX-UI #10)*
+- [x] **Transaction price isn't pre-filled** — **this was already true when the item was written
+  down.** `onTxTickerChange()` fills the price from `tStocks[ticker].price` and shows a "current
+  price" hint; it does not overwrite a price the user typed, and invents nothing for an unknown
+  ticker. Verified in the browser 2026-09-06 (Cat 120) and ticked, not rewritten. *(UX-UI #11)*
 - [ ] **Delete confirmation works three different ways** — confirm modal for positions, type-to-
   confirm for stocks, undo toast for notes. Proposed rule: soft delete + undo everywhere,
   confirm dialog for permanent actions, type-to-confirm only for genuinely destructive ones.
@@ -206,8 +210,11 @@ Rated medium/low:
   *(UX-UI #14)*
 - [ ] **Missing cross-links** — earnings calendar, research notes and dashboard alerts show tickers
   as plain text. Every ticker occurrence should open that company's profile. *(UX-UI #15)*
-- [ ] **Checklist has no progress indicator** — 12 sections and 100+ questions with no per-company
-  "65% analysed" signal, in the tracker or at the top of the checklist. *(UX-REVIEW #7 + II.3)*
+- [x] **Checklist has no progress indicator** (2026-09-06, Cat 120, v61) — the checklist half
+  already existed (overall bar + per-section %); the tracker half is the new `CL%` column, which
+  delegates to the same `cl.overallProgress` rather than counting anything itself. A company whose
+  checklist was never opened reads `—`, not `0%`. **The item said "12 sections"; `CL_SECTIONS` has
+  14** — re-measured rather than carried forward. *(UX-REVIEW #7 + II.3)*
 - [ ] **Quick add position** — adding a position is account → position → transaction with no wizard.
   One modal (ticker, broker, shares, price, date) that creates the account if needed.
   *(UX-REVIEW #3 + II.5)*

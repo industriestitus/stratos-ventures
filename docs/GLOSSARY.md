@@ -185,6 +185,27 @@ Function: `calcDivGrowthCAGR()` — lookback periods: 1Y, 3Y, 5Y, 10Y.
   - **Health:** Debt/Equity, Current Ratio, FCF Positive, FCF Quality, SBC %, Buyback Yield
 - **Used in:** Tracker table (center column), Screener filters, Dashboard quality widget
 
+### Checklist Completion — `CL%`
+
+- **Function:** `calcClProgress()`; the tracker column reads it through `clProgressPct()`
+- **Formula:** the **unweighted mean of the 14 `CL_SECTIONS` percentages** — not the share of all
+  questions answered. A section with three fields and one with forty count the same.
+- **What counts as complete** varies by section type, and two of them award credit for nothing the
+  user did:
+  - `change_log` — **hardwired to 100%**, always
+  - `financials` (`auto_thresholds`) — a threshold counts as met if the user set it **or** if it
+    can be derived from live FMP metrics, so the figure moves on a data refresh (KNOWN-ISSUES
+    **P.34**)
+  - plain field sections — a field counts when non-empty; `0` and `false` do **not** count
+  - `checkboxes` / entry-list sections — per box and per filled entry field
+- **Consequence worth knowing:** a brand-new checklist already reads ~7-13% before anyone types
+  anything. The tracker therefore renders **`—` for a company whose checklist was never opened**,
+  and only shows a percentage once a section holds real content — otherwise the column would
+  publish a number nobody earned.
+- **Thresholds:** none, except that 100% is shown in green. Low is "not analysed yet", not "bad".
+- **Used in:** the checklist page header and per-section bars, the per-company PDF, and the tracker
+  `CL%` column (added Cat 120). All four read the same `cl.overallProgress`.
+
 ### Position Score (Framework)
 
 - **Function:** `calcFwScore()` — line ~9755
