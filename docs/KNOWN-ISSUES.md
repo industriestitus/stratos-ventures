@@ -189,7 +189,7 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 
 ### P.30 — Three Process Rules Have No Mechanical Evidence and Cannot Acquire Any (ACCEPTED, Cat 115)
 - **Where:** CLAUDE.md § Shipping a Batch steps 5 and 6 (the QA agent ran; the app was opened in a browser) and the schema → `wrangler deploy` → push deploy ordering. `docs/check.sh` states this limit in its own header.
-- **Effect:** a green gate certifies the repository, never the process around it. All three are pure self-report by the agent doing the work, so a batch can pass 13 checks while none of the three happened. Cat 115 closed the *adjacent* half — check 10 now verifies that `STATUS.md` is current, not merely correctly shaped — but currency is not truthfulness.
+- **Effect:** a green gate certifies the repository, never the process around it. All three are pure self-report by the agent doing the work, so a batch can pass every check in the gate while none of the three happened. Cat 115 closed the *adjacent* half — check 10 now verifies that `STATUS.md` is current, not merely correctly shaped — but currency is not truthfulness.
 - **Status:** **accepted as permanently unverifiable from inside a repo**, and deliberately written down rather than left as an implied gap: an unstated limit gets read as coverage. The one mitigation that exists is structural — `STATUS.md` § Verified live records only what was actually exercised, kept apart from what was merely reviewed, so an unverified batch has to say so in the handoff. *A rejected fix, recorded so it is not re-proposed: making the docs commit state a QA finding count and having `check.sh` require it. The number would be written by the same agent the check exists to hold to account — ritual, not evidence.*
 
 

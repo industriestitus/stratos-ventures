@@ -108,6 +108,25 @@ dumps themselves marked "MAYBE LATER" were kept rather than dropped — each say
 because a deferral with a stated rationale is worth more than a deleted line. Provenance is kept per
 item so the deletion lost nothing. None of this is blocking; it is the honest backlog.
 
+### Documentation & log debts (2026-09-06)
+Small, named, and each one currently lives only in a session handoff, which is not a backlog.
+Written down here so they survive the next `STATUS.md` rewrite.
+
+- [ ] **`docs/API-REFERENCE.md:35,77` calls the `X-Auth-Token` check a "timing-safe comparison"** —
+  it is a SHA-256 KV lookup. `timingSafeEqual` is used only on the password and recovery
+  verifiers, which line 477 already states correctly. Two lines.
+- [ ] **`ROADMAP § Process & Docs Hygiene` is fully checked and belongs in `ROADMAP-ARCHIVE.md`** —
+  it stays put only because the move belongs to whichever batch next edits this file.
+- [ ] **`docs/BUG-HISTORY.md`'s "26 potential (unfixed)" cannot be derived from anything.**
+  `check.sh` verifies the Fixed total against the Fixed column and **nothing** verifies this one;
+  it matches neither the Unfixed column nor the "Potential Bugs (Unfixed)" section. Left untouched
+  for four batches running, because changing a number you cannot derive is how the 646/653 error
+  happened. Either make it derivable and let `check.sh` assert it, or delete it — deleting is
+  defensible under this project's own rule that a counter nobody can keep true is worse than none.
+- [ ] **P.32 — `applyI18n()` destroys the green highlight in `settings.d1Connected`** (KNOWN-ISSUES).
+  Cosmetic. The fix is to restructure that one string, **not** to add a second exemption to
+  `applyI18n()`: one carve-out for a runtime-injected child is a rule, two is a list.
+
 ### Architecture & code quality
 The first item is the parent — most of the rest are only worth doing as part of it, or become much
 cheaper after it.
