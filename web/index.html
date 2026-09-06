@@ -998,6 +998,12 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .cl-summary-progress{flex:1;min-width:120px}
 .cl-summary-bar{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:6px}
 .cl-summary-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+/* Tracker checklist column. Same accent bar as .cl-summary-fill above, drawn as a 2px underline
+   so a dense table row keeps its height. --p is set per cell from the same overallProgress the
+   checklist header shows. */
+.st-cl{text-align:center;font-size:11px;color:var(--text2);position:relative}
+.st-cl::before{content:'';position:absolute;left:0;bottom:0;height:2px;width:var(--p,0%);background:var(--accent)}
+.st-cl.done{color:var(--green);font-weight:600}
 .cl-summary-pct{font-size:var(--fs-3xl);font-weight:700;color:var(--text)}
 .cl-summary-label{font-size:var(--fs-sm);color:var(--text2)}
 .cl-summary-stats{display:flex;gap:16px;font-size:var(--fs-base);color:var(--text2)}
@@ -1099,7 +1105,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v60';
+var APP_VERSION='v61';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1130,7 +1136,7 @@ var I18N={en:{
 'comp.historicalTrends':'Historical Trends','comp.historicalTrendsN':'Historical Trends ({n} Year)','comp.insiderKeyMissing':'Finnhub API key not set — go to Settings to add your free key from finnhub.io','comp.insiderFailed':'Failed to load insider data.','comp.insiderRateLimit':'Finnhub rate limit reached — try again in a minute.','comp.insiderNoData':'No insider trading data available for {ticker}','comp.insiderSummary':'Insider Trading Summary','comp.totalTxns':'Total Transactions','comp.buysSells':'Buys / Sells','comp.netShares':'Net Shares','comp.last90d':'Last 90 Days','comp.keyInsiders':'Key Insiders','comp.txnHistory':'Transaction History','comp.showAll':'Show all {count} transactions','comp.showingTop':'Showing top 20 of {count} insiders',
 'pf.overview':'Overview','pf.accounts':'Accounts','pf.positionsTab':'Positions','pf.transactionsTab':'Transactions','pf.dividendsTab':'Dividends','pf.portfolioOverview':'Portfolio Overview','pf.portfolioValueTime':'Portfolio Value Over Time','pf.allocationTitle':'Allocation','pf.snapshots':'Snapshots','pf.takeSnapshot':'Take Snapshot','pf.returns':'Returns','pf.brokerAccounts':'Broker Accounts','pf.addAccount':'+ Add Account','pf.addPosition':'+ Add Position','pf.logTransaction':'+ Log Transaction','pf.importCSV':'Import CSV','pf.dividendIncome':'Dividend Income','pf.taxPct':'Tax %','pf.fetchData':'Fetch Data','pf.monthlyForecast':'Monthly Income Forecast','pf.paymentCalendar':'Payment Calendar','pf.incomeBreakdown':'Income Breakdown',
 'pf.allAccounts':'All Accounts','pf.allTypes':'All Types','pf.stocks':'Stocks','pf.etfs':'ETFs','pf.crypto':'Crypto','pf.bonds':'Bonds','pf.realEstate':'Real Estate','pf.savings':'Savings','pf.cash':'Cash','pf.other':'Other','pf.filterTicker':'Filter ticker...',
-'pf.noAccounts':'No broker accounts yet.\nAdd your first account to start tracking positions.','pf.position':'{count} position','pf.positions':'{count} positions','pf.inactive':'(inactive)','pf.editAccount':'Edit Account','pf.addAccountTitle':'Add Account','pf.accountRequired':'Account name is required','pf.accountExists':'Account name already exists','pf.accountUpdated':'Account updated','pf.accountAdded':'Account added','pf.accountDeleted':'Account deleted','pf.addBrokerFirst':'Add a broker account first',
+'pf.noAccounts':'No broker accounts yet.\nAdd your first account to start tracking positions.','pf.position':'{count} position','pf.positions':'{count} positions','pf.inactive':'(inactive)','pf.editAccount':'Edit Account','pf.addAccountTitle':'Add Account','pf.accountRequired':'Account name is required','pf.accountExists':'Account name already exists','pf.accountUpdated':'Account updated','pf.accountAdded':'Account added','pf.accountDeleted':'Account deleted','pf.addBrokerFirst':'Add a broker account first','pf.addBrokerFirstMsg':'Positions and transactions always belong to a broker account. Add one now and we will carry on where you left off.',
 'pf.totalCost':'Total Cost','pf.marketValue':'Market Value','pf.pl':'P&L','pf.ratesNotLoaded':'Exchange rates not loaded — affected totals are hidden instead of mixing currencies.','pf.fetchRates':'Fetch rates',
 'pf.rateMissingTotal':'Exchange rate missing — hidden rather than mixed','pf.rateMissingChart':'Exchange rates missing. Showing this would compare amounts in different currencies as if they were the same.','pf.rateMissingSnapshot':'Snapshot not taken: exchange rates are missing, so the stored total would mix currencies — and unlike a screen value, that one would outlive the missing rate.',
 'pf.ticker':'Ticker','pf.account':'Account','pf.type':'Type','pf.shares':'Shares','pf.avgCost':'Avg Cost','pf.priceCol':'Price','pf.value':'Value','pf.plCol':'P&L','pf.plPct':'P&L %',
@@ -1202,7 +1208,7 @@ var I18N={en:{
 'comp.historicalTrends':'Historikus trendek','comp.historicalTrendsN':'Historikus trendek ({n} év)','comp.insiderKeyMissing':'Finnhub API kulcs nincs beállítva — menj a Beállításokba és add hozzá az ingyenes kulcsot a finnhub.io-ról','comp.insiderFailed':'Bennfentes adatok betöltése sikertelen.','comp.insiderRateLimit':'Finnhub korlát elérve — próbáld újra egy perc múlva.','comp.insiderNoData':'Nincs bennfentes kereskedési adat ehhez: {ticker}','comp.insiderSummary':'Bennfentes kereskedési összefoglaló','comp.totalTxns':'Összes tranzakció','comp.buysSells':'Vételek / Eladások','comp.netShares':'Nettó részvények','comp.last90d':'Utolsó 90 nap','comp.keyInsiders':'Kulcs bennfentesek','comp.txnHistory':'Tranzakció előzmények','comp.showAll':'Összes {count} tranzakció mutatása','comp.showingTop':'{count} bennfentesből a top 20',
 'pf.overview':'Áttekintés','pf.accounts':'Számlák','pf.positionsTab':'Pozíciók','pf.transactionsTab':'Tranzakciók','pf.dividendsTab':'Osztalékok','pf.portfolioOverview':'Portfólió áttekintés','pf.portfolioValueTime':'Portfólió értéke az idő során','pf.allocationTitle':'Elosztás','pf.snapshots':'Pillanatfelvételek','pf.takeSnapshot':'Pillanatfelvétel','pf.returns':'Hozamok','pf.brokerAccounts':'Bróker számlák','pf.addAccount':'+ Számla hozzáadása','pf.addPosition':'+ Pozíció hozzáadása','pf.logTransaction':'+ Tranzakció rögzítése','pf.importCSV':'CSV importálás','pf.dividendIncome':'Osztalék bevétel','pf.taxPct':'Adó %','pf.fetchData':'Adatok lekérése','pf.monthlyForecast':'Havi bevétel előrejelzés','pf.paymentCalendar':'Kifizetési naptár','pf.incomeBreakdown':'Bevétel bontás',
 'pf.allAccounts':'Összes számla','pf.allTypes':'Összes típus','pf.stocks':'Részvények','pf.etfs':'ETF-ek','pf.crypto':'Kriptó','pf.bonds':'Kötvények','pf.realEstate':'Ingatlan','pf.savings':'Megtakarítás','pf.cash':'Készpénz','pf.other':'Egyéb','pf.filterTicker':'Ticker szűrés...',
-'pf.noAccounts':'Még nincs bróker számlád.\nAdd hozzá az első számládat a pozíciók követéséhez.','pf.position':'{count} pozíció','pf.positions':'{count} pozíció','pf.inactive':'(inaktív)','pf.editAccount':'Számla szerkesztése','pf.addAccountTitle':'Számla hozzáadása','pf.accountRequired':'A számlanév kötelező','pf.accountExists':'Ez a számlanév már létezik','pf.accountUpdated':'Számla frissítve','pf.accountAdded':'Számla hozzáadva','pf.accountDeleted':'Számla törölve','pf.addBrokerFirst':'Először adj hozzá egy bróker számlát',
+'pf.noAccounts':'Még nincs bróker számlád.\nAdd hozzá az első számládat a pozíciók követéséhez.','pf.position':'{count} pozíció','pf.positions':'{count} pozíció','pf.inactive':'(inaktív)','pf.editAccount':'Számla szerkesztése','pf.addAccountTitle':'Számla hozzáadása','pf.accountRequired':'A számlanév kötelező','pf.accountExists':'Ez a számlanév már létezik','pf.accountUpdated':'Számla frissítve','pf.accountAdded':'Számla hozzáadva','pf.accountDeleted':'Számla törölve','pf.addBrokerFirst':'Először adj hozzá egy bróker számlát','pf.addBrokerFirstMsg':'A pozíciók és tranzakciók mindig egy bróker számlához tartoznak. Add hozzá most, és ott folytatjuk, ahol abbahagytad.',
 'pf.totalCost':'Összköltség','pf.marketValue':'Piaci érték','pf.pl':'P&L','pf.ratesNotLoaded':'Árfolyamok nincsenek betöltve — az érintett összesítések rejtve maradnak a kevert érték helyett.','pf.fetchRates':'Árfolyamok lekérése',
 'pf.rateMissingTotal':'Hiányzó árfolyam — elrejtve a kevert érték helyett','pf.rateMissingChart':'Hiányoznak az árfolyamok. Ez a diagram különböző pénznemű összegeket hasonlítana össze, mintha azonosak lennének.','pf.rateMissingSnapshot':'Nem készült pillanatfelvétel: hiányoznak az árfolyamok, így a mentett összeg kevert pénznemű lenne — és egy képernyőn látott számmal ellentétben ez túlélné a hiányzó árfolyamot.',
 'pf.ticker':'Ticker','pf.account':'Számla','pf.type':'Típus','pf.shares':'Darab','pf.avgCost':'Átlagár','pf.priceCol':'Ár','pf.value':'Érték','pf.plCol':'P&L','pf.plPct':'P&L %',
@@ -6121,7 +6127,25 @@ function renderAccounts(){
   }).join('');
 }
 
+// "Add a broker account first" used to be a toast and a full stop: it named the problem and left
+// the user to find Portfolio -> Accounts -> Add on their own, then repeat the action they had
+// come for. Offer the fix, and resume the original intent once the account exists.
+let _afterAccountSaved=null;
+function requireBrokerAccount(resume){
+  if(pfAccounts.length)return true;
+  showConfirm(i18n('pf.addBrokerFirst'),i18n('pf.addBrokerFirstMsg'),
+              {okLabel:i18n('pf.addAccountTitle'),danger:false}).then(go=>{
+    if(!go)return;
+    openAccountModal();
+    // AFTER the call, not before: openAccountModal() clears any pending intent, so that an
+    // account modal opened by hand later can never fire a resume the user has forgotten about.
+    _afterAccountSaved=resume||null;
+  });
+  return false;
+}
+
 function openAccountModal(editId){
+  _afterAccountSaved=null;
   const modal=document.getElementById('pf-account-modal');
   const titleEl=document.getElementById('pf-account-modal-title');
   document.getElementById('pf-acc-edit-id').value=editId||'';
@@ -6140,23 +6164,30 @@ function openAccountModal(editId){
 }
 
 function saveAccount(){
-  if(saveAccount._lock)return;saveAccount._lock=true;setTimeout(()=>saveAccount._lock=false,500);
+  if(saveAccount._lock)return;
   const name=document.getElementById('pf-acc-name').value.trim();
   const currency=document.getElementById('pf-acc-currency').value;
   const editId=parseInt(document.getElementById('pf-acc-edit-id').value,10)||0;
   if(!name){showToast(i18n('pf.accountRequired'),'error');return}
   const dup=pfAccounts.find(a=>a.name.toLowerCase()===name.toLowerCase()&&a.id!==editId);
   if(dup){showToast(i18n('pf.accountExists'),'error');return}
+  // The double-submit lock is taken AFTER validation. Taken before, a rejected save (empty or
+  // duplicate name) locked out the corrected retry for 500ms and swallowed it in silence.
+  saveAccount._lock=true;setTimeout(()=>saveAccount._lock=false,500);
   if(editId){
     const a=pfAccounts.find(x=>x.id===editId);
     if(a){a.name=name;a.currency=currency}
   }else{
     pfAccounts.push({id:pfNextId(pfAccounts),name,currency,isActive:true,createdAt:new Date().toISOString()});
   }
+  const resume=editId?null:_afterAccountSaved;
+  _afterAccountSaved=null;
   savePortfolioAccounts();
   closeModals();
   renderAccounts();
   showToast(editId?'Account updated':'Account added','success');
+  // Deferred a tick so the account modal has finished closing before the next one opens.
+  if(resume)setTimeout(resume,0);
 }
 
 async function deleteAccount(id){
@@ -6600,7 +6631,10 @@ function updatePositionModalFields(){
 }
 
 function openPositionModal(editId){
-  if(!pfAccounts.length){showToast(i18n('pf.addBrokerFirst'),'error');return}
+  // Resume only a CREATE. Coming back into an EDIT would rebuild the account <select> with
+  // only the just-created account, and saving would silently reassign the record's broker —
+  // reachable whenever pfAccounts is empty because its D1 load failed, not because there are none.
+  if(!requireBrokerAccount(editId?null:()=>openPositionModal()))return;
   const modal=document.getElementById('pf-position-modal');
   const titleEl=document.getElementById('pf-position-modal-title');
   document.getElementById('pf-pos-edit-id').value=editId||'';
@@ -6852,7 +6886,10 @@ function updateTxModalFields(){
 }
 
 function openTransactionModal(editId){
-  if(!pfAccounts.length){showToast(i18n('pf.addBrokerFirst'),'error');return}
+  // Resume only a CREATE. Coming back into an EDIT would rebuild the account <select> with
+  // only the just-created account, and saving would silently reassign the record's broker —
+  // reachable whenever pfAccounts is empty because its D1 load failed, not because there are none.
+  if(!requireBrokerAccount(editId?null:()=>openTransactionModal()))return;
   const modal=document.getElementById('pf-transaction-modal');
   const titleEl=document.getElementById('pf-tx-modal-title');
   document.getElementById('pf-tx-edit-id').value=editId||'';
@@ -8027,7 +8064,7 @@ function _csvNumParse(s,locale){
 }
 
 function openCsvImportModal(){
-  if(!pfAccounts.length){showToast(i18n('pf.addBrokerFirst'),'error');return}
+  if(!requireBrokerAccount(()=>openCsvImportModal()))return;
   _csvParsed=null;_csvMapping={};_csvNumLocale='auto';
   document.getElementById('pf-csv-file').value='';
   document.getElementById('pf-csv-account').innerHTML=pfAccounts.map(a=>`<option value="${a.id}">${escH(a.name)} (${escH(a.currency)})</option>`).join('');
@@ -13640,6 +13677,7 @@ const stCols=[
   {k:'fcfSbc',l:'FCF-SBC',w:66,d:1,big:1,tip:'Free Cash Flow minus Stock Based Compensation'},
   {k:'sbc',l:'SBC',w:58,d:1,big:1,tip:'Stock Based Compensation'},
   {k:'buyback',l:'BB%',w:42,ratio:1,pct:1,tip:'Buyback Yield %'},
+  {k:'_cl',l:'CL%',w:46,cl:1,tip:'Checklist completion — the same figure the checklist header shows'},
   {k:'_score',l:'Score',w:48,score:1,tip:'Composite Quality Score (0-100)'},
   {k:'_scoreVal',l:'Val',w:36,score:1,scorePillar:'valuation',tip:'Valuation Score (0-25)'},
   {k:'_scoreGrw',l:'Grw',w:36,score:1,scorePillar:'growth',tip:'Growth Score (0-25)'},
@@ -13966,6 +14004,8 @@ function renderTracker(){
       va=getCalc(a)[col];vb=getCalc(b)[col];
     }else if(['ps','pe','pfcf','pocf','evEbit','buyback'].includes(col)){
       va=getRatio(a)[col];vb=getRatio(b)[col];
+    }else if(col==='_cl'){
+      va=clProgressPct(a.ticker);vb=clProgressPct(b.ticker);
     }else if(col==='_score'||col.startsWith('_score')){
       const sa=getScore(a),sb=getScore(b);
       if(col==='_score'){va=sa.total;vb=sb.total}
@@ -13987,7 +14027,7 @@ function renderTracker(){
     const fr=c.frozen?` st-frozen${c.lastFrozen?' st-frozen-last':''}`:''
     const ls=c.frozen?`left:${c.left}px;`:'';
     const tp=c.tip?` title="${escH(c.tip)}"`:'';
-    if(c.k.startsWith('_')&&!c.score)return`<th class="${fr}" style="width:${c.w}px;${ls}"></th>`;
+    if(c.k.startsWith('_')&&!c.score&&!c.cl)return`<th class="${fr}" style="width:${c.w}px;${ls}"></th>`;
     if(c.score){const sorted=stSort.col===c.k;const arrow=sorted?(stSort.dir==='asc'?'▲':'▼'):'▲';return`<th class="${sorted?'sorted':''}${fr}" onclick="sortTracker('${c.k}')" style="width:${c.w}px;${ls}"${tp}>${c.l} <span class="sa">${arrow}</span></th>`}
     const sorted=stSort.col===c.k;
     const arrow=sorted?(stSort.dir==='asc'?'▲':'▼'):'▲';
@@ -14055,6 +14095,10 @@ function renderTracker(){
         const v=ratios[c.k];
         if(c.pct)html+=`<td>${v!=null&&!isNaN(v)?v.toFixed(1)+'%':'-'}</td>`;
         else html+=`<td>${v!=null&&!isNaN(v)?v.toFixed(1)+'x':'-'}</td>`;
+      }else if(c.cl){
+        const pct=clProgressPct(s.ticker);
+        if(pct==null)html+=`<td class="st-cl" title="Checklist not started">—</td>`;
+        else html+=`<td class="st-cl${pct>=100?' done':''}" style="--p:${pct}%" title="Checklist ${pct}% complete — includes checks derived automatically from the financial data, so it moves when metrics are refreshed">${pct}%</td>`;
       }else if(c.score){
         if(c.k==='_score'){
           const v=scoreObj.total;
@@ -15969,6 +16013,60 @@ function clLogChange(ticker,event,field,oldValue,newValue){
     newValue:newValue!=null?String(newValue).substring(0,100):''
   });
   if(log.length>200)cl.sections.change_log.entries=log.slice(-200);
+}
+
+// The tracker's CL% column must show the SAME figure the checklist header shows, so it delegates
+// to calcClProgress() rather than counting anything itself — two ways to compute "how analysed is
+// this company" would be two truths, and the one on the busier screen would win by exposure.
+//
+// null means NOT STARTED, and getting that test right took two goes. The first version asked
+// `if(!cl)` — but _d1CompanyToTStock() hands every company a bare `checklist:{sections:{}}`, so in
+// the D1 path (i.e. production) that guard never fired and every untouched company would have
+// shown a fabricated 7-13%: change_log counts as complete by definition and the financials section
+// takes credit for live FMP metrics. A plausible wrong number of exactly the Cat 116 kind, in the
+// batch that claimed to be avoiding one. The test is now whether any section holds real content.
+//
+// It also must not WRITE. calcClProgress() stamps `progress` onto every section object and
+// `overallProgress` onto the checklist, and saveTrackerStocks() syncs those to D1 — so without the
+// snapshot below, merely looking at the Companies tab and then editing one unrelated cell would
+// push recomputed derived values for every company to a database that has no staging.
+function clProgressPct(ticker){
+  const st=tStocks[ticker];
+  const cl=st&&st.checklist;
+  if(!cl||!cl.sections)return null;
+  const keys=Object.keys(cl.sections);
+  // `progress` is this function's own footprint from an earlier render, so it never counts as content.
+  const started=keys.some(k=>{
+    const d=cl.sections[k];
+    if(!d||typeof d!=='object')return false;
+    return Object.keys(d).some(f=>f!=='progress'&&d[f]!==''&&d[f]!=null&&d[f]!==false&&
+      !(Array.isArray(d[f])&&!d[f].length));
+  });
+  if(!started)return null;
+  // Snapshot what calcClProgress is about to overwrite, so a table render leaves no trace.
+  const beforeOverall=cl.overallProgress;
+  const beforeSection={};
+  keys.forEach(k=>{if(cl.sections[k]&&typeof cl.sections[k]==='object')beforeSection[k]='progress' in cl.sections[k]?cl.sections[k].progress:undefined});
+  let pct=null;
+  try{
+    calcClProgress(ticker);
+    pct=cl.overallProgress||0;
+  }catch(e){
+    // Deliberately swallowed, against the usual rule (CODING-LESSONS Data Safety 0c), because the
+    // alternative is worse and silent: this runs inside renderTracker()'s row loop, tbody.innerHTML
+    // is assigned only at the end, so one malformed checklist (`{}` with no sections — reachable
+    // through doImport of a hand-edited backup) would leave the ENTIRE table showing stale rows
+    // with no error on screen. One company reading "—" is a visible, honest unknown.
+    console.error('clProgressPct failed for '+ticker,e);
+    pct=null;
+  }
+  cl.overallProgress=beforeOverall;
+  keys.forEach(k=>{
+    const d=cl.sections[k];
+    if(!d||typeof d!=='object')return;
+    if(beforeSection[k]===undefined)delete d.progress; else d.progress=beforeSection[k];
+  });
+  return pct;
 }
 
 function calcClProgress(ticker){
