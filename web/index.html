@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="hu">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1099,7 +1099,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v59';
+var APP_VERSION='v60';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1251,7 +1251,28 @@ var I18N={en:{
    the 104 locals are untouched and now harmless. KNOWN-ISSUES P.28, BUG-HISTORY Cat 117. */
 function i18n(key,params){var s=(I18N[_lang]&&I18N[_lang][key])||I18N.en[key]||key;if(params)Object.keys(params).forEach(function(k){s=s.replace('{'+k+'}',params[k])});return s}
 function setLang(l){_lang=l;localStorage.setItem('app_lang',l);location.reload()}
-function applyI18n(){document.querySelectorAll('[data-i18n]').forEach(function(el){el.textContent=i18n(el.getAttribute('data-i18n'))});document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){el.placeholder=i18n(el.getAttribute('data-i18n-placeholder'))});document.querySelectorAll('[data-i18n-title]').forEach(function(el){el.title=i18n(el.getAttribute('data-i18n-title'))})}
+// Three things this must keep doing, each of which cost a bug to learn.
+// 1. <html lang> follows _lang. It was hard-coded lang="hu" in the markup while the app defaults
+//    to English, so every English user was served a page declaring Hungarian — wrong for screen
+//    readers, browser translate prompts and hyphenation.
+// 2. The widget tooltip survives. initWidgetTips() appends .cp-tiptext INSIDE nodes carrying
+//    data-i18n, and textContent deletes element children; the widgets render lazily, so
+//    renderDbFiTracker()'s applyI18n() fired long AFTER initWidgetTips() and wiped all 12 the
+//    moment the FI widget scrolled into view. DIRECT children only — a bubble belonging to a
+//    nested node must never be re-parented onto its ancestor.
+// 3. Everything else keeps replace-all semantics. Exactly one [data-i18n] node has a child in the
+//    SOURCE markup — settings.d1Connected, whose green <span> highlight replace-all destroys.
+//    That loss is pre-existing and recorded as P.32; it is not blessed as intentional here.
+// Cat 118.
+function applyI18n(){document.documentElement.lang=_lang;document.querySelectorAll('[data-i18n]').forEach(function(el){var tips=[].slice.call(el.querySelectorAll(':scope>.cp-tiptext'));el.textContent=i18n(el.getAttribute('data-i18n'));tips.forEach(function(b){el.appendChild(b)})});document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){el.placeholder=i18n(el.getAttribute('data-i18n-placeholder'))});document.querySelectorAll('[data-i18n-title]').forEach(function(el){el.title=i18n(el.getAttribute('data-i18n-title'))})}
+// Translate the static markup as soon as the DOM is parsed. Until v60 the ONLY callers were
+// autoLoad() and renderDbFiTracker(), both of which run after a successful sign-in — so the
+// lock screen, the one screen every user sees FIRST, was the one screen i18n never reached, and
+// ten fully-translated keys (the whole recovery flow among them) could never display. This fires
+// strictly before showMasterLogin() un-hides #lock-screen from the window load handler, so the
+// gate is painted already translated rather than flipping languages in front of the user.
+// KNOWN-ISSUES P.31, BUG-HISTORY Cat 118.
+document.addEventListener('DOMContentLoaded',applyI18n);
 </script>
 <style>html.app-locked #sidebar,html.app-locked #main-content,html.app-locked #bottom-nav{visibility:hidden}</style>
 
