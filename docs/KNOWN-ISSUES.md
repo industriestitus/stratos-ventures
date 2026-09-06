@@ -193,10 +193,22 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Status:** **accepted as permanently unverifiable from inside a repo**, and deliberately written down rather than left as an implied gap: an unstated limit gets read as coverage. The one mitigation that exists is structural — `STATUS.md` § Verified live records only what was actually exercised, kept apart from what was merely reviewed, so an unverified batch has to say so in the handoff. *A rejected fix, recorded so it is not re-proposed: making the docs commit state a QA finding count and having `check.sh` require it. The number would be written by the same agent the check exists to hold to account — ritual, not evidence.*
 
 
-### P.31 — The Lock Screen Never Follows the Language Setting (2026-09-06, found in Cat 117)
-- **Where:** `applyI18n()` is called from exactly two sites — `renderDbFiTracker()` and `autoLoad()` — and **both run only after a successful sign-in**. The sign-in screen is therefore the one screen the translation system never reaches; its ten `data-i18n` nodes keep the English text hard-coded in the markup.
-- **Effect:** with `app_lang=hu` a Hungarian user sees the app's *first* screen entirely in English, including the whole recovery flow. The translations already exist and are complete — `mp.signIn` = *"Belépés"*, `lock.subtitle` = *"Titkosított befektetési platform"*, `mp.rec.title` = *"Add meg a helyreállítási kulcsod és egy új mesterjelszót"* — they are simply unreachable. Dead translations, not missing ones.
-- **Status:** pre-existing and long-standing; `HEAD~1` at v58 has the same two call sites, so this predates the i18n rename and was merely *found* by it. Recorded rather than folded into Cat 117, whose scope was the shadowing class. **Fix direction:** call `applyI18n()` once at boot, before the lock screen paints, rather than only after `autoLoad()`. Small, but it touches the boot path, so it wants its own batch and a real sign-in to verify — the one thing an agent cannot do here (P.30).
+### ~~P.31 — The Lock Screen Never Follows the Language Setting (FIXED 2026-09-06, Cat 118, v60)~~
+- **Was:** `applyI18n()` was called from exactly two sites, `renderDbFiTracker()` and `autoLoad()`, and **both run only after a successful sign-in** — so the sign-in gate, the first screen every user sees, was the one screen the translation system never reached. Ten keys carried complete Hungarian that could never display, the whole `mp.rec.*` recovery flow among them.
+- **Fixed by** `document.addEventListener('DOMContentLoaded', applyI18n)`. `#lock-screen` ships `display:none` and is un-hidden from the `window` `load` handler, which the spec orders strictly after `DOMContentLoaded`, so the gate is painted already translated rather than flipping in front of the user.
+- **Two more defects in the same function came with it** — `<html lang>` hard-coded `"hu"` against an English default, and `textContent` silently deleting all 12 widget tooltips. See BUG-HISTORY Cat 118.
+- **It does not reach first-time users** — see **P.33**, which is the honest remainder of this entry.
+
+### P.32 — `applyI18n()` Destroys the Green Highlight in `settings.d1Connected` (2026-09-06, found in Cat 118)
+- **Where:** `index.html:2284`. The source markup is `<p data-i18n="settings.d1Connected"><span style="color:var(--green);font-weight:600">Connected to D1</span> — all data is stored…</p>` — the **only** `[data-i18n]` element with a child element in the source. `applyI18n()` writes `textContent`, which deletes the `<span>`.
+- **Effect:** cosmetic and permanent. The paragraph renders as flat unstyled text from the first `applyI18n()` onward; the green "Connected to D1" highlight the markup describes has never been visible after boot. Pre-existing — `autoLoad()` already did this long before Cat 118 touched the function.
+- **Status:** deliberately not special-cased. Cat 118 already carved out one exception (the widget tooltip) because a *runtime-injected* child had to survive; adding a second selector for a *static* child would make `applyI18n()` a list of exemptions. **Fix direction:** restructure the string — either split it into two keys (a highlighted status word and a sentence) or drop the inline `<span>` and style the whole paragraph. *An earlier draft of the Cat 118 comment described this destruction as behaviour the node "relies on"; QA caught it. It is damage, not design.*
+
+### P.33 — Nothing on the Sign-In Gate Can Change the Language (2026-09-06, found in Cat 118)
+- **Where:** the only two `setLang()` entry points are the sidebar toggle (`index.html:1305`) and `#lang-select` in Settings (`index.html:2351`). Both sit inside `#sidebar` / `#main-content`, which `html.app-locked` hides while the gate is up. Measured on the gate: `#sidebar` computes to `visibility:hidden` and the language button to `offsetWidth === 0`.
+- **Effect:** `_lang` falls back to `'en'`, so a **first-time** user — or anyone on a new device, or after clearing site data — gets an English sign-in screen and **no control anywhere on it** to change that. P.31's fix reaches returning users, whose choice is already in `localStorage`, and nobody else. This is the honest limit of Cat 118 and is written down rather than left implied.
+- **Status:** open, and a product decision rather than a defect to be quietly patched — it puts a new control on the sign-in screen. `#lock-screen` sits outside the `app-locked` subtree, so a small EN/HU toggle can live there with no CSS changes. **Fix direction:** the existing `setLang(_lang==='en'?'hu':'en')` handler, reused inside `#lock-screen`.
+
 
 ---
 
@@ -257,8 +269,8 @@ Bundling too many tasks per session (e.g., 9 tasks, ~200 fields) compounds bugs 
 The rows above are a 2026-07-01 snapshot, kept for the record. **Currently open** (nothing critical):
 `SV.1`, `SV.4`, `SV.5`, `SV.7` (deferred security hardening) · `SA.1`, `SA.4`, `SA.5` (sync audit
 remnants) · `P.3`, `P.15`, `P.16`, `P.19`, `P.20`–`P.26` (accepted or external) · `P.27` (notes
-search over ciphertext) · `P.31` (the lock screen never follows the language setting) ·
-`P.30` (QA pass / browser check /
+search over ciphertext) · `P.32` (a destroyed highlight) · `P.33` (no language control before
+sign-in) · `P.30` (QA pass / browser check /
 deploy ordering are unverifiable by any gate). **`P.29` closed 2026-08-27 (Cat 116, v58)** — no
 open item can now show a wrong number in a portfolio total. Feature-shaped work lives in
 ROADMAP § Technical Debt & Deferred Audit Findings, not here.

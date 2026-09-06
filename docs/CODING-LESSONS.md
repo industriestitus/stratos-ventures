@@ -213,6 +213,16 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 ---
 
+### 14. `textContent =` Deletes Element Children — and Something Is Always Injected Later (Cat 118)
+
+**Bugs found:** 1 live (all 12 dashboard widget tooltips), 1 cosmetic and still open (P.32).
+
+**Pattern:** `applyI18n()` refreshed every `[data-i18n]` node with `el.textContent = i18n(key)`. That is correct for a node whose whole content is the translated string — and destructive for one that anything else has appended into. `initWidgetTips()` appends the tooltip bubble (`.cp-tiptext`) **inside** the node that carries `data-i18n`, so every `applyI18n()` deleted all 12 bubbles.
+
+**Why it hid for so long.** Both functions run from `DOMContentLoaded`, in an order that happens to be safe. The damage came from a *third* call site reached much later: the dashboard widgets render **lazily** through an IntersectionObserver, so `renderDbFiTracker()`'s own `applyI18n()` fired whenever the user scrolled the FI widget into view — after the bubbles existed, with nothing restoring them until the next `renderDashboard()`. **Ordering that is safe at boot says nothing about a call site that fires on scroll.**
+
+**Rule:** before writing `textContent` (or `innerHTML`) on a node that other code can reach, ask *who else appends into this element*. Grep for the class or tag being injected, not just for the write. When a child must survive, preserve it explicitly and scope the selector to **direct children** (`:scope > .x`) — a descendant-scoped rescue silently **re-parents** a nested node's child onto its ancestor, which is worse than losing it. And when you carve out one exception, resist a second: `applyI18n()` preserves the runtime-injected tooltip and deliberately does *not* preserve `settings.d1Connected`'s static `<span>`, because a translation function that is a list of exemptions is no longer readable (P.32).
+
 ## Data Safety
 
 ### 0. Before a Purge-and-Reinsert, Strip EVERY Cached FK Row-Id (C3b / Cat 86)
@@ -573,6 +583,10 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 **Thirteenth — the corrected instrument has a shape too (Cat 117).** Cat 116's lesson was *use a parser, not a grep*, and Cat 117 did: `acorn` scope-resolution replaced P.28's grep census and corrected **~110 scopes** to **104**, split 13/90/1 rather than 15/91/4. It also answered the question the grep could not — how many of those scopes *call* `t()` — and the answer, **zero**, is the one that tells you whether an entry is urgent. But the AST census still missed **2 live call sites**, because they sit in a static inline `onclick` attribute: HTML text, not JavaScript, until the browser makes it so. They surfaced only by diffing the file's **691 textual `t(` occurrences** against the **680** the parser accounted for and reading all ten of the remainder by eye. **Every census has a blind spot exactly where its input stops being the thing it parses.** So the discipline is not "use the better instrument" — it is *cross-check two instruments with different blind spots and account for the residue, item by item*.
 
+**Fourteenth — measuring downstream of the code you are repairing (Cat 118).** The sharpest of the four, because the measurement was not merely incomplete — it could only ever report the behaviour under repair. Fixing `applyI18n()`'s destruction of child nodes needed to know how many `[data-i18n]` elements have element children. The census was run **in the live DOM**, and returned *"12 with children, **0** whose first child is not a text node"* — a number produced entirely by the old `textContent` having already flattened every node before the tape measure arrived. The source markup says **one** element has a child, and it *begins* with that child, so the fix built on that census inserted the translation in front of the surviving English and duplicated a paragraph. Re-measured by fetching the page and parsing it with `DOMParser` — the markup as served, on which no script has run — the answer was immediate and different.
+
+**The rule this adds: when you measure to justify changing X, make sure X has not already run on what you are measuring.** A DOM is not markup; it is markup plus everything that has executed since. Prefer the artifact as served, as parsed, as committed — and when only the live state is available, say which one you measured and why it is the right one. Instances twelve through fourteen are the same defect at three altitudes (grep, AST, DOM), which is the argument for stating a count's *provenance* beside it every time.
+
 **The rule this adds: a scope count is a claim, and it inherits the shape of the query that produced it.** Before trusting one, state the defect in prose, then ask whether the query you ran could miss an instance that matches the prose but not the syntax. And when the defect is "two things that should not be combined get combined", the authoritative search is over the *combining*, not over the helper that usually does it — the instances that skip the helper entirely are both the hardest to find and the most wrong.
 
 **The generalisation, and the reason this one is worth its own entry: all four leaks in that batch were the same defect wearing different clothes — a check that returns a verdict on a question adjacent to the rule rather than the rule itself.** Comparing two values that both stood still. Warning about a rule stated without exception, where the entire failure mode is that nobody notices — which is what a non-blocking warning guarantees. Asserting that a handoff has the right five headings and calling it verified, while its body described a tree two commits stale. And a gate that only ran when someone remembered to run it. Every one of them printed `ok`. **When you write a check, say out loud the sentence it licenses — "therefore the version was bumped", "therefore the handoff is current" — and then ask whether the code actually establishes that sentence or merely something near it.** A fail-open at least has the decency to be silent; this class speaks, and says the wrong thing confidently.
@@ -591,7 +605,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Process | 4 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 56 lessons across 7 domains.
+**Total:** 57 lessons across 7 domains.
 
 ## Related Documents
 

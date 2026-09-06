@@ -570,3 +570,25 @@
 | Dátum | Tesztelő | Sikeres | Hibás | Megjegyzés |
 |-------|----------|---------|-------|------------|
 | | | | | |
+
+## Internationalisation & the Sign-In Gate (added Cat 118, v60)
+
+These exist because the app's translation system could not be exercised by any agent session — the
+sign-in gate is behind a master password, so every case below is **manual only**.
+
+- [ ] **Gate in Hungarian.** With `app_lang=hu` in localStorage, hard-reload. The sign-in screen must
+      read *"Titkosított befektetési platform" / "Add meg a mesterjelszavad a belépéshez" / "Belépés"*,
+      and *"Elfelejtetted a jelszót?…"*. It must be Hungarian **on first paint** — a flicker from
+      English means the `DOMContentLoaded` hook regressed (P.31).
+- [ ] **Recovery view in Hungarian.** Click "Elfelejtetted a jelszót?" — all six `mp.rec.*` strings,
+      including both input placeholders, must be Hungarian.
+- [ ] **`<html lang>` follows the setting.** In DevTools, `document.documentElement.lang` must equal
+      the chosen language in both `en` and `hu`. It was hard-coded `"hu"` until v60.
+- [ ] **Widget tooltips survive scrolling.** Sign in, open the Dashboard, then **scroll down until the
+      FI Tracker widget enters the viewport**. Go back up and hover a widget title: the tooltip must
+      still appear. Before v60 all 12 were deleted at that exact moment (Cat 118.3). Lazy rendering
+      is the trigger, so the widget must actually be scrolled into view, not merely present.
+- [ ] **Language switch mid-session.** Switch EN↔HU from the sidebar; after the reload, spot-check the
+      Dashboard, Portfolio and Settings, and confirm the tooltips are still there.
+- [ ] **Known limitation, not a bug:** a first-time user with no stored language gets an English gate
+      and no control on it to change the language (P.33). Do not file this again.
