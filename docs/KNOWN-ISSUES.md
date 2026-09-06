@@ -177,10 +177,10 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Where:** `downloadBackupPlaintext` uses `_gatherAllData()` directly; only `downloadBackup` (encrypted) offers the checkbox.
 - **Decision:** the encrypted download is the default and the intended complete-snapshot path; the plaintext export exists as an escape hatch, not as the archival format.
 
-### P.28 — The Global `t()` Is Shadowed at ~110 Sites (MAINTENANCE RISK, migrated 2026-08-19)
-- **Where:** **110 sites, measured 2026-08-19** — 15 `const t = …` declarations, 91 `t =>` callback parameters (`forEach`/`map`/`filter`/`reduce`), and 4 `(t, …)` parameter lists, all shadowing the global i18n `t()`. Most common: `const t=document.createElement('div')` in `showToast`, `.forEach(t=>…)` over transaction arrays, `const t=escH(ticker)` in checklist rendering. The July 2026 sweep counted ~91; the count grows with the file, so re-measure rather than quoting this number later.
-- **Effect:** nothing today — none of those scopes calls `t()`. The risk is latent: any future line added *inside* one of them that calls `t()` throws `TypeError: t is not a function`. This has already happened twice: Cat 34 (three CRITICAL crashes) and the tooltips batch, where QA caught a `t`→`tip` shadow before it shipped.
-- **Status:** the unfixed remainder of the 2026-07-09 QA sweep, whose other findings were resolved across Cat 64/65/67 or judged not real bugs. Recorded here because it is a real trap with no current symptom, so it will never surface on its own. **Fix direction:** rename to descriptive locals (`el`, `tx`, `todo`, `tip`) — mechanical, but 110 sites means its own batch, ideally alongside the module split. See `memory/feedback_t-function-shadowing.md` and CODING-LESSONS.
+### ~~P.28 — The Global `t()` Is Shadowed at ~110 Sites (FIXED 2026-09-06, Cat 117, v59)~~
+- **Was:** 104 scopes bound a local `t` that shadowed the global i18n `t()`. Nothing broke — **none of them ever called it** — but any line added inside one that did would throw `TypeError: t is not a function`, which had already happened twice (Cat 34's three CRITICAL crashes, and a `t`→`tip` shadow QA caught in the tooltips batch).
+- **Fixed by renaming the global, not the locals.** This entry used to prescribe the opposite ("rename to descriptive locals — mechanical, but 110 sites"), and that was the wrong end: it leaves `t` a free name, so the next `.filter(t=>…)` reopens the trap and the entry has to be reopened with it. The global is now **`i18n()`** — 683 sites rewritten at AST byte offsets — and the 104 locals were left untouched, because a local `t` can no longer shadow anything. The class is closed rather than emptied, so no gate check is needed to hold it.
+- **The count in this entry was wrong too, in the same way P.29's was.** It said **~110**, split 15/91/4 across three grep patterns. Parsed with `acorn` and scope-resolved: **104**, split 13/90/1. A census of spellings is not a census of scopes. See BUG-HISTORY Cat 117 and CODING-LESSONS § JavaScript #7.
 
 ### ~~P.29 — Missing Rates Produce a Plausible Wrong Total, Not a Dash (FIXED 2026-08-27, Cat 116, v58)~~
 - **Was:** every foreign-currency total read `convertCurrency(amt, cur, base) || amt`, so with an empty rates table the **raw foreign amount was added to a base-currency sum** — $2 000 landing in a HUF total as 2 000 Ft. It read as a real number and was wrong by the exchange rate.
@@ -191,6 +191,12 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Where:** CLAUDE.md § Shipping a Batch steps 5 and 6 (the QA agent ran; the app was opened in a browser) and the schema → `wrangler deploy` → push deploy ordering. `docs/check.sh` states this limit in its own header.
 - **Effect:** a green gate certifies the repository, never the process around it. All three are pure self-report by the agent doing the work, so a batch can pass 13 checks while none of the three happened. Cat 115 closed the *adjacent* half — check 10 now verifies that `STATUS.md` is current, not merely correctly shaped — but currency is not truthfulness.
 - **Status:** **accepted as permanently unverifiable from inside a repo**, and deliberately written down rather than left as an implied gap: an unstated limit gets read as coverage. The one mitigation that exists is structural — `STATUS.md` § Verified live records only what was actually exercised, kept apart from what was merely reviewed, so an unverified batch has to say so in the handoff. *A rejected fix, recorded so it is not re-proposed: making the docs commit state a QA finding count and having `check.sh` require it. The number would be written by the same agent the check exists to hold to account — ritual, not evidence.*
+
+
+### P.31 — The Lock Screen Never Follows the Language Setting (2026-09-06, found in Cat 117)
+- **Where:** `applyI18n()` is called from exactly two sites — `renderDbFiTracker()` and `autoLoad()` — and **both run only after a successful sign-in**. The sign-in screen is therefore the one screen the translation system never reaches; its ten `data-i18n` nodes keep the English text hard-coded in the markup.
+- **Effect:** with `app_lang=hu` a Hungarian user sees the app's *first* screen entirely in English, including the whole recovery flow. The translations already exist and are complete — `mp.signIn` = *"Belépés"*, `lock.subtitle` = *"Titkosított befektetési platform"*, `mp.rec.title` = *"Add meg a helyreállítási kulcsod és egy új mesterjelszót"* — they are simply unreachable. Dead translations, not missing ones.
+- **Status:** pre-existing and long-standing; `HEAD~1` at v58 has the same two call sites, so this predates the i18n rename and was merely *found* by it. Recorded rather than folded into Cat 117, whose scope was the shadowing class. **Fix direction:** call `applyI18n()` once at boot, before the lock screen paints, rather than only after `autoLoad()`. Small, but it touches the boot path, so it wants its own batch and a real sign-in to verify — the one thing an agent cannot do here (P.30).
 
 ---
 
@@ -251,7 +257,8 @@ Bundling too many tasks per session (e.g., 9 tasks, ~200 fields) compounds bugs 
 The rows above are a 2026-07-01 snapshot, kept for the record. **Currently open** (nothing critical):
 `SV.1`, `SV.4`, `SV.5`, `SV.7` (deferred security hardening) · `SA.1`, `SA.4`, `SA.5` (sync audit
 remnants) · `P.3`, `P.15`, `P.16`, `P.19`, `P.20`–`P.26` (accepted or external) · `P.27` (notes
-search over ciphertext) · `P.28` (`t()` shadowing, latent) · `P.30` (QA pass / browser check /
+search over ciphertext) · `P.31` (the lock screen never follows the language setting) ·
+`P.30` (QA pass / browser check /
 deploy ordering are unverifiable by any gate). **`P.29` closed 2026-08-27 (Cat 116, v58)** — no
 open item can now show a wrong number in a portfolio total. Feature-shaped work lives in
 ROADMAP § Technical Debt & Deferred Audit Findings, not here.
