@@ -321,7 +321,9 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .cp-fin-label{font-size:var(--fs-xs);font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
 .cp-fin-value{font-size:var(--fs-2xl);font-weight:700}
 .cp-fin-sub{font-size:var(--fs-sm);color:var(--text2);margin-top:2px}
-.cp-hist-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+/* Same defect as .db-alloc-grid: `1fr` is minmax(auto,1fr) and a canvas sets its own width, so
+   the tracks could not shrink and the right column overflowed the card. */
+.cp-hist-charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 .cp-hist-chart{position:relative;height:240px}
 .cp-hist-loading{text-align:center;color:var(--text2);padding:40px 0;font-size:var(--fs-md)}
 /* Valuation tab */
@@ -689,10 +691,17 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .db-manage-arrows button{background:none;border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:var(--fs-sm);padding:2px 6px;border-radius:4px;font-family:inherit;line-height:1}
 .db-manage-arrows button:hover{border-color:var(--accent);color:var(--text)}
 .db-manage-arrows button:disabled{opacity:.3;cursor:default}
-.db-alloc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* minmax(0,1fr), not 1fr: `1fr` means minmax(AUTO,1fr), and a Chart.js canvas sets its own
+   width, so the tracks refused to shrink below it. The grid grew to 600px inside a narrower
+   widget and the right column — By Account and By Currency — was clipped outside the card with
+   nothing to scroll. Reported as "only two show and the widget will not scroll". */
+.db-alloc-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
 .db-alloc-item{text-align:center}
 .db-alloc-item .db-alloc-label{font-size:var(--fs-sm);color:var(--text2);margin-bottom:4px}
-.db-alloc-item canvas{max-height:160px}
+/* max-width too: without it the canvas keeps its intrinsic width in the frame before Chart.js
+   runs its responsive pass — or forever, if Chart.js never loads (this is a PWA, first visit
+   offline). The file already has this rule for .chart-container canvas. */
+.db-alloc-item canvas,.cp-hist-chart canvas{max-height:160px;max-width:100%}
 .db-metrics-table{width:100%;border-collapse:collapse}
 .db-metrics-table td{padding:8px 6px;font-size:var(--fs-md);border-bottom:1px solid var(--border)}
 .db-metrics-table td:first-child{color:var(--text2);font-weight:500}
@@ -767,7 +776,7 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
   .db-hero{padding:16px}
   .db-hero-value{font-size:28px}
   .db-hero-main{min-width:0}
-  .db-alloc-grid{grid-template-columns:1fr}
+  .db-alloc-grid{grid-template-columns:minmax(0,1fr)}
   .db-fi-progress{flex-direction:column;align-items:center}
   .db-fi-form{grid-template-columns:1fr}
   .db-benchmark{flex-direction:column}
@@ -901,7 +910,7 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
   .research-modal{width:95%!important}
   .research-modal-row{flex-direction:column}
   .research-entry-actions{margin-left:0;margin-top:4px}
-  .cp-hist-charts{grid-template-columns:1fr}
+  .cp-hist-charts{grid-template-columns:minmax(0,1fr)}
   .cp-val-details{grid-template-columns:repeat(auto-fill,minmax(120px,1fr))}
   .cp-todo-add{flex-wrap:wrap}
   .cp-todo-add input[type=text]{min-width:0}
@@ -916,7 +925,7 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
   .div-summary-grid{grid-template-columns:1fr}
   .st-exp-grid{grid-template-columns:1fr}
   .db-grid{grid-template-columns:1fr}
-  .db-alloc-grid{grid-template-columns:1fr}
+  .db-alloc-grid{grid-template-columns:minmax(0,1fr)}
   .db-fi-form{grid-template-columns:1fr}
   .db-benchmark{flex-direction:column}
   .db-bench-card{min-width:0}
@@ -1115,7 +1124,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v63';
+var APP_VERSION='v64';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1134,7 +1143,7 @@ var I18N={en:{
 'checklist.marketMispricing':'What is the market mispricing?','checklist.consensusError':'Where is the consensus wrong?','checklist.kpiMisread':'Which KPI is being misread?','checklist.timeHorizonMismatch':'Time horizon mismatch? Short-term pain vs long-term value?',
 'lock.subtitle':'Encrypted investment platform','lock.password':'Encryption password','lock.unlock':'Unlock','lock.forgot':'Forgot password? Use recovery key','lock.setup':'Set up encryption to protect your data','lock.choosePassword':'Choose a password','lock.confirmPassword':'Confirm password','lock.enable':'Enable Encryption','lock.skip':'Skip for now','lock.enabled':'Encryption enabled!','lock.saveKey':'Save this recovery key somewhere safe. You\'ll need it if you forget your password.','lock.copyKey':'Copy Recovery Key','lock.keySaved':'I have saved my recovery key','lock.continue':'Continue to App','lock.enterKey':'Enter your recovery key to reset your password','lock.newPassword':'New password','lock.reset':'Reset Password','lock.backToLogin':'Back to password login',
 'lock.wrongPassword':'Wrong password','lock.minChars':'Password must be at least 6 characters','lock.noMatch':'Passwords do not match','lock.fillBoth':'Fill in both fields','lock.invalidKey':'Invalid recovery key','lock.newMinChars':'New password must be at least 6 characters','lock.currentWrong':'Current password is wrong','lock.passwordChanged':'Password changed! Cloud data re-encrypted.','lock.cloudFailed':'Cloud save failed — password NOT changed. Try again.','lock.sessionLocked':'Session locked due to inactivity',
-'db.portfolioValue':'Portfolio Value','db.allocation':'Allocation','db.byTicker':'By Ticker','db.byAccount':'By Account','db.byType':'By Type','db.byCurrency':'By Currency','db.netWorth':'Net Worth','db.qualityWeighted':'Portfolio Quality (Weighted)','db.redFlags':'Red Flag Alerts','db.sellTriggers':'Sell Triggers','db.benchmark':'Benchmark (S&P 500)','db.dipFinder':'Dip Finder','db.fi':'Financial Independence','db.reviewsDue':'Reviews Due','db.todoSummary':'TODO Summary','db.earnings':'Upcoming Earnings','db.generalTodo':'General TODO','db.refresh':'Refresh','db.newTask':'New task...','db.noPositions':'No positions yet','db.addPositionsMsg':'Add positions in the Portfolio tab to see your dashboard.','db.waitingPrice':'Waiting for price data...','db.noStockData':'No stock data available for owned positions.','db.noRedFlags':'No red flags detected','db.noSellTriggers':'No sell triggers set. Add them in each company\'s Checklist → Buy/Sell Decision.','db.benchmarkProgress':'Fetching S&P 500 data...','db.benchmarkFailed':'Could not fetch benchmark data','db.benchmarkUpdated':'Benchmark data updated','db.benchmarkNeedSnapshots':'Take portfolio snapshots first to compare with benchmark','db.benchmarkNeed2':'Need at least 2 portfolio snapshots to compare with benchmark.','db.benchmarkClickRefresh':'Click Refresh to fetch S&P 500 data for comparison.','db.benchmarkUnavailable':'Benchmark data unavailable','db.lastUpdated':'Last updated: ','db.fetch52w':'Fetching 52-week highs...','db.updated52w':'52-week highs updated','db.noTracked':'No tracked stocks.','db.click52wRefresh':'Click Refresh to fetch 52-week high data.','db.dipsNeedRefresh':'Prices for these companies were cached without a quote. Click Refresh to reload them.','db.noDips':'No stocks down more than 10% from 52-week high.','db.enterTask':'Enter a task','db.deleted':'Deleted','db.noTasks':'No tasks yet.','db.allDone':'All done! No pending tasks.','db.allReviewsOk':'All reviews up to date.','db.dueForReview':'{count} company due for quarterly review','db.neverReviewed':'Never reviewed','db.pending':'Pending','db.overdue':'Overdue','db.thisWeek':'This week','db.noEarnings':'No earnings data. Click Refresh to fetch from FMP.','db.fmpKeyMissing':'FMP API key not set — go to Settings','db.noOwnedCompanies':'No Owned/Buy Target companies','db.earningsUpdated':'Updated earnings for {x}/{y} companies','db.manageWidgets':'Manage Widgets','db.hideWidget':'Hide','db.widgetHidden':'Widget hidden — use Manage Widgets to restore','db.allWidgetsHidden':'All widgets are hidden. Use Manage Widgets to restore them.',
+'db.portfolioValue':'Portfolio Value','db.allocation':'Allocation','db.byTicker':'By Ticker','db.byAccount':'By Account','db.byType':'By Type','db.byCurrency':'By Currency','db.netWorth':'Net Worth','db.qualityWeighted':'Portfolio Quality (Weighted)','db.redFlags':'Red Flag Alerts','db.sellTriggers':'Sell Triggers','db.benchmark':'Benchmark (S&P 500)','db.dipFinder':'Dip Finder','db.fi':'Financial Independence','db.reviewsDue':'Reviews Due','db.todoSummary':'TODO Summary','db.earnings':'Upcoming Earnings','db.generalTodo':'General TODO','db.refresh':'Refresh','db.newTask':'New task...','db.noPositions':'No positions yet','db.addPositionsMsg':'Add positions in the Portfolio tab to see your dashboard.','db.waitingPrice':'Waiting for price data...','db.ratioUnusable':'Not shown: the market-cap figure behind this ratio is implausible, so the result rounds to zero. Refresh the company data.','db.noStockData':'No stock data available for owned positions.','db.noRedFlags':'No red flags detected','db.noSellTriggers':'No sell triggers set. Add them in each company\'s Checklist → Buy/Sell Decision.','db.benchmarkProgress':'Fetching S&P 500 data...','db.benchmarkFailed':'Could not fetch benchmark data','db.benchmarkUpdated':'Benchmark data updated','db.benchmarkNeedSnapshots':'Take portfolio snapshots first to compare with benchmark','db.benchmarkNeed2':'Need at least 2 portfolio snapshots to compare with benchmark.','db.benchmarkClickRefresh':'Click Refresh to fetch S&P 500 data for comparison.','db.benchmarkUnavailable':'Benchmark data unavailable','db.twrZeroSnapshots':'No return figure: {n} snapshot(s) recorded a total of zero, taken before prices had loaded. Delete them under Portfolio → Snapshots and take a new one.','db.twrNoCurrency':'No return figure: {n} snapshot(s) have no recorded currency, so they cannot be compared. Delete them and take a new one.','db.twrNoRate':'No return figure: an exchange rate is missing for a snapshot or a transaction currency. Refresh rates in Settings.','db.twrUnavailable':'No return figure: at least two usable snapshots in one currency are needed.','db.lastUpdated':'Last updated: ','db.fetch52w':'Fetching 52-week highs...','db.updated52w':'52-week highs updated','db.noTracked':'No tracked stocks.','db.click52wRefresh':'Click Refresh to fetch 52-week high data.','db.quoteNotAllowed':'{n} companies could not be quoted — this FMP plan refuses the price lookup (HTTP 402), so no dip can be measured for them. Existing 52-week highs were kept.','db.dipsNeedRefresh':'Prices for these companies were cached without a quote. Click Refresh to reload them.','db.noDips':'No stocks down more than 10% from 52-week high.','db.enterTask':'Enter a task','db.deleted':'Deleted','db.noTasks':'No tasks yet.','db.allDone':'All done! No pending tasks.','db.allReviewsOk':'All reviews up to date.','db.dueForReview':'{count} company due for quarterly review','db.neverReviewed':'Never reviewed','db.pending':'Pending','db.overdue':'Overdue','db.thisWeek':'This week','db.noEarnings':'No earnings data. Click Refresh to fetch from FMP.','db.fmpKeyMissing':'FMP API key not set — go to Settings','db.noOwnedCompanies':'No Owned/Buy Target companies','db.earningsUpdated':'Updated earnings for {x}/{y} companies','db.manageWidgets':'Manage Widgets','db.hideWidget':'Hide','db.widgetHidden':'Widget hidden — use Manage Widgets to restore','db.allWidgetsHidden':'All widgets are hidden. Use Manage Widgets to restore them.',
 'db.totalValue':'Total Value','db.totalPL':'Total P&L','db.dividends':'Dividends','db.positions':'Positions','db.totalReceived':'total received','db.annualized':'annualized','db.moneyWeighted':'money-weighted','db.snapshotHint':'Take snapshots to see value over time','db.portfolioValueLabel':'Portfolio Value','db.simpleReturn':'Simple Return','db.twrTotal':'TWR (Total)','db.twrAnnualized':'TWR (Annualized)','db.trackingPeriod':'Tracking Period','db.ratesLimited':'Exchange rate API rate limited — try later','db.ratesUpdated':'Exchange rates updated','db.ratesFailed':'Failed to fetch exchange rates: ','db.ratesUpdatedAt':'Updated ',
 'db.currentValue':'Current Value','db.target':'Target','db.rule4pct':'4% Rule FI Number','db.projectedFI':'Projected FI','db.coastFI':'Coast FI (25yr)','db.reached':'Reached!','db.years':'years','db.targetAmount':'Target Amount','db.monthlyExpenses':'Monthly Expenses','db.monthlySavings':'Monthly Savings','db.assumedReturn':'Assumed Return %',
 'comp.calculator':'Calculator','comp.tracker':'Tracker','comp.charts':'Charts','comp.saveStock':'Save Stock','comp.tickerPlaceholder':'Stock ticker / name','comp.millions':'Millions','comp.billions':'Billions','comp.thousands':'Thousands','comp.units':'Units','comp.sharedInputs':'Shared Inputs','comp.savedStocks':'Saved Stocks','comp.savedStocksHint':'Click to load. Data stored in localStorage.','comp.backToTracker':'Back to Tracker','comp.backToDashboard':'Back to Dashboard','comp.backToPortfolio':'Back to Portfolio','comp.backToResearch':'Back to Research','comp.backToReviews':'Back to Reviews','comp.enterTicker':'Enter a stock name/ticker first.','comp.noSavedStocks':'No saved stocks yet.',
@@ -1206,7 +1215,7 @@ var I18N={en:{
 'checklist.marketMispricing':'Mi az, amit a piac rosszul áraz?','checklist.consensusError':'Miben téved a konszenzus?','checklist.kpiMisread':'Mi az a KPI, ami félre van értelmezve?','checklist.timeHorizonMismatch':'Időhorizont mismatch? Short-term pain vs long-term value?',
 'lock.subtitle':'Titkosított befektetési platform','lock.password':'Titkosítási jelszó','lock.unlock':'Feloldás','lock.forgot':'Elfelejtett jelszó? Használd a helyreállítási kulcsot','lock.setup':'Állítsd be a titkosítást az adataid védelméhez','lock.choosePassword':'Válassz jelszót','lock.confirmPassword':'Jelszó megerősítése','lock.enable':'Titkosítás engedélyezése','lock.skip':'Kihagyás','lock.enabled':'Titkosítás engedélyezve!','lock.saveKey':'Mentsd el ezt a helyreállítási kulcsot biztonságos helyre. Szükséged lesz rá, ha elfelejted a jelszavadat.','lock.copyKey':'Kulcs másolása','lock.keySaved':'Elmentettem a helyreállítási kulcsot','lock.continue':'Tovább az alkalmazáshoz','lock.enterKey':'Add meg a helyreállítási kulcsot a jelszó visszaállításához','lock.newPassword':'Új jelszó','lock.reset':'Jelszó visszaállítása','lock.backToLogin':'Vissza a bejelentkezéshez',
 'lock.wrongPassword':'Hibás jelszó','lock.minChars':'A jelszó legalább 6 karakter legyen','lock.noMatch':'A jelszavak nem egyeznek','lock.fillBoth':'Mindkét mezőt töltsd ki','lock.invalidKey':'Érvénytelen helyreállítási kulcs','lock.newMinChars':'Az új jelszó legalább 6 karakter legyen','lock.currentWrong':'A jelenlegi jelszó hibás','lock.passwordChanged':'Jelszó megváltoztatva! Felhő adatok újratitkosítva.','lock.cloudFailed':'Felhő mentés sikertelen — jelszó NEM változott. Próbáld újra.','lock.sessionLocked':'Munkamenet zárolva inaktivitás miatt',
-'db.portfolioValue':'Portfólió értéke','db.allocation':'Elosztás','db.byTicker':'Ticker szerint','db.byAccount':'Számla szerint','db.byType':'Típus szerint','db.byCurrency':'Pénznem szerint','db.netWorth':'Nettó vagyon','db.qualityWeighted':'Portfólió minőség (súlyozott)','db.redFlags':'Red Flag figyelmeztetések','db.sellTriggers':'Eladási triggerek','db.benchmark':'Benchmark (S&P 500)','db.dipFinder':'Esés kereső','db.fi':'Pénzügyi függetlenség','db.reviewsDue':'Esedékes értékelések','db.todoSummary':'TODO összefoglaló','db.earnings':'Közelgő eredmények','db.generalTodo':'Általános TODO','db.refresh':'Frissítés','db.newTask':'Új feladat...','db.noPositions':'Még nincs pozíció','db.addPositionsMsg':'Adj hozzá pozíciókat a Portfólió fülön a dashboard megtekintéséhez.','db.waitingPrice':'Várakozás árfolyam adatra...','db.noStockData':'Nincs elérhető részvényadat a birtokolt pozíciókhoz.','db.noRedFlags':'Nem észleltünk red flag-et','db.noSellTriggers':'Nincs eladási trigger beállítva. Add meg az egyes cégek Checklist → Vételi/Eladási döntésénél.','db.benchmarkProgress':'S&P 500 adatok lekérése...','db.benchmarkFailed':'Nem sikerült lekérni a benchmark adatokat','db.benchmarkUpdated':'Benchmark adatok frissítve','db.benchmarkNeedSnapshots':'Készíts portfólió pillanatfelvételeket a benchmark összehasonlításhoz','db.benchmarkNeed2':'Legalább 2 portfólió pillanatfelvétel szükséges a benchmark összehasonlításhoz.','db.benchmarkClickRefresh':'Kattints a Frissítés gombra az S&P 500 összehasonlító adatok lekéréséhez.','db.benchmarkUnavailable':'Benchmark adatok nem elérhetők','db.lastUpdated':'Utolsó frissítés: ','db.fetch52w':'52 hetes csúcsok lekérése...','db.updated52w':'52 hetes csúcsok frissítve','db.noTracked':'Nincs követett részvény.','db.click52wRefresh':'Kattints a Frissítés gombra az 52 hetes csúcs adatok lekéréséhez.','db.dipsNeedRefresh':'Ezekhez a cégekhez árfolyam nélkül tárolódott a csúcs. Kattints a Frissítés gombra az újratöltéshez.','db.noDips':'Nincs 10%-nál nagyobb esés az 52 hetes csúcshoz képest.','db.enterTask':'Adj meg egy feladatot','db.deleted':'Törölve','db.noTasks':'Még nincs feladat.','db.allDone':'Minden kész! Nincs függő feladat.','db.allReviewsOk':'Minden értékelés naprakész.','db.dueForReview':'{count} cég esedékes negyedéves értékelésre','db.neverReviewed':'Soha nem értékelt','db.pending':'Függőben','db.overdue':'Lejárt','db.thisWeek':'Ezen a héten','db.noEarnings':'Nincs eredményadat. Kattints a Frissítés gombra az FMP-ből történő lekéréshez.','db.fmpKeyMissing':'FMP API kulcs nincs beállítva — menj a Beállításokba','db.noOwnedCompanies':'Nincs Birtokolt/Vételi célpont cég','db.earningsUpdated':'Eredmények frissítve: {x}/{y} cég','db.manageWidgets':'Widget kezelés','db.hideWidget':'Elrejtés','db.widgetHidden':'Widget elrejtve — használd a Widget kezelést a visszaállításhoz','db.allWidgetsHidden':'Minden widget el van rejtve. Használd a Widget kezelést a visszaállításhoz.',
+'db.portfolioValue':'Portfólió értéke','db.allocation':'Elosztás','db.byTicker':'Ticker szerint','db.byAccount':'Számla szerint','db.byType':'Típus szerint','db.byCurrency':'Pénznem szerint','db.netWorth':'Nettó vagyon','db.qualityWeighted':'Portfólió minőség (súlyozott)','db.redFlags':'Red Flag figyelmeztetések','db.sellTriggers':'Eladási triggerek','db.benchmark':'Benchmark (S&P 500)','db.dipFinder':'Esés kereső','db.fi':'Pénzügyi függetlenség','db.reviewsDue':'Esedékes értékelések','db.todoSummary':'TODO összefoglaló','db.earnings':'Közelgő eredmények','db.generalTodo':'Általános TODO','db.refresh':'Frissítés','db.newTask':'Új feladat...','db.noPositions':'Még nincs pozíció','db.addPositionsMsg':'Adj hozzá pozíciókat a Portfólió fülön a dashboard megtekintéséhez.','db.waitingPrice':'Várakozás árfolyam adatra...','db.ratioUnusable':'Nem jelenik meg: az arányszám mögötti piaci kapitalizáció hihetetlen, ezért az eredmény nullára kerekedne. Frissítsd a cég adatait.','db.noStockData':'Nincs elérhető részvényadat a birtokolt pozíciókhoz.','db.noRedFlags':'Nem észleltünk red flag-et','db.noSellTriggers':'Nincs eladási trigger beállítva. Add meg az egyes cégek Checklist → Vételi/Eladási döntésénél.','db.benchmarkProgress':'S&P 500 adatok lekérése...','db.benchmarkFailed':'Nem sikerült lekérni a benchmark adatokat','db.benchmarkUpdated':'Benchmark adatok frissítve','db.benchmarkNeedSnapshots':'Készíts portfólió pillanatfelvételeket a benchmark összehasonlításhoz','db.benchmarkNeed2':'Legalább 2 portfólió pillanatfelvétel szükséges a benchmark összehasonlításhoz.','db.benchmarkClickRefresh':'Kattints a Frissítés gombra az S&P 500 összehasonlító adatok lekéréséhez.','db.benchmarkUnavailable':'Benchmark adatok nem elérhetők','db.twrZeroSnapshots':'Nincs hozamszám: {n} pillanatkép nulla összeget rögzített, még az árak betöltése előtt készült. Töröld őket a Portfólió → Pillanatfelvételek alatt, és készíts egy újat.','db.twrNoCurrency':'Nincs hozamszám: {n} pillanatképnek nincs rögzített devizája, így nem összehasonlítható. Töröld őket, és készíts újat.','db.twrNoRate':'Nincs hozamszám: hiányzik egy árfolyam valamelyik pillanatkép vagy tranzakció devizájához. Frissítsd az árfolyamokat a Beállításokban.','db.twrUnavailable':'Nincs hozamszám: legalább két használható, azonos devizájú pillanatkép kell hozzá.','db.lastUpdated':'Utolsó frissítés: ','db.fetch52w':'52 hetes csúcsok lekérése...','db.updated52w':'52 hetes csúcsok frissítve','db.noTracked':'Nincs követett részvény.','db.click52wRefresh':'Kattints a Frissítés gombra az 52 hetes csúcs adatok lekéréséhez.','db.quoteNotAllowed':'{n} céghez nem érkezett árfolyam — ez az FMP csomag elutasítja a lekérdezést (HTTP 402), így hozzájuk nem mérhető esés. A meglévő 52 hetes csúcsok megmaradtak.','db.dipsNeedRefresh':'Ezekhez a cégekhez árfolyam nélkül tárolódott a csúcs. Kattints a Frissítés gombra az újratöltéshez.','db.noDips':'Nincs 10%-nál nagyobb esés az 52 hetes csúcshoz képest.','db.enterTask':'Adj meg egy feladatot','db.deleted':'Törölve','db.noTasks':'Még nincs feladat.','db.allDone':'Minden kész! Nincs függő feladat.','db.allReviewsOk':'Minden értékelés naprakész.','db.dueForReview':'{count} cég esedékes negyedéves értékelésre','db.neverReviewed':'Soha nem értékelt','db.pending':'Függőben','db.overdue':'Lejárt','db.thisWeek':'Ezen a héten','db.noEarnings':'Nincs eredményadat. Kattints a Frissítés gombra az FMP-ből történő lekéréshez.','db.fmpKeyMissing':'FMP API kulcs nincs beállítva — menj a Beállításokba','db.noOwnedCompanies':'Nincs Birtokolt/Vételi célpont cég','db.earningsUpdated':'Eredmények frissítve: {x}/{y} cég','db.manageWidgets':'Widget kezelés','db.hideWidget':'Elrejtés','db.widgetHidden':'Widget elrejtve — használd a Widget kezelést a visszaállításhoz','db.allWidgetsHidden':'Minden widget el van rejtve. Használd a Widget kezelést a visszaállításhoz.',
 'db.totalValue':'Összérték','db.totalPL':'Összesített P&L','db.dividends':'Osztalékok','db.positions':'Pozíciók','db.totalReceived':'összesen kapott','db.annualized':'évesített','db.moneyWeighted':'pénzsúlyozott','db.snapshotHint':'Készíts pillanatfelvételt az érték időbeli változásának nyomon követéséhez','db.portfolioValueLabel':'Portfólió értéke','db.simpleReturn':'Egyszerű hozam','db.twrTotal':'TWR (összesen)','db.twrAnnualized':'TWR (évesített)','db.trackingPeriod':'Követési időszak','db.ratesLimited':'Árfolyam API korlát — próbáld később','db.ratesUpdated':'Árfolyamok frissítve','db.ratesFailed':'Árfolyamok lekérése sikertelen: ','db.ratesUpdatedAt':'Frissítve: ',
 'db.currentValue':'Jelenlegi érték','db.target':'Cél','db.rule4pct':'4%-os szabály FI szám','db.projectedFI':'Tervezett FI','db.coastFI':'Coast FI (25 év)','db.reached':'Elérve!','db.years':'év','db.targetAmount':'Célösszeg','db.monthlyExpenses':'Havi kiadások','db.monthlySavings':'Havi megtakarítás','db.assumedReturn':'Feltételezett hozam %',
 'comp.calculator':'Kalkulátor','comp.tracker':'Követő','comp.charts':'Grafikonok','comp.saveStock':'Mentés','comp.tickerPlaceholder':'Részvény ticker / név','comp.millions':'Millió','comp.billions':'Milliárd','comp.thousands':'Ezer','comp.units':'Egység','comp.sharedInputs':'Közös bemenetek','comp.savedStocks':'Mentett részvények','comp.savedStocksHint':'Kattints a betöltéshez. Adatok a localStorage-ban.','comp.backToTracker':'Vissza a követőhöz','comp.backToDashboard':'Vissza az irányítópulthoz','comp.backToPortfolio':'Vissza a portfólióhoz','comp.backToResearch':'Vissza a kutatáshoz','comp.backToReviews':'Vissza az értékelésekhez','comp.enterTicker':'Adj meg egy részvény nevet/tickert először.','comp.noSavedStocks':'Még nincs mentett részvény.',
@@ -8823,14 +8832,25 @@ function renderDbSmithMetrics(){
     let weightedSum=0,weightSum=0;
     posData.forEach(pd=>{
       const val=md.src==='r'?pd.r[md.key]:pd.s[md.key];
-      if(val!=null&&isFinite(val)){
+      /* Dropped PER POSITION, before weighting — never after averaging. The first version of this
+         guard tested the finished average, which works only for a single holding: with five
+         positions and one broken market cap the average came out 24.0 instead of 30.0 and rendered
+         as a clean, confident, plausible number. That is strictly worse than the "0.0" it replaced,
+         because 0.0 is self-evidently wrong and 24.0 is not — and it errs CHEAP, which is the
+         dangerous direction for an investment tool. An average absorbs one broken value; a filter
+         does not. */
+      const usable=md.src!=='r'?(val!=null&&isFinite(val)):(val!=null&&isFinite(val)&&val>=0.05);
+      if(usable){
         const w=pd.valInBase/totalValue;
         weightedSum+=w*val;
         weightSum+=w;
       }
     });
-    if(weightSum<=0){html+=`<tr><td>${md.label}</td><td>-</td></tr>`;return}
+    /* Nothing usable survived the filter above — for a ratio that means every holding's market cap
+       was implausible, which is worth saying rather than showing a bare dash. */
+    if(weightSum<=0){const why=md.src==='r'?` title="${escH(i18n('db.ratioUnusable'))}"`:'';html+=`<tr><td>${md.label}</td><td${why}>-</td></tr>`;return}
     const avg=weightedSum/weightSum;
+
     const cls=dbValClass(avg,md.lo,md.hi,md.invert);
     const display=md.pct?avg.toFixed(1)+'%':avg.toFixed(1);
     html+=`<tr><td>${md.label}</td><td class="${cls}">${display}</td></tr>`;
@@ -8987,6 +9007,23 @@ function renderDbBenchmark(){
     html+=`<div class="db-bench-chart"><canvas id="db-bench-canvas"></canvas></div>`;
   }
 
+  /* A bare '—' is indistinguishable from a broken widget — Peter read exactly that and reported
+     the benchmark as still wrong when it was refusing correctly. Cat 116's rule was to state the
+     reason IN the tile; this states it directly under the three. */
+  if(pfReturn==null){
+    /* calcTWR() returns null for four different reasons and the first version of this note named
+       only two of them — so with two perfectly good snapshots and one transaction in a currency
+       with no rate, it told the user to delete healthy data. Name the cause that actually applies. */
+    const snaps=pfSnapshots||[];
+    const zeros=snaps.filter(x=>!(parseFloat(x.totalValue)>0)).length;
+    const noCur=snaps.filter(x=>parseFloat(x.totalValue)>0&&!x.baseCurrency).length;
+    let why;
+    if(zeros)why=i18n('db.twrZeroSnapshots',{n:zeros});
+    else if(noCur)why=i18n('db.twrNoCurrency',{n:noCur});
+    else if(snaps.length<2)why=i18n('db.twrUnavailable');
+    else why=i18n('db.twrNoRate');
+    html+=`<div style="font-size:11px;color:var(--yellow);margin-top:8px">${escH(why)}</div>`;
+  }
   if(dbBenchmark.fetchedAt){
     html+=`<div style="font-size:11px;color:var(--text2);margin-top:8px">${i18n('db.lastUpdated')}${new Date(dbBenchmark.fetchedAt).toLocaleDateString()}</div>`;
   }
@@ -9023,7 +9060,7 @@ function renderDbBenchmark(){
 }
 
 // ---- 5C: Dip Finder ----
-let _fetchingDip=false;
+let _fetchingDip=false,_dipUnquotable=0;
 async function fetchDipData(){
   if(_fetchingDip)return;
   const tickers=Object.keys(tStocks);
@@ -9039,7 +9076,7 @@ async function fetchDipData(){
     // list. Probe it ONCE per run: if the first batch answers for more than one ticker the list
     // works and every later group costs 1 call; if not, fall back to per-symbol. Without the
     // probe flag a plan that ignores the list would silently cost 1+N calls PER GROUP.
-    let batchWorks=null;
+    let batchWorks=null,unquotable=0,fetched=0;
     const today=new Date().toISOString().slice(0,10);
     let stop=false;
     for(let i=0;i<tickers.length&&!stop;i+=batchSize){
@@ -9049,7 +9086,7 @@ async function fetchDipData(){
          fetched 52-week high by whatever `tStocks[t].price` happened to hold — a value that can be
          months old, or never fetched at all when the plan answers 402. AAPL showed a "-71.0% dip"
          built from a current high and a stale price. Two numbers from two moments are not a ratio. */
-      const take=rows=>(rows||[]).forEach(q=>{
+      const take=rows=>(rows||[]).forEach(q=>{fetched++;
         if(q&&q.symbol&&q.yearHigh!=null){db52wHighs[q.symbol]={high52:q.yearHigh,price:(q.price!=null?q.price:null),fetchedAt:new Date().toISOString()};seen.add(q.symbol)}
       });
       if(batchWorks!==false){
@@ -9065,21 +9102,40 @@ async function fetchDipData(){
           // wasted call on every single refresh, forever.
           if(seen.has(tk))continue;
           const prev=db52wHighs[tk];
-          if(prev&&String(prev.fetchedAt||'').slice(0,10)===today)continue;
+          /* Skip today's entry only if it is actually FINISHED: either a negative cache
+             (high52 null — this plan cannot quote the symbol) or a complete row with a price.
+             An entry written today by a pre-v63 build has a high and NO price, which looks like a
+             success and was therefore skipped — so with the batch call answering 402, Refresh did
+             nothing at all until the next day, while the widget told the user to press Refresh. */
+          const done=prev&&String(prev.fetchedAt||'').slice(0,10)===today&&(prev.unquotable||prev.high52==null||prev.price!=null);
+          if(done)continue;
           const one=await fmpFetch('quote',{symbol:tk});
           if(one&&one.rateLimited){stop=true;break}
           const before=seen.size;
           take(_fmpRows(one));
-          // Negative-cache a symbol this plan can't quote (high52 null → the renderer skips it)
-          // so the next refresh doesn't pay for it again.
-          if(seen.size===before)db52wHighs[tk]={high52:null,fetchedAt:new Date().toISOString()};
+          /* Negative-cache a symbol this plan cannot quote, so the next refresh does not pay for it
+             again — but PRESERVE whatever we already knew. The previous version replaced the whole
+             entry with {high52:null}, which DELETED a good 52-week high the moment the plan
+             answered 402, then showed a green "highs updated" toast over a widget that now had
+             nothing to compare against. Losing data to a failed refresh is worse than the stale
+             number it was refreshing. */
+          if(seen.size===before){
+            const keep=db52wHighs[tk]||{};
+            db52wHighs[tk]={high52:keep.high52!=null?keep.high52:null,price:keep.price!=null?keep.price:null,
+                            unquotable:true,fetchedAt:new Date().toISOString()};
+            unquotable++;
+          }
           await new Promise(r=>setTimeout(r,300)); // pace like the other per-ticker loops
         }
       }
     }
     saveDash52wHighs();
+    _dipUnquotable=unquotable;
     renderDbDipFinder();
-    showToast(i18n('db.updated52w'),'success');
+    /* Only claim success if something actually arrived. A green "highs updated" over a refresh in
+       which every single symbol was refused is the same lie as an empty chart with no reason. */
+    if(unquotable&&!fetched)showToast(i18n('db.quoteNotAllowed',{n:unquotable}),'warning',8000);
+    else showToast(i18n('db.updated52w'),'success');
   }finally{_fetchingDip=false;if(el)hideSkeleton(el);if(dipBtn)setBtnLoading(dipBtn,false,'Refresh')}
 }
 
@@ -9095,8 +9151,11 @@ function renderDbDipFinder(){
     const h=db52wHighs[ticker];
     /* Both numbers come from the same quote response. No fallback to tStocks[].price: a dip
        against a price of unknown age is not a dip, and showing one is worse than showing none. */
-    if(!h||!h.high52)return;
-    if(!(h.price>0)){skipped++;return}   // 0 is what FMP returns for a halted or delisted symbol; it produced a fabricated -100% dip
+    if(!h)return;
+    /* Count first, return second. The old order returned on a missing high before incrementing,
+       so a portfolio whose symbols were ALL negative-cached counted zero skips and fell through to
+       "no dips" — announcing that nothing had fallen while it could no longer see any price. */
+    if(h.unquotable||!h.high52||!(h.price>0)){skipped++;return}   // 0 is what FMP returns for a halted or delisted symbol; it produced a fabricated -100% dip
     const dipPct=((h.price-h.high52)/h.high52)*100;
     if(dipPct<-10)dips.push({ticker,price:h.price,high52:h.high52,dipPct});
   });
@@ -9105,7 +9164,10 @@ function renderDbDipFinder(){
   /* Every cache entry written before v63 has no `price`, so all of them are skipped — and with a
      non-empty cache the "click Refresh" branch above never fires, so the widget confidently
      announced "no dips" over a portfolio that was 70% off its highs. Say what actually happened. */
-  if(!dips.length&&skipped){el.innerHTML='<div class="db-empty">'+escH(i18n('db.dipsNeedRefresh'))+'</div>';return}
+  if(!dips.length&&skipped){
+    const msg=_dipUnquotable?i18n('db.quoteNotAllowed',{n:_dipUnquotable}):i18n('db.dipsNeedRefresh');
+    el.innerHTML='<div class="db-empty">'+escH(msg)+'</div>';return;
+  }
   if(!dips.length){el.innerHTML='<div class="db-empty">'+i18n('db.noDips')+'</div>';return}
 
   let html='<table class="db-dip-table"><thead><tr><th>Ticker</th><th>Price</th><th>52w High</th><th>Dip</th></tr></thead><tbody>';
@@ -13394,11 +13456,31 @@ const PRESERVE_FIELDS=['overriddenData','_d1Id','notes','earnings','filings','pi
 // Merge market data onto a stock, then re-apply manual overrides on top (overrides always win),
 // recomputing the two derived fields when a component is overridden. `data` may be null/absent (no
 // fetch or no cache) — then only the override re-apply runs.
+/* A market cap can be present, positive and finite and still be nonsense — Apple stored as `3`
+   rather than 3.5e12. The old guard only rejected negative and non-finite, so a value like that
+   flowed into every ratio: P/E, P/S and P/FCF rounded to 0.0 on the dashboard, and on the Tracker
+   the SAME number scored the company 82 with a perfect 25/25 valuation pillar and a buyback yield
+   of 8000000000000%. Masking it at each consumer is eight fixes and a ninth waiting; this refuses
+   it once, where every path already passes.
+
+   The test is shares outstanding: marketCap/price is the share count, and a listed company does
+   not have fewer than a thousand shares. Price-free rows (crypto, unpriced assets) are left alone
+   — with no price there is nothing to compare against. */
+function _capPlausible(cap,price){
+  if(cap==null)return true;
+  const p=parseFloat(price);
+  if(!isFinite(p)||p<=0)return true;
+  return (cap/p)>=1000;
+}
 function _applyMarketData(stock,data){
   if(data&&typeof data==='object'){Object.keys(data).forEach(k=>{if(!PRESERVE_FIELDS.includes(k))stock[k]=data[k]})}
   if(stock.price!=null&&(stock.price<0||!isFinite(stock.price)))stock.price=null;
   if(stock.marketCap!=null&&(stock.marketCap<0||!isFinite(stock.marketCap)))stock.marketCap=null;
+  if(!_capPlausible(stock.marketCap,stock.price))stock.marketCap=null;
   if(stock.overriddenData){Object.entries(stock.overriddenData).forEach(([k,v])=>{stock[k]=v});
+    // The sanity lines above run BEFORE this, so an override is not covered by them — which is why
+    // _capPlausible is repeated here and mirrored in calcStockRatios().
+    if(!_capPlausible(stock.marketCap,stock.price))stock.marketCap=null;
     // recompute derived fields when a component is overridden (unless the derived field is itself overridden)
     if(('ocf'in stock.overriddenData||'sbc'in stock.overriddenData)&&!('ocfSbc'in stock.overriddenData))stock.ocfSbc=(stock.ocf||0)-(stock.sbc||0);
     if(('fcf'in stock.overriddenData||'sbc'in stock.overriddenData)&&!('fcfSbc'in stock.overriddenData))stock.fcfSbc=(stock.fcf||0)-(stock.sbc||0);
@@ -13757,6 +13839,10 @@ function calcStockRatios(s){
   const r={};
   const mc=s.marketCap;
   if(!mc||mc<=0)return r;
+  /* Mirrors _applyMarketData's gate, for the paths that reach here without passing it — a manual
+     override, or a row loaded before the gate existed. Without this the ratios are built from a
+     cap that the rest of the app has already decided is not real. */
+  if(!_capPlausible(mc,s.price))return r;
   if(s.revenue&&s.revenue>0)r.ps=mc/s.revenue;
   if(s.profit&&s.profit>0)r.pe=mc/s.profit;
   if(s.fcf&&s.fcf>0)r.pfcf=mc/s.fcf;
