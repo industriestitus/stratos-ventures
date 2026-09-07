@@ -253,6 +253,16 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 **Rules.** (1) When you rely on a chokepoint, **enumerate its callers and prove each one goes through it** — `grep` for the raw field (`s.totalValue`), not for the helper. (2) A helper that is easy to bypass will be bypassed; if the raw field must never be read directly, that is worth saying in a comment at the field's source. (3) **A validity guard must not depend on data that some storage paths drop.** The first version of this fix refused only when `snap.positions` was non-empty — but `savePortfolioSnapshots()` silently drops unresolvable positions and the loader caps at 5000 rows, so the same snapshot was refused from localStorage and accepted from D1. Guard on something every path preserves, or on an invariant the writer enforces (here: `takeSnapshot()` is the only writer and already refuses an empty portfolio, so `totalValue <= 0` is sufficient by itself). (4) **Refusing is not free.** The companion guard here would have made snapshots impossible for bonds, savings and property, which have no market price by nature — under a toast telling the user to refresh prices. If you refuse, name what to fix.
 
+### 18. Guard the Input Per Item, Never the Aggregate (Cat 123)
+
+**Bugs found:** 1 CRITICAL, caught by QA before it shipped — a weighted P/E rendering `24.0` where the truth was `30.0`.
+
+**Pattern:** a corrupt market cap made three valuation ratios collapse to ~1e-9, which `toFixed(1)` published as `0.0`. The first fix filtered the finished **weighted average**: if it rounded to zero, show a dash. That is indistinguishable from correct when the portfolio holds ONE position — which the reporter's did. With five positions and one broken value, the average came back **24.0**: clean, plausible, confident and wrong, and wrong in the *cheap* direction.
+
+**Why it is worse than the bug it replaced.** `0.0` is self-evidently broken and a reader distrusts it. `24.0` is a number a person acts on. **An average is a laundering device** — it takes one impossible value and hands back a plausible one with a straight face.
+
+**Rules.** (1) Filter at the point where a single bad datum is still identifiable — inside the loop, before weighting — not after the arithmetic that hides it. (2) Test a guard with **more than one** item; a one-element aggregate equals its element, so every aggregate-level guard passes that test. (3) When masking a bad value, ask which OTHER consumers read the same field: this one had eight (tracker cells, screener, compare, scatter, profile cards, Money Back, DCF, 10cap), so the refusal belonged at the source — `_applyMarketData`, the choke point every path already passed — with a mirror for the manual-override path that bypasses it. (4) "Positive and finite" is not "plausible": a market cap of `3` is all three. The plausibility test has to come from the domain — here `marketCap/price` is the share count, and a listed company does not have fewer than a thousand shares.
+
 ## Data Safety
 
 ### 0. Before a Purge-and-Reinsert, Strip EVERY Cached FK Row-Id (C3b / Cat 86)
@@ -645,7 +655,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Process | 4 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 60 lessons across 7 domains.
+**Total:** 61 lessons across 7 domains.
 
 ## Related Documents
 

@@ -665,3 +665,28 @@ Manual, signed in, with real data.
       widget: the Refresh button and the hide control must sit side by side, neither on top of the
       other, in both languages. (Not verified by an agent — the browser pane could not produce
       screenshots in the session that wrote this.)
+
+## Market Cap, Scores and the Dip Finder (added Cat 123, v64)
+
+Manual, signed in. Several of these guard numbers that would read as investment advice.
+
+- [ ] **No ratio column shows `0.0x`.** Companies → Tracker. P/S, P/E, PEG, P/FCF, P/OCF and EV/EBIT
+      must show a real figure or nothing — never `0.0x`. A row of zeros means a corrupt market cap
+      got past the plausibility gate (BUG-HISTORY 123.1).
+- [ ] **The MCAP column reads in the right scale.** Apple in trillions, Adobe in hundreds of
+      billions. A bare `3` or `200` with no `T`/`B` suffix is the corruption this batch guards.
+- [ ] **A broken company does not score well.** If any company still has a bad market cap, check its
+      Score: it must NOT show a full 25/25 valuation pillar. (Its total may still be inflated — that
+      is P.35, a known and separate decision.)
+- [ ] **The Portfolio Quality widget with more than one holding.** With several positions where one
+      company has poor data, P/E must reflect the healthy ones only — not a lower, plausible average
+      that quietly includes the broken one (BUG-HISTORY 123.5).
+- [ ] **The allocation widget shows all four doughnuts** — By Ticker, By Account, By Type, By
+      Currency — inside the card, at any window width. Two visible with no way to scroll is the
+      overflow this batch fixed.
+- [ ] **The company profile's history charts** (Financials tab) likewise stay inside their card.
+- [ ] **Refreshing the Dip Finder never loses data.** Note a 52-week high, press Refresh while your
+      FMP plan is refusing quotes, and check that the high is still there. A green "updated" toast
+      over an emptied widget is the regression (BUG-HISTORY 123.8).
+- [ ] **The benchmark says why it has no number**, and names the right cause: zero-valued snapshots,
+      a snapshot with no currency, too few snapshots, or a missing exchange rate.

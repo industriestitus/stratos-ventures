@@ -219,6 +219,12 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Effect:** the number rises after a data refresh and falls when a fetch fails — QA measured **14% → 9% on one company with no user action in between**, purely by clearing `_isData`/`_cfData`. It has always behaved this way on the checklist page; Cat 120 put it in the tracker, on the screen Peter looks at most, which is what makes it worth writing down. The cell tooltip was reworded in Cat 120 so it no longer claims the figure is what the user "filled in".
 - **Status:** open, and deliberately not "fixed" in the batch that surfaced it. Excluding auto-derived credit would move **every** historical percentage at once — including the ones the checklist page has been showing for months — so it is a definition change, not a bug fix, and it should be a decision rather than a side effect. **Fix direction, if taken:** either count auto-derived thresholds separately (`"38% answered, 62% auto"`), or drop them from the completion figure and let the thresholds table speak for itself.
 
+
+### P.35 — A Missing Pillar Makes the Composite Score Go UP (2026-09-07, found in Cat 123)
+- **Where:** `calcStockScore()`. The total is `rawTotal / maxPossible * 100`, where `maxPossible` counts only the pillars that could be computed — so a company missing one pillar is scored on the other three and renormalised to 100.
+- **Effect:** measured with the same stock twice — **85** with its valuation pillar absent, **69** with real but poor valuation data. **Absent data outranks present data**, and since the Tracker's Score column is sortable, the least-known companies float to the top of a list whose purpose is to surface the best ones. Peter hit the extreme version of this in Cat 123: a corrupt market cap produced a *fabricated* 25/25 valuation pillar and an 82 total; fixing the cap turned that into a *missing* pillar and an 85.
+- **Status:** open, and deliberately not patched inside the batch that surfaced it — this is a scoring **philosophy** question, and whichever way it goes it re-ranks every company in the tracker. Three defensible answers: **(a)** leave it and show how many pillars a score rests on, so `85 (3/4)` is not read as comparable to `69 (4/4)`; **(b)** cap the total by the pillars available, so a missing pillar can only cost; **(c)** score a missing pillar as zero, which punishes thin data as hard as bad data. **(a)** preserves the current numbers and costs only a label; **(b)** changes every score. Peter's call.
+
 ---
 
 ## ~~Deep Audit Findings~~ (ALL FIXED 2026-07-01)
@@ -278,7 +284,8 @@ Bundling too many tasks per session (e.g., 9 tasks, ~200 fields) compounds bugs 
 The rows above are a 2026-07-01 snapshot, kept for the record. **Currently open** (nothing critical):
 `SV.1`, `SV.4`, `SV.5`, `SV.7` (deferred security hardening) · `SA.1`, `SA.4`, `SA.5` (sync audit
 remnants) · `P.3`, `P.15`, `P.16`, `P.19`, `P.20`–`P.26` (accepted or external) · `P.27` (notes
-search over ciphertext) · `P.32` (a destroyed highlight) · `P.34` (CL% counts auto-derived
+search over ciphertext) · `P.32` (a destroyed highlight) · `P.35` (a missing pillar raises the
+score) · `P.34` (CL% counts auto-derived
 checks) · `P.33` (no language control before
 sign-in) · `P.30` (QA pass / browser check /
 deploy ordering are unverifiable by any gate). **`P.29` closed 2026-08-27 (Cat 116, v58)** — no
