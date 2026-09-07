@@ -226,6 +226,11 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .st-table th.sorted .sa{opacity:1;color:var(--accent)}
 .st-table td{padding:4px 4px;border-bottom:1px solid var(--border);white-space:nowrap;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;background:var(--surface)}
 .st-table tr:hover td{background:rgba(35,39,52,.6)}
+/* Partial-score marker (P.35). A pseudo-element on purpose: CSS-generated content is NOT part of
+   the cell's textContent, so copying the Tracker yields "85", not "853/4" — which is what an
+   absolutely positioned <sup> still produced. The cell's aria-label carries the full sentence. */
+.st-score-partial{position:relative}
+.st-score-partial::after{content:attr(data-pillars);position:absolute;top:1px;right:2px;font-size:9px;font-weight:500;color:var(--text2);pointer-events:none}
 .st-table th.st-frozen{position:sticky;z-index:4;background:var(--surface2)}
 .st-table td.st-frozen{position:sticky;z-index:1;background:var(--surface)}
 .st-table tr:hover td.st-frozen{background:var(--surface2)}
@@ -1124,7 +1129,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v64';
+var APP_VERSION='v65';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1149,9 +1154,9 @@ var I18N={en:{
 'comp.calculator':'Calculator','comp.tracker':'Tracker','comp.charts':'Charts','comp.saveStock':'Save Stock','comp.tickerPlaceholder':'Stock ticker / name','comp.millions':'Millions','comp.billions':'Billions','comp.thousands':'Thousands','comp.units':'Units','comp.sharedInputs':'Shared Inputs','comp.savedStocks':'Saved Stocks','comp.savedStocksHint':'Click to load. Data stored in localStorage.','comp.backToTracker':'Back to Tracker','comp.backToDashboard':'Back to Dashboard','comp.backToPortfolio':'Back to Portfolio','comp.backToResearch':'Back to Research','comp.backToReviews':'Back to Reviews','comp.enterTicker':'Enter a stock name/ticker first.','comp.noSavedStocks':'No saved stocks yet.',
 'comp.trackerDefaults':'Tracker Defaults','comp.addTicker':'+ Add','comp.refreshAll':'Refresh All','comp.filter':'Filter...','comp.screener':'🔍 Screener','comp.compare':'⚖ Compare','comp.screenerFilters':'Screener Filters','comp.screenerDesc':'Filter your tracked stocks by financial metrics, scores, and valuation ratios.','comp.screenerTip':'Filter stocks by P/E, margins, scores, and other financial metrics','comp.compareTip':'Select 2+ companies to compare their metrics side by side','comp.compareDesc':'Check 2+ companies below, then click Compare Selected.','comp.clearAll':'Clear All','comp.addFilter':'+ Add filter...','comp.selectCompare':'Select companies to compare:','comp.selected':'0 selected','comp.compareSelected':'Compare Selected','comp.companyComparison':'Company Comparison',
 'comp.priceCharts':'Price & Valuation Charts','comp.range':'Range','comp.6months':'6 Months','comp.1year':'1 Year','comp.2years':'2 Years','comp.chartType':'Type','comp.price':'Price','comp.priceNorm':'Price (Normalized %)','comp.peRatio':'P/E Ratio','comp.individualCharts':'Individual Stock Charts',
-'comp.summary':'Summary','comp.overview':'Overview','comp.financials':'Financials','comp.valuation':'Valuation','comp.notes':'Notes','comp.checklist':'Checklist','comp.dividendsTab':'Dividends','comp.scores':'Scores','comp.insider':'Insider',
+'comp.summary':'Summary','comp.overview':'Overview','comp.financials':'Financials','comp.valuation':'Valuation','comp.notes':'Notes','comp.checklist':'Checklist','comp.dividendsTab':'Dividends','comp.scorePartial':'Score computed from {n} of the 4 pillars — whatever could not be computed is left out, so this is not directly comparable with a full score. Click for the breakdown.','comp.scoreBreakdownHint':'Click for score breakdown','comp.scores':'Scores','comp.insider':'Insider',
 'comp.noHistorical':'No historical data available','comp.failedHistorical':'Failed to load historical data',
-'comp.highQuality':'High Quality','comp.fair':'Fair','comp.weak':'Weak','comp.belowAverage':'Below Average','comp.pillar':'pillar','comp.pillars':'pillars',
+'comp.highQuality':'High Quality','comp.fair':'Fair','comp.weak':'Weak','comp.belowAverage':'Below Average','comp.pillar':'pillar','comp.pillars':'pillars','comp.qualityScore':'Quality Score','comp.noScoreData':'Not enough data to calculate scores. Fetch data first.','comp.scoreAcross':'{score}/100 across {n} pillars','comp.scoreAcross1':'{score}/100 across {n} pillar','comp.pValuation':'Valuation','comp.pGrowth':'Growth','comp.pProfitability':'Profitability','comp.pHealth':'Financial Health','comp.pillarDetails':'{p} Details','comp.metric':'Metric','comp.value':'Value','comp.score':'Score','comp.na':'N/A',
 'comp.historicalTrends':'Historical Trends','comp.historicalTrendsN':'Historical Trends ({n} Year)','comp.insiderKeyMissing':'Finnhub API key not set — go to Settings to add your free key from finnhub.io','comp.insiderFailed':'Failed to load insider data.','comp.insiderRateLimit':'Finnhub rate limit reached — try again in a minute.','comp.insiderNoData':'No insider trading data available for {ticker}','comp.insiderSummary':'Insider Trading Summary','comp.totalTxns':'Total Transactions','comp.buysSells':'Buys / Sells','comp.netShares':'Net Shares','comp.last90d':'Last 90 Days','comp.keyInsiders':'Key Insiders','comp.txnHistory':'Transaction History','comp.showAll':'Show all {count} transactions','comp.showingTop':'Showing top 20 of {count} insiders',
 'pf.overview':'Overview','pf.accounts':'Accounts','pf.positionsTab':'Positions','pf.transactionsTab':'Transactions','pf.dividendsTab':'Dividends','pf.portfolioOverview':'Portfolio Overview','pf.portfolioValueTime':'Portfolio Value Over Time','pf.allocationTitle':'Allocation','pf.snapshots':'Snapshots','pf.takeSnapshot':'Take Snapshot','pf.returns':'Returns','pf.brokerAccounts':'Broker Accounts','pf.addAccount':'+ Add Account','pf.addPosition':'+ Add Position','pf.logTransaction':'+ Log Transaction','pf.importCSV':'Import CSV','pf.dividendIncome':'Dividend Income','pf.taxPct':'Tax %','pf.fetchData':'Fetch Data','pf.monthlyForecast':'Monthly Income Forecast','pf.paymentCalendar':'Payment Calendar','pf.incomeBreakdown':'Income Breakdown',
 'pf.allAccounts':'All Accounts','pf.allTypes':'All Types','pf.stocks':'Stocks','pf.etfs':'ETFs','pf.crypto':'Crypto','pf.bonds':'Bonds','pf.realEstate':'Real Estate','pf.savings':'Savings','pf.cash':'Cash','pf.other':'Other','pf.filterTicker':'Filter ticker...',
@@ -1221,9 +1226,9 @@ var I18N={en:{
 'comp.calculator':'Kalkulátor','comp.tracker':'Követő','comp.charts':'Grafikonok','comp.saveStock':'Mentés','comp.tickerPlaceholder':'Részvény ticker / név','comp.millions':'Millió','comp.billions':'Milliárd','comp.thousands':'Ezer','comp.units':'Egység','comp.sharedInputs':'Közös bemenetek','comp.savedStocks':'Mentett részvények','comp.savedStocksHint':'Kattints a betöltéshez. Adatok a localStorage-ban.','comp.backToTracker':'Vissza a követőhöz','comp.backToDashboard':'Vissza az irányítópulthoz','comp.backToPortfolio':'Vissza a portfólióhoz','comp.backToResearch':'Vissza a kutatáshoz','comp.backToReviews':'Vissza az értékelésekhez','comp.enterTicker':'Adj meg egy részvény nevet/tickert először.','comp.noSavedStocks':'Még nincs mentett részvény.',
 'comp.trackerDefaults':'Követő alapértékek','comp.addTicker':'+ Hozzáadás','comp.refreshAll':'Összes frissítése','comp.filter':'Szűrés...','comp.screener':'🔍 Szűrő','comp.compare':'⚖ Összehasonlítás','comp.screenerFilters':'Szűrő feltételek','comp.screenerDesc':'Szűrd a követett részvényeidet pénzügyi mutatók, pontszámok és értékeltségi ráták alapján.','comp.screenerTip':'Részvények szűrése P/E, margó, pontszám és egyéb pénzügyi mutatók alapján','comp.compareTip':'Válassz ki 2+ céget a mutatóik egymás melletti összehasonlításához','comp.compareDesc':'Jelölj be 2+ céget lent, majd kattints az Összehasonlításra.','comp.clearAll':'Összes törlése','comp.addFilter':'+ Szűrő hozzáadása...','comp.selectCompare':'Válassz cégeket az összehasonlításhoz:','comp.selected':'0 kiválasztva','comp.compareSelected':'Kiválasztottak összehasonlítása','comp.companyComparison':'Cég összehasonlítás',
 'comp.priceCharts':'Ár és értékelési grafikonok','comp.range':'Időszak','comp.6months':'6 hónap','comp.1year':'1 év','comp.2years':'2 év','comp.chartType':'Típus','comp.price':'Ár','comp.priceNorm':'Ár (normalizált %)','comp.peRatio':'P/E arány','comp.individualCharts':'Egyedi részvény grafikonok',
-'comp.summary':'Összefoglaló','comp.overview':'Áttekintés','comp.financials':'Pénzügyek','comp.valuation':'Értékelés','comp.notes':'Jegyzetek','comp.checklist':'Checklist','comp.dividendsTab':'Osztalékok','comp.scores':'Pontszámok','comp.insider':'Bennfentes',
+'comp.summary':'Összefoglaló','comp.overview':'Áttekintés','comp.financials':'Pénzügyek','comp.valuation':'Értékelés','comp.notes':'Jegyzetek','comp.checklist':'Checklist','comp.dividendsTab':'Osztalékok','comp.scorePartial':'A pontszám a 4 pillérből {n} alapján készült — ami nem volt kiszámítható, az kimarad, ezért nem hasonlítható közvetlenül egy teljes pontszámhoz. Kattints a részletekért.','comp.scoreBreakdownHint':'Kattints a pontszám részletezéséhez','comp.scores':'Pontszámok','comp.insider':'Bennfentes',
 'comp.noHistorical':'Nincs elérhető historikus adat','comp.failedHistorical':'Historikus adatok betöltése sikertelen',
-'comp.highQuality':'Kiváló minőség','comp.fair':'Elfogadható','comp.weak':'Gyenge','comp.belowAverage':'Átlag alatti','comp.pillar':'pillér','comp.pillars':'pillér',
+'comp.highQuality':'Kiváló minőség','comp.fair':'Elfogadható','comp.weak':'Gyenge','comp.belowAverage':'Átlag alatti','comp.pillar':'pillér','comp.pillars':'pillér','comp.qualityScore':'Minőségi pontszám','comp.noScoreData':'Nincs elég adat a pontszám kiszámításához. Előbb tölts le adatot.','comp.scoreAcross':'{score}/100, {n} pillér alapján','comp.scoreAcross1':'{score}/100, {n} pillér alapján','comp.pValuation':'Értékelés','comp.pGrowth':'Növekedés','comp.pProfitability':'Jövedelmezőség','comp.pHealth':'Pénzügyi stabilitás','comp.pillarDetails':'{p} — részletek','comp.metric':'Mutató','comp.value':'Érték','comp.score':'Pontszám','comp.na':'nincs adat',
 'comp.historicalTrends':'Historikus trendek','comp.historicalTrendsN':'Historikus trendek ({n} év)','comp.insiderKeyMissing':'Finnhub API kulcs nincs beállítva — menj a Beállításokba és add hozzá az ingyenes kulcsot a finnhub.io-ról','comp.insiderFailed':'Bennfentes adatok betöltése sikertelen.','comp.insiderRateLimit':'Finnhub korlát elérve — próbáld újra egy perc múlva.','comp.insiderNoData':'Nincs bennfentes kereskedési adat ehhez: {ticker}','comp.insiderSummary':'Bennfentes kereskedési összefoglaló','comp.totalTxns':'Összes tranzakció','comp.buysSells':'Vételek / Eladások','comp.netShares':'Nettó részvények','comp.last90d':'Utolsó 90 nap','comp.keyInsiders':'Kulcs bennfentesek','comp.txnHistory':'Tranzakció előzmények','comp.showAll':'Összes {count} tranzakció mutatása','comp.showingTop':'{count} bennfentesből a top 20',
 'pf.overview':'Áttekintés','pf.accounts':'Számlák','pf.positionsTab':'Pozíciók','pf.transactionsTab':'Tranzakciók','pf.dividendsTab':'Osztalékok','pf.portfolioOverview':'Portfólió áttekintés','pf.portfolioValueTime':'Portfólió értéke az idő során','pf.allocationTitle':'Elosztás','pf.snapshots':'Pillanatfelvételek','pf.takeSnapshot':'Pillanatfelvétel','pf.returns':'Hozamok','pf.brokerAccounts':'Bróker számlák','pf.addAccount':'+ Számla hozzáadása','pf.addPosition':'+ Pozíció hozzáadása','pf.logTransaction':'+ Tranzakció rögzítése','pf.importCSV':'CSV importálás','pf.dividendIncome':'Osztalék bevétel','pf.taxPct':'Adó %','pf.fetchData':'Adatok lekérése','pf.monthlyForecast':'Havi bevétel előrejelzés','pf.paymentCalendar':'Kifizetési naptár','pf.incomeBreakdown':'Bevétel bontás',
 'pf.allAccounts':'Összes számla','pf.allTypes':'Összes típus','pf.stocks':'Részvények','pf.etfs':'ETF-ek','pf.crypto':'Kriptó','pf.bonds':'Kötvények','pf.realEstate':'Ingatlan','pf.savings':'Megtakarítás','pf.cash':'Készpénz','pf.other':'Egyéb','pf.filterTicker':'Ticker szűrés...',
@@ -10316,17 +10321,17 @@ function renderScoreBreakdown(ticker){
   if(!s){document.getElementById('cp-scores-content').innerHTML='';return}
   const sc=calcStockScore(s);
   const el=document.getElementById('cp-scores-content');
-  if(sc.total==null){el.innerHTML='<div class="card"><p style="color:var(--text2)">Not enough data to calculate scores. Fetch data first.</p></div>';return}
+  if(sc.total==null){el.innerHTML=`<div class="card"><p style="color:var(--text2)">${escH(i18n('comp.noScoreData'))}</p></div>`;return}
 
   const pillarMeta=[
-    {k:'valuation',l:'Valuation',color:'var(--purple,#6c5ce7)',icon:'&#128176;'},
-    {k:'growth',l:'Growth',color:'var(--green)',icon:'&#128200;'},
-    {k:'profitability',l:'Profitability',color:'var(--blue,#74b9ff)',icon:'&#9733;'},
-    {k:'health',l:'Financial Health',color:'var(--orange)',icon:'&#128737;'}
+    {k:'valuation',l:i18n('comp.pValuation'),color:'var(--purple,#6c5ce7)',icon:'&#128176;'},
+    {k:'growth',l:i18n('comp.pGrowth'),color:'var(--green)',icon:'&#128200;'},
+    {k:'profitability',l:i18n('comp.pProfitability'),color:'var(--blue,#74b9ff)',icon:'&#9733;'},
+    {k:'health',l:i18n('comp.pHealth'),color:'var(--orange)',icon:'&#128737;'}
   ];
 
   let h='<div class="card" style="margin-bottom:16px">';
-  h+='<div class="card-title">Quality Score</div>';
+  h+=`<div class="card-title">${escH(i18n('comp.qualityScore'))}</div>`;
 
   // Total score display
   const nPillars=sc.availablePillars||['valuation','growth','profitability','health'].filter(p=>sc[p]!=null).length;
@@ -10337,7 +10342,7 @@ function renderScoreBreakdown(ticker){
   h+=`<div style="width:80px;height:80px;border-radius:50%;border:4px solid var(--${totalCls==='positive'?'green':totalCls==='warn'?'orange':'red'});display:flex;align-items:center;justify-content:center;flex-shrink:0">`;
   h+=`<span style="font-size:28px;font-weight:700;color:var(--${totalCls==='positive'?'green':totalCls==='warn'?'orange':'red'})">${pct100}</span>`;
   h+=`</div>`;
-  h+=`<div><div style="font-size:18px;font-weight:600">${totalLabel}</div><div style="color:var(--text2);font-size:13px">${pct100}/100 across ${nPillars} ${nPillars!==1?i18n('comp.pillars'):i18n('comp.pillar')}</div></div>`;
+  h+=`<div><div style="font-size:18px;font-weight:600">${totalLabel}</div><div style="color:var(--text2);font-size:13px">${nPillars!==1?escH(i18n('comp.scoreAcross',{score:pct100,n:nPillars})):escH(i18n('comp.scoreAcross1',{score:pct100,n:nPillars}))}</div></div>`;
   h+=`</div>`;
 
   // Pillar bars
@@ -10349,10 +10354,10 @@ function renderScoreBreakdown(ticker){
     const pct=Math.round((v/25)*100);
     h+=`<div>`;
     h+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">`;
-    h+=`<span style="font-size:13px;font-weight:600">${p.l}</span>`;
+    h+=`<span style="font-size:13px;font-weight:600">${escH(p.l)}</span>`;
     h+=hasData
       ?`<span style="font-size:13px;font-weight:600;color:${v>=19?'var(--green)':v>=13?'var(--orange)':'var(--red)'}">${v}/25</span>`
-      :`<span style="font-size:13px;color:var(--text2)">N/A</span>`;
+      :`<span style="font-size:13px;color:var(--text2)">${escH(i18n('comp.na'))}</span>`;
     h+=`</div>`;
     h+=`<div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">`;
     h+=`<div style="height:100%;width:${hasData?pct:0}%;background:${v>=19?'var(--green)':v>=13?'var(--orange)':'var(--red)'};border-radius:4px;transition:width .3s"></div>`;
@@ -10365,9 +10370,9 @@ function renderScoreBreakdown(ticker){
     const items=sc.details[p.k];
     if(!items)return;
     h+=`<div class="card" style="margin-bottom:16px">`;
-    h+=`<div class="card-title">${p.l} Details</div>`;
+    h+=`<div class="card-title">${escH(i18n('comp.pillarDetails',{p:p.l}))}</div>`;
     h+=`<table style="width:100%;font-size:13px;border-collapse:collapse">`;
-    h+=`<tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2);font-weight:500">Metric</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Value</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">Score</th></tr>`;
+    h+=`<tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 8px;color:var(--text2);font-weight:500">${escH(i18n('comp.metric'))}</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">${escH(i18n('comp.value'))}</th><th style="text-align:right;padding:6px 8px;color:var(--text2);font-weight:500">${escH(i18n('comp.score'))}</th></tr>`;
     items.forEach(it=>{
       let disp='-';
       if(it.v!=null&&typeof it.v==='number'){
@@ -11991,7 +11996,7 @@ const METRIC_TIPS={
   treasuryStock:{name:'Treasury Stock',formula:'Shares repurchased × cost basis',bench:'Present = active buybacks',desc:'Value of shares the company has repurchased and holds. Indicates shareholder return via buybacks.'},
   wcMgmt:{name:'Working Capital Management',formula:'(Payables - Receivables - Inventory) / Revenue × 100',bench:'Positive = supplier financing (like Amazon), Negative = cash tied up',desc:'Whether the company finances operations with supplier credit (positive) or ties up its own cash (negative).'},
   prefStock:{name:'Preferred Stock',formula:'Preferred stock on balance sheet',bench:'None = simpler capital structure',desc:'Preferred shares have priority over common stock for dividends and liquidation. Their presence complicates equity analysis.'},
-  _score:{name:'Total Score',formula:'Average of Valuation + Growth + Profitability + Health',bench:'> 70 strong, 40-70 mixed, < 40 weak',desc:'Composite score across 4 pillars. GARP-tuned thresholds weigh quality and value equally.'},
+  _score:{name:'Total Score',formula:'Valuation + Growth + Profitability + Health, rescaled to 100 over the pillars that could be computed — so a company missing one is scored on the rest',bench:'> 70 strong, 40-70 mixed, < 40 weak',desc:'Composite score across 4 pillars. GARP-tuned thresholds weigh quality and value equally.'},
   _scoreVal:{name:'Valuation Score',formula:'P/E, P/FCF, PEG, EV/EBIT weighted',bench:'> 70 cheap, 40-70 fair, < 40 expensive',desc:'How cheap or expensive the stock is based on multiple valuation metrics.'},
   _scoreGrw:{name:'Growth Score',formula:'Revenue growth, EPS growth, 3Y CAGR weighted',bench:'> 70 fast grower, 40-70 moderate, < 40 slow',desc:'Revenue and earnings growth momentum over multiple timeframes.'},
   _scorePrf:{name:'Profitability Score',formula:'Gross/Op/Net margin, ROE, ROIC weighted',bench:'> 70 high quality, 40-70 decent, < 40 weak',desc:'How profitable the business is across margin and return-on-capital metrics.'},
@@ -14314,7 +14319,31 @@ function renderTracker(){
         if(c.k==='_score'){
           const v=scoreObj.total;
           const cls=v!=null?(v>=75?'positive':v>=50?'warn':'negative'):'';
-          html+=`<td class="${cls}" style="font-weight:600;cursor:pointer;text-align:center" onclick="showProfile('${escH(s.ticker)}')" title="Click for score breakdown">${v!=null?v:'-'}</td>`;
+          /* P.35: the total is renormalised over the pillars that could be computed, so a company
+             missing one is scored on the other three and can OUTRANK a company with real but poor
+             data — 85 against 69, in a column people sort by. Peter's call was to keep the number
+             and say what it rests on, rather than re-rank every company. An 85 that admits it saw
+             three pillars is a different claim from an 85 that saw four. */
+          const np=scoreObj.availablePillars;
+          /* The marker is CSS-generated (.st-score-partial::after), for three reasons found in
+             order. Inline text cost 15px of a 40px content box and shifted the digits ~8px left in
+             a column that carries tabular-nums precisely to stop that. Absolute positioning fixed
+             the layout but NOT the reading: an absolutely positioned <sup> is still in the cell's
+             textContent, measured as "853/4" — one token to a screen reader, and 853 to a
+             copy/paste. Pseudo-element content is in neither. The cell's aria-label carries the
+             whole sentence. And no opacity: at 9px, .7 measured 2.19:1 in the light theme, which
+             is a marker nobody sees — the same silence P.35 was opened about, in a smaller font. */
+          const partial=(v!=null&&np!=null&&np<4);
+          const stitle=partial?i18n('comp.scorePartial',{n:np}):i18n('comp.scoreBreakdownHint');
+          /* A <td>'s accessible name comes from its CONTENT unless the author supplies one — so an
+             aria-label does not annotate the score, it REPLACES it. The first version labelled every
+             cell and thereby deleted the number from the accessibility tree, naming a hundred rows
+             identically "Click for score breakdown". So: only a partial cell is labelled, the label
+             leads with the value, and it is what a screen reader reads instead of the pseudo-element
+             marker (generated content IS exposed in the a11y tree, unlike in textContent). A full
+             score keeps its content as its name and takes the hint as a `title` description only. */
+          const aria=partial?` aria-label="${escH(v+'/100. '+stitle)}"`:'';
+          html+=`<td class="${cls}${partial?' st-score-partial':''}"${partial?` data-pillars="${np}/4"`:''} style="font-weight:600;cursor:pointer;text-align:center" onclick="showProfile('${escH(s.ticker)}')"${v!=null?` title="${escH(stitle)}"`:''}${aria}>${v!=null?v:'-'}</td>`;
         }else{
           const v=scoreObj[c.scorePillar];
           const cls=v!=null?(v>=19?'positive':v>=13?'warn':'negative'):'';
@@ -14746,7 +14775,18 @@ function renderComparison(){
       {l:'Buyback %',f:s=>cmpRatios(s).buyback,fmt:v=>v.toFixed(1)+'%',hi:true},
     ]},
     {title:'Scores',metrics:[
-      {l:'Total Score',f:s=>cmpScore(s).total,fmt:v=>v+'/100',hi:true},
+      /* The marker belongs HERE most of all. This view exists to declare a winner, and it was
+         crowning the company with the LEAST data in green: 91/100 from three pillars beating
+         75/100 from four. `hi` is dropped when the pillar counts differ, because a green "best"
+         over two scores computed from different denominators is an assertion, not a comparison. */
+      {l:'Total Score',f:s=>cmpScore(s).total,fmt:(v,s)=>{const n=s?cmpScore(s).availablePillars:null;return v+'/100'+(n!=null&&n<4?` (${n}/4)`:'')},
+       hi:s=>{const P=['valuation','growth','profitability','health'];
+              const sig=s.map(x=>{const c=cmpScore(x);return P.filter(k=>c[k]!=null).join(',')});
+              /* The SET, not its size. Two companies can both rest on three pillars and still be
+                 incomparable — one missing Valuation, the other missing Health — and the row would
+                 print "(3/4)" beside each while crowning a winner across different denominators,
+                 which is exactly the assertion this predicate exists to withhold. */
+              return sig.every(g=>g===sig[0])}},
       {l:'Valuation',f:s=>cmpScore(s).valuation,fmt:v=>v+'/25',hi:true},
       {l:'Growth',f:s=>cmpScore(s).growth,fmt:v=>v+'/25',hi:true},
       {l:'Profitability',f:s=>cmpScore(s).profitability,fmt:v=>v+'/25',hi:true},
@@ -14765,12 +14805,23 @@ function renderComparison(){
     g.metrics.forEach(m=>{
       const vals=stocks.map(s=>{try{return m.f(s)}catch(e){return null}});
       const numVals=vals.filter(v=>v!=null&&typeof v==='number'&&!isNaN(v));
-      const best=numVals.length>1?(m.hi?Math.max(...numVals):m.lo?Math.min(...numVals):null):null;
+      /* `hi` may be a predicate over the stocks that actually produced a number, not just a flag —
+         Total Score uses it to refuse a winner when the scores rest on different pillars. Three
+         things this line has to get right, each of which was wrong once: a function is TRUTHY, so
+         it must be called or every such row silently crowns a maximum; it is handed `scored`, not
+         `stocks`, so one company with no data at all cannot suppress the crown for two that are
+         perfectly comparable; and it is wrapped, because `m.f` is guarded per cell and this is not
+         — an unguarded throw here aborts renderComparison BEFORE the modal opens, so a single
+         corrupt company would make "Compare" do nothing at all (Cat 121's failure shape). */
+      const scored=stocks.filter(function(s,i){const v=vals[i];return v!=null&&typeof v==='number'&&!isNaN(v)});
+      let hiOn=m.hi;
+      if(typeof m.hi==='function'){try{hiOn=m.hi(scored)}catch(e){hiOn=false}}
+      const best=numVals.length>1?(hiOn?Math.max(...numVals):m.lo?Math.min(...numVals):null):null;
       h+=`<tr>`;
       h+=`<td style="position:sticky;left:0;background:var(--surface);z-index:1;font-size:13px;padding:5px 8px;border-bottom:1px solid var(--border)">${m.l}</td>`;
-      vals.forEach(v=>{
+      vals.forEach((v,vi)=>{
         const isBest=v!=null&&v===best&&numVals.filter(x=>x===best).length<numVals.length;
-        h+=`<td style="text-align:right;padding:5px 8px;font-size:13px;border-bottom:1px solid var(--border);${isBest?'font-weight:600;color:var(--green)':''}">${v!=null&&!isNaN(v)?m.fmt(v):'-'}</td>`;
+        h+=`<td style="text-align:right;padding:5px 8px;font-size:13px;border-bottom:1px solid var(--border);${isBest?'font-weight:600;color:var(--green)':''}">${v!=null&&!isNaN(v)?m.fmt(v,stocks[vi]):'-'}</td>`;
       });
       h+=`</tr>`;
     });
@@ -17298,7 +17349,9 @@ async function generatePdf(ticker){
       metricRow([
         {label:'Rev Growth',value:s.revenueGrowth!=null?s.revenueGrowth.toFixed(1)+'%':'-'},
         {label:'3Y CAGR',value:s.revCAGR3!=null?s.revCAGR3.toFixed(1)+'%':'-'},
-        {label:'Quality Score',value:sc.total!=null?sc.total+'/100':'-'},
+        /* The PDF is re-read months later with no tooltip to rescue it, so the caveat has to be
+           in the ink. */
+        {label:'Quality Score',value:sc.total!=null?(sc.total+'/100'+(sc.availablePillars!=null&&sc.availablePillars<4?` (${sc.availablePillars}/4 pillars)`:'')):'-'},
         {label:'Debt/Equity',value:s.debtEquity!=null?s.debtEquity.toFixed(2):'-'}
       ]);
 
