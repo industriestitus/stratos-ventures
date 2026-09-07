@@ -1105,13 +1105,13 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v61';
+var APP_VERSION='v62';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
 'confirm.typePrefix':'Type: ','confirm.deleteAccount':'Delete broker','confirm.deleteAccountMsg':'{name} and {count} position(s) will be deleted.','confirm.deleteAccountMsgSimple':'Delete "{name}".','confirm.bulkDelete':'Bulk delete','confirm.bulkDeletePositions':'{count} positions will be deleted. Can be undone.','confirm.bulkDeleteTransactions':'{count} transactions will be deleted. Can be undone.','confirm.bulkDeleteNotes':'{count} notes will be deleted. Can be undone.','confirm.bulkDeleteReviews':'{count} reviews will be deleted. Can be undone.','confirm.bulkDeleteStocks':'{count} stocks will be deleted. Can be undone.','confirm.snapshotOverwrite':'Overwrite snapshot','confirm.snapshotOverwriteMsg':'A snapshot was already taken today. Overwrite?','confirm.overwrite':'Overwrite','confirm.snapshotDelete':'Delete snapshot','confirm.snapshotDeleteMsg':'Are you sure you want to delete this snapshot?','confirm.permanentDelete':'Permanent delete','confirm.permanentDeleteMsg':'{ticker} and all related data (notes, reviews, positions, transactions) will be permanently deleted.','confirm.permanentDeleteOk':'Delete permanently','confirm.deleteItem':'Delete item','confirm.deleteItemMsg':'Are you sure you want to delete this item?','confirm.deleteRisk':'Delete risk','confirm.deleteRiskMsg':'Are you sure you want to delete this risk?','confirm.deleteQuarter':'Delete quarter','confirm.deleteQuarterMsg':'Are you sure you want to delete this quarterly entry?','confirm.deleteLearning':'Delete learning','confirm.deleteLearningMsg':'Are you sure you want to delete this learning?','confirm.backupRestore':'Restore backup','confirm.backupRestoreMsg':'This will OVERWRITE all current data with the backup file contents. Current data will be lost.','confirm.backupRestoreOk':'Restore','confirm.migrationRetry':'Retry migration','confirm.migrationRetryMsg':'A previous migration did not complete. Retry? Cloud data will be overwritten.','confirm.migrationRetryOk':'Retry','confirm.d1Migration':'D1 migration','confirm.d1MigrationMsg':'This will upload all local data to the D1 cloud database. localStorage data will remain as backup.','confirm.d1MigrationOk':'Start migration',
 'validation.tickerRequired':'Ticker / identifier required','validation.accountRequired':'Select a valid account','validation.priceRequired':'Purchase price or current value required','validation.amountRequired':'Enter the amount','validation.sharesRequired':'Valid share count required','validation.avgCostRequired':'Valid average price required','validation.sharesOrAvgRequired':'Enter share count or average price','validation.dateRequired':'Date required','validation.dateFuture':'Cannot be a future date','validation.tickerRequiredTx':'Ticker required','validation.accountRequiredTx':'Select an account','validation.amountRequiredTx':'Valid amount required','validation.sharesRequiredTx':'Valid share count required',
-'search.placeholder':'Search everywhere...','search.startTyping':'Start typing to search...','search.minChars':'At least 2 characters...','search.noResults':'No results: "{q}"','search.companies':'Companies','search.positions':'Positions','search.transactions':'Transactions','search.companyNotes':'Company notes','search.journal':'Journal','search.news':'News','search.market':'Market',
+'search.placeholder':'Search everywhere...','search.failed':'Search failed — see the console for details.','charts.rateLimited':'Yahoo is rate-limiting chart requests right now, so no price history could be loaded. Switch away and back in a minute to retry.','charts.loadFailed':'Chart data could not be loaded. See the console for the reason.','charts.partial':'{n} of {total} charts could not be loaded (rate limit or network).','search.reviews':'Reviews','search.startTyping':'Start typing to search...','search.minChars':'At least 2 characters...','search.noResults':'No results: "{q}"','search.companies':'Companies','search.positions':'Positions','search.transactions':'Transactions','search.companyNotes':'Company notes','search.journal':'Journal','search.news':'News','search.market':'Market',
 'empty.noPositions':'No positions yet','empty.noPositionsMsg':'Add your investments to track your portfolio.','empty.addPosition':'+ Add Position','empty.noTransactions':'No transactions yet','empty.noTransactionsMsg':'Record your first buy, sell, or dividend transaction.','empty.addTransaction':'+ Record Transaction','empty.noReviews':'No reviews yet','empty.noReviewsMsg':'Start your first {type}review to track your investment decisions.','empty.addReview':'+ New Review','empty.portfolioMetrics':'Add positions for portfolio metrics.','empty.priceAlerts':'Add positions for price alerts.','empty.sellTriggers':'Add positions for sell triggers.','empty.createAccount':'Create a broker account and add positions for portfolio overview.','empty.addAccount':'+ Add Account',
 'toast.positionsExported':'{count} positions exported','toast.transactionsExported':'{count} transactions exported','toast.positionDeleted':'Position deleted: {ticker}','toast.transactionDeleted':'Transaction deleted: {type} {ticker}','toast.noteDeleted':'Note deleted','toast.reviewDeleted':'Review deleted','toast.stockDeleted':'"{name}" deleted','toast.bulkPositionsDeleted':'{count} positions deleted','toast.bulkTransactionsDeleted':'{count} transactions deleted','toast.bulkNotesDeleted':'{count} notes deleted','toast.bulkReviewsDeleted':'{count} reviews deleted','toast.bulkStocksDeleted':'{count} stocks deleted','toast.recoveryMsg':'{count} unsaved change(s) recovered','toast.offlineCache':'Offline — loading from local cache','toast.storageFull':'Storage full — export your data to avoid data loss','toast.trashEmptied':'Trash emptied','toast.itemRestored':'Item restored','toast.itemPermanentlyDeleted':'Item permanently deleted','toast.trashPurged':'{count} expired item(s) auto-removed from trash','toast.valSnapshotDeleted':'Valuation snapshot deleted','toast.todoDeleted':'Todo deleted',
 'trash.title':'Trash','trash.empty':'Trash is empty','trash.emptyMsg':'Deleted items appear here for 30 days before being permanently removed.','trash.positions':'Positions','trash.transactions':'Transactions','trash.notes':'Notes','trash.reviews':'Reviews','trash.restore':'Restore','trash.permanentDelete':'Permanently Delete','trash.emptyTrash':'Empty Trash','trash.restoreAll':'Restore All','trash.deletedOn':'Deleted {date}','trash.autoDelete':'{days}d left','trash.itemCount':'{count} item(s) in trash','trash.confirmEmpty':'Empty Trash','trash.confirmEmptyMsg':'All {count} items will be permanently deleted. This cannot be undone.','trash.confirmPermanent':'Permanent Delete','trash.confirmPermanentMsg':'This item will be permanently deleted. This cannot be undone.',
@@ -1183,7 +1183,7 @@ var I18N={en:{
 'common.cancel':'Mégsem','common.delete':'Törlés','common.save':'Mentés','common.close':'Bezárás','common.add':'Hozzáadás','common.edit':'Szerkesztés','common.export':'Exportálás','common.import':'Importálás','common.test':'Teszt','common.copy':'Másolás','common.loading':'Betöltés...','common.undo':'Visszavonás','common.restored':'Visszaállítva','common.back':'Vissza','common.none':'Nincs','common.yes':'Igen','common.no':'Nem','common.ok':'OK','common.retry':'Újra','common.selectAll':'Összes kijelölése','common.pin':'Kitűzés','common.unpin':'Kitűzés megszüntetése','common.source':'Forrás',
 'confirm.typePrefix':'Írd be: ','confirm.deleteAccount':'Bróker törlése','confirm.deleteAccountMsg':'"{name}" és {count} pozíció is törlődik.','confirm.deleteAccountMsgSimple':'"{name}" törlése.','confirm.bulkDelete':'Tömeges törlés','confirm.bulkDeletePositions':'{count} pozíció törlése. Visszavonható.','confirm.bulkDeleteTransactions':'{count} tranzakció törlése. Visszavonható.','confirm.bulkDeleteNotes':'{count} jegyzet törlése. Visszavonható.','confirm.bulkDeleteReviews':'{count} review törlése. Visszavonható.','confirm.bulkDeleteStocks':'{count} részvény törlése. Visszavonható.','confirm.snapshotOverwrite':'Snapshot felülírása','confirm.snapshotOverwriteMsg':'Ma már készült pillanatfelvétel. Felülírod?','confirm.overwrite':'Felülírás','confirm.snapshotDelete':'Snapshot törlése','confirm.snapshotDeleteMsg':'Biztosan törlöd ezt a pillanatfelvételt?','confirm.permanentDelete':'Végleges törlés','confirm.permanentDeleteMsg':'{ticker} és az összes kapcsolódó adat (jegyzet, review, pozíció, tranzakció) véglegesen törlődik.','confirm.permanentDeleteOk':'Véglegesen törlöm','confirm.deleteItem':'Elem törlése','confirm.deleteItemMsg':'Biztosan törlöd ezt az elemet?','confirm.deleteRisk':'Kockázat törlése','confirm.deleteRiskMsg':'Biztosan törlöd ezt a kockázatot?','confirm.deleteQuarter':'Negyedév törlése','confirm.deleteQuarterMsg':'Biztosan törlöd ezt a negyedéves bejegyzést?','confirm.deleteLearning':'Tanulság törlése','confirm.deleteLearningMsg':'Biztosan törlöd ezt a tanulságot?','confirm.backupRestore':'Backup visszaállítás','confirm.backupRestoreMsg':'Ez FELÜLÍRJA az összes jelenlegi adatot a backup fájl tartalmával. A jelenlegi adatok elvesznek.','confirm.backupRestoreOk':'Visszaállítás','confirm.migrationRetry':'Migráció újrapróbálása','confirm.migrationRetryMsg':'Egy korábbi migráció nem fejeződött be. Újrapróbálod? A felhő adatok felülíródnak.','confirm.migrationRetryOk':'Újrapróbálás','confirm.d1Migration':'D1 migráció','confirm.d1MigrationMsg':'Ez feltölti az összes helyi adatot a D1 felhő adatbázisba. A localStorage adatok megmaradnak backupként.','confirm.d1MigrationOk':'Migráció indítása',
 'validation.tickerRequired':'Ticker / azonosító kötelező','validation.accountRequired':'Válassz egy érvényes számlát','validation.priceRequired':'Vételár vagy jelenlegi érték kötelező','validation.amountRequired':'Add meg az összeget','validation.sharesRequired':'Érvényes darabszám szükséges','validation.avgCostRequired':'Érvényes átlagár szükséges','validation.sharesOrAvgRequired':'Adj meg darabszámot vagy átlagárat','validation.dateRequired':'Dátum kötelező','validation.dateFuture':'Nem lehet jövőbeli dátum','validation.tickerRequiredTx':'Ticker kötelező','validation.accountRequiredTx':'Válassz egy számlát','validation.amountRequiredTx':'Érvényes összeg szükséges','validation.sharesRequiredTx':'Érvényes darabszám szükséges',
-'search.placeholder':'Keresés mindenhol...','search.startTyping':'Kezdj el gépelni a kereséshez...','search.minChars':'Legalább 2 karakter...','search.noResults':'Nincs találat: "{q}"','search.companies':'Cégek','search.positions':'Pozíciók','search.transactions':'Tranzakciók','search.companyNotes':'Cég jegyzetek','search.journal':'Napló','search.news':'Hír','search.market':'Piac',
+'search.placeholder':'Keresés mindenhol...','search.failed':'A keresés hibára futott — a részletek a konzolban.','charts.rateLimited':'A Yahoo jelenleg korlátozza a chart-lekéréseket, ezért nem töltött be árfolyam-előzmény. Válts el a fülről és vissza egy perc múlva.','charts.loadFailed':'A chart-adatok nem töltődtek be. Az okot a konzol mutatja.','charts.partial':'{total} chartból {n} nem töltődött be (korlátozás vagy hálózat).','search.reviews':'Értékelések','search.startTyping':'Kezdj el gépelni a kereséshez...','search.minChars':'Legalább 2 karakter...','search.noResults':'Nincs találat: "{q}"','search.companies':'Cégek','search.positions':'Pozíciók','search.transactions':'Tranzakciók','search.companyNotes':'Cég jegyzetek','search.journal':'Napló','search.news':'Hír','search.market':'Piac',
 'empty.noPositions':'Még nincs pozíciód','empty.noPositionsMsg':'Add hozzá a befektetéseidet a portfólió követéséhez.','empty.addPosition':'+ Pozíció hozzáadása','empty.noTransactions':'Még nincs tranzakciód','empty.noTransactionsMsg':'Rögzítsd az első vételi, eladási vagy osztalék tranzakciódat.','empty.addTransaction':'+ Tranzakció rögzítése','empty.noReviews':'Még nincs review-d','empty.noReviewsMsg':'Kezdd el az első {type}review-dat a befektetési döntéseid nyomon követéséhez.','empty.addReview':'+ Új Review','empty.portfolioMetrics':'Adj hozzá pozíciókat a portfólió metrikákhoz.','empty.priceAlerts':'Adj hozzá pozíciókat az áralertekhez.','empty.sellTriggers':'Adj hozzá pozíciókat az eladási trigger-ekhez.','empty.createAccount':'Hozz létre egy brókert számlafiókot és adj hozzá pozíciókat a portfólió áttekintéshez.','empty.addAccount':'+ Számla hozzáadása',
 'toast.positionsExported':'{count} pozíció exportálva','toast.transactionsExported':'{count} tranzakció exportálva','toast.positionDeleted':'Pozíció törölve: {ticker}','toast.transactionDeleted':'Tranzakció törölve: {type} {ticker}','toast.noteDeleted':'Jegyzet törölve','toast.reviewDeleted':'Review törölve','toast.stockDeleted':'"{name}" törölve','toast.bulkPositionsDeleted':'{count} pozíció törölve','toast.bulkTransactionsDeleted':'{count} tranzakció törölve','toast.bulkNotesDeleted':'{count} jegyzet törölve','toast.bulkReviewsDeleted':'{count} review törölve','toast.bulkStocksDeleted':'{count} részvény törölve','toast.recoveryMsg':'{count} nem mentett változás visszaállítva','toast.offlineCache':'Offline — betöltés helyi gyorsítótárból','toast.storageFull':'Tárhely megtelt — exportáld az adataidat az adatvesztés elkerülése érdekében','toast.trashEmptied':'Kuka kiürítve','toast.itemRestored':'Elem visszaállítva','toast.itemPermanentlyDeleted':'Elem véglegesen törölve','toast.trashPurged':'{count} lejárt elem automatikusan eltávolítva a kukából','toast.valSnapshotDeleted':'Értékelési pillanatkép törölve','toast.todoDeleted':'Teendő törölve',
 'trash.title':'Kuka','trash.empty':'A kuka üres','trash.emptyMsg':'A törölt elemek 30 napig megmaradnak itt, mielőtt véglegesen törlődnének.','trash.positions':'Pozíciók','trash.transactions':'Tranzakciók','trash.notes':'Jegyzetek','trash.reviews':'Review-k','trash.restore':'Visszaállítás','trash.permanentDelete':'Végleges törlés','trash.emptyTrash':'Kuka kiürítése','trash.restoreAll':'Összes visszaállítása','trash.deletedOn':'Törölve: {date}','trash.autoDelete':'{days} nap van hátra','trash.itemCount':'{count} elem a kukában','trash.confirmEmpty':'Kuka kiürítése','trash.confirmEmptyMsg':'Mind a(z) {count} elem véglegesen törlődik. Ez nem vonható vissza.','trash.confirmPermanent':'Végleges törlés','trash.confirmPermanentMsg':'Az elem véglegesen törlődik. Ez nem vonható vissza.',
@@ -1471,9 +1471,9 @@ document.addEventListener('DOMContentLoaded',applyI18n);
 <!-- ====== SECTION: COMPANIES ====== -->
 <div class="content" id="section-companies">
   <div class="company-tabs">
-    <button class="tab" onclick="switchCompanyTab('calculator')" data-i18n="comp.calculator">Calculator</button>
-    <button class="tab active" onclick="switchCompanyTab('tracker')" data-i18n="comp.tracker">Tracker</button>
-    <button class="tab" onclick="switchCompanyTab('charts')" data-i18n="comp.charts">Charts</button>
+    <button class="tab" data-tab="calculator" onclick="switchCompanyTab('calculator')" data-i18n="comp.calculator">Calculator</button>
+    <button class="tab active" data-tab="tracker" onclick="switchCompanyTab('tracker')" data-i18n="comp.tracker">Tracker</button>
+    <button class="tab" data-tab="charts" onclick="switchCompanyTab('charts')" data-i18n="comp.charts">Charts</button>
   </div>
 
   <div id="company-panel-calculator" class="company-panel">
@@ -1887,15 +1887,15 @@ document.addEventListener('DOMContentLoaded',applyI18n);
       <div id="cp-external-links" class="cp-ext-links"></div>
     </div>
     <div class="cp-tabs">
-      <button class="tab active" onclick="switchProfileTab('summary')" data-i18n="comp.summary">Summary</button>
-      <button class="tab" onclick="switchProfileTab('overview')" data-i18n="comp.overview">Overview</button>
-      <button class="tab" onclick="switchProfileTab('financials')" data-i18n="comp.financials">Financials</button>
-      <button class="tab" onclick="switchProfileTab('valuation')" data-i18n="comp.valuation">Valuation</button>
-      <button class="tab" onclick="switchProfileTab('notes')" data-i18n="comp.notes">Notes</button>
-      <button class="tab" onclick="switchProfileTab('checklist')" data-i18n="comp.checklist">Checklist</button>
-      <button class="tab" onclick="switchProfileTab('dividends')" data-i18n="comp.dividendsTab">Dividends</button>
-      <button class="tab" onclick="switchProfileTab('scores')" data-i18n="comp.scores">Scores</button>
-      <button class="tab" onclick="switchProfileTab('insider')" data-i18n="comp.insider">Insider</button>
+      <button class="tab active" data-tab="summary" onclick="switchProfileTab('summary')" data-i18n="comp.summary">Summary</button>
+      <button class="tab" data-tab="overview" onclick="switchProfileTab('overview')" data-i18n="comp.overview">Overview</button>
+      <button class="tab" data-tab="financials" onclick="switchProfileTab('financials')" data-i18n="comp.financials">Financials</button>
+      <button class="tab" data-tab="valuation" onclick="switchProfileTab('valuation')" data-i18n="comp.valuation">Valuation</button>
+      <button class="tab" data-tab="notes" onclick="switchProfileTab('notes')" data-i18n="comp.notes">Notes</button>
+      <button class="tab" data-tab="checklist" onclick="switchProfileTab('checklist')" data-i18n="comp.checklist">Checklist</button>
+      <button class="tab" data-tab="dividends" onclick="switchProfileTab('dividends')" data-i18n="comp.dividendsTab">Dividends</button>
+      <button class="tab" data-tab="scores" onclick="switchProfileTab('scores')" data-i18n="comp.scores">Scores</button>
+      <button class="tab" data-tab="insider" onclick="switchProfileTab('insider')" data-i18n="comp.insider">Insider</button>
     </div>
     <div id="cp-panel-summary" class="cp-panel active">
       <div id="cp-summary-content"></div>
@@ -1931,11 +1931,11 @@ document.addEventListener('DOMContentLoaded',applyI18n);
 <!-- ====== SECTION: PORTFOLIO ====== -->
 <div class="content" id="section-portfolio" style="display:none">
   <div class="tabs pf-tabs">
-    <button class="tab active" onclick="switchPortfolioTab('overview')" data-i18n="pf.overview">Overview</button>
-    <button class="tab" onclick="switchPortfolioTab('accounts')" data-i18n="pf.accounts">Accounts</button>
-    <button class="tab" onclick="switchPortfolioTab('positions')" data-i18n="pf.positionsTab">Positions</button>
-    <button class="tab" onclick="switchPortfolioTab('transactions')" data-i18n="pf.transactionsTab">Transactions</button>
-    <button class="tab" onclick="switchPortfolioTab('dividends')" data-i18n="pf.dividendsTab">Dividends</button>
+    <button class="tab active" data-tab="overview" onclick="switchPortfolioTab('overview')" data-i18n="pf.overview">Overview</button>
+    <button class="tab" data-tab="accounts" onclick="switchPortfolioTab('accounts')" data-i18n="pf.accounts">Accounts</button>
+    <button class="tab" data-tab="positions" onclick="switchPortfolioTab('positions')" data-i18n="pf.positionsTab">Positions</button>
+    <button class="tab" data-tab="transactions" onclick="switchPortfolioTab('transactions')" data-i18n="pf.transactionsTab">Transactions</button>
+    <button class="tab" data-tab="dividends" onclick="switchPortfolioTab('dividends')" data-i18n="pf.dividendsTab">Dividends</button>
   </div>
 
   <div id="pf-panel-overview">
@@ -2373,13 +2373,13 @@ document.addEventListener('DOMContentLoaded',applyI18n);
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px;font-size:13px">
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘K</kbd> <span data-i18n="shortcuts.search">Search</span></div>
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">?</kbd> <span data-i18n="shortcuts.shortcutGuide">Shortcut guide</span></div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘1</kbd> <span data-i18n="nav.dashboard">Dashboard</span></div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘2</kbd> <span data-i18n="nav.companies">Companies</span></div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘3</kbd> <span data-i18n="nav.portfolio">Portfolio</span></div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘4</kbd> <span data-i18n="nav.research">Research</span></div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘5</kbd> <span data-i18n="nav.framework">Framework</span></div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘6</kbd> <span data-i18n="nav.reviews">Reviews</span></div>
-      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌘7</kbd> <span data-i18n="nav.settings">Settings</span></div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌥1</kbd> <span data-i18n="nav.dashboard">Dashboard</span></div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌥2</kbd> <span data-i18n="nav.companies">Companies</span></div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌥3</kbd> <span data-i18n="nav.portfolio">Portfolio</span></div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌥4</kbd> <span data-i18n="nav.research">Research</span></div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌥5</kbd> <span data-i18n="nav.framework">Framework</span></div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌥6</kbd> <span data-i18n="nav.reviews">Reviews</span></div>
+      <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">⌥7</kbd> <span data-i18n="nav.settings">Settings</span></div>
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">N</kbd> <span data-i18n="shortcuts.addNew">Add new item</span></div>
       <div><kbd style="display:inline-block;padding:2px 7px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);font-size:11px;font-family:inherit;margin-right:6px">Esc</kbd> <span data-i18n="shortcuts.close">Close</span></div>
     </div>
@@ -3827,36 +3827,45 @@ function _gsHighlight(text,q){
 function _gsSearch(q){
   const results=[];
   const ql=q.toLowerCase();
+  // NOTHING below may assume a type. Every field here comes from user data that doImport() and
+  // doRestore() assign VERBATIM from a backup file, and the app already knows tickers can be
+  // absent (`p.ticker||''` when saving) and that `tags` can arrive as a non-array. This function
+  // was the one consumer that trusted all of it — and because a throw here kills the whole
+  // search, one malformed record blanked every result from every source. Fixing the reported
+  // `answers` case alone would have left six more of exactly the same bug.
+  const L=v=>(v==null||typeof v==='object')?'':String(v).toLowerCase();
+  const has=v=>L(v).includes(ql);
+  const arr=v=>Array.isArray(v)?v:[];
   // Companies
   Object.keys(tStocks).forEach(ticker=>{
     const s=tStocks[ticker];
     const name=s.name||s.profile?.companyName||ticker;
-    if(ticker.toLowerCase().includes(ql)||name.toLowerCase().includes(ql)){
+    if(has(ticker)||has(name)){
       results.push({group:i18n('search.companies'),icon:'📊',iconBg:'var(--accent)',title:name,sub:ticker+(s.profile?.sector?' · '+s.profile.sector:''),action:()=>{showSection('companies');showProfile(ticker)},ticker});
     }
   });
   // Positions
   getActivePositions().forEach(p=>{
     const name=p.name||p.ticker;
-    if(p.ticker.toLowerCase().includes(ql)||name.toLowerCase().includes(ql)){
+    if(has(p.ticker)||has(name)){
       const acc=pfAccounts.find(a=>a.id===p.accountId);
       results.push({group:i18n('search.positions'),icon:'💼',title:`${name} (${p.ticker})`,sub:`${_privacyMode?_privacyMask:p.shares+' db'} · ${acc?acc.name:''}`,action:()=>{showSection('portfolio')}});
     }
   });
   // Transactions
   getActiveTransactions().forEach(tx=>{
-    const match=tx.ticker.toLowerCase().includes(ql)||(tx.notes||'').toLowerCase().includes(ql);
+    const match=has(tx.ticker)||has(tx.notes);
     if(match){
-      results.push({group:i18n('search.transactions'),icon:'💱',title:`${tx.type.toUpperCase()} ${tx.ticker}`,sub:`${tx.date} · ${_privacyMode?_privacyMask:tx.totalAmount?tx.totalAmount.toLocaleString():''}`,action:()=>{showSection('portfolio');document.querySelector('[data-tab="pf-transactions"]')?.click()}});
+      results.push({group:i18n('search.transactions'),icon:'💱',title:`${L(tx.type).toUpperCase()} ${tx.ticker||''}`,sub:`${tx.date} · ${_privacyMode?_privacyMask:tx.totalAmount?tx.totalAmount.toLocaleString():''}`,action:()=>{showSection('portfolio');switchPortfolioTab('transactions')}});
     }
   });
   // Research notes
   ['journal','news','market'].forEach(type=>{
-    (researchNotes[type]||[]).filter(n=>!n.deleted_at).forEach(n=>{
+    arr(researchNotes[type]).filter(n=>n&&!n.deleted_at).forEach(n=>{
       const title=n.title||n.source||n.topic||'';
       const content=n.content||n.excerpt||n.comment||'';
-      const tags=(n.tags||[]).join(' ');
-      const all=(title+' '+content+' '+tags+' '+(n.ticker||'')).toLowerCase();
+      const tags=Array.isArray(n.tags)?n.tags.map(L).join(' '):L(n.tags);
+      const all=[L(title),L(content),tags,L(n.ticker)].join(' ');
       if(all.includes(ql)){
         const label={journal:i18n('search.journal'),news:i18n('search.news'),market:i18n('search.market')}[type]||type;
         results.push({group:i18n('search.companyNotes'),icon:'📝',title:title||content.slice(0,60),sub:`${label}`+(n.ticker?' · '+n.ticker:'')+(n.date?' · '+n.date:''),action:()=>{showSection('research');const inp=document.getElementById('research-search');if(inp){inp.value=q;debounceResearchSearch()}}});
@@ -3866,21 +3875,35 @@ function _gsSearch(q){
   // Company thesis notes
   Object.keys(tStocks).forEach(ticker=>{
     const s=tStocks[ticker];
-    if(s.notes){
+    if(s.notes&&typeof s.notes==='object'){
       ['thesis','risks','catalyst','moat','management'].forEach(key=>{
-        const val=s.notes[key]||'';
-        if(val.toLowerCase().includes(ql)){
+        const val=(v=>(v==null||typeof v==='object')?'':String(v))(s.notes[key]);
+        if(has(val)){
           results.push({group:i18n('search.companyNotes'),icon:'🏢',title:`${ticker} — ${key}`,sub:val.slice(0,80),action:()=>{showSection('companies');showProfile(ticker)}});
         }
       });
     }
   });
   // Reviews
-  (rvData.entries||[]).forEach(r=>{
-    const title=r.companyName||r.companyTicker||'';
-    const content=(r.answers||[]).map(a=>a.answer||'').join(' ');
-    if(title.toLowerCase().includes(ql)||content.toLowerCase().includes(ql)||(r.companyTicker||'').toLowerCase().includes(ql)){
-      results.push({group:'Reviews',icon:'📋',title:title+(r.companyTicker?' ('+r.companyTicker+')':''),sub:r.reviewDate||'',action:()=>{showSection('reviews')}});
+  const RV_LABELS={weekly:i18n('rv.weekly'),monthly:i18n('rv.monthly'),quarterly:i18n('rv.quarterly')};
+  arr(rvData&&rvData.entries).filter(r=>r&&!r.deleted_at).forEach(r=>{
+    // `answers` is an OBJECT keyed by question id — every other consumer treats it that way
+    // (Object.entries in the CSV export, Object.values in the reviews list, `r.answers||{}` in the
+    // renderer). This line assumed an array, so `||[]` never engaged, `.map` was undefined and the
+    // whole of _gsSearch threw: global search returned NOTHING for anyone who had ever written a
+    // review. Not "no matches" — no search at all, and silently.
+    const a=r.answers;
+    const content=(Array.isArray(a)?a.map(x=>L(x&&x.answer)||L(x))
+                  :(a&&typeof a==='object')?Object.values(a).map(v=>L(v&&v.answer)||L(v))
+                  :[L(a)]).join(' ');
+    // The model stores {type,date,companyTicker} — there is no companyName and no reviewDate
+    // anywhere in this file, so the old title read "AAPL (AAPL)" and the subtitle was always blank.
+    // Literal keys, not i18n('rv.'+r.type): a runtime-built key is invisible to check 14, and
+    // the pinned ceiling correctly refused to let a new blind spot in. Three types, spelled out.
+    const label=RV_LABELS[r.type]||L(r.type);
+    const title=r.companyTicker?`${label} — ${r.companyTicker}`:label;
+    if(has(title)||content.includes(ql)||has(r.companyTicker)||has(r.summary)){
+      results.push({group:i18n('search.reviews'),icon:'📋',title:title,sub:L(r.date)?String(r.date):'',action:()=>{showSection('reviews')}});
     }
   });
   return results;
@@ -3888,7 +3911,20 @@ function _gsSearch(q){
 let _gsDebounce=null;
 function onGlobalSearchInput(){
   clearTimeout(_gsDebounce);
+  // Wrapped, because the failure mode here is invisible: when _gsSearch() threw, the previous
+  // markup stayed on screen and the search looked like it was simply ignoring what you typed.
+  // Whatever breaks in there, say so rather than showing a stale placeholder.
   _gsDebounce=setTimeout(()=>{
+    try{_gsRender()}
+    catch(e){
+      console.error('global search failed',e);
+      const c=document.getElementById('gs-results');
+      if(c)c.innerHTML='<div class="gs-empty">'+escH(i18n('search.failed'))+'</div>';
+      _gsItems=[];_gsIdx=-1;
+    }
+  },150);
+}
+function _gsRender(){
     const q=document.getElementById('gs-input').value.trim();
     const cont=document.getElementById('gs-results');
     if(!q){cont.innerHTML='<div class="gs-empty">'+i18n('search.startTyping')+'</div>';_gsItems=[];_gsIdx=-1;return}
@@ -3913,7 +3949,6 @@ function onGlobalSearchInput(){
     });
     cont.innerHTML=html;
     _gsIdx=-1;
-  },150);
 }
 function _gsSetActive(idx){
   _gsIdx=idx;
@@ -3937,7 +3972,26 @@ document.addEventListener('keydown',e=>{
   if(_gsActive){_gsKeydown(e);return}
   const tag=document.activeElement?.tagName;
   if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT'||document.activeElement?.isContentEditable)return;
-  if(e.metaKey||e.ctrlKey){
+  // Nor while a full-screen surface is up. Focus lands on the dialog's BUTTON, which the guard
+  // above does not cover, so ⌥1 used to switch section behind an open confirm dialog and leave
+  // its promise unresolved. Covers the bare `n` and `?` handlers below too. This is the same
+  // condition the service-worker auto-reload already uses to decide the user is mid-task.
+  if(document.querySelector('.modal-overlay.active, .confirm-overlay.active, .gs-overlay.active'))return;
+  // Section jumps are on ALT/Option, and the choice of modifier is the whole point.
+  //   * Cmd/Ctrl+digit is reserved by the browser for tab switching; preventDefault() does not
+  //     take it back, and in Safari it never reaches the page at all. It could never have worked.
+  //   * A BARE digit is worse than useless: the focus guard above only covers inputs, textareas,
+  //     selects and contenteditable, so any stray keystroke while focus sits on the body would
+  //     navigate away from what the user was doing. A convenience must not be able to fire by
+  //     accident; that is a bad trade at any hit rate.
+  // Alt is reserved by nothing here. Matched on e.code, because on macOS Option+1 produces "¡"
+  // rather than "1" — reading e.key would silently never match.
+  if(e.altKey&&!e.metaKey&&!e.ctrlKey){
+    const m=/^(?:Digit|Numpad)([1-7])$/.exec(e.code||'');
+    if(m){e.preventDefault();showSection(SECTIONS[+m[1]-1]);return}
+  }
+  // Still honoured where a browser lets it through, so muscle memory built before v62 survives.
+  if((e.metaKey||e.ctrlKey)&&!e.altKey){
     const n=parseInt(e.key,10);
     if(n>=1&&n<=7){e.preventDefault();showSection(SECTIONS[n-1]);return}
   }
@@ -5939,8 +5993,11 @@ function switchCompanyTab(name,skipScroll){
     const el=document.getElementById('company-panel-'+t);
     if(el){el.style.display=t===name?'':'none';el.classList.toggle('active',t===name)}
   });
+  // Keyed on data-tab, never on the button's TEXT. The label is translated, so
+  // "Grafikonok".toLowerCase()==='charts' is false and in Hungarian NO tab was ever marked
+  // active — the user could not see which one they were on. UI state must not depend on i18n.
   document.querySelectorAll('.company-tabs .tab').forEach(b=>{
-    b.classList.toggle('active',b.textContent.toLowerCase()===name);
+    b.classList.toggle('active',b.dataset.tab===name);
   });
   try{sessionStorage.setItem('_activeCompanyTab',name)}catch(e){}
   if(name==='tracker')renderTracker();
@@ -6090,8 +6147,10 @@ function switchPortfolioTab(name){
     const el=document.getElementById('pf-panel-'+t);
     if(el)el.style.display=t===name?'':'none';
   });
-  document.querySelectorAll('.pf-tabs .tab').forEach((b,i)=>{
-    b.classList.toggle('active',tabs[i]===name);
+  // data-tab, like the other two strips. The index coupling this replaces was not the
+  // translated-text bug, but it broke on any reordering and on any extra .tab in the strip.
+  document.querySelectorAll('.pf-tabs .tab').forEach(b=>{
+    b.classList.toggle('active',b.dataset.tab===name);
   });
   if(name==='overview')renderPortfolioOverview();
   if(name==='accounts')renderAccounts();
@@ -10114,8 +10173,9 @@ function switchProfileTab(name){
     const el=document.getElementById('cp-panel-'+t);
     if(el){el.style.display=t===name?'':'none';el.classList.toggle('active',t===name)}
   });
+  // data-tab, not textContent — see switchCompanyTab(). Same defect, nine tabs.
   document.querySelectorAll('.cp-tabs .tab').forEach(b=>{
-    b.classList.toggle('active',b.textContent.toLowerCase()===name);
+    b.classList.toggle('active',b.dataset.tab===name);
   });
   if(name==='financials')Object.values(cpHistCharts).forEach(c=>{if(c)c.resize()});
   if(name==='dividends'&&profileTicker)renderProfileDividends(profileTicker);
@@ -11968,7 +12028,7 @@ function getTrashItems(){
     items.push({type:'positions',id:p.id,title:`${p.ticker} — ${acc?acc.name:''}`,sub:_privacyMode?_privacyMask:`${p.shares} shares @ ${p.avgCost}`,deleted_at:p.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(p.deleted_at).getTime())/86400000))});
   });
   pfTransactions.filter(tx=>tx.deleted_at).forEach(tx=>{
-    items.push({type:'transactions',id:tx.id,title:`${tx.type.toUpperCase()} ${tx.ticker}`,sub:_privacyMode?`${tx.date} — ${_privacyMask}`:`${tx.date} — ${tx.totalAmount||''}`,deleted_at:tx.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(tx.deleted_at).getTime())/86400000))});
+    items.push({type:'transactions',id:tx.id,title:`${L(tx.type).toUpperCase()} ${tx.ticker||''}`,sub:_privacyMode?`${tx.date} — ${_privacyMask}`:`${tx.date} — ${tx.totalAmount||''}`,deleted_at:tx.deleted_at,daysLeft:Math.max(0,30-Math.floor((now-new Date(tx.deleted_at).getTime())/86400000))});
   });
   ['journal','news','market'].forEach(nt=>{
     (researchNotes[nt]||[]).filter(n=>n.deleted_at).forEach(n=>{
@@ -14578,7 +14638,17 @@ const CH_COLORS=['#6c5ce7','#00b894','#e17055','#74b9ff','#fdcb6e','#a29bfe','#5
 let chInited=false;
 function resetCharts(){chInited=false;chMiniCharts={}}
 function initCharts(){
-  if(!chInited){chInited=true;renderChartChips();renderAllCharts()}
+  // Re-fetch when nothing is loaded, not only on the first visit. `chInited` was set before the
+  // fetches resolved, so a transient rate limit left the tab permanently empty: leaving and
+  // coming back only re-rendered the (absent) data, and a full page reload was the only way out.
+  //
+  // But the retry must not feed the limit it is recovering from. Without the guards below, every
+  // visit to the tab fires a fresh N/6-batch round, which is exactly how a 429 is sustained —
+  // and the message tells the user to leave and come back, i.e. to do the amplifying thing.
+  const empty=!Object.keys(chData).length;
+  if(_chFetching){renderChartChips();return}
+  if(empty&&Date.now()<_chBlockedUntil){renderChartChips();renderMainChart();return}
+  if(!chInited||empty){chInited=true;renderChartChips();renderAllCharts()}
   else{renderChartChips();renderMainChart()}
 }
 
@@ -14609,16 +14679,25 @@ function toggleChartStock(ticker){
   renderMainChart();
 }
 
-async function fetchChartData(ticker,range){
-  if(!hasDataAuth())return null;
+// Why the last batch of chart fetches failed. Counted, not just logged: the app knew perfectly
+// well that Yahoo was rate-limiting and still drew an empty chart with no explanation, which is
+// indistinguishable from "you own nothing" (the same defect Cat 116 fixed for currency totals).
+let _chFail={rate:0,other:0},_chRound=0,_chFetching=false,_chBlockedUntil=0;
+// A failure only counts for the round that is still current. Without this, a slow abandoned
+// round's late responses land in the counter a newer round has already zeroed.
+function _fail(round,kind){if(round!==_chRound)return;if(kind==='rate')_chFail.rate++;else _chFail.other++}
+async function fetchChartData(ticker,range,round){
+  // Counted and logged, not returned in silence: this is the likeliest failure on a fresh or
+  // locked session, and it used to produce "see the console for the reason" over an empty console.
+  if(!hasDataAuth()){_fail(round,'other');console.warn('Chart skipped for',ticker,'— not signed in');return null}
   const interval=range==='6mo'?'1d':'1wk';
   try{
     const r=await fetchWithTimeout(`${getWorkerUrl()}/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}`,{headers:authDataHeaders()});
-    if(r.status===429){console.warn('Chart rate limited for',ticker);return null}
-    if(!r.ok){console.warn('Chart HTTP',r.status,'for',ticker);return null}
+    if(r.status===429){_fail(round,'rate');console.warn('Chart rate limited for',ticker);return null}
+    if(!r.ok){_fail(round,'other');console.warn('Chart HTTP',r.status,'for',ticker);return null}
     const d=await r.json();
     const result=d?.chart?.result?.[0];
-    if(!result)return null;
+    if(!result){_fail(round,'no series');console.warn('Chart returned no series for',ticker);return null}
     const ts=result.timestamp||[];
     const closes=result.indicators?.quote?.[0]?.close||[];
     const currency=result.meta?.currency||'USD';
@@ -14632,7 +14711,10 @@ async function renderAllCharts(){
   const tickers=Object.keys(tStocks).filter(t=>t!=='ETH');
   const chartWrap=document.getElementById('ch-grid');
 
-  prog.textContent='Loading charts...';
+  const round=++_chRound;
+  _chFetching=true;
+  prog.textContent='Loading charts...';prog.style.color='';
+  _chFail={rate:0,other:0};
   chData={};
   if(chartWrap)showSkeleton(chartWrap,'dashboard');
 
@@ -14640,13 +14722,27 @@ async function renderAllCharts(){
     for(let i=0;i<tickers.length;i+=6){
       const batch=tickers.slice(i,i+6);
       prog.textContent=`Loading ${i+1}-${Math.min(i+6,tickers.length)}/${tickers.length}...`;
-      const results=await Promise.all(batch.map(t=>fetchChartData(t,range)));
+      const results=await Promise.all(batch.map(t=>fetchChartData(t,range,round)));
       batch.forEach((t,j)=>{if(results[j])chData[t]=results[j]});
     }
-    prog.textContent='';
+    // A later round has taken over — say nothing, or a stale count from this one lands on top of
+    // its result. Reproduced: an abandoned rate-limited round reported "0 of 3 could not be
+    // loaded", in yellow, over three charts that had just loaded perfectly.
+    if(round!==_chRound)return;
+    const loaded=Object.keys(chData).length;
+    if(_chFail.rate)_chBlockedUntil=Date.now()+30000;
+    if(tickers.length&&!loaded){
+      prog.textContent=_chFail.rate?i18n('charts.rateLimited'):i18n('charts.loadFailed');
+      prog.style.color='var(--yellow)';
+    }else if(_chFail.rate||_chFail.other){
+      prog.textContent=i18n('charts.partial',{n:tickers.length-loaded,total:tickers.length});
+      prog.style.color='var(--yellow)';
+    }else{
+      prog.textContent='';prog.style.color='';
+    }
     renderMainChart();
     renderMiniCharts();
-  }finally{if(chartWrap)hideSkeleton(chartWrap)}
+  }finally{if(round===_chRound)_chFetching=false;if(chartWrap)hideSkeleton(chartWrap)}
 }
 
 function renderMainChart(){
