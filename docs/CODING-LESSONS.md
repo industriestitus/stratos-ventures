@@ -223,6 +223,26 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 **Rule:** before writing `textContent` (or `innerHTML`) on a node that other code can reach, ask *who else appends into this element*. Grep for the class or tag being injected, not just for the write. When a child must survive, preserve it explicitly and scope the selector to **direct children** (`:scope > .x`) — a descendant-scoped rescue silently **re-parents** a nested node's child onto its ancestor, which is worse than losing it. And when you carve out one exception, resist a second: `applyI18n()` preserves the runtime-injected tooltip and deliberately does *not* preserve `settings.d1Connected`'s static `<span>`, because a translation function that is a list of exemptions is no longer readable (P.32).
 
+### 15. Never Key UI State on Translated Text (Cat 121)
+
+**Bugs found:** 12 buttons across two tab strips; invisible in English, total in Hungarian.
+
+**Pattern:** `b.classList.toggle('active', b.textContent.toLowerCase()===name)`. It compares the button's **rendered label** to an internal identifier. In English `"Charts"` happens to equal `"charts"`, so it worked and kept working for as long as nobody switched language. In Hungarian the label is `"Grafikonok"`, nothing ever matched, and **no tab was ever marked active** — the user could not see which one they were on.
+
+**Why it survived:** the developer and the test pass were both in English. i18n bugs of this shape are invisible from the default locale by definition, and no amount of English testing will surface one.
+
+**Rule:** UI state binds to a stable attribute — `data-tab`, `data-section` — never to text a translator can change, and never to array index either (which the portfolio strip used, and which breaks on reordering instead of on translation). This codebase already had the right pattern in the sidebar (`b.dataset.section===name`); the two broken strips were the outliers. **When you add an i18n layer, every `===` against a user-visible string becomes a latent bug.** Grep for `textContent===`, `.textContent.toLowerCase()===` and `innerText` after any translation work — and note that `#pf-chart-periods` at `index.html:7443` still does this, safe only because `1M`/`3M`/`ALL` are not translated *yet*.
+
+### 16. One Shape Assumption in a Shared Loop Kills Every Branch (Cat 121)
+
+**Bugs found:** 7 in `_gsSearch` — global search returned nothing for years for anyone who had written a review.
+
+**Pattern:** `(r.answers||[]).map(...)` where `answers` is an object. `||` only substitutes for null/undefined, so a wrong-but-truthy value sails straight through the guard that looks like it is protecting you. `.map` is undefined, the function throws — and because global search aggregates companies, positions, transactions, notes and reviews into **one** try-less function, a single malformed record in any one source silently blanks **all** of them.
+
+**Why this class recurs:** the data is user-supplied. `doImport()` and `doRestore()` assign backup contents verbatim, so a field's type is an assumption, not a fact. The codebase already knew this in places — `p.ticker||''` when saving, array guards on `tags` — and `_gsSearch` was the one consumer that trusted everything.
+
+**Rules.** (1) `x||[]` guards against *absence*, never against the *wrong type*; use `Array.isArray(x)?x:[]` and a `String(v??'')` normaliser at every boundary where user data meets a method call. (2) **An aggregating loop needs per-source containment**, or one bad record costs you every source. (3) When you find a shape bug, **fix the class, not the line** — the first pass here fixed the one reported instance and QA found six identical ones still live. (4) A throw in a render path that assigns its output at the end leaves the *previous* output on screen, so the failure looks like indifference rather than an error; catch and say so.
+
 ## Data Safety
 
 ### 0. Before a Purge-and-Reinsert, Strip EVERY Cached FK Row-Id (C3b / Cat 86)
@@ -587,6 +607,10 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 **Fifteenth — a break-test you designed yourself measures your imagination, not your code (Cat 119).** The i18n gate check was break-tested before anyone was asked to trust it: **nine** deliberately broken copies of `index.html`, every one correctly failed, in the invocation the process prescribes. QA then wrote thirty and found **five fail-opens** — in a script whose own header states *"a check must never fail OPEN"*. The worst let a comment satisfy the contract: the assertion matched a regex from `function applyI18n(){` to the first newline, and `applyI18n` is the last thing on its line, so a trailing `// TODO restore :scope > .cp-tiptext and documentElement.lang =` satisfied **both** halves while both defects were fully reintroduced. Another reproduced check 4's *"enumerates the one spelling it has seen"* antipattern verbatim, written by an author who had read that warning in the same file an hour before.
 
+**Sixteenth — a green gate and a clean QA pass certify the repository, not the product (Cat 121).** Five consecutive batches shipped with `docs/check.sh` green, an adversarial QA agent run over each, and a "Verified live" section in the handoff. Then the app's owner spent an hour with `TEST-PLAN.md` and found that **global search had never worked** for anyone with a single review, that **no tab was ever highlighted in Hungarian**, and that a documented keyboard shortcut **could not work in any browser**. None of the three is subtle. All three were invisible to everything the project had built to catch defects, for the same reason: an agent verifies the code it just changed, against data it seeded itself, in the language it wrote the code in.
+
+**What this changes in practice.** KNOWN-ISSUES **P.30** says the gate cannot see whether QA ran or whether anyone opened the app; this is what that costs. The mitigations are cheap and were all absent: **switch the language before testing** (an English-only pass cannot see an i18n bug by construction); **read the console** — the `TypeError` that killed the search had been sitting there the whole time, and the owner's pasted console log diagnosed in seconds what a symptom description could not; and **seed data with the shapes production actually produces**, not the tidy ones you have in mind — the same lesson as Cat 120's D1-shaped checklist, one level up.
+
 **Why the nine proved so little:** they were the failure modes the author had in mind *while writing the checks*, so they test the same model twice. The mutations that found holes were the ones nobody had modelled — an attribute in a different quote style, a lazily-loaded script tag, `t` used as a value rather than called, a dictionary that is not an object literal.
 
 **Rules.** (1) **Assert contracts on the syntax tree, not on text.** A comment cannot satisfy an AST, and reformatting cannot break one; a textual assertion fails both ways at once. (2) **A `continue` inside a checker is a fail-open with a friendly face** — every "cannot read this, move on" must be a FAIL that names what it could not read. (3) **Have someone else write the break-tests**, or at minimum write them from the *defect* you fear rather than from the code you wrote. (4) **A false positive is a fail-open by a longer route:** a gate that red-lights correct work gets `--no-verify`'d, after which it guards nothing — which is why five of this batch's fixes were for checks that were too strict, not too loose.
@@ -611,7 +635,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Process | 4 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 57 lessons across 7 domains.
+**Total:** 59 lessons across 7 domains.
 
 ## Related Documents
 

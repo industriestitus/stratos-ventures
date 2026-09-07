@@ -618,3 +618,28 @@ Manual only — both need a signed-in session, which no agent has.
 - [ ] **Transaction price pre-fill** (verifying an item ticked as already-built): open Log
       Transaction, type a tracked ticker — the price fills and a "current price" hint appears. Type
       a price first, then the ticker: your price must survive.
+
+## Global Search, Tabs and Charts (added Cat 121, v62)
+
+All manual. These exist because five batches of gate + QA missed every one of them, and one
+hour of ordinary use found them all.
+
+- [ ] **Search actually searches.** ⌘K, type three letters of a company you track. It must list
+      it. **Do this with at least one review saved** — the object-shaped `answers` field is what
+      used to make the whole search throw and return nothing at all (BUG-HISTORY 121.1).
+- [ ] **Search survives odd data.** After any import or restore, repeat the above. If the palette
+      says "the search failed", open the console: it now names the record instead of silently
+      showing a stale placeholder.
+- [ ] **A search result goes where it says.** Pick a Transaction result — it must land on the
+      Portfolio → Transactions tab, not Overview.
+- [ ] **Switch the language to Hungarian and check the tabs.** Companies (Kalkulátor / Követő /
+      Grafikonok), a company profile's nine tabs, and Portfólió's five: in each strip exactly one
+      button must look selected. **An English-only pass cannot see this class of bug at all.**
+- [ ] **⌥1 … ⌥7 switch section.** A bare digit must NOT. Neither must ⌥1 while a modal or a
+      confirm dialog is open — the dialog stays, nothing moves behind it.
+- [ ] **Charts explain themselves.** Companies → Grafikonok. If Yahoo is rate-limiting, the line
+      above the chart must say so in words rather than leaving an empty chart. Switch to another
+      tab and back after a minute: it retries. It must NOT retry immediately and repeatedly, which
+      is what sustains the limit.
+- [ ] **The console is part of the test.** Open it before you start. The defect that killed search
+      for years was a `TypeError` sitting in plain sight.

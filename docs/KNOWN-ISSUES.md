@@ -54,8 +54,11 @@ These were surfaced during the Security v2 (Phase A+B) audit and consciously def
 ### SV.4 — Production CORS allowlist hardcodes localhost origins (LOW, deferred)
 - `ALLOWED_ORIGINS` includes `localhost:8765/8767` + `127.0.0.1` in the production Worker. `authenticate()` still gates every data route, so this grants no data access without credentials. Recommendation: move localhost origins to a dev-only `ALLOWED_ORIGINS` env var. Cosmetic; low priority.
 
-### SV.5 — Bearer token in localStorage (LOW/INFO, accepted)
-- `auth_token` is XSS-readable like the sync key always was. Stored SHA-256-hashed server-side, never logged, never in URLs. 180-day TTL. Accepted for a single-user app; revocable via the device manager and revoked on password change.
+### SV.5 — Bearer token **and the unwrapped DEK** in localStorage (accepted — ADR-046)
+- `auth_token` is XSS-readable like the sync key always was. Stored SHA-256-hashed server-side, never logged, never in URLs. 180-day TTL. Revocable via the device manager and revoked on password change.
+- **The more sensitive half went unrecorded until 2026-09-07 (Cat 121): `dek_cache` holds the DATA ENCRYPTION KEY, unwrapped**, so read access to the browser profile is read access to every encrypted field. The master password protects the data on the *server*, and on this device only until the first successful sign-in. Read "E2EE" here as end-to-end between client and server, **not** as "the key is never at rest in plaintext".
+- **The visible consequence, which is what prompted this being written down:** a normal tab never re-asks for the master password, while a private window — its own empty `localStorage`, therefore a fresh device — always does. That is the design working, not a bug.
+- Accepted deliberately for a single-user app; the trade, the rejected alternatives (`sessionStorage`, memory-only, a device-secret wrap) and their reasons are in **ADR-046**. This entry exists for whoever is reading about the risk rather than the decision.
 
 ### SV.6 — `api_cache` stored a plaintext snapshot of encrypted fields (MEDIUM, at-rest) — ✅ RESOLVED (Cat 80)
 - Found during the v36 tracker-hydration QA (BUG-HISTORY-ARCHIVE Cat 79). `api_cache.data_json` for `data_source='stock_data'` was written as a snapshot of the WHOLE client stock object (`_fetchStockDataRaw` → `fetchYahooData` returns the live `tStocks[ticker]`, `cachedFetch` persisted it verbatim with no allowlist), so a cached row held **plaintext** copies of encrypted fields (thesis, notes text, checklist, override values) + client-only state — partially defeating the Security v2 C2 encryption-at-rest for those duplicated values. **Pre-existing** (the cache write path predated C2, unchanged by Cat 79).

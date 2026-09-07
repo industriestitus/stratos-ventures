@@ -33,7 +33,7 @@ docs/
   GLOSSARY.md         — Financial formulas, metrics, scoring thresholds
   CODING-LESSONS.md   — Validated coding pitfalls distilled from the bug log
   KNOWN-ISSUES.md     — Unfixed issues, tech debt, dev gotchas
-  DECISIONS.md        — 45 Architecture Decision Records (ADRs)
+  DECISIONS.md        — 46 Architecture Decision Records (ADRs)
   DEPLOYMENT.md       — Deploy guide (GitHub Pages, Worker, D1, secrets)
   ROADMAP.md          — The LIVE backlog: in-flight process track, technical debt, Maybe Later
   ROADMAP-ARCHIVE.md  — Completed phases 0-18 and finished tracks. No open checkbox, ever

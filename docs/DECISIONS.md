@@ -1360,6 +1360,30 @@ FMP retired the legacy v3 path style and moved `limit` above 5 behind a paid pla
 
 ## Summary Table
 
+## ADR-046: The Auth Token and the DEK Live in localStorage — a Private Tab Is a Fresh Device
+
+**Status:** Accepted (2026-09-07) — written up in Cat 121 at Peter's request, after he noticed the behaviour while testing and asked why a normal tab never asks for the master password while a private one always does. The code predates this record; the decision did not, and that gap is what this ADR closes.
+
+**Context:**  
+Security v2 (ADR-039/040/041) put the data behind a master password and envelope encryption: the DEK is wrapped under a key derived from the password, and the server never sees either. That protects the data **at rest on the server** and in transit. It says nothing about what the browser keeps between page loads — and something must, or the user retypes a long master password on every reload, several times an hour. A personal tool nobody wants to open is a tool nobody uses.
+
+Two things are cached, both in `localStorage`: the session token (`auth_token`, `index.html:3129`) and the **unwrapped DEK itself** (`dek_cache`, written by `cacheDek()`, restored by `restoreDekFromCache()`). `doRestore()` deliberately preserves both across a restore (BUG-HISTORY 89.1) — without that, restoring a backup logged you out of the account you were restoring into.
+
+**Decision:**  
+- **Keep both in `localStorage`, and treat "signed in on this device" as the unit of trust.** The master password authorises a device once; the device then holds the key until site data is cleared or the token is revoked.
+- **`sessionStorage` was rejected.** It is per-tab, so it would re-prompt on every new tab and every restart — a cost paid constantly, to close a window that only matters to an attacker who already has the browser profile.
+- **Accept the consequence, and state it here rather than let it be discovered:** the DEK sits in `localStorage` **unwrapped**. Anyone with read access to the browser profile — another user of the same OS account, malware, a successful XSS — can read it and decrypt everything. The master password protects the data **on the server**, and on this device only until the first successful sign-in.
+- **A private window has its own empty `localStorage`, so it is a fresh device and always prompts.** Not a separate feature — the same rule seen from the other side, and the honest way to check that the prompt still works.
+
+**Consequences:**  
+- There is no "sign out everywhere" beyond revoking the token server-side, and no UI for either; clearing site data is the local logout of last resort.
+- The XSS surface is not academic. The app renders user-supplied text in many places and relies on `escH()`; a single missed escape is a total compromise rather than a defacement, which is why the escaping sweeps (D.1/D.2) were treated as security work rather than tidiness.
+- Read "E2EE" in this project as *end-to-end between client and server*, **not** as "the key is never at rest in plaintext anywhere". KNOWN-ISSUES records the same fact for whoever is reading about the risk rather than the decision.
+
+**Rejected, with reasons:** re-prompting on a timer (the interruption lands mid-task, and a password typed more often is typed less carefully); keeping the DEK in memory only (a reload is the most common action in a PWA, and every deploy would become a logout); wrapping the cached DEK under a device secret (there is nowhere to put that secret that is meaningfully safer than where the DEK already is — it moves the problem down a level and adds code).
+
+---
+
 | ADR | Decision | Status | Date |
 |-----|----------|--------|------|
 | 001 | Monolithic HTML | Accepted | Phase 0 |
@@ -1407,6 +1431,7 @@ FMP retired the legacy v3 path style and moved `limit` above 5 behind a paid pla
 | 043 | Restore completeness — rehydrate derived caches + pre-restore safety backup (Batch B) | Accepted | 2026-07-24 |
 | 044 | D1 cloud snapshots — chunked, DEK-encrypted, generic CRUD (Batch C) | Accepted | 2026-08-05 |
 | 045 | FMP `/stable` migration — probe the API, don't trust the docs | Accepted | 2026-08-05 |
+| 046 | Auth token + DEK cached in localStorage; a private tab is a fresh device | Accepted | 2026-09-07 |
 
 ---
 
