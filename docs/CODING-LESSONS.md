@@ -243,6 +243,16 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 **Rules.** (1) `x||[]` guards against *absence*, never against the *wrong type*; use `Array.isArray(x)?x:[]` and a `String(v??'')` normaliser at every boundary where user data meets a method call. (2) **An aggregating loop needs per-source containment**, or one bad record costs you every source. (3) When you find a shape bug, **fix the class, not the line** — the first pass here fixed the one reported instance and QA found six identical ones still live. (4) A throw in a render path that assigns its output at the end leaves the *previous* output on screen, so the failure looks like indifference rather than an error; catch and say so.
 
+### 17. A Chokepoint Only Works If Everything Actually Goes Through It (Cat 122)
+
+**Bugs found:** 1 CRITICAL — the Snapshots panel kept printing `0 Ft` and a fabricated `-100.0%` while every other consumer had correctly fallen back to `—`.
+
+**Pattern:** Cat 116 built `snapshotInBase()` so that one refusal would propagate everywhere: refuse in the helper, and TWR, Alpha, the hero delta, the benchmark and net worth all degrade together. Cat 122 leaned on exactly that guarantee — and did not check who calls it. `renderCloudSnapshotsList()` printed `formatMoney(s.totalValue,…)` directly and built its own delta from `baseSum(...).add(s.totalValue)`. So on the one screen dedicated to snapshots, the refused number was still on display, next to a TWR that had already given up.
+
+**Why this is worse than the original bug:** a wrong number everywhere is at least consistent, and a user reads it as one fact. **A screen that mixes `—` with a confident wrong number invites the reader to trust the confident one** — the dash looks like a rendering gap and the number looks like data.
+
+**Rules.** (1) When you rely on a chokepoint, **enumerate its callers and prove each one goes through it** — `grep` for the raw field (`s.totalValue`), not for the helper. (2) A helper that is easy to bypass will be bypassed; if the raw field must never be read directly, that is worth saying in a comment at the field's source. (3) **A validity guard must not depend on data that some storage paths drop.** The first version of this fix refused only when `snap.positions` was non-empty — but `savePortfolioSnapshots()` silently drops unresolvable positions and the loader caps at 5000 rows, so the same snapshot was refused from localStorage and accepted from D1. Guard on something every path preserves, or on an invariant the writer enforces (here: `takeSnapshot()` is the only writer and already refuses an empty portfolio, so `totalValue <= 0` is sufficient by itself). (4) **Refusing is not free.** The companion guard here would have made snapshots impossible for bonds, savings and property, which have no market price by nature — under a toast telling the user to refresh prices. If you refuse, name what to fix.
+
 ## Data Safety
 
 ### 0. Before a Purge-and-Reinsert, Strip EVERY Cached FK Row-Id (C3b / Cat 86)
@@ -635,7 +645,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Process | 4 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 59 lessons across 7 domains.
+**Total:** 60 lessons across 7 domains.
 
 ## Related Documents
 

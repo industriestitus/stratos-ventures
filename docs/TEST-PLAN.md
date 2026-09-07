@@ -643,3 +643,25 @@ hour of ordinary use found them all.
       is what sustains the limit.
 - [ ] **The console is part of the test.** Open it before you start. The defect that killed search
       for years was a `TypeError` sitting in plain sight.
+
+## Snapshots, Returns and the Dip Finder (added Cat 122, v63)
+
+Manual, signed in, with real data.
+
+- [ ] **A zero-valued snapshot never appears as a number.** If you still have the two zero snapshots
+      from July 2026: Portfolio → Snapshots must show `—` for both the amount and the delta, with a
+      tooltip explaining they recorded a total of zero. **No `0 Ft` and no `-100.0%` anywhere.**
+- [ ] **TWR and Alpha are absent or `—`, never -100%**, while those snapshots exist. Delete them,
+      take a fresh one, and the figures should return.
+- [ ] **A snapshot cannot be taken with an unpriced holding.** Add a bond or a savings position with
+      no Current Value and press Snapshot: it must refuse **and name that position**. Set a Current
+      Value and it must go through. (Refreshing prices will never help a bond — if the message says
+      only "refresh prices", that is the regression.)
+- [ ] **The Dip Finder's price and its 52-week high come from the same fetch.** Press Refresh and
+      sanity-check one row against the real quote. A price wildly out of date means the pairing
+      regressed. If nothing loads, it must say the highs were cached without a quote — not "no dips".
+- [ ] **Hover an allocation doughnut slice:** the tooltip shows the amount **and a percentage**.
+- [ ] **Widget headers do not collide.** On Dip Finder, Benchmark and Upcoming Earnings, hover the
+      widget: the Refresh button and the hide control must sit side by side, neither on top of the
+      other, in both languages. (Not verified by an agent — the browser pane could not produce
+      screenshots in the session that wrote this.)
