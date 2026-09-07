@@ -220,10 +220,25 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Status:** open, and deliberately not "fixed" in the batch that surfaced it. Excluding auto-derived credit would move **every** historical percentage at once — including the ones the checklist page has been showing for months — so it is a definition change, not a bug fix, and it should be a decision rather than a side effect. **Fix direction, if taken:** either count auto-derived thresholds separately (`"38% answered, 62% auto"`), or drop them from the completion figure and let the thresholds table speak for itself.
 
 
-### P.35 — A Missing Pillar Makes the Composite Score Go UP (2026-09-07, found in Cat 123)
+### ~~P.35 — A Missing Pillar Makes the Composite Score Go UP~~ (2026-09-07, found in Cat 123 — CLOSED in Cat 124, v65)
 - **Where:** `calcStockScore()`. The total is `rawTotal / maxPossible * 100`, where `maxPossible` counts only the pillars that could be computed — so a company missing one pillar is scored on the other three and renormalised to 100.
 - **Effect:** measured with the same stock twice — **85** with its valuation pillar absent, **69** with real but poor valuation data. **Absent data outranks present data**, and since the Tracker's Score column is sortable, the least-known companies float to the top of a list whose purpose is to surface the best ones. Peter hit the extreme version of this in Cat 123: a corrupt market cap produced a *fabricated* 25/25 valuation pillar and an 82 total; fixing the cap turned that into a *missing* pillar and an 85.
-- **Status:** open, and deliberately not patched inside the batch that surfaced it — this is a scoring **philosophy** question, and whichever way it goes it re-ranks every company in the tracker. Three defensible answers: **(a)** leave it and show how many pillars a score rests on, so `85 (3/4)` is not read as comparable to `69 (4/4)`; **(b)** cap the total by the pillars available, so a missing pillar can only cost; **(c)** score a missing pillar as zero, which punishes thin data as hard as bad data. **(a)** preserves the current numbers and costs only a label; **(b)** changes every score. Peter's call.
+- **Resolution — option (a), Peter's call (2026-09-07, Cat 124).** The number stays and now declares what it rests on: a `3/4` marker on the Tracker cell, `(3/4)` on the Compare score row, `(3/4 pillars)` in the profile PDF, and a help text that describes the renormalisation instead of an average. **(b)** and **(c)** were both rejected for the same reason: each re-ranks every company in the app to fix a labelling problem. The one place a label was not enough is Compare, whose entire purpose is to declare a winner — there the green "best" crown is **dropped** when the two scores come from different pillar counts, because a best across different denominators is an assertion, not a comparison.
+- **What this does NOT do:** the ranking is unchanged. Sorting the Tracker by Score still floats a 3-pillar 85 above a 4-pillar 69; the marker tells you why, it does not reorder. If that turns out to matter in daily use, (b) is still available and is a one-line change to `maxPossible`.
+- **Residual:** the marker has no tooltip on touch — → **P.36**.
+
+### P.36 — The Partial-Score Marker Has No Tooltip on Touch (2026-09-07, found in Cat 124)
+- **Where:** the Tracker's Score cell. The `3/4` marker explains itself through `title` and `aria-label`, and a touch device shows neither — `title` needs a hover.
+- **Effect:** on a phone the 9px `3/4` is the *only* signal, and by itself it does not say that a pillar is missing or that the score is not comparable with a full one. Peter's primary device is a phone.
+- **Mitigation already in place:** tapping the cell opens the company profile, whose score breakdown now reads `83/100, 3 pillér alapján` in Hungarian (Cat 124.7) — so the explanation is one tap away, but only for someone who already suspects there is one.
+- **Status:** accepted for now. The proper fix is a tap-to-explain affordance on the marker itself — a small popover, not a `title`. Small, self-contained, and worth doing when the Tracker is next open.
+
+### P.37 — A Three-Digit Partial Score Overlaps Its Marker (2026-09-07, found in Cat 124)
+- **Where:** the Tracker's `_score` column — 48px, `table-layout:fixed` — and `.st-score-partial::after`.
+- **Measured, not estimated:** the marker renders 14.88px wide at `font-size:9px`. A centred `100` at the desktop type size spans `[13.05, 34.95]` from the cell's left edge while the marker occupies `[31.12, 46]` — a **3.8px** horizontal overlap, 4.7px at mobile type sizes, and the two boxes intersect vertically as well.
+- **When it can happen:** a total of exactly 100 computed from three pillars, i.e. all three at a perfect 25/25. Rare — but Cat 123 documented a corrupt market cap manufacturing a 25/25 valuation pillar, so it is not hypothetical.
+- **Status:** accepted, because every candidate fix is worse than the defect. A smaller marker still overlaps (8px measures ~13.2px, overlap 2.15px); a background behind the marker hides a digit; extra right padding shifts the digits, which is precisely what BUG-HISTORY 124.5 fixed. The honest fix is a wider `_score` column, which costs horizontal space on every row for a case almost nobody will see.
+- **The test that would NOT catch it:** TEST-PLAN asks whether a 3-digit partial and a 3-digit full score stay *aligned* — they do. Overlap is a different failure, and it is now its own case.
 
 ---
 

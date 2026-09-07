@@ -690,3 +690,37 @@ Manual, signed in. Several of these guard numbers that would read as investment 
       over an emptied widget is the regression (BUG-HISTORY 123.8).
 - [ ] **The benchmark says why it has no number**, and names the right cause: zero-valued snapshots,
       a snapshot with no currency, too few snapshots, or a missing exchange rate.
+
+## Partial Quality Scores (added Cat 124, v65)
+
+Manual, signed in, **switch to Hungarian first** — half of this section is about what the app says,
+not what it computes. A "partial" company is one whose data is missing an entire pillar; the
+quickest way to get one is a company with no valuation inputs (no market cap, no P/E, no DCF).
+
+- [ ] **A partial score is marked on the Tracker.** Companies → Tracker. A company scored on fewer
+      than four pillars shows a small `3/4` beside its Score; a fully scored company shows nothing
+      extra. Hovering the cell explains that the missing pillar is not counted.
+- [ ] **The marker does not push the digits around.** Compare a 3-digit partial score with a 3-digit
+      full score in the same column — the numbers must stay aligned on the same axis.
+- [ ] **Copying the table gives clean numbers.** Select a few Tracker rows, copy, paste into a text
+      editor. A partial score must paste as `83`, never `833/4` (BUG-HISTORY 124.5).
+- [ ] **Compare does not crown a partial score.** Select a partial company and a fully scored one →
+      Compare. The `Total Score` row shows `(3/4)` on the partial one, and **neither cell is
+      highlighted green.** Then compare two fully scored companies: the higher one IS highlighted
+      again. This is the one QA called critical (BUG-HISTORY 124.4).
+- [ ] **Other Compare rows still highlight normally** — P/E, ROE, margins. Only `Total Score` drops
+      its highlight, and only when the pillar counts differ.
+- [ ] **The PDF carries the qualification.** Open a partial company → export the profile PDF. The
+      Quality Score line reads `83/100 (3/4 pillars)`.
+- [ ] **The score breakdown panel is fully Hungarian.** Company profile → Scores. Check for leftover
+      English in the panel *chrome*: the card titles, the `Mutató / Érték / Pontszám` table headers,
+      the pillar names, and the sentence under the big number — which must read `83/100, 3 pillér
+      alapján`, not `83/100 across 3 pillér` (BUG-HISTORY 124.7).
+      *Known and out of scope:* the individual metric row labels (`P/E`, `Revenue Growth`,
+      `DCF Upside`) are still English — they are shared with several other views.
+- [ ] **The help text describes the renormalisation.** Hover the Score column header → the formula
+      must say the score is rescaled over the pillars that could be computed, not that it is an
+      average of four.
+- [ ] **On a phone.** The marker is visible and does not overflow the cell. `title` will not appear
+      on touch — that is P.36, accepted; tapping the cell must open the profile, where the breakdown
+      panel gives the explanation.

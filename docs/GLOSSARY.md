@@ -183,7 +183,29 @@ Function: `calcDivGrowthCAGR()` — lookback periods: 1Y, 3Y, 5Y, 10Y.
   - **Growth:** Revenue Growth, 3Y CAGR, EPS Growth, Revenue Consistency
   - **Profitability:** Gross Margin, Op. Margin, Net Margin, ROE, ROIC
   - **Health:** Debt/Equity, Current Ratio, FCF Positive, FCF Quality, SBC %, Buyback Yield
-- **Used in:** Tracker table (center column), Screener filters, Dashboard quality widget
+- **Total:** **NOT an average of four.** The total is `round(rawTotal / maxPossible * 100)`, where
+  `maxPossible` counts only the pillars that could actually be computed — a pillar whose inputs are
+  all missing is `null` and is **excluded from both the numerator and the denominator**. So a
+  company with no valuation data is scored on the remaining three and rescaled to 100.
+- **Consequence — a missing pillar RAISES the score.** Measured on one stock: **85** with the
+  valuation pillar absent, **69** with real but poor valuation data. Absent data outranks present
+  data, and the Tracker's Score column is sortable. This is by design, not a defect (KNOWN-ISSUES
+  **P.35**, closed 2026-09-07): the ranking is unchanged and the score instead **declares its
+  denominator** wherever it is shown.
+  - Tracker: a `3/4` marker on the cell, with the full sentence in the tooltip and `aria-label`
+  - Compare: `(3/4)` appended — and the green "best" crown is **dropped** when the two scores rest
+    on different pillar counts
+  - Profile PDF: `85/100 (3/4 pillars)`
+  - Profile breakdown panel: `85/100, 3 pillér alapján`
+  - `availablePillars` on the returned object is how many were counted; **read it wherever the
+    total is displayed.**
+- **`null` total:** when *no* pillar can be computed, `total` is `null` — not `0`. `0` is a real
+  score meaning "everything was measured and everything was bad".
+- **Used in — the complete set of `calcStockScore` callers, verified by grep:** the Tracker's Score
+  column, the Screener's score filter, Compare mode, the profile's Scores tab
+  (`renderScoreBreakdown`) and the profile PDF. **Five, and no others.** In particular the
+  dashboard's *Portfolio Quality (Weighted)* widget does **not** use this score — it is built from
+  Terry Smith metrics and never calls `calcStockScore`.
 
 ### Checklist Completion — `CL%`
 

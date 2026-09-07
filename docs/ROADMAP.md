@@ -170,6 +170,16 @@ cheaper after it.
   CLAUDE.md's warn-first rule as the mitigation. `wrangler d1 create stratos-ventures-dev` + an
   env-based binding if it is ever wanted. *(IMPROVEMENT-IDEAS #10)*
 
+### Partial-score marker, the two residuals (2026-09-07, Cat 124)
+Both are accepted-for-now in KNOWN-ISSUES and listed here because CLAUDE.md routes open items to this
+file; neither blocks anything, and both are small enough to ride along with the next Tracker batch.
+- [ ] **Tap-to-explain on the partial-score marker** — `title` needs a hover, so on a phone the 9px
+  `3/4` stands alone with no explanation. A small popover on the marker, not a `title`.
+  *(KNOWN-ISSUES **P.36**)*
+- [ ] **A three-digit partial score overlaps the marker** — measured at 3.8px on desktop in a 48px
+  fixed column. Needs a total of exactly 100 from three perfect pillars. Every cheap fix is worse
+  than the defect; the honest one is a wider column. *(KNOWN-ISSUES **P.37**)*
+
 ### UX findings (2026-07-03 UI/UX audit)
 Rated high in the audit:
 - [ ] **No breadcrumb or back navigation** — opening a profile and jumping to the calculator loses

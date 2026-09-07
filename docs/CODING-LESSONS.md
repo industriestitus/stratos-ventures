@@ -69,6 +69,14 @@ Each fix only addressed the immediate symptom.
 
 ---
 
+### 6. Out of the Layout Is Not Out of the Text (Cat 124)
+
+**Bugs found:** 1 — a Tracker score cell whose `textContent` read `"853/4"` after the layout had already been fixed.
+
+**Pattern:** a small `3/4` marker was appended inside a table cell to say the score rested on three pillars. Inline, it displaced the digits in a `tabular-nums` column. Moving it to `position:absolute` fixed the *visual* problem completely — and changed nothing about the *text*: an absolutely positioned element is still a child node, so the cell's `textContent` stayed `"853/4"`. A screen reader announced it as one token; a copy of the table pasted `853`. `aria-hidden="true"` plus an `aria-label` on the cell answered the screen reader and left the copy/paste mangled, because `aria-hidden` is not a text-extraction rule.
+
+**Rule.** Positioning changes where a node is *painted*, never whether it is *read*. When a decoration must not join the content, it must not be a node: `content: attr(data-x)` on a `::before`/`::after` is in neither `textContent` nor the copy buffer, and the element's own `aria-label` supplies the meaning. Three separate readers of a cell — the eye, the accessibility tree, and `textContent` (copy/paste, CSV export, any `innerText` scrape) — and a fix aimed at one proves nothing about the other two. **Verify by reading `textContent` back**, not by looking at it.
+
 ## JavaScript Patterns
 
 ### 1. Dedup Guards with try/finally
@@ -262,6 +270,14 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 **Why it is worse than the bug it replaced.** `0.0` is self-evidently broken and a reader distrusts it. `24.0` is a number a person acts on. **An average is a laundering device** — it takes one impossible value and hands back a plausible one with a straight face.
 
 **Rules.** (1) Filter at the point where a single bad datum is still identifiable — inside the loop, before weighting — not after the arithmetic that hides it. (2) Test a guard with **more than one** item; a one-element aggregate equals its element, so every aggregate-level guard passes that test. (3) When masking a bad value, ask which OTHER consumers read the same field: this one had eight (tracker cells, screener, compare, scatter, profile cards, Money Back, DCF, 10cap), so the refusal belonged at the source — `_applyMarketData`, the choke point every path already passed — with a mirror for the manual-override path that bypasses it. (4) "Positive and finite" is not "plausible": a market cap of `3` is all three. The plausibility test has to come from the domain — here `marketCap/price` is the share count, and a listed company does not have fewer than a thousand shares.
+
+### 19. A Fix Lands in One View; The Number Lives in Several (Cat 124)
+
+**Bugs found:** 1 CRITICAL, caught by QA — Compare mode kept crowning the company with the least data after the Tracker had been fixed.
+
+**Pattern:** the Quality Score is renormalised over the pillars that could be computed, so a 3-pillar `91` can outrank a 4-pillar `75`. The batch marked the partial score on the Tracker and stopped there. Compare mode — whose *entire purpose* is to declare a winner, and which paints the better value green — went on awarding the crown to the score built from less data, which is the most consequential place the defect could survive.
+
+**Rule.** Before calling a display fix done, grep for every renderer of the same field and list them; this number had four (Tracker cell, Compare row, profile PDF, help text). Cat 123 had already taught the same lesson about `marketCap` and its eight consumers. And note the second half: in Compare a *label* was not enough, because the green highlight is an independent claim. **When a view ranks or highlights, ask whether the comparison is still valid, not just whether the number is annotated** — a "best" across two different denominators is an assertion, not a comparison, and the right answer was to withhold it.
 
 ## Data Safety
 
@@ -647,15 +663,15 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 
 | Domain | Lessons | Bugs Found |
 |--------|---------|-----------|
-| Layout & CSS | 5 | 40+ (Categories 10-14) |
-| JavaScript | 13 | 55+ (Categories 5, 8, 9, 22, 34, 73, 116) |
+| Layout & CSS | 6 | 40+ (Categories 10-14, 124) |
+| JavaScript | 19 | 55+ (Categories 5, 8, 9, 22, 34, 73, 116, 121-124) |
 | Data Safety | 11 | 34+ (Categories 15, 72, 82, 86) |
 | API & Caching | 5 | 40+ (Categories 5, 6, 21, 80, 98, 99) |
 | Testing & QA | 4 | 50+ (Categories 9-18, 113) |
 | Process | 4 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 61 lessons across 7 domains.
+**Total:** 63 lessons across 7 domains.
 
 ## Related Documents
 
