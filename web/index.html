@@ -1129,7 +1129,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v66';
+var APP_VERSION='v67';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -10930,7 +10930,7 @@ function renderSummaryTab(ticker){
   h+=`</div>`;
 
   // 4. Reviews
-  const reviews=(rvData.entries||[]).filter(e=>e.companyTicker===ticker).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const reviews=(rvData.entries||[]).filter(e=>e.companyTicker===ticker&&!e.deleted_at).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const recentReviews=reviews.slice(0,5);
   h+=`<div class="cp-sum-section"><div class="cp-sum-header"><span class="cp-sum-title">Reviews (${reviews.length})</span>`;
   if(reviews.length)h+=`<a class="cp-sum-link" onclick="showSection('reviews')">View all →</a>`;
@@ -11261,7 +11261,7 @@ async function fetchHistoricalCharts(ticker){
     });
     const incData=histRaw?.incData;
     const cfData=histRaw?.cfData;
-    if(histRaw?.bsData?.length&&tStocks[ticker])tStocks[ticker]._bsData=histRaw.bsData;
+    if(histRaw?.bsData?.length&&tStocks[ticker])tStocks[ticker]._bsData=histRaw.bsData.slice(0,3);
     if(histRaw?.incData?.length&&tStocks[ticker])tStocks[ticker]._isData=histRaw.incData.slice(0,3);
     if(histRaw?.cfData?.length&&tStocks[ticker])tStocks[ticker]._cfData=histRaw.cfData.slice(0,3);
     if(profileTicker!==startTicker)return;
@@ -17170,6 +17170,9 @@ async function generatePdf(ticker){
   if(!await _confirmSensitiveExport())return;
   const btn=document.getElementById('pdf-generate-btn');
   if(btn){btn.disabled=true;btn.textContent='Generating...'}
+  // Declared outside the try: `catch` is a sibling block, not a nested one, so a `let`
+  // inside the try is not in scope there.
+  let pdfSection='setup';
   try{
     await loadJsPDF();
     if(!window.jspdf)throw new Error('jsPDF failed to load');
@@ -17247,10 +17250,13 @@ async function generatePdf(ticker){
       doc.text(label+':',ml+indent,y);
       const labelW=doc.getTextWidth(label+': ');
       doc.setFont('helvetica','normal');doc.setTextColor(...colors.black);
-      const maxW=cw-indent-labelW;
+      const maxW=Math.max(cw-indent-labelW,20);
       const lines=doc.splitTextToSize(String(value||'-'),maxW);
-      doc.text(lines,ml+indent+labelW,y);
-      y+=lines.length*4.5;
+      for(let i=0;i<lines.length;i++){
+        if(i>0)checkPage(5);
+        doc.text(lines[i],ml+indent+labelW,y);
+        y+=4.5;
+      }
       if(lines.length===1)y+=1;
     }
 
@@ -17262,7 +17268,7 @@ async function generatePdf(ticker){
       items.forEach((item,i)=>{
         const x=ml+i*colW;
         doc.setFontSize(7);doc.setTextColor(...colors.gray);doc.setFont('helvetica','normal');
-        doc.text(item.label,x+2,y);
+        doc.text(String(item.label??''),x+2,y);
         doc.setFontSize(9);doc.setTextColor(...colors.black);doc.setFont('helvetica','bold');
         doc.text(String(item.value||'-'),x+2,y+5);
       });
@@ -17275,7 +17281,7 @@ async function generatePdf(ticker){
       doc.rect(ml,y-3.5,cw,6,'F');
       doc.setFontSize(7.5);doc.setTextColor(...colors.white);doc.setFont('helvetica','bold');
       let x=ml;
-      cols.forEach((c,i)=>{doc.text(c,x+1,y);x+=colWidths[i]});
+      cols.forEach((c,i)=>{doc.text(String(c??'-'),x+1,y);x+=(colWidths[i]||0)});
       y+=5;
     }
 
@@ -17286,7 +17292,7 @@ async function generatePdf(ticker){
       let x=ml;
       vals.forEach((v,i)=>{
         const txt=String(v??'-').substring(0,40);
-        doc.text(txt,x+1,y);x+=colWidths[i];
+        doc.text(txt,x+1,y);x+=(colWidths[i]||0);
       });
       y+=5;
     }
@@ -17332,7 +17338,7 @@ async function generatePdf(ticker){
     const sc=calcStockScore(s);
 
     // ── Key Metrics Summary ──
-    if(selected.has('profile')){
+    if(selected.has('profile')){pdfSection='profile';
       metricRow([
         {label:'Price',value:s.price?'$'+s.price.toFixed(2):'-'},
         {label:'Market Cap',value:fmt(s.marketCap)},
@@ -17376,15 +17382,15 @@ async function generatePdf(ticker){
     }
 
     // ── Financials ──
-    if(selected.has('financials')){
+    if(selected.has('financials')){pdfSection='financials';
       sectionTitle('Financial Analysis');
 
       // 3-year tables
-      const years=s._isData||[];
+      const years=(s._isData||[]).slice(0,3);     // colW below holds 3 year columns
       if(years.length){
         subTitle('Income Statement (3 Years)');
         const colW=[cw*0.34,cw*0.22,cw*0.22,cw*0.22];
-        const yrLabels=years.map(yr=>yr.calendarYear||yr.date?.substring(0,4)||'-');
+        const yrLabels=years.map(yr=>String(yr.calendarYear||yr.date?.substring(0,4)||'-'));
         tableHeader(['Metric',...yrLabels],colW);
         const isRows=[
           {l:'Revenue',f:'revenue'},
@@ -17402,11 +17408,11 @@ async function generatePdf(ticker){
         y+=6;
       }
 
-      const cfYears=s._cfData||[];
+      const cfYears=(s._cfData||[]).slice(0,3);   // colW below holds 3 year columns
       if(cfYears.length){
         subTitle('Cash Flow (3 Years)');
         const colW=[cw*0.34,cw*0.22,cw*0.22,cw*0.22];
-        const yrLabels=cfYears.map(yr=>yr.calendarYear||yr.date?.substring(0,4)||'-');
+        const yrLabels=cfYears.map(yr=>String(yr.calendarYear||yr.date?.substring(0,4)||'-'));
         tableHeader(['Metric',...yrLabels],colW);
         const cfRows=[
           {l:'Operating CF',f:'operatingCashFlow'},
@@ -17423,11 +17429,11 @@ async function generatePdf(ticker){
         y+=6;
       }
 
-      const bsYears=s._bsData||[];
+      const bsYears=(s._bsData||[]).slice(0,3);   // colW below holds 3 year columns
       if(bsYears.length){
         subTitle('Balance Sheet (3 Years)');
         const colW=[cw*0.34,cw*0.22,cw*0.22,cw*0.22];
-        const yrLabels=bsYears.map(yr=>yr.calendarYear||yr.date?.substring(0,4)||'-');
+        const yrLabels=bsYears.map(yr=>String(yr.calendarYear||yr.date?.substring(0,4)||'-'));
         tableHeader(['Metric',...yrLabels],colW);
         const bsRows=[
           {l:'Total Assets',f:'totalAssets'},
@@ -17463,7 +17469,7 @@ async function generatePdf(ticker){
     }
 
     // ── Checklist ──
-    if(selected.has('checklist')){
+    if(selected.has('checklist')){pdfSection='checklist';
       sectionTitle('Checklist Analysis');
       const cl=s.checklist;
       if(cl){
@@ -17524,7 +17530,7 @@ async function generatePdf(ticker){
     }
 
     // ── Valuations ──
-    if(selected.has('valuations')){
+    if(selected.has('valuations')){pdfSection='valuations';
       sectionTitle('Valuations');
 
       // Valuation calcs summary
@@ -17564,7 +17570,7 @@ async function generatePdf(ticker){
     }
 
     // ── Research Notes ──
-    if(selected.has('notes')){
+    if(selected.has('notes')){pdfSection='notes';
       sectionTitle('Research Notes');
       const allNotes=[];
       ['journal','news','market'].forEach(type=>{
@@ -17599,7 +17605,7 @@ async function generatePdf(ticker){
     }
 
     // ── Earnings Notes ──
-    if(selected.has('earnings')){
+    if(selected.has('earnings')){pdfSection='earnings';
       sectionTitle('Earnings Notes');
       const eNotes=s.notes?.earnings;
       let hasEarnings=false;
@@ -17627,7 +17633,7 @@ async function generatePdf(ticker){
     }
 
     // ── Portfolio ──
-    if(selected.has('portfolio')){
+    if(selected.has('portfolio')){pdfSection='portfolio';
       sectionTitle('Portfolio');
 
       const positions=getActivePositions().filter(p=>p.ticker===ticker);
@@ -17667,13 +17673,13 @@ async function generatePdf(ticker){
     }
 
     // ── Dividends ──
-    if(selected.has('dividends')){
+    if(selected.has('dividends')){pdfSection='dividends';
       sectionTitle('Dividend History');
       const dh=divHistory[ticker];
       if(dh&&dh.history&&dh.history.length){
         // Summary
         const latest=dh.history[0];
-        textLine('Latest Dividend','$'+(latest.amount||latest.dividend||0).toFixed(4)+' ('+latest.frequency+')');
+        textLine('Latest Dividend','$'+(latest.amount||latest.dividend||0).toFixed(4)+' ('+(latest.frequency||'-')+')');
         if(s.dividendYield!=null)textLine('Current Yield',s.dividendYield.toFixed(2)+'%');
         y+=4;
 
@@ -17694,13 +17700,14 @@ async function generatePdf(ticker){
     }
 
     // ── Reviews ──
-    if(selected.has('reviews')){
+    if(selected.has('reviews')){pdfSection='reviews';
       sectionTitle('Reviews');
-      const reviews=rvData.entries.filter(e=>e.companyTicker===ticker).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+      const reviews=rvData.entries.filter(e=>e.companyTicker===ticker&&!e.deleted_at).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
       if(reviews.length){
         reviews.forEach(rev=>{
           checkPage(20);
-          subTitle(rev.type.charAt(0).toUpperCase()+rev.type.slice(1)+' Review — '+(rev.date||''));
+          const rvType=String(rev.type||'');
+          subTitle((rvType?rvType.charAt(0).toUpperCase()+rvType.slice(1)+' ':'')+'Review — '+(rev.date||''));
           if(rev.summary){writeWrapped(rev.summary)}
           if(rev.answers){
             Object.entries(rev.answers).forEach(([q,a])=>{
@@ -17717,7 +17724,7 @@ async function generatePdf(ticker){
     }
 
     // ── TODOs & Alerts ──
-    if(selected.has('todos')){
+    if(selected.has('todos')){pdfSection='todos';
       sectionTitle('TODOs & Alerts');
       const todos=s.todos||[];
       if(todos.length){
@@ -17749,12 +17756,16 @@ async function generatePdf(ticker){
       }
     }
 
+    pdfSection='save';
     const fileName='Stratos-'+ticker+'-'+new Date().toISOString().slice(0,10)+'.pdf';
     doc.save(fileName);
     showToast(i18n('toast.pdfExported',{name:fileName}),'success');
   }catch(e){
-    console.error('PDF generation error:',e);
-    showToast(i18n('toast.pdfFailed',{err:e.message}),'error');
+    // The failure shape says what went wrong; only the section says where. Ten independent
+    // section builders share one try block, and "Invalid arguments passed to jsPDF.text"
+    // named none of them.
+    console.error('PDF generation error in section "'+pdfSection+'":',e);
+    showToast(i18n('toast.pdfFailed',{err:'['+pdfSection+'] '+e.message}),'error');
   }finally{
     closePdfDialog();
   }
@@ -17802,15 +17813,20 @@ async function generatePortfolioPdf(btn){
       doc.text(label+':',ml+indent,y);
       const lw=doc.getTextWidth(label+': ');
       doc.setFont('helvetica','normal');doc.setTextColor(...colors.black);
-      const lines=doc.splitTextToSize(String(value||'-'),cw-indent-lw);
-      doc.text(lines,ml+indent+lw,y);y+=lines.length*4.5+(lines.length===1?1:0);
+      const lines=doc.splitTextToSize(String(value||'-'),Math.max(cw-indent-lw,20));
+      for(let i=0;i<lines.length;i++){
+        if(i>0)checkPage(5);
+        doc.text(lines[i],ml+indent+lw,y);
+        y+=4.5;
+      }
+      if(lines.length===1)y+=1;
     }
     function metricRow(items){
       checkPage(14);const colW=cw/items.length;
       doc.setFillColor(...colors.bg);doc.roundedRect(ml,y-3,cw,12,1,1,'F');
       items.forEach((item,i)=>{
         const x=ml+i*colW;
-        doc.setFontSize(7);doc.setTextColor(...colors.gray);doc.setFont('helvetica','normal');doc.text(item.label,x+2,y);
+        doc.setFontSize(7);doc.setTextColor(...colors.gray);doc.setFont('helvetica','normal');doc.text(String(item.label??''),x+2,y);
         doc.setFontSize(9);doc.setTextColor(...colors.black);doc.setFont('helvetica','bold');doc.text(String(item.value||'-'),x+2,y+5);
       });
       y+=14;
@@ -17818,12 +17834,12 @@ async function generatePortfolioPdf(btn){
     function tableHeader(cols,colWidths){
       checkPage(10);doc.setFillColor(...colors.accent);doc.rect(ml,y-3.5,cw,6,'F');
       doc.setFontSize(7.5);doc.setTextColor(...colors.white);doc.setFont('helvetica','bold');
-      let x=ml;cols.forEach((c,i)=>{doc.text(c,x+1,y);x+=colWidths[i]});y+=5;
+      let x=ml;cols.forEach((c,i)=>{doc.text(String(c??'-'),x+1,y);x+=(colWidths[i]||0)});y+=5;
     }
     function tableRow(vals,colWidths,alt){
       checkPage(7);if(alt){doc.setFillColor(...colors.bg);doc.rect(ml,y-3.5,cw,6,'F')}
       doc.setFontSize(7.5);doc.setTextColor(...colors.black);doc.setFont('helvetica','normal');
-      let x=ml;vals.forEach((v,i)=>{doc.text(String(v??'-').substring(0,40),x+1,y);x+=colWidths[i]});y+=5;
+      let x=ml;vals.forEach((v,i)=>{doc.text(String(v??'-').substring(0,40),x+1,y);x+=(colWidths[i]||0)});y+=5;
     }
 
     addHeader();addFooter(pageNum);
