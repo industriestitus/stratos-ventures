@@ -191,7 +191,7 @@ input:focus,textarea:focus{box-shadow:0 0 0 2px rgba(108,92,231,.25)}
 .btn-danger{background:#e74c3c;color:#fff;border:none}.btn-danger:hover{background:#c0392b}
 .btn-danger:disabled{opacity:.4;cursor:not-allowed;background:#e74c3c}
 /* Confirmation dialog */
-.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:350;align-items:center;justify-content:center}
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:10050;align-items:center;justify-content:center}
 .confirm-overlay.active{display:flex}
 .confirm-dialog{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:420px;width:90%;animation:sectionFadeIn .15s ease-out}
 .confirm-dialog h3{margin:0 0 8px;font-size:var(--fs-xl);font-weight:600}
@@ -1129,7 +1129,7 @@ body.is-offline::after{content:'Offline';position:fixed;top:8px;right:8px;backgr
 var _lang=localStorage.getItem('app_lang')||'en';
 // Build/deploy version — MUST match sw.js CACHE_NAME ('stratos-vNN'). Bump both on every deploy.
 // Shown at the bottom of the sidebar so a hard reload can be confirmed to have loaded the new build.
-var APP_VERSION='v65';
+var APP_VERSION='v66';
 var I18N={en:{
 'nav.dashboard':'Dashboard','nav.companies':'Companies','nav.portfolio':'Portfolio','nav.research':'Research','nav.framework':'Framework','nav.reviews':'Reviews','nav.search':'Search','nav.settings':'Settings','nav.more':'More',
 'common.cancel':'Cancel','common.delete':'Delete','common.save':'Save','common.close':'Close','common.add':'Add','common.edit':'Edit','common.export':'Export','common.import':'Import','common.test':'Test','common.copy':'Copy','common.loading':'Loading...','common.undo':'Undo','common.restored':'Restored','common.back':'Back','common.none':'None','common.yes':'Yes','common.no':'No','common.ok':'OK','common.retry':'Retry','common.selectAll':'Select all','common.pin':'Pin','common.unpin':'Unpin','common.source':'Source',
@@ -1154,7 +1154,7 @@ var I18N={en:{
 'comp.calculator':'Calculator','comp.tracker':'Tracker','comp.charts':'Charts','comp.saveStock':'Save Stock','comp.tickerPlaceholder':'Stock ticker / name','comp.millions':'Millions','comp.billions':'Billions','comp.thousands':'Thousands','comp.units':'Units','comp.sharedInputs':'Shared Inputs','comp.savedStocks':'Saved Stocks','comp.savedStocksHint':'Click to load. Data stored in localStorage.','comp.backToTracker':'Back to Tracker','comp.backToDashboard':'Back to Dashboard','comp.backToPortfolio':'Back to Portfolio','comp.backToResearch':'Back to Research','comp.backToReviews':'Back to Reviews','comp.enterTicker':'Enter a stock name/ticker first.','comp.noSavedStocks':'No saved stocks yet.',
 'comp.trackerDefaults':'Tracker Defaults','comp.addTicker':'+ Add','comp.refreshAll':'Refresh All','comp.filter':'Filter...','comp.screener':'🔍 Screener','comp.compare':'⚖ Compare','comp.screenerFilters':'Screener Filters','comp.screenerDesc':'Filter your tracked stocks by financial metrics, scores, and valuation ratios.','comp.screenerTip':'Filter stocks by P/E, margins, scores, and other financial metrics','comp.compareTip':'Select 2+ companies to compare their metrics side by side','comp.compareDesc':'Check 2+ companies below, then click Compare Selected.','comp.clearAll':'Clear All','comp.addFilter':'+ Add filter...','comp.selectCompare':'Select companies to compare:','comp.selected':'0 selected','comp.compareSelected':'Compare Selected','comp.companyComparison':'Company Comparison',
 'comp.priceCharts':'Price & Valuation Charts','comp.range':'Range','comp.6months':'6 Months','comp.1year':'1 Year','comp.2years':'2 Years','comp.chartType':'Type','comp.price':'Price','comp.priceNorm':'Price (Normalized %)','comp.peRatio':'P/E Ratio','comp.individualCharts':'Individual Stock Charts',
-'comp.summary':'Summary','comp.overview':'Overview','comp.financials':'Financials','comp.valuation':'Valuation','comp.notes':'Notes','comp.checklist':'Checklist','comp.dividendsTab':'Dividends','comp.scorePartial':'Score computed from {n} of the 4 pillars — whatever could not be computed is left out, so this is not directly comparable with a full score. Click for the breakdown.','comp.scoreBreakdownHint':'Click for score breakdown','comp.scores':'Scores','comp.insider':'Insider',
+'comp.summary':'Summary','comp.overview':'Overview','comp.financials':'Financials','comp.valuation':'Valuation','comp.notes':'Notes','comp.checklist':'Checklist','comp.dividendsTab':'Dividends','comp.tipScoreCol':'Composite Quality Score (0-100). Rescaled over what could actually be computed, so missing data raises the score rather than lowering it.','comp.scorePartial':'Score computed from {n} of the 4 pillars — whatever could not be computed is left out, so this is not directly comparable with a full score. Click for the breakdown.','comp.scoreBreakdownHint':'Click for score breakdown','comp.scores':'Scores','comp.insider':'Insider',
 'comp.noHistorical':'No historical data available','comp.failedHistorical':'Failed to load historical data',
 'comp.highQuality':'High Quality','comp.fair':'Fair','comp.weak':'Weak','comp.belowAverage':'Below Average','comp.pillar':'pillar','comp.pillars':'pillars','comp.qualityScore':'Quality Score','comp.noScoreData':'Not enough data to calculate scores. Fetch data first.','comp.scoreAcross':'{score}/100 across {n} pillars','comp.scoreAcross1':'{score}/100 across {n} pillar','comp.pValuation':'Valuation','comp.pGrowth':'Growth','comp.pProfitability':'Profitability','comp.pHealth':'Financial Health','comp.pillarDetails':'{p} Details','comp.metric':'Metric','comp.value':'Value','comp.score':'Score','comp.na':'N/A',
 'comp.historicalTrends':'Historical Trends','comp.historicalTrendsN':'Historical Trends ({n} Year)','comp.insiderKeyMissing':'Finnhub API key not set — go to Settings to add your free key from finnhub.io','comp.insiderFailed':'Failed to load insider data.','comp.insiderRateLimit':'Finnhub rate limit reached — try again in a minute.','comp.insiderNoData':'No insider trading data available for {ticker}','comp.insiderSummary':'Insider Trading Summary','comp.totalTxns':'Total Transactions','comp.buysSells':'Buys / Sells','comp.netShares':'Net Shares','comp.last90d':'Last 90 Days','comp.keyInsiders':'Key Insiders','comp.txnHistory':'Transaction History','comp.showAll':'Show all {count} transactions','comp.showingTop':'Showing top 20 of {count} insiders',
@@ -1226,7 +1226,7 @@ var I18N={en:{
 'comp.calculator':'Kalkulátor','comp.tracker':'Követő','comp.charts':'Grafikonok','comp.saveStock':'Mentés','comp.tickerPlaceholder':'Részvény ticker / név','comp.millions':'Millió','comp.billions':'Milliárd','comp.thousands':'Ezer','comp.units':'Egység','comp.sharedInputs':'Közös bemenetek','comp.savedStocks':'Mentett részvények','comp.savedStocksHint':'Kattints a betöltéshez. Adatok a localStorage-ban.','comp.backToTracker':'Vissza a követőhöz','comp.backToDashboard':'Vissza az irányítópulthoz','comp.backToPortfolio':'Vissza a portfólióhoz','comp.backToResearch':'Vissza a kutatáshoz','comp.backToReviews':'Vissza az értékelésekhez','comp.enterTicker':'Adj meg egy részvény nevet/tickert először.','comp.noSavedStocks':'Még nincs mentett részvény.',
 'comp.trackerDefaults':'Követő alapértékek','comp.addTicker':'+ Hozzáadás','comp.refreshAll':'Összes frissítése','comp.filter':'Szűrés...','comp.screener':'🔍 Szűrő','comp.compare':'⚖ Összehasonlítás','comp.screenerFilters':'Szűrő feltételek','comp.screenerDesc':'Szűrd a követett részvényeidet pénzügyi mutatók, pontszámok és értékeltségi ráták alapján.','comp.screenerTip':'Részvények szűrése P/E, margó, pontszám és egyéb pénzügyi mutatók alapján','comp.compareTip':'Válassz ki 2+ céget a mutatóik egymás melletti összehasonlításához','comp.compareDesc':'Jelölj be 2+ céget lent, majd kattints az Összehasonlításra.','comp.clearAll':'Összes törlése','comp.addFilter':'+ Szűrő hozzáadása...','comp.selectCompare':'Válassz cégeket az összehasonlításhoz:','comp.selected':'0 kiválasztva','comp.compareSelected':'Kiválasztottak összehasonlítása','comp.companyComparison':'Cég összehasonlítás',
 'comp.priceCharts':'Ár és értékelési grafikonok','comp.range':'Időszak','comp.6months':'6 hónap','comp.1year':'1 év','comp.2years':'2 év','comp.chartType':'Típus','comp.price':'Ár','comp.priceNorm':'Ár (normalizált %)','comp.peRatio':'P/E arány','comp.individualCharts':'Egyedi részvény grafikonok',
-'comp.summary':'Összefoglaló','comp.overview':'Áttekintés','comp.financials':'Pénzügyek','comp.valuation':'Értékelés','comp.notes':'Jegyzetek','comp.checklist':'Checklist','comp.dividendsTab':'Osztalékok','comp.scorePartial':'A pontszám a 4 pillérből {n} alapján készült — ami nem volt kiszámítható, az kimarad, ezért nem hasonlítható közvetlenül egy teljes pontszámhoz. Kattints a részletekért.','comp.scoreBreakdownHint':'Kattints a pontszám részletezéséhez','comp.scores':'Pontszámok','comp.insider':'Bennfentes',
+'comp.summary':'Összefoglaló','comp.overview':'Áttekintés','comp.financials':'Pénzügyek','comp.valuation':'Értékelés','comp.notes':'Jegyzetek','comp.checklist':'Checklist','comp.dividendsTab':'Osztalékok','comp.tipScoreCol':'Összesített minőségi pontszám (0-100). Csak arra számol, ami kiszámítható volt, és arra skálázza vissza — ezért a hiányzó adat felfelé húzza a pontszámot, nem lefelé.','comp.scorePartial':'A pontszám a 4 pillérből {n} alapján készült — ami nem volt kiszámítható, az kimarad, ezért nem hasonlítható közvetlenül egy teljes pontszámhoz. Kattints a részletekért.','comp.scoreBreakdownHint':'Kattints a pontszám részletezéséhez','comp.scores':'Pontszámok','comp.insider':'Bennfentes',
 'comp.noHistorical':'Nincs elérhető historikus adat','comp.failedHistorical':'Historikus adatok betöltése sikertelen',
 'comp.highQuality':'Kiváló minőség','comp.fair':'Elfogadható','comp.weak':'Gyenge','comp.belowAverage':'Átlag alatti','comp.pillar':'pillér','comp.pillars':'pillér','comp.qualityScore':'Minőségi pontszám','comp.noScoreData':'Nincs elég adat a pontszám kiszámításához. Előbb tölts le adatot.','comp.scoreAcross':'{score}/100, {n} pillér alapján','comp.scoreAcross1':'{score}/100, {n} pillér alapján','comp.pValuation':'Értékelés','comp.pGrowth':'Növekedés','comp.pProfitability':'Jövedelmezőség','comp.pHealth':'Pénzügyi stabilitás','comp.pillarDetails':'{p} — részletek','comp.metric':'Mutató','comp.value':'Érték','comp.score':'Pontszám','comp.na':'nincs adat',
 'comp.historicalTrends':'Historikus trendek','comp.historicalTrendsN':'Historikus trendek ({n} év)','comp.insiderKeyMissing':'Finnhub API kulcs nincs beállítva — menj a Beállításokba és add hozzá az ingyenes kulcsot a finnhub.io-ról','comp.insiderFailed':'Bennfentes adatok betöltése sikertelen.','comp.insiderRateLimit':'Finnhub korlát elérve — próbáld újra egy perc múlva.','comp.insiderNoData':'Nincs bennfentes kereskedési adat ehhez: {ticker}','comp.insiderSummary':'Bennfentes kereskedési összefoglaló','comp.totalTxns':'Összes tranzakció','comp.buysSells':'Vételek / Eladások','comp.netShares':'Nettó részvények','comp.last90d':'Utolsó 90 nap','comp.keyInsiders':'Kulcs bennfentesek','comp.txnHistory':'Tranzakció előzmények','comp.showAll':'Összes {count} tranzakció mutatása','comp.showingTop':'{count} bennfentesből a top 20',
@@ -3630,6 +3630,10 @@ async function loginWithMasterPassword(){
 
 // Show the master-password login gate (used at boot and on session expiry).
 function showMasterLogin(msg){
+  // Locking cancels any pending confirm. Since the confirm sits above the lock screen,
+  // leaving it open would let a destructive action be executed on a locked app — and its
+  // message text (ticker, count) would be readable over the lock surface.
+  if(_confirmResolve)_confirmCancel();
   const ls=document.getElementById('lock-screen');
   if(ls)ls.style.display='flex';
   document.documentElement.classList.add('app-locked');
@@ -4642,7 +4646,7 @@ function showPasswordPrompt(opts){
   opts=opts||{};
   return new Promise(resolve=>{
     const ov=document.createElement('div');
-    ov.className='confirm-overlay active';ov.style.zIndex='400';
+    ov.className='confirm-overlay active';ov.style.zIndex='10055';
     const dlg=document.createElement('div');dlg.className='confirm-dialog';
     const h=document.createElement('h3');h.textContent=opts.title||'';
     const p=document.createElement('p');p.textContent=opts.message||'';
@@ -11997,10 +12001,10 @@ const METRIC_TIPS={
   wcMgmt:{name:'Working Capital Management',formula:'(Payables - Receivables - Inventory) / Revenue × 100',bench:'Positive = supplier financing (like Amazon), Negative = cash tied up',desc:'Whether the company finances operations with supplier credit (positive) or ties up its own cash (negative).'},
   prefStock:{name:'Preferred Stock',formula:'Preferred stock on balance sheet',bench:'None = simpler capital structure',desc:'Preferred shares have priority over common stock for dividends and liquidation. Their presence complicates equity analysis.'},
   _score:{name:'Total Score',formula:'Valuation + Growth + Profitability + Health, rescaled to 100 over the pillars that could be computed — so a company missing one is scored on the rest',bench:'> 70 strong, 40-70 mixed, < 40 weak',desc:'Composite score across 4 pillars. GARP-tuned thresholds weigh quality and value equally.'},
-  _scoreVal:{name:'Valuation Score',formula:'P/E, P/FCF, PEG, EV/EBIT weighted',bench:'> 70 cheap, 40-70 fair, < 40 expensive',desc:'How cheap or expensive the stock is based on multiple valuation metrics.'},
-  _scoreGrw:{name:'Growth Score',formula:'Revenue growth, EPS growth, 3Y CAGR weighted',bench:'> 70 fast grower, 40-70 moderate, < 40 slow',desc:'Revenue and earnings growth momentum over multiple timeframes.'},
+  _scoreVal:{name:'Valuation Score',formula:'P/E, P/FCF, PEG, EV/EBIT and DCF Upside weighted',bench:'> 70 cheap, 40-70 fair, < 40 expensive',desc:'How cheap or expensive the stock is based on multiple valuation metrics.'},
+  _scoreGrw:{name:'Growth Score',formula:'Revenue growth, 3Y revenue CAGR, EPS growth and revenue consistency weighted',bench:'> 70 fast grower, 40-70 moderate, < 40 slow',desc:'Revenue and earnings growth momentum over multiple timeframes.'},
   _scorePrf:{name:'Profitability Score',formula:'Gross/Op/Net margin, ROE, ROIC weighted',bench:'> 70 high quality, 40-70 decent, < 40 weak',desc:'How profitable the business is across margin and return-on-capital metrics.'},
-  _scoreHlt:{name:'Health Score',formula:'D/E, current ratio, interest coverage weighted',bench:'> 70 fortress, 40-70 adequate, < 40 risky',desc:'Balance sheet strength — leverage, liquidity, and debt serviceability.'},
+  _scoreHlt:{name:'Health Score',formula:'D/E, current ratio, FCF positive, FCF/net income, SBC/revenue and buyback yield weighted',bench:'> 70 fortress, 40-70 adequate, < 40 risky',desc:'Balance sheet strength and cash quality — leverage, liquidity, and whether earnings turn into cash.'},
   marketCap:{name:'Market Cap',formula:'Share Price × Shares Outstanding',bench:'> $200B mega, $10-200B large, $2-10B mid, < $2B small',desc:'Total market value of the company. Larger = more liquid and stable, smaller = more growth potential but higher risk.'},
   pipeline:{name:'Pipeline Stage',desc:'Where this company sits in your analysis workflow: Watchlist → Under Review → Buy Target → Owned → Archived.'},
   companyType:{name:'Company Type',desc:'Growth classification: Slow (< 5% growth), Medium (5-15%), Fast (> 15%), Cyclical, Turnaround, or Asset play.'},
@@ -13894,7 +13898,7 @@ const stCols=[
   {k:'sbc',l:'SBC',w:58,d:1,big:1,tip:'Stock Based Compensation'},
   {k:'buyback',l:'BB%',w:42,ratio:1,pct:1,tip:'Buyback Yield %'},
   {k:'_cl',l:'CL%',w:46,cl:1,tip:'Checklist completion — the same figure the checklist header shows'},
-  {k:'_score',l:'Score',w:48,score:1,tip:'Composite Quality Score (0-100)'},
+  {k:'_score',l:'Score',w:48,score:1},
   {k:'_scoreVal',l:'Val',w:36,score:1,scorePillar:'valuation',tip:'Valuation Score (0-25)'},
   {k:'_scoreGrw',l:'Grw',w:36,score:1,scorePillar:'growth',tip:'Growth Score (0-25)'},
   {k:'_scorePrf',l:'Prf',w:36,score:1,scorePillar:'profitability',tip:'Profitability Score (0-25)'},
@@ -14242,7 +14246,8 @@ function renderTracker(){
   thead.innerHTML='<tr>'+stCols.map(c=>{
     const fr=c.frozen?` st-frozen${c.lastFrozen?' st-frozen-last':''}`:''
     const ls=c.frozen?`left:${c.left}px;`:'';
-    const tp=c.tip?` title="${escH(c.tip)}"`:'';
+    const tipText=c.k==='_score'?i18n('comp.tipScoreCol'):c.tip;
+    const tp=tipText?` title="${escH(tipText)}"`:'';
     if(c.k.startsWith('_')&&!c.score&&!c.cl)return`<th class="${fr}" style="width:${c.w}px;${ls}"></th>`;
     if(c.score){const sorted=stSort.col===c.k;const arrow=sorted?(stSort.dir==='asc'?'▲':'▼'):'▲';return`<th class="${sorted?'sorted':''}${fr}" onclick="sortTracker('${c.k}')" style="width:${c.w}px;${ls}"${tp}>${c.l} <span class="sa">${arrow}</span></th>`}
     const sorted=stSort.col===c.k;
@@ -17164,7 +17169,7 @@ async function generatePdf(ticker){
   if(!selected.size){showToast(i18n('toast.selectSection'),'error');return}
   if(!await _confirmSensitiveExport())return;
   const btn=document.getElementById('pdf-generate-btn');
-  btn.disabled=true;btn.textContent='Generating...';
+  if(btn){btn.disabled=true;btn.textContent='Generating...'}
   try{
     await loadJsPDF();
     if(!window.jspdf)throw new Error('jsPDF failed to load');
