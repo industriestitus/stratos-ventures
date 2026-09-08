@@ -240,6 +240,14 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **Status:** accepted, because every candidate fix is worse than the defect. A smaller marker still overlaps (8px measures ~13.2px, overlap 2.15px); a background behind the marker hides a digit; extra right padding shifts the digits, which is precisely what BUG-HISTORY 124.5 fixed. The honest fix is a wider `_score` column, which costs horizontal space on every row for a case almost nobody will see.
 - **The test that would NOT catch it:** TEST-PLAN asks whether a 3-digit partial and a 3-digit full score stay *aligned* — they do. Overlap is a different failure, and it is now its own case.
 
+### P.38 — A Pillar Can Score a Perfect 25/25 From a Single Metric (2026-09-08, found in Cat 125 QA)
+- **Where:** `calcStockScore` → `pillar()` (`index.html:13786`): `scaled = round(earned/possible*25)`, where `possible` counts only the items that resolved.
+- **What it means:** the Cat 124 renormalisation happens at **two** levels, and only the outer one is disclosed. A pillar goes `null` — and so raises the `3/4` marker — only when *every* item in it is non-computable. The far more common case is a **partially** computable pillar, and it is silent.
+- **Concrete case:** `SCORE_THRESHOLDS.valuation` sums to exactly 25 (P/E 6, P/FCF 6, PEG 5, EV/EBIT 5, DCF 3). A company where only `pe` resolves — profitable, no FCF/EBIT/PEG/DCF, ordinary for a manually added or Yahoo-sourced EU stock — scores `6/6 → **25/25**`. `availablePillars` is still 4, so there is **no marker, no `comp.scorePartial` tooltip**, and the pillar cell renders bare with no `title` (`index.html:14348`). A 25 built from one ratio is visually identical to a 25 built from five.
+- **Why it is not fixed here:** this is **P.35 one level down**, and every honest fix changes numbers Peter has already read — capping the pillar by its missing items re-scores companies, and a per-pillar marker re-marks the Tracker. P.35 was his call for exactly this reason; so is this.
+- **The options, for when it is decided:** (a) mark a pillar the way the total is marked, (b) cap `possible` at the pillar's full weight so absent items cost points, (c) refuse a pillar below some coverage threshold, as `null`. (a) changes no number; (b) and (c) change many.
+- **Status:** open, and the highest-value candidate on the score track. GLOSSARY § Quality Score documents only the across-pillar rescale and should say both once this is settled.
+
 ---
 
 ## ~~Deep Audit Findings~~ (ALL FIXED 2026-07-01)

@@ -140,6 +140,7 @@ the archive: its content is from 2026-07-01 and it only received a number in 202
 
 | 116 | **The totals stop mixing currencies (P.29 closed).** Every base-currency total fell back to the raw foreign amount when a rate was missing, so an empty rates table added it straight into a base-currency sum — $2 000 landing in a HUF total as 2 000 Ft, and the allocation doughnut drawing an 18.9% holding as 0.07%. One accumulator (`baseSum`) replaced all **34** sites; P.29 had recorded 16, because its grep counted one spelling of three. Four further sites mixed currencies **without ever calling `convertCurrency()`** and were found only by opening the app: a snapshot delta rendering `+33900.0%`, an index-to-100 chart, an account rollup, and a tooltip labelling dollars as forints. Plus a refused TWR published as exactly 0.0% Alpha. **The QA pass found eight more, the two worst created by the fix itself:** a `base_currency` NOT NULL DEFAULT `'USD'` colliding with readers that assumed the current base, so a D1 round-trip turned a 3.4M Ft snapshot into ~1.19bn Ft; and seven brand-new 'Fetch rates' buttons that stored the rates and never re-rendered, leaving the only way out of an emptied widget looking broken | `98ff584` | 2026-08-27 | 16 | 0 |
 | 117 | **The i18n global is `i18n()`, not `t()` (P.28 closed).** P.28 recorded ~110 scopes binding a local `t` that shadows the global i18n `t()`, and proposed renaming those locals. That treats the symptom: the disease is a **one-letter global**, and `t` is the likeliest local name in JavaScript, so the trap reopens on the next `t=>` anyone writes. The global moved instead — **683 sites rewritten at AST byte offsets** (1 definition + 680 calls + **2 inside a static inline `onclick` handler**, which is HTML text and so invisible to every JS parser). The 104 shadowing scopes were left untouched and are now harmless. Measured with `acorn`, not grep, because Cat 116 had just taught that a scope count inherits the shape of its query: the real figure is **104**, not ~110, and **zero** of them ever called `t()` — the trap never sprang in four years. Also retired **8 comments** warning against shadowing `t`, which described a hazard that no longer exists. **QA found two, both mine:** an orphaned `*/` left by the comment surgery, and a comment shipped in code citing a `Cat 117` that did not yet exist. QA independently re-derived every count and diffed the string, regex and property-name multisets across the refactor — 14 689 strings, exactly two differing (`v58`→`v59`) | `7fad100` | 2026-09-06 | 5 | 1 |
+| 125 | **The blocking export warning was rendering under the dialog that raised it — the profile PDF export has been impossible since v52.** `_confirmSensitiveExport()` opens `.confirm-overlay` at z-index **350**; the PDF dialog it is raised from sits at **9999**. The confirm was neither visible nor clickable, so the export waited forever on a decision nobody could make — and because the export could not run, nobody ever saw whether the PDF's `(3/4 pillars)` line from Cat 124 was right. Peter found it by trying to run TEST-PLAN case 41. **QA then found three regressions in the fix itself**: raising `.toast-container` to clear the confirm put toasts over the **opaque lock screen** (leaking a ticker through `toast.pdfExported`) and, at ≤768px where the band is full width and `pointer-events:auto`, over a dialog's footer buttons — so that half was reverted; `showPasswordPrompt`'s inline `z-index:400`, a value derived from the old 350 base, was left behind and put the **backup-passphrase prompt** below the class it is built from; and the raised confirm now cleared the lock screen, so a destructive confirm raised before a mid-session 401 stayed **clickable on top of a locked app**. Also: the Score column header still described the score as `Composite Quality Score (0-100)` — Cat 124's corrected formula had landed only in the metric help card, and the header is the surface people actually hover — and three `METRIC_TIPS` pillar formulas named metrics their pillars do not score, `_scoreHlt` claiming an interest-coverage term the health pillar has never had | `ca3d834` | 2026-09-08 | 10 | 1 |
 | 124 | **A partial Quality Score now says so — P.35 closed, Peter's call.** The composite renormalises over the pillars it could compute, so a company missing one was scored on the other three and rescaled to 100: **85/100 from three pillars outranked 69/100 from four**, in a column the Tracker sorts by. Rather than re-rank every company, the number now declares what it rests on — a `3/4` marker on the Tracker, `(3/4)` in Compare, `(3/4 pillars)` in the PDF, and a help text that describes the renormalisation instead of an average. **QA found the critical one: Compare was still crowning the company with the LEAST data**, in the one view whose purpose is to declare a winner — so the green crown is now dropped when the pillar counts differ. It also found that absolute positioning moved the marker out of the layout but NOT out of `textContent` (`"853/4"` to a copy/paste), that 9px at `opacity:.7` measured 2.19:1, and that the breakdown panel the marker points people to read `83/100 across 3 pillér` on a Hungarian UI. **A second QA round over those fixes found the accessibility fix had DELETED the score from the accessibility tree** — an `aria-label` replaces a cell's name rather than adding to it, so a hundred Score cells were all announced as "Click for score breakdown" — plus a Compare crown that compared how many pillars instead of which, and an unguarded predicate that would have made "Compare" silently do nothing for anyone holding one corrupt company. The i18n gate rejected the fix's own runtime-built key along the way | `e22b285` | 2026-09-07 | 14 | 2 |
 | 123 | **A corrupt market cap was scoring a company 82 out of 100.** Peter's Tracker showed Apple with a market cap of `3`, and every ratio built from it read `0.0x`. calcStockRatios only checked that the cap was above zero, not that it was plausible — so on the dashboard the ratios collapsed, and on the Tracker the SAME number produced a **perfect 25/25 valuation pillar** and a buyback yield of 8000000000000%. The dashboard was the mildest consumer of a corrupt field. Also: the allocation widget was clipping two of its four doughnuts because `1fr` is `minmax(auto,1fr)` and a Chart.js canvas will not shrink; the benchmark's `—` never said why. **QA rejected the ratio fix twice** — it guarded the weighted AVERAGE (which absorbs one broken holding into a plausible 24.0) and it masked at one consumer while eight others kept reading the field — and caught that this batch's own v64 message named a cause that cannot happen. Worst of all, v64's dip fix DESTROYED known-good 52-week highs on a failed refresh, under a green success toast | `af7d65f` | 2026-09-07 | 11 | 1 |
 | 122 | **The dashboard was publishing a -100% return on a portfolio that had lost nothing.** Peter looked at his own dashboard: TWR -100.0%, Alpha -99.9%, P&L +0 Ft. Both of his snapshots stored a total of **zero**, and calcTWR multiplies period returns — one period ending at zero makes the product zero, and zero times anything stays zero, so the metric was pinned at exactly -100% for the life of the portfolio. Cat 116 taught takeSnapshot() to refuse a missing exchange RATE; a missing PRICE walked past it as 0. Also: the Dip Finder divided a fresh 52-week high by a price that could be months old (a "-71% dip" on AAPL), the widget hide button sat on top of three widgets' Refresh buttons, and the allocation tooltip never showed a share. **QA found the first round of fixes wrong in three places**, the worst being that the Snapshots panel bypassed the very chokepoint the fix relied on and went on printing 0 Ft and -100.0% beside a TWR that had already given up | `56ad30b` | 2026-09-07 | 12 | 0 |
@@ -148,7 +149,7 @@ the archive: its content is from 2026-07-01 and it only received a number in 202
 | 119 | **The i18n contracts stop being hand-maintained (check 14).** The invariants Cats 117 and 118 established by hand — every used key exists in every dictionary, nothing resolves to a global `t`, `applyI18n()` still does its two jobs, no element shadows `i18n` in a handler's `with` scope — are now asserted by `docs/i18n-invariants.mjs`, which parses `index.html` with acorn. **QA found FIVE fail-opens in the first version**, in a gate whose own header forbids exactly that: the `applyI18n` assertion was a regex to the first newline, so a trailing `// TODO restore …` comment satisfied both halves while both defects were reintroduced; `data-i18n` was recognised only double-quoted (check 4's own antipattern, verbatim); `\bsrc\s*=` also matched `data-src=`, cloaking a whole script block; inside inline handlers `t` was caught only when *called*, so `[t]` passed; and a dictionary that was not an object literal was dropped in silence while the summary claimed the languages agreed. Also five false positives that would have blocked correct work, an undeclared acorn dependency, and the two real blind spots now **pinned** so growth fails | `c61957c` | 2026-09-06 | 16 | 0 |
 | 118 | **The sign-in gate follows the language setting (P.31 closed).** `applyI18n()` had exactly two callers, `autoLoad()` and `renderDbFiTracker()`, and both run only after a successful sign-in — so the first screen every user sees was the one screen i18n never reached, with **ten** fully-translated keys that could never display. Now applied on `DOMContentLoaded`, which the spec orders strictly before the `window` `load` handler that un-hides the gate, so it is painted already translated. Three more in the same function: **`<html lang>` was hard-coded `"hu"`** while the app defaults to English, so every English user was served a page declaring Hungarian; **`textContent` was silently deleting all 12 dashboard widget tooltips**, because `initWidgetTips()` appends them *inside* `data-i18n` nodes and the widgets render lazily, so `renderDbFiTracker()` wiped them the moment the FI widget scrolled into view (measured 12 → 0, now 12 → 12); and the preservation reads **direct children only**, so a nested node's bubble can never be re-parented onto its ancestor. **The batch's own worst moment was self-caught:** a first fix rewrote the wrong thing because its supporting measurement was taken on the live DOM, which the old `textContent` had already flattened — the source markup was never looked at | `47d6746` | 2026-09-06 | 5 | 2 |
 
-**Total: 761 fixed, 28 potential (unfixed)** — derived from the Fixed column above, not maintained by hand; `docs/check.sh` fails if the two ever disagree. — P.3/P.15/P.16 accepted as external limitations.
+**Total: 771 fixed, 29 potential (unfixed)** — derived from the Fixed column above, not maintained by hand; `docs/check.sh` fails if the two ever disagree. — P.3/P.15/P.16 accepted as external limitations.
 
  (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch; Cat 98 = 8 adversarial-QA fixes folded into the FMP /stable migration; Cat 99 = 1 wrong-data endpoint caught only by live-browser verification.)
 
@@ -1109,6 +1110,110 @@ Cat 123 found it and left it for Peter: `calcStockScore` renormalises the total 
 **124.16 — a three-digit partial score overlaps the marker.** QA rebuilt the CSS and measured it: the `::after` is 14.88px wide, the `_score` column is 48px with `table-layout:fixed`, and a centred `100` spans into it by **3.8px** on desktop and 4.7px at mobile type sizes; the boxes intersect vertically too. It needs a total of exactly 100 built from three pillars — every one of them a perfect 25/25 — which is rare but *not* hypothetical, since Cat 123 had just documented a corrupt market cap manufacturing a 25/25 valuation pillar. Not fixed because every candidate is worse than the defect: a smaller marker still overlaps, a background behind it hides a digit, and extra padding shifts the digits, which is the thing 124.5 fixed. **Note the test that would not have caught it** — TEST-PLAN asks whether the digits stay *aligned*, and they do; overlap is a different failure. → KNOWN-ISSUES **P.37**.
 
 **The sentence worth carrying forward:** *a fix that lands in one view is a bug in every other view that shows the same number.* Cat 123 said it about eight consumers of `marketCap`; this batch shipped the Tracker and left Compare crowning the least-informed score. Ask who else renders it — the Tracker, Compare, the PDF and the help text were four.
+
+---
+
+
+## Category 125 — The Warning Nobody Could See (2026-09-08) — v66
+
+Peter reached TEST-PLAN case 41 — *does the PDF print `(3/4 pillars)`?* — and could not run it:
+*"Nem tudok jelenleg pdf-et exportálni, valószínű azért, mert a pdf popup alá bukkan fel az a popup,
+ami figyelmeztet arra hogy érzékeny adatok vannak benne."* He described the mechanism exactly.
+
+**125.1 — The blocking export warning rendered beneath the dialog that raised it.** `generatePdf()`
+awaits `_confirmSensitiveExport()`, which is a plain `showConfirm` on `.confirm-overlay`
+(`index.html:194`, **z-index 350**). It is raised from inside `.pdf-dialog-overlay`
+(`index.html:1110`, **z-index 9999**). Both are `position:fixed` children of `<body>` with no ancestor
+creating a stacking context, so z-index alone decides: the confirm painted **under** an opaque
+backdrop, invisible and unclickable. The export then awaited a promise that could only be settled by
+a control the user could not reach. Fixed by raising `.confirm-overlay` to **10050**, above the PDF
+dialog (9999) and `#recovery-key-modal` (10000).
+
+**This is not a Cat 124 regression.** The unencrypted-export warning was added to *all* sensitive
+exports in **v52** (`7557158`). The profile PDF export has therefore been unusable for **thirteen
+versions**, and that is why the Cat 124 PDF line was never validated by anyone: the test could not
+be run. *A gate that cannot be answered is not a gate, it is a dead end.*
+
+### The three regressions QA found in the fix
+
+**125.2 — Toasts began rendering over the opaque lock screen.** To keep toasts visible above the
+newly-raised confirm, `.toast-container` was moved 500 → 10060. `#lock-screen` is
+`position:fixed;inset:0;background:var(--bg)` at 9999, and the app-hiding rule names only three
+elements — `html.app-locked #sidebar,#main-content,#bottom-nav` (`index.html:1307`). The toast
+container is a body-level sibling of all three and is **not** in that selector: it was hidden solely
+by sitting under the lock screen. `showMasterLogin()` fires on **any** mid-session 401
+(`index.html:5766`), and several toasts live 10–14 seconds, one of which interpolates a filename
+built from the ticker. A tracked ticker became readable on a locked screen.
+
+**125.3 — And could cover a dialog's buttons on a phone.** `.toast` sets `pointer-events:auto`, and
+under `@media(max-width:768px)` the container becomes `left:12px;right:12px` — a full-width,
+click-absorbing band. At 10060 two or three stacked toasts sit over the footer of the PDF dialog and
+of `#recovery-key-modal`.
+
+Both 125.2 and 125.3 were caused **only** by the toast bump, so the bump was reverted to 500. The
+cost is that a toast fired while a confirm is open is now hidden behind it — which is what it did
+before this batch, and no flow depends on it.
+
+**125.4 — A derived constant was left behind.** `showPasswordPrompt` overrides the shared class with
+`ov.style.zIndex='400'` (`index.html:4645`) — a value that exists only to sit +50 above the *old*
+base of 350. Moving the base to 10050 and leaving the derived value put the **encrypted-backup
+passphrase prompt** 10050 below the very class it is built from, and below every dialog at 9999+. No
+currently reachable flow puts a 9999 layer on screen while it is open, so this was a broken invariant
+rather than a live failure — but the dialog in question is where a user types their backup
+passphrase, and a hidden one means typing it into nothing. Raised to 10055, keeping the +5 intent.
+
+**125.5 — A destructive confirm became answerable through the lock screen.** The confirm now clears
+`#lock-screen` (9999) too. Sequence: the user clicks Delete on a position, `showConfirm` opens with
+the ticker in its message, a background call 401s, `showMasterLogin()` paints the lock screen
+*underneath* — and the confirm stays fully visible and fully clickable. A destructive action could be
+executed on an app that had just locked itself, with its subject named on the lock surface. Before
+this batch the confirm was buried at 350, which was also wrong (its promise hung silently) but did
+not permit action. `showMasterLogin()` now calls `_confirmCancel()` first, so locking answers any
+pending confirm with `false`.
+
+### The rest
+
+**125.6 — `generatePdf` dereferenced a possibly-missing button outside its `try`.**
+`btn.disabled=true` before the `try` throws an unhandled rejection — no toast, no PDF — if the dialog
+is already gone. This is exactly how 125.1 manifested: the buried confirm left the user clicking the
+PDF backdrop, which calls `closePdfDialog()`, which revealed the confirm, whose OK then hit a null
+`btn`. `generatePortfolioPdf` already guards; the two now match.
+
+**125.7 — The Score column header still described the old formula.** Cat 124 corrected the
+description of the renormalisation — in `METRIC_TIPS._score`, the metric help *card*. The Tracker's
+column header `title` still read `Composite Quality Score (0-100)`, unchanged since Phase 8. Peter
+hovered the header, because that is what a person does. It now carries the real behaviour, and in
+both languages: it was English while the Score *cell* one row below already answered in Hungarian via
+`comp.scorePartial`. **The header was the fifth consumer, and Cat 124's own lesson was about missing
+one.**
+
+**125.8 — The i18n gate rejected the fix's mechanism, again.** The first attempt added a generic
+`tipKey` field read as `i18n(c.tipKey)` — a runtime-built key, invisible to check 14, which failed at
+*runtime-built keys: 11, above the pinned ceiling of 10*. As in Cat 124, the fix was to name the key
+literally (`c.k==='_score'?i18n('comp.tipScoreCol'):c.tip`), **not** to raise the pin. Second batch
+running in which this pin caught something it was not written against.
+
+**125.9–125.11 — Three pillar formulas in `METRIC_TIPS` named metrics their pillars do not score.**
+Found by QA while verifying the new tooltip's claim. `_scoreHlt` advertised *"D/E, current ratio,
+interest coverage"* — the health pillar has **never** had an interest-coverage term; it scores D/E,
+current ratio, FCF positive, FCF/net income, SBC/revenue and buyback yield. `_scoreVal` omitted DCF
+Upside and `_scoreGrw` omitted revenue consistency, both of which are scored. All three corrected
+against `calcStockScore`. Same defect class as 125.7, in the same registry.
+
+### What QA raised that this batch deliberately did **not** fix
+
+`pillar()` rescales a **second** time, one level below the pillar total: `scaled =
+round(earned/possible*25)`. A pillar is `null` only when *every* item in it is non-computable, so
+Cat 124's `3/4` marker covers the rare case. The common case is a **partially**-computable pillar —
+and a company where only `pe` resolves scores `6/6 → 25/25`, a perfect Valuation pillar from one
+ratio, with `availablePillars` still **4**, no marker, and nothing anywhere saying so. That is P.35's
+exact failure mode one level down. It is recorded as **KNOWN-ISSUES P.38** rather than fixed here,
+for the same reason P.35 was put to Peter: every honest fix changes numbers he has already read.
+
+**The sentence worth carrying forward:** *when you move a shared layer, you move everything derived
+from it — and everything that was only ever hidden by sitting below it.* Three of this batch's five
+z-index defects were not the original bug; they were things that had been silently relying on the old
+number. The lock screen hid toasts by being above them, not by any rule that said so.
 
 ---
 

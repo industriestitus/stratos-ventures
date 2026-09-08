@@ -179,6 +179,11 @@ file; neither blocks anything, and both are small enough to ride along with the 
 - [ ] **A three-digit partial score overlaps the marker** — measured at 3.8px on desktop in a 48px
   fixed column. Needs a total of exactly 100 from three perfect pillars. Every cheap fix is worse
   than the defect; the honest one is a wider column. *(KNOWN-ISSUES **P.37**)*
+- [ ] **A pillar can score 25/25 from a single metric** — the renormalisation runs at two levels and
+  only the outer one is disclosed, so a Valuation pillar built from one resolvable ratio is
+  indistinguishable from one built from five, with no marker and `availablePillars` still 4. This is
+  P.35 one level down; like P.35 it is **Peter's call**, because two of the three fixes re-score
+  companies he has already read. *(KNOWN-ISSUES **P.38**)*
 
 ### UX findings (2026-07-03 UI/UX audit)
 Rated high in the audit:

@@ -77,6 +77,36 @@ Each fix only addressed the immediate symptom.
 
 **Rule.** Positioning changes where a node is *painted*, never whether it is *read*. When a decoration must not join the content, it must not be a node: `content: attr(data-x)` on a `::before`/`::after` is in neither `textContent` nor the copy buffer, and the element's own `aria-label` supplies the meaning. Three separate readers of a cell — the eye, the accessibility tree, and `textContent` (copy/paste, CSV export, any `innerText` scrape) — and a fix aimed at one proves nothing about the other two. **Verify by reading `textContent` back**, not by looking at it.
 
+### 7. A Shared Layer Carries Everything Derived From It — and Everything Hidden Behind It (Cat 125)
+
+**What went wrong:** `.confirm-overlay` sat at `z-index:350` and was raised from inside a dialog at
+`9999`, so a **blocking** confirm painted underneath the thing that opened it: invisible, unclickable,
+and awaited forever. The profile PDF export was unusable for thirteen versions because of it. Raising
+the confirm to `10050` fixed that and immediately broke three other things — none of which mentioned
+`.confirm-overlay` anywhere.
+
+**Why repeatable:** a z-index is never a property of one element; it is a position in one ordering
+that everything else is implicitly measured against. Two kinds of neighbour break when you move it:
+
+- **Derived constants.** `showPasswordPrompt` hardcoded `ov.style.zIndex='400'` — meaningful *only*
+  as "+50 above the 350 base". Moving the base left the passphrase prompt below the class it is
+  built from. Grep for the old number, not just the selector.
+- **Things that were only ever hidden by being underneath.** The opaque lock screen (`9999`) hid the
+  toast container by covering it. No rule said so: `html.app-locked` names `#sidebar`,
+  `#main-content` and `#bottom-nav`, and the toast container is a body-level sibling of all three.
+  Raising toasts above `9999` made them render on the lock surface — with a ticker in the text.
+
+**Rule:** before changing a z-index, enumerate **every** z-index in the file, including inline styles
+and JS-built style strings, and list which pairs can be on screen at once. Then ask the second
+question, the one that has no CSS to grep: *what was relying on this element being covered?* And
+prefer the smallest move — the toast bump here was reverted entirely, because it was defending
+against a case (a toast during a confirm) that no flow actually depends on.
+
+**Corollary — a modal that clears the lock screen must be answered when the app locks.** Once the
+confirm outranked `#lock-screen`, a destructive confirm stayed clickable *on top of a locked app*.
+`showMasterLogin()` now calls `_confirmCancel()`. Anything that can outrank the lock screen needs the
+same treatment.
+
 ## JavaScript Patterns
 
 ### 1. Dedup Guards with try/finally
@@ -671,7 +701,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Process | 4 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 63 lessons across 7 domains.
+**Total:** 64 lessons across 7 domains.
 
 ## Related Documents
 

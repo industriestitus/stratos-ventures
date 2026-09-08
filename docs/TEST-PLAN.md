@@ -724,3 +724,40 @@ quickest way to get one is a company with no valuation inputs (no market cap, no
 - [ ] **On a phone.** The marker is visible and does not overflow the cell. `title` will not appear
       on touch — that is P.36, accepted; tapping the cell must open the profile, where the breakdown
       panel gives the explanation.
+
+## The Export Warning and the Layers Above It (added Cat 125, v66)
+
+The bug this section guards was invisible to every automated check and to code review: a blocking
+dialog rendered *underneath* the dialog that raised it. Only trying to export a PDF found it.
+
+- [ ] **The profile PDF export completes.** Company profile → PDF, pick sections, Export. The
+      "unencrypted export carries sensitive data" warning must appear **in front**, be clickable, and
+      after OK the PDF must actually generate. This was impossible from v52 to v65 (BUG-HISTORY
+      125.1) — and it is the only way to run the Cat 124 case below.
+- [ ] **And the PDF says what the score rests on.** In the generated file, the Quality Score line for
+      a partial-score company must read `83/100 (3/4 pillars)`. *(This is TEST-PLAN case 41 / Cat
+      124.9, which could never be run before.)*
+- [ ] **Cancelling the warning leaves nothing stuck.** Dismiss the warning instead of confirming: no
+      PDF, no error, and the Export button must not be left disabled or reading "Generating…".
+- [ ] **The encrypted-backup passphrase prompt is on top.** Settings → encrypted backup / restore.
+      The passphrase prompt must be visible and focusable — it carries its own `z-index` derived from
+      the confirm layer (BUG-HISTORY 125.4).
+- [ ] **Toasts do not appear on the lock screen.** Trigger a long toast (a data fetch, or an export),
+      then lock the app or let a request 401. The toast must **not** be readable over the lock
+      surface — one of them interpolates a ticker into a filename (BUG-HISTORY 125.2).
+- [ ] **Locking answers an open confirm.** Open a destructive confirm (e.g. delete a position), then
+      let the session lock. The confirm must close by itself and do nothing — it must **not** remain
+      clickable on top of the lock screen (BUG-HISTORY 125.5).
+- [ ] **On a phone, a toast does not cover a dialog's buttons.** At ≤768px the toast band is full
+      width and clickable. With two or three toasts on screen, the PDF dialog's Cancel/Export footer
+      must still be tappable (BUG-HISTORY 125.3).
+- [ ] **The Score column header tells the truth, in your language.** Hover the Tracker's Score
+      header. It must say the score is rescaled over what could actually be computed and that missing
+      data **raises** it — and it must be Hungarian on a Hungarian UI, matching the cell tooltip one
+      row below.
+- [ ] **The pillar help cards match the pillars.** Open the metric help for the Health score: it must
+      not mention interest coverage (the pillar has never scored it). Valuation must include DCF
+      Upside, Growth must include revenue consistency.
+      *Known and NOT fixed:* a pillar can still score a perfect 25/25 from a single resolvable
+      metric, with no marker and `availablePillars` at 4 — KNOWN-ISSUES **P.38**, awaiting Peter's
+      decision. Do not report it as new.
