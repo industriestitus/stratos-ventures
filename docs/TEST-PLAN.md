@@ -761,3 +761,25 @@ dialog rendered *underneath* the dialog that raised it. Only trying to export a 
       *Known and NOT fixed:* a pillar can still score a perfect 25/25 from a single resolvable
       metric, with no marker and `availablePillars` at 4 — KNOWN-ISSUES **P.38**, awaiting Peter's
       decision. Do not report it as new.
+
+## The PDF That Could Finally Run (added Cat 126, v67)
+
+Cat 125 made the export reachable; this section covers what was waiting behind it. Every case here
+needs a signed-in session and a company with real fetched financials.
+
+- [ ] **A company with five years of balance-sheet data exports.** Any company whose data was fetched
+      after v55. Company profile → PDF → keep **Financial Summary & Tables** ticked → Export. It must
+      produce a file. This threw `Invalid arguments passed to jsPDF.text` from v55 to v66
+      (BUG-HISTORY 126.2), and the Balance Sheet table never rendered at all.
+- [ ] **The Balance Sheet table shows three year columns**, aligned with the Income Statement and Cash
+      Flow tables above it, with no overprinted or missing column.
+- [ ] **A failure names its section.** If any export fails, the toast must start with a section tag —
+      `[financials] …`, `[reviews] …`, `[save] …`. A failure with **no toast at all** is BUG-HISTORY
+      126.3 returning; that is the shape to watch for.
+- [ ] **A long answer does not fall off the page.** Export a company with a very long checklist answer
+      or assessment note (several thousand characters). The text must continue onto the next page —
+      not stop mid-sentence at the page edge (BUG-HISTORY 126.4).
+- [ ] **A deleted review is not in the PDF.** Delete a review, then export with **Reviews** ticked. It
+      must not appear — and it must not appear on the company's Reviews tab either.
+- [ ] **The dividend summary has no `(undefined)`.** With **Dividends** ticked, the "Latest Dividend"
+      line must read a real frequency or `-`.

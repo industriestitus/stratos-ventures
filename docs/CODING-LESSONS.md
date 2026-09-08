@@ -309,6 +309,44 @@ For Chart.js: update existing instance (`chart.data = ...; chart.update('none')`
 
 **Rule.** Before calling a display fix done, grep for every renderer of the same field and list them; this number had four (Tracker cell, Compare row, profile PDF, help text). Cat 123 had already taught the same lesson about `marketCap` and its eight consumers. And note the second half: in Compare a *label* was not enough, because the green highlight is an independent claim. **When a view ranks or highlights, ask whether the comparison is still valid, not just whether the number is annotated** — a "best" across two different denominators is an assertion, not a comparison, and the right answer was to withhold it.
 
+### 20. Measure Which Input Produces the Error Before Believing Your Reading (Cat 126)
+
+**What went wrong:** `Invalid arguments passed to jsPDF.text` was read as "a non-string reached
+`doc.text`", and the obvious culprit was found in seconds: an API field passed to the header
+uncoerced. The fix was written. Then the message was actually *measured* against the real library:
+
+| argument | message |
+|---|---|
+| a number | `Type of text must be string or Array. "2024" is not recognized.` |
+| `undefined` / `NaN` **coordinate** | `Invalid arguments passed to jsPDF.text` |
+
+The reported message is a **coordinate**, not a text argument. The plausible fix would have shipped,
+looked reasonable in review, and changed nothing.
+
+**Why repeatable:** a library's error messages are a vocabulary you have not learned. Reading the
+code tells you which inputs are *possible*; only running it tells you which one produces *this*
+string. The gap is invisible because the wrong theory also explains the symptom.
+
+**Rule:** when a third-party library throws, reproduce the message from each candidate input before
+choosing one. It takes a minute in the console and it is the difference between a fix and a
+plausible-looking no-op.
+
+### 21. Code That Only Runs After Something Broke Is the Code Least Likely to Have Been Run (Cat 126)
+
+**What went wrong:** a diagnostic was added so the next PDF failure would name its section. The
+variable was declared with `let` **inside** the `try`; `catch` is a sibling block, not a nested one.
+The handler would have thrown a `ReferenceError`, destroying the original error and firing no toast —
+every failure silent, strictly worse than the unhelpful message it replaced. `finally` still closed
+the dialog, so it would have looked like the export quietly did nothing.
+
+**Why repeatable:** the happy path never enters the handler. Opening the app, exporting a PDF and
+watching it succeed proves nothing about the catch block. Error paths, empty states and cleanup
+handlers share this: they are the code you cannot verify by using the feature normally.
+
+**Rule:** `try`/`catch`/`finally` are three sibling scopes. Anything the handler reads is declared
+**before** the `try`. And when you add error-path code, execute it deliberately — throw on purpose
+once — because nothing else in the workflow will.
+
 ## Data Safety
 
 ### 0. Before a Purge-and-Reinsert, Strip EVERY Cached FK Row-Id (C3b / Cat 86)
@@ -701,7 +739,7 @@ Self-assessment based on 196+ bugs across 23 QA categories. These are recurring 
 | Process | 4 | 15+ (Categories 19-23, 100) |
 | AI Behavioral | 14 | 100+ (cross-cutting, incl. Cat 84 removal-safety + boot-gate, Cat 96 honest-success-reporting, Cat 97 name-collision safety) |
 
-**Total:** 64 lessons across 7 domains.
+**Total:** 66 lessons across 7 domains.
 
 ## Related Documents
 

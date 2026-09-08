@@ -248,6 +248,12 @@ The 2026-07-22 field-by-field sync audit closed every data-loss and D1-bloat sou
 - **The options, for when it is decided:** (a) mark a pillar the way the total is marked, (b) cap `possible` at the pillar's full weight so absent items cost points, (c) refuse a pillar below some coverage threshold, as `null`. (a) changes no number; (b) and (c) change many.
 - **Status:** open, and the highest-value candidate on the score track. GLOSSARY § Quality Score documents only the across-pillar rescale and should say both once this is settled.
 
+### P.39 — One localStorage Write Skips the Transient-Field Strip (2026-09-08, found in Cat 126 QA)
+- **Where:** `saveTrackerStocks` strips `_isData` / `_cfData` / `_bsData` before writing (`index.html:12482-12484`), and `STOCK_CACHE_FIELDS` excludes them (`13246`). The write at **`12648`** does neither.
+- **Effect today: none.** It runs at boot, before any profile has been opened, so the transient arrays are not populated yet.
+- **Why it is recorded anyway:** it is the same asymmetry that caused Cat 126 — two of three sibling paths do the right thing and the third silently does not, and nothing fails until the ordering changes. If anything ever populates those fields earlier, this write starts persisting multi-megabyte API payloads into localStorage.
+- **Status:** open, trivial, worth folding into any batch that touches tracker persistence.
+
 ---
 
 ## ~~Deep Audit Findings~~ (ALL FIXED 2026-07-01)

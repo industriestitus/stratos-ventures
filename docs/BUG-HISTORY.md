@@ -140,6 +140,7 @@ the archive: its content is from 2026-07-01 and it only received a number in 202
 
 | 116 | **The totals stop mixing currencies (P.29 closed).** Every base-currency total fell back to the raw foreign amount when a rate was missing, so an empty rates table added it straight into a base-currency sum — $2 000 landing in a HUF total as 2 000 Ft, and the allocation doughnut drawing an 18.9% holding as 0.07%. One accumulator (`baseSum`) replaced all **34** sites; P.29 had recorded 16, because its grep counted one spelling of three. Four further sites mixed currencies **without ever calling `convertCurrency()`** and were found only by opening the app: a snapshot delta rendering `+33900.0%`, an index-to-100 chart, an account rollup, and a tooltip labelling dollars as forints. Plus a refused TWR published as exactly 0.0% Alpha. **The QA pass found eight more, the two worst created by the fix itself:** a `base_currency` NOT NULL DEFAULT `'USD'` colliding with readers that assumed the current base, so a D1 round-trip turned a 3.4M Ft snapshot into ~1.19bn Ft; and seven brand-new 'Fetch rates' buttons that stored the rates and never re-rendered, leaving the only way out of an emptied widget looking broken | `98ff584` | 2026-08-27 | 16 | 0 |
 | 117 | **The i18n global is `i18n()`, not `t()` (P.28 closed).** P.28 recorded ~110 scopes binding a local `t` that shadows the global i18n `t()`, and proposed renaming those locals. That treats the symptom: the disease is a **one-letter global**, and `t` is the likeliest local name in JavaScript, so the trap reopens on the next `t=>` anyone writes. The global moved instead — **683 sites rewritten at AST byte offsets** (1 definition + 680 calls + **2 inside a static inline `onclick` handler**, which is HTML text and so invisible to every JS parser). The 104 shadowing scopes were left untouched and are now harmless. Measured with `acorn`, not grep, because Cat 116 had just taught that a scope count inherits the shape of its query: the real figure is **104**, not ~110, and **zero** of them ever called `t()` — the trap never sprang in four years. Also retired **8 comments** warning against shadowing `t`, which described a hazard that no longer exists. **QA found two, both mine:** an orphaned `*/` left by the comment surgery, and a comment shipped in code citing a `Cat 117` that did not yet exist. QA independently re-derived every count and diffed the string, regex and property-name multisets across the refactor — 14 689 strings, exactly two differing (`v58`→`v59`) | `7fad100` | 2026-09-06 | 5 | 1 |
+| 126 | **The PDF export crashed on a NaN coordinate, and the diagnostic added to explain it would have made every failure silent.** Peter got past Cat 125's warning and hit `Invalid arguments passed to jsPDF.text`. Measured against the real jsPDF: a non-string *text* gives a different message — **this one is a `NaN`/`undefined` coordinate**. `_isData` and `_cfData` are sliced to 3 years on arrival; **`_bsData` never was**, while all three PDF tables allocate exactly 4 column widths. With FMP's 5 balance-sheet years the 6th column reads `colWidths[4] === undefined`, `x` becomes `NaN`, and the next `doc.text` throws. Reproduced with the real library: 3 years ok, 5 years throws. Introduced in **v55** when the balance-sheet fetch went to `limit:FMP_MAX_LIMIT` without the `.slice(0,3)` its siblings had — so the export has been broken for any company with 5 years since then, hidden behind Cat 125's unclickable warning. **QA then found the batch's own diagnostic was a blocker**: `let pdfSection` was declared inside the `try`, and `catch` is a sibling block — the handler would have thrown a `ReferenceError`, destroying the real error and firing no toast at all, which is worse than the unhelpful message it replaced. QA also found `textLine()` called `checkPage` once for a value that can wrap to 48 lines (a long checklist answer ran off the page and was clipped out of an exported document), that the PDF printed **soft-deleted reviews** every other consumer filters, a null `review_type` that threw and aborted the whole export, and `(undefined)` in the dividend summary | `9b7e4a9` | 2026-09-08 | 14 | 1 |
 | 125 | **The blocking export warning was rendering under the dialog that raised it — the profile PDF export has been impossible since v52.** `_confirmSensitiveExport()` opens `.confirm-overlay` at z-index **350**; the PDF dialog it is raised from sits at **9999**. The confirm was neither visible nor clickable, so the export waited forever on a decision nobody could make — and because the export could not run, nobody ever saw whether the PDF's `(3/4 pillars)` line from Cat 124 was right. Peter found it by trying to run TEST-PLAN case 41. **QA then found three regressions in the fix itself**: raising `.toast-container` to clear the confirm put toasts over the **opaque lock screen** (leaking a ticker through `toast.pdfExported`) and, at ≤768px where the band is full width and `pointer-events:auto`, over a dialog's footer buttons — so that half was reverted; `showPasswordPrompt`'s inline `z-index:400`, a value derived from the old 350 base, was left behind and put the **backup-passphrase prompt** below the class it is built from; and the raised confirm now cleared the lock screen, so a destructive confirm raised before a mid-session 401 stayed **clickable on top of a locked app**. Also: the Score column header still described the score as `Composite Quality Score (0-100)` — Cat 124's corrected formula had landed only in the metric help card, and the header is the surface people actually hover — and three `METRIC_TIPS` pillar formulas named metrics their pillars do not score, `_scoreHlt` claiming an interest-coverage term the health pillar has never had | `ca3d834` | 2026-09-08 | 10 | 1 |
 | 124 | **A partial Quality Score now says so — P.35 closed, Peter's call.** The composite renormalises over the pillars it could compute, so a company missing one was scored on the other three and rescaled to 100: **85/100 from three pillars outranked 69/100 from four**, in a column the Tracker sorts by. Rather than re-rank every company, the number now declares what it rests on — a `3/4` marker on the Tracker, `(3/4)` in Compare, `(3/4 pillars)` in the PDF, and a help text that describes the renormalisation instead of an average. **QA found the critical one: Compare was still crowning the company with the LEAST data**, in the one view whose purpose is to declare a winner — so the green crown is now dropped when the pillar counts differ. It also found that absolute positioning moved the marker out of the layout but NOT out of `textContent` (`"853/4"` to a copy/paste), that 9px at `opacity:.7` measured 2.19:1, and that the breakdown panel the marker points people to read `83/100 across 3 pillér` on a Hungarian UI. **A second QA round over those fixes found the accessibility fix had DELETED the score from the accessibility tree** — an `aria-label` replaces a cell's name rather than adding to it, so a hundred Score cells were all announced as "Click for score breakdown" — plus a Compare crown that compared how many pillars instead of which, and an unguarded predicate that would have made "Compare" silently do nothing for anyone holding one corrupt company. The i18n gate rejected the fix's own runtime-built key along the way | `e22b285` | 2026-09-07 | 14 | 2 |
 | 123 | **A corrupt market cap was scoring a company 82 out of 100.** Peter's Tracker showed Apple with a market cap of `3`, and every ratio built from it read `0.0x`. calcStockRatios only checked that the cap was above zero, not that it was plausible — so on the dashboard the ratios collapsed, and on the Tracker the SAME number produced a **perfect 25/25 valuation pillar** and a buyback yield of 8000000000000%. The dashboard was the mildest consumer of a corrupt field. Also: the allocation widget was clipping two of its four doughnuts because `1fr` is `minmax(auto,1fr)` and a Chart.js canvas will not shrink; the benchmark's `—` never said why. **QA rejected the ratio fix twice** — it guarded the weighted AVERAGE (which absorbs one broken holding into a plausible 24.0) and it masked at one consumer while eight others kept reading the field — and caught that this batch's own v64 message named a cause that cannot happen. Worst of all, v64's dip fix DESTROYED known-good 52-week highs on a failed refresh, under a green success toast | `af7d65f` | 2026-09-07 | 11 | 1 |
@@ -149,7 +150,7 @@ the archive: its content is from 2026-07-01 and it only received a number in 202
 | 119 | **The i18n contracts stop being hand-maintained (check 14).** The invariants Cats 117 and 118 established by hand — every used key exists in every dictionary, nothing resolves to a global `t`, `applyI18n()` still does its two jobs, no element shadows `i18n` in a handler's `with` scope — are now asserted by `docs/i18n-invariants.mjs`, which parses `index.html` with acorn. **QA found FIVE fail-opens in the first version**, in a gate whose own header forbids exactly that: the `applyI18n` assertion was a regex to the first newline, so a trailing `// TODO restore …` comment satisfied both halves while both defects were reintroduced; `data-i18n` was recognised only double-quoted (check 4's own antipattern, verbatim); `\bsrc\s*=` also matched `data-src=`, cloaking a whole script block; inside inline handlers `t` was caught only when *called*, so `[t]` passed; and a dictionary that was not an object literal was dropped in silence while the summary claimed the languages agreed. Also five false positives that would have blocked correct work, an undeclared acorn dependency, and the two real blind spots now **pinned** so growth fails | `c61957c` | 2026-09-06 | 16 | 0 |
 | 118 | **The sign-in gate follows the language setting (P.31 closed).** `applyI18n()` had exactly two callers, `autoLoad()` and `renderDbFiTracker()`, and both run only after a successful sign-in — so the first screen every user sees was the one screen i18n never reached, with **ten** fully-translated keys that could never display. Now applied on `DOMContentLoaded`, which the spec orders strictly before the `window` `load` handler that un-hides the gate, so it is painted already translated. Three more in the same function: **`<html lang>` was hard-coded `"hu"`** while the app defaults to English, so every English user was served a page declaring Hungarian; **`textContent` was silently deleting all 12 dashboard widget tooltips**, because `initWidgetTips()` appends them *inside* `data-i18n` nodes and the widgets render lazily, so `renderDbFiTracker()` wiped them the moment the FI widget scrolled into view (measured 12 → 0, now 12 → 12); and the preservation reads **direct children only**, so a nested node's bubble can never be re-parented onto its ancestor. **The batch's own worst moment was self-caught:** a first fix rewrote the wrong thing because its supporting measurement was taken on the live DOM, which the old `textContent` had already flattened — the source markup was never looked at | `47d6746` | 2026-09-06 | 5 | 2 |
 
-**Total: 771 fixed, 29 potential (unfixed)** — derived from the Fixed column above, not maintained by hand; `docs/check.sh` fails if the two ever disagree. — P.3/P.15/P.16 accepted as external limitations.
+**Total: 785 fixed, 30 potential (unfixed)** — derived from the Fixed column above, not maintained by hand; `docs/check.sh` fails if the two ever disagree. — P.3/P.15/P.16 accepted as external limitations.
 
  (Cat 83/84/85/87 are QA-clean 0-fix batches; Cat 86 = 1 QA-caught fix; Cat 88 = 1 runtime-state fix; Cat 90 = 6 data-loss fixes from the final security sweep; Cat 91 = 5 adversarial-QA fixes folded into the encrypted-backup feature; Cat 92 = 1 QA collision-id guard in the restore-completeness batch; Cat 93 = 3 QA nits in the Data-Management UX-polish batch; Cat 94 = 2 QA completeness fixes in the HTML-archive export; Cat 95 = 4 ungated sensitive exports found + gated by QA; Cat 96 = 8 adversarial-QA fixes folded into the historical-in-backup batch; Cat 97 = 6 adversarial-QA fixes folded into the cloud-snapshot batch; Cat 98 = 8 adversarial-QA fixes folded into the FMP /stable migration; Cat 99 = 1 wrong-data endpoint caught only by live-browser verification.)
 
@@ -1214,6 +1215,99 @@ for the same reason P.35 was put to Peter: every honest fix changes numbers he h
 from it — and everything that was only ever hidden by sitting below it.* Three of this batch's five
 z-index defects were not the original bug; they were things that had been silently relying on the old
 number. The lock screen hid toasts by being above them, not by any rule that said so.
+
+---
+
+
+## Category 126 — A NaN Coordinate, and the Diagnostic That Would Have Hidden the Next One (2026-09-08) — v67
+
+Cat 125 made the export *reachable*. This is what was waiting behind it. Peter: *"PDF generálás
+sikertelen: Invalid arguments passed to jsPDF.text"*.
+
+**126.1 — The message named the wrong suspect, and measuring it changed the diagnosis.** The first
+theory was that `calendarYear` arrives from FMP as a **number** and `tableHeader` passed it straight
+to `doc.text`. Tested against the real jsPDF before writing any fix:
+
+| argument | message |
+|---|---|
+| `doc.text(2024, x, y)` | `Type of text must be string or Array. "2024" is not recognized.` |
+| `doc.text(undefined, x, y)` | **`Invalid arguments passed to jsPDF.text`** |
+| `doc.text('hi', NaN, y)` | **`Invalid arguments passed to jsPDF.text`** |
+
+So the reported message is a **coordinate**, not a text argument. The number theory was wrong, and
+five minutes with the library was the only thing that said so.
+
+**126.2 — The real cause: one of three siblings was never sliced.**
+
+```js
+_bsData = histRaw.bsData;              // ← unsliced
+_isData = histRaw.incData.slice(0,3);
+_cfData = histRaw.cfData.slice(0,3);
+```
+
+All three PDF tables are titled "(3 Years)" and allocate exactly four column widths
+(`colW=[cw*0.34,cw*0.22,cw*0.22,cw*0.22]`), but the balance-sheet table iterates every year FMP
+returned. `FMP_MAX_LIMIT` is 5, so the header is six columns: at `i=4` `colWidths[4]` is `undefined`,
+`x` becomes `NaN`, and the **next** `doc.text(txt, NaN, y)` throws. Reproduced against the real
+library with the real widths — 3 years ok, 4 years silently overprints, **5 years throws Peter's
+exact message**.
+
+**Introduced in v55** (`5a30b3e`, the FMP `/stable` migration), which changed the balance-sheet fetch
+to `limit:FMP_MAX_LIMIT`. Income and cash flow were shielded by a `.slice(0,3)` dating from Phase
+12.1; the balance sheet had no equivalent. The export has been failing outright since then for any
+company with five years of balance-sheet data — invisible, because Cat 125's warning made the export
+unreachable anyway. **Two bugs in series, the second hidden by the first.**
+
+Fixed at the point of storage, where its siblings already were, **and** at the point of use in all
+three tables — because data already cached in a browser still carries five years, and QA found a
+second path that bypasses storage entirely: the JSON backup serialises the live `tStocks`, so
+importing a backup taken while a profile was open puts a 5-entry `_bsData` straight into memory. The
+slice-at-use is load-bearing, not belt-and-braces.
+
+### The blocker QA found in this batch's own diagnostic
+
+**126.3 — `let pdfSection` was declared inside the `try`; `catch` is a sibling block.** The batch
+added a section tracker so the next failure would say *where*. Declared inside the `try` body, it is
+not in scope in the handler — so `console.error(...pdfSection...)` would throw a `ReferenceError`
+**inside the catch**, destroying the original error, firing no toast, and escaping as an unhandled
+rejection with no `unhandledrejection` handler anywhere in the file. `finally` still closes the
+dialog, so the export would look like it silently did nothing.
+
+**The feature added to name the failing section would have made every failure anonymous.** And it
+could not have been caught by opening the app: the happy path never enters the handler. It shows up
+only on the *next* failure — exactly when the diagnostic was supposed to earn its keep. Declaration
+moved above the `try`, and `pdfSection='save'` now covers `doc.save()`, which was otherwise blamed on
+whichever section ran last.
+
+### The rest of what QA found
+
+**126.4 — `textLine()` page-broke once for a value that can wrap to 48 lines.** `checkPage(6)` ran
+before the label, then the whole wrapped value was drawn in one call and `y` advanced past the
+footer. Measured: a 4000-character checklist answer is 48 lines / 216 mm — starting below y≈56 it
+runs off the page, jsPDF clips it, and **an exported document is silently missing content**.
+`writeWrapped` had always done it correctly, per line. Both copies of `textLine` now break per line.
+
+**126.5 — A long label could make the wrap width negative.** `maxW = cw-indent-labelW`, and
+`splitTextToSize` does not throw on a negative width — it returns one character per line. Reachable
+through a user-named saved valuation. Clamped.
+
+**126.6 — The PDF exported soft-deleted reviews.** `rvData.entries.filter(e=>e.companyTicker===...)`
+with no `!e.deleted_at`, which every other consumer has. Soft-deleted reviews live for 30 days until
+the purge, so a review the user deleted printed into a report that outlives the app. **The on-screen
+reviews tab had the identical omission** and is fixed with it.
+
+**126.7 — A null `review_type` threw and aborted the whole export.** `rev.type.charAt(0)` on a value
+that comes from D1 with no fallback. Latent — and with 126.3 unfixed it would have aborted
+*invisibly*.
+
+**126.8 — `(undefined)` in the dividend summary.** The FMP history path never sets `frequency`; the
+table cell four lines below already guarded, the summary line did not.
+
+**The sentence worth carrying forward:** *an error message names a symptom, not a cause — measure
+which input actually produces it before believing your reading of the code.* The obvious suspect
+(a number where a string was wanted) produces a **different** message, and acting on that theory would
+have shipped a plausible fix that changed nothing. And the second lesson, from 126.3: **code that only
+runs when something has already gone wrong is the code least likely to have been run.**
 
 ---
 
